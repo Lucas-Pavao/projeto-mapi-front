@@ -1,6 +1,6 @@
 import React from 'react';
 import type { SensorResponseDTO } from '../types';
-import { Thermometer, Battery, Signal, Search, Filter } from 'lucide-react';
+import { Thermometer, Battery, Signal, Search, Filter, Waves, CloudRain } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +16,29 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
   selectedSensorId 
 }) => {
   const [search, setSearch] = React.useState('');
+
+  const getSensorConfig = (sensor: SensorResponseDTO) => {
+    const source = sensor.source?.toUpperCase();
+    if (source === 'ANA') {
+      return { 
+        icon: Waves, 
+        color: "bg-blue-500/10 text-blue-400", 
+        label: 'Rio' 
+      };
+    }
+    if (source === 'APAC/CEMADEN') {
+      return { 
+        icon: CloudRain, 
+        color: "bg-sky-500/10 text-sky-400", 
+        label: 'Chuva' 
+      };
+    }
+    return { 
+      icon: Thermometer, 
+      color: "bg-orange-500/10 text-orange-400", 
+      label: 'Temp' 
+    };
+  };
 
   const filteredSensors = sensors.filter(s => 
     s.stationName.toLowerCase().includes(search.toLowerCase()) ||
@@ -51,50 +74,53 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
             <p className="text-xs text-muted-foreground">Nenhum sensor encontrado.</p>
           </div>
         ) : (
-          filteredSensors.map((sensor) => (
-            <button
-              key={sensor.id}
-              onClick={() => onSensorClick(sensor)}
-              className={cn(
-                "w-full text-left p-4 rounded-lg transition-all hover:bg-zinc-800/50 group relative border border-transparent",
-                selectedSensorId === sensor.id ? "bg-zinc-800/80 border-border shadow-sm" : ""
-              )}
-            >
-              {selectedSensorId === sensor.id && (
-                <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full" />
-              )}
-              
-              <div className="flex justify-between items-start mb-2">
-                <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
-                  {sensor.stationName}
-                </span>
-                <span className={cn(
-                  "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider",
-                  sensor.type === 'Tide' ? "bg-indigo-500/10 text-indigo-400" : "bg-orange-500/10 text-orange-400"
-                )}>
-                  {sensor.type === 'Tide' ? 'Maré' : 'Temp'}
-                </span>
-              </div>
+          filteredSensors.map((sensor) => {
+            const config = getSensorConfig(sensor);
+            return (
+              <button
+                key={sensor.id}
+                onClick={() => onSensorClick(sensor)}
+                className={cn(
+                  "w-full text-left p-4 rounded-lg transition-all hover:bg-zinc-800/50 group relative border border-transparent",
+                  selectedSensorId === sensor.id ? "bg-zinc-800/80 border-border shadow-sm" : ""
+                )}
+              >
+                {selectedSensorId === sensor.id && (
+                  <div className="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r-full" />
+                )}
+                
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors">
+                    {sensor.stationName}
+                  </span>
+                  <span className={cn(
+                    "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider",
+                    config.color
+                  )}>
+                    {config.label}
+                  </span>
+                </div>
 
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5 text-foreground font-medium">
-                  <Thermometer className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{sensor.value} {sensor.unit}</span>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-1.5 text-foreground font-medium">
+                    <config.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{sensor.value} {sensor.unit}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Battery className={cn(
+                      "h-3.5 w-3.5",
+                      sensor.batteryStatus === 'Low' ? "text-red-500" : "text-emerald-500"
+                    )} />
+                    <span className="text-[10px] uppercase font-bold">{sensor.batteryStatus}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Battery className={cn(
-                    "h-3.5 w-3.5",
-                    sensor.batteryStatus === 'Low' ? "text-red-500" : "text-emerald-500"
-                  )} />
-                  <span className="text-[10px] uppercase font-bold">{sensor.batteryStatus}</span>
+                
+                <div className="mt-3 text-[10px] text-muted-foreground uppercase tracking-widest font-medium opacity-60">
+                  Lido às {new Date(sensor.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                 </div>
-              </div>
-              
-              <div className="mt-3 text-[10px] text-muted-foreground uppercase tracking-widest font-medium opacity-60">
-                Lido às {new Date(sensor.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </button>
-          ))
+              </button>
+            );
+          })
         )}
       </div>
 
