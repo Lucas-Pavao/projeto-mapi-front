@@ -1,78 +1,53 @@
-# Projeto Mapi Front
+# Projeto MAPI - Frontend 🗺️📊
 
-Este é o frontend de uma aplicação moderna de monitoramento e visualização de dados geoespaciais, construído com React 19, TypeScript e Vite. O projeto utiliza uma arquitetura baseada em funcionalidades (Feature-Based Architecture) para garantir escalabilidade e manutenibilidade.
+O **MAPI Frontend** é a interface web do Projeto MAPI (Monitoramento de Águas e Pluviometria Inteligente). Construído com tecnologias de ponta, o dashboard oferece uma visualização intuitiva e em tempo real dos dados geoespaciais e ambientais da Região Metropolitana do Recife.
 
-## 🚀 Tecnologias
+## 📋 O que é o projeto?
 
-- **React 19**: Biblioteca principal para construção da interface.
-- **TypeScript**: Tipagem estática para maior segurança no desenvolvimento.
-- **Vite**: Build tool extremamente rápida.
-- **Tailwind CSS**: Framework CSS utilitário para estilização.
-- **MapLibre GL**: Motor de mapas de alta performance.
-- **Shadcn UI**: Componentes de UI acessíveis e personalizáveis (Radix UI).
-- **Lucide React**: Conjunto de ícones consistentes.
-- **Axios**: Cliente HTTP para comunicação com a API.
+O frontend atua como a camada de visualização do sistema, permitindo que gestores públicos e a população monitorem o nível dos rios, a precipitação pluviométrica e a tábua de marés. O foco principal é a detecção visual de áreas de risco e o acompanhamento de sensores IoT distribuídos geograficamente.
 
-## 🏗️ Arquitetura e Estrutura
+## 🏗️ Arquitetura
 
-O projeto segue uma **Feature-Based Architecture**, onde o código é organizado por domínio de negócio:
+O projeto adota uma **Feature-Based Architecture** (Arquitetura Baseada em Funcionalidades), que organiza o código em torno de domínios de negócio em vez de tipos técnicos:
+
+1.  **Funcionalidades (Features):** Cada módulo (ex: `authentication`, `map`) contém seus próprios componentes, hooks, serviços e tipos. Isso facilita o isolamento e a escalabilidade do projeto.
+2.  **Componentes UI:** Utiliza uma biblioteca de componentes baseada no **Shadcn UI**, garantindo consistência visual e acessibilidade.
+3.  **Gerenciamento de Estado:** Utiliza a Context API do React para estados globais como autenticação e preferências de mapa.
+4.  **Motor de Mapa:** Baseado no **MapLibre GL**, permitindo renderização de alta performance de camadas vetoriais e marcadores dinâmicos.
+
+## 📂 Estrutura do Projeto
 
 ```text
 src/
-├── assets/             # Ativos estáticos (imagens, ícones)
+├── assets/             # Imagens, ícones e arquivos estáticos
 ├── components/
-│   └── ui/             # Componentes de UI genéricos (Button, Card, Map, etc.)
-├── features/           # Funcionalidades principais do sistema
-│   ├── authentication/ # Login, serviços de auth, tipos e componentes relacionados
-│   └── map/            # Visualização do mapa, sidebar de sensores, etc.
-├── hooks/              # Hooks globais compartilhados (ex: useAuth)
-├── lib/                # Utilitários e configurações (ex: utils.ts para tailwind-merge)
+│   └── ui/             # Componentes de interface reutilizáveis (botões, cards, etc.)
+├── features/           # Módulos principais por domínio
+│   ├── authentication/ # Login, registro e serviços de auth
+│   └── map/            # Visualização do mapa, sidebar de sensores e filtros
+├── hooks/              # Hooks customizados globais (ex: useAuth)
+├── lib/                # Configurações e utilitários (axios, tailwind merge)
 ├── pages/              # Componentes de página (rotas principais)
-└── App.tsx             # Configuração de rotas e provedores contextuais
+└── services/           # Clientes de API e comunicação externa
 ```
 
-### Componentes de Destaque
+## ⚙️ Como o projeto funciona?
 
-- **`Map` (`src/components/ui/map.tsx`)**: Um componente wrapper robusto sobre o MapLibre GL, suportando marcadores, popups, camadas de cluster e rotas.
-- **`AuthContext`**: Gerencia o estado de autenticação global e persistência de tokens.
+1.  **Renderização Geoespacial:** Ao carregar o mapa, o frontend consome as coordenadas dos sensores da API e os renderiza como marcadores dinâmicos sobre o MapLibre GL.
+2.  **Monitoramento em Tempo Real:** O dashboard exibe informações atualizadas vindas da API Spring Boot, incluindo gráficos de maré e alertas meteorológicos.
+3.  **Fluxo de Autenticação:** O sistema gerencia o ciclo de vida dos tokens JWT, armazenando o Access Token em memória/estado e o Refresh Token via cookies seguros ou armazenamento local, garantindo uma navegação sem interrupções.
+4.  **Responsividade:** A interface é construída com Tailwind CSS, sendo totalmente adaptável para dispositivos móveis e desktops.
 
-## ⚙️ Configuração e Instalação
+## 🚀 Tecnologias Utilizadas
 
-### Pré-requisitos
+- **React 19**
+- **TypeScript**
+- **Vite** (Build Tool)
+- **Tailwind CSS** (Estilização)
+- **MapLibre GL** (Mapas)
+- **Shadcn UI + Lucide React** (Componentes e Ícones)
+- **Axios** (Comunicação HTTP)
+- **Zustand / Context API** (Estado)
 
-- Node.js (v18 ou superior)
-- npm ou yarn
-
-### Instalação
-
-1. Clone o repositório:
-   ```bash
-   git clone git@github.com:Lucas-Pavao/projeto-mapi-front.git
-   cd projeto-mapi-front
-   ```
-
-2. Instale as dependências:
-   ```bash
-   npm install
-   ```
-
-3. Configure as variáveis de ambiente:
-   Crie um arquivo `.env` na raiz do projeto com:
-   ```env
-   VITE_API_URL=http://localhost:3000
-   ```
-
-### Execução
-
-- **Desenvolvimento**: `npm run dev`
-- **Build**: `npm run build`
-- **Lint**: `npm run lint`
-- **Preview**: `npm run preview`
-
-## 🗺️ Mapa e Provedores
-
-Por padrão, o sistema utiliza os basemaps do **CartoDB** (Positron/Dark Matter), que não exigem chave de API para uso de desenvolvimento. A configuração do tema do mapa (Light/Dark) é detectada automaticamente ou pode ser configurada via props.
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+---
+**Interface desenvolvida para clareza e rapidez na tomada de decisão.**
