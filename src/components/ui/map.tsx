@@ -148,11 +148,11 @@ type MapProps = {
 
 function DefaultLoader() {
   return (
-    <div className="bg-background/50 absolute inset-0 z-10 flex items-center justify-center backdrop-blur-xs">
+    <div className="bg-zinc-950 absolute inset-0 z-10 flex items-center justify-center">
       <div className="flex gap-1">
-        <span className="bg-muted-foreground/60 size-1.5 animate-pulse rounded-full" />
-        <span className="bg-muted-foreground/60 size-1.5 animate-pulse rounded-full [animation-delay:150ms]" />
-        <span className="bg-muted-foreground/60 size-1.5 animate-pulse rounded-full [animation-delay:300ms]" />
+        <span className="bg-primary size-2 animate-pulse rounded-full" />
+        <span className="bg-primary size-2 animate-pulse rounded-full [animation-delay:150ms]" />
+        <span className="bg-primary size-2 animate-pulse rounded-full [animation-delay:300ms]" />
       </div>
     </div>
   );
@@ -255,6 +255,13 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       }, 100);
     };
     const loadHandler = () => setIsLoaded(true);
+    const errorHandler = (e: any) => {
+      console.error("MapLibre error:", e);
+      // Force loaded state on error to allow children (like overlays) to render 
+      // or to at least show the map container
+      setIsLoaded(true); 
+      setIsStyleLoaded(true);
+    };
 
     // Viewport change handler - skip if triggered by internal update
     const handleMove = () => {
@@ -267,6 +274,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     };
 
     map.on("load", loadHandler);
+    map.on("error", errorHandler);
     map.on("styledata", styleDataHandler);
     map.on("move", handleMove);
     map.on("click", handleClick);
@@ -275,6 +283,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
     return () => {
       clearStyleTimeout();
       map.off("load", loadHandler);
+      map.off("error", errorHandler);
       map.off("styledata", styleDataHandler);
       map.off("move", handleMove);
       map.off("click", handleClick);
