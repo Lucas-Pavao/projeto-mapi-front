@@ -23,10 +23,11 @@ import {
   Clock,
   Info,
   Waves,
-  X as CloseIcon
+  X as CloseIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { mapService } from '../services/map.service';
-import type { SensorResponseDTO, PreciseDataResponse } from '../types';
+import type { SensorResponseDTO, PreciseDataResponse, FloodPointResponseDTO } from '../types';
 import { getSensorConfig, getBatteryStatus } from '../utils/sensor';
 import { getWeatherCondition } from '../utils/weather';
 import { SensorSidebar } from './SensorSidebar';
@@ -128,17 +129,138 @@ const SensorPopupContent = ({
   );
 };
 
+/**
+ * Reusable component for the flood point information popup content
+ */
+const FloodPointPopupContent = ({ 
+  point, 
+  onShowDetails 
+}: { 
+  point: FloodPointResponseDTO; 
+  onShowDetails: () => void;
+}) => {
+  return (
+    <div className="bg-zinc-900 text-white rounded-lg border border-zinc-800 shadow-2xl overflow-hidden w-72">
+      <div className="p-4 text-white font-bold flex flex-col gap-1 relative bg-red-600">
+        <div className="flex justify-between items-center">
+          <span className="text-[10px] opacity-80 uppercase tracking-widest">Ponto Crítico</span>
+          <AlertTriangle className="h-4 w-4 animate-pulse" />
+        </div>
+        <h3 className="text-sm leading-tight font-bold">{point.nome}</h3>
+        <p className="text-[10px] opacity-70 font-medium truncate">{point.municipio || 'Localidade não informada'}</p>
+      </div>
+      
+      <div className="p-4 space-y-4 bg-zinc-900/95">
+        <div className="flex items-center justify-between">
+          <div>
+             <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Nível da Maré</p>
+             <p className="text-2xl font-black text-white">
+              {point.tideHeight !== null ? point.tideHeight : '--'} <small className="text-xs font-normal text-zinc-500">{point.tideUnit || 'm'}</small>
+             </p>
+          </div>
+          <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-zinc-800/50 border border-zinc-700 shadow-inner text-red-400">
+            <Waves className="h-5 w-5" />
+          </div>
+        </div>
+
+        <div className="space-y-2 pt-2 border-t border-zinc-800">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-zinc-500 uppercase font-medium">Altitude</span>
+            <span className="text-[10px] font-bold text-white uppercase">{point.altitude_m !== null ? `${point.altitude_m}m` : 'N/A'}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-zinc-500 uppercase font-medium">Dist. Canal</span>
+            <span className="text-[10px] font-bold text-white uppercase">{point.dist_canal_m !== null ? `${point.dist_canal_m}m` : 'N/A'}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-zinc-500 uppercase font-medium">Bacia</span>
+            <span className="text-[10px] font-bold text-white uppercase truncate max-w-[120px]">{point.bacia_hidrografica || 'N/A'}</span>
+          </div>
+        </div>
+
+        <Button 
+          onClick={onShowDetails}
+          className="w-full h-8 text-[10px] font-bold uppercase tracking-widest bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-900/20"
+        >
+          Ver Análise de Risco
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export const MapView: React.FC = () => {
   const { user, logout } = useAuth();
   const [sensors, setSensors] = useState<SensorResponseDTO[]>([]);
+  const [floodPoints, setFloodPoints] = useState<FloodPointResponseDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSensorId, setSelectedSensorId] = useState<number>();
+  const [selectedFloodPointId, setSelectedFloodPointId] = useState<number>();
   const [showDetailCard, setShowDetailCard] = useState(false);
   const [clickedLocation, setClickedLocation] = useState<{lat: number, lng: number} | null>(null);
   const [locationInfo, setLocationInfo] = useState<PreciseDataResponse | null>(null);
+  const [nearestHarbor, setNearestHarbor] = useState<any>(null);
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
-  const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva']);
+  const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos Críticos']);
+  const [sensorHistory, setSensorHistory] = useState<SensorResponseDTO[]>([]);
+  const [floodPointStatus, setFloodPointStatus] = useState<PreciseDataResponse | null>(null);
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false);
+  const [isFetchingStatus, setIsFetchingStatus] = useState(false);
   const mapRef = useRef<MapRef>(null);
+
+  const selectedSensor = useMemo(() => 
+    (sensors || []).find(s => s.id === selectedSensorId),
+    [sensors, selectedSensorId]
+  );
+
+  const selectedFloodPoint = useMemo(() => 
+    (floodPoints || []).find(p => p.id === selectedFloodPointId),
+    [floodPoints, selectedFloodPointId]
+  );
+
+  useEffect(() => {
+    if (showDetailCard && selectedFloodPoint?.id_ponto) {
+      let isMounted = true;
+      const fetchStatus = async () => {
+        setIsFetchingStatus(true);
+        try {
+          const data = await mapService.getPointStatus(selectedFloodPoint.id_ponto);
+          if (isMounted) setFloodPointStatus(data);
+        } catch (error) {
+          console.error('Erro ao buscar status do ponto:', error);
+        } finally {
+          if (isMounted) setIsFetchingStatus(false);
+        }
+      };
+      fetchStatus();
+      return () => { 
+        isMounted = false;
+        setFloodPointStatus(null);
+      };
+    }
+  }, [showDetailCard, selectedFloodPoint?.id_ponto]);
+
+  useEffect(() => {
+    if (showDetailCard && selectedSensor?.sensorId) {
+      let isMounted = true;
+      const fetchHistory = async () => {
+        setIsFetchingHistory(true);
+        try {
+          const data = await mapService.getSensorHistory(selectedSensor.sensorId);
+          if (isMounted) setSensorHistory(data || []);
+        } catch (error) {
+          console.error('Erro ao buscar histórico:', error);
+        } finally {
+          if (isMounted) setIsFetchingHistory(false);
+        }
+      };
+      fetchHistory();
+      return () => { 
+        isMounted = false; 
+        setSensorHistory([]);
+      };
+    }
+  }, [showDetailCard, selectedSensor?.sensorId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -148,14 +270,19 @@ export const MapView: React.FC = () => {
       if (isMounted) setIsLoading(false);
     }, 5000);
 
-    const fetchSensors = async () => {
+    const fetchData = async () => {
       try {
-        const data = await mapService.getLatestSensors();
+        const [sensorsData, floodPointsData] = await Promise.all([
+          mapService.getLatestSensors(),
+          mapService.getAllFloodPoints()
+        ]);
+        
         if (isMounted) {
-          setSensors(Array.isArray(data) ? data : []);
+          setSensors(Array.isArray(sensorsData) ? sensorsData : []);
+          setFloodPoints(Array.isArray(floodPointsData) ? floodPointsData : []);
         }
       } catch (error) {
-        console.error('Erro ao buscar sensores:', error);
+        console.error('Erro ao buscar dados:', error);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -164,19 +291,14 @@ export const MapView: React.FC = () => {
       }
     };
 
-    fetchSensors();
-    const interval = setInterval(fetchSensors, 30000);
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => {
       isMounted = false;
       clearInterval(interval);
       clearTimeout(safetyTimeout);
     };
   }, []);
-
-  const selectedSensor = useMemo(() => 
-    (sensors || []).find(s => s.id === selectedSensorId),
-    [sensors, selectedSensorId]
-  );
 
   const filteredSensorsForMap = useMemo(() => {
     if (!Array.isArray(sensors)) return [];
@@ -189,6 +311,14 @@ export const MapView: React.FC = () => {
     });
   }, [sensors, activeLayers]);
 
+  const filteredFloodPointsForMap = useMemo(() => {
+    if (!Array.isArray(floodPoints) || !activeLayers.includes('Pontos Críticos')) return [];
+    return floodPoints.filter(point => 
+      point.latitude != null && point.longitude != null && 
+      point.latitude !== 0 && point.longitude !== 0
+    );
+  }, [floodPoints, activeLayers]);
+
   const handleMapClick = async (e: MapMouseEvent) => {
     if ((e.originalEvent?.target as HTMLElement)?.closest('.maplibregl-marker')) {
       return;
@@ -197,11 +327,19 @@ export const MapView: React.FC = () => {
     const { lng, lat } = e.lngLat;
     setClickedLocation({ lat, lng });
     setSelectedSensorId(undefined);
+    setSelectedFloodPointId(undefined);
     setIsFetchingLocation(true);
     setLocationInfo(null);
+    setNearestHarbor(null);
     try {
-      const data = await mapService.getPreciseData(lat, lng);
+      const [data, harborData] = await Promise.all([
+        mapService.getPreciseData(lat, lng),
+        mapService.getNearestHarbor(lat, lng)
+      ]);
       setLocationInfo(data);
+      if (harborData && !harborData.error) {
+        setNearestHarbor(harborData.data);
+      }
     } catch (error) {
       console.error('Erro ao buscar informações do local:', error);
     } finally {
@@ -212,12 +350,14 @@ export const MapView: React.FC = () => {
   const handleCloseLocationInfo = () => {
     setClickedLocation(null);
     setLocationInfo(null);
+    setNearestHarbor(null);
   };
 
   const handleSensorClick = (sensor: SensorResponseDTO, e?: React.MouseEvent | MouseEvent) => {
     if (e) e.stopPropagation();
     
     setClickedLocation(null);
+    setSelectedFloodPointId(undefined);
     setSelectedSensorId(sensor.id);
     
     if (sensor.latitude != null && sensor.longitude != null && sensor.latitude !== 0 && sensor.longitude !== 0) {
@@ -230,6 +370,20 @@ export const MapView: React.FC = () => {
       // For sensors without coordinates, open the detail card directly
       setShowDetailCard(true);
     }
+  };
+
+  const handleFloodPointClick = (point: FloodPointResponseDTO, e?: React.MouseEvent | MouseEvent) => {
+    if (e) e.stopPropagation();
+    
+    setClickedLocation(null);
+    setSelectedSensorId(undefined);
+    setSelectedFloodPointId(point.id);
+    
+    mapRef.current?.flyTo({
+      center: [point.longitude, point.latitude],
+      zoom: 15,
+      duration: 2000
+    });
   };
 
   const toggleLayer = (layer: string) => {
@@ -287,8 +441,11 @@ export const MapView: React.FC = () => {
           <div className="pointer-events-auto h-full shadow-2xl rounded-lg overflow-hidden border border-zinc-800">
             <SensorSidebar 
               sensors={sensors} 
+              floodPoints={floodPoints}
               onSensorClick={handleSensorClick} 
+              onFloodPointClick={handleFloodPointClick}
               selectedSensorId={selectedSensorId}
+              selectedFloodPointId={selectedFloodPointId}
             />
           </div>
         </div>
@@ -314,7 +471,7 @@ export const MapView: React.FC = () => {
                   <CardTitle className="text-[10px] uppercase tracking-widest font-bold opacity-70 text-white">Camadas</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 space-y-1">
-                  {['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva'].map((layer) => (
+                  {['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos Críticos'].map((layer) => (
                     <button 
                       key={layer}
                       onClick={() => toggleLayer(layer)} 
@@ -382,6 +539,27 @@ export const MapView: React.FC = () => {
               );
             })}
 
+            {filteredFloodPointsForMap.map((point) => (
+              <MapMarker 
+                key={point.id} 
+                longitude={point.longitude} 
+                latitude={point.latitude}
+                onClick={(e) => handleFloodPointClick(point, e)}
+              >
+                <MarkerContent>
+                  <div className="relative group cursor-pointer">
+                    <div className="absolute -inset-2 rounded-full animate-ping opacity-20 bg-red-500" />
+                    <div className={cn(
+                      "h-8 w-8 rounded-full border-2 border-zinc-950 shadow-2xl flex items-center justify-center text-white transition-all group-hover:scale-110 z-10 relative bg-red-600",
+                      selectedFloodPointId === point.id ? 'ring-2 ring-white scale-110' : ''
+                    )}>
+                      <AlertTriangle className="h-4 w-4" />
+                    </div>
+                  </div>
+                </MarkerContent>
+              </MapMarker>
+            ))}
+
             {selectedSensor && selectedSensor.latitude != null && selectedSensor.longitude != null && (
               <MapPopup
                 longitude={selectedSensor.longitude}
@@ -391,6 +569,20 @@ export const MapView: React.FC = () => {
               >
                 <SensorPopupContent 
                   sensor={selectedSensor} 
+                  onShowDetails={() => setShowDetailCard(true)} 
+                />
+              </MapPopup>
+            )}
+
+            {selectedFloodPoint && (
+              <MapPopup
+                longitude={selectedFloodPoint.longitude}
+                latitude={selectedFloodPoint.latitude}
+                onClose={() => setSelectedFloodPointId(undefined)}
+                className="p-0 border-none shadow-none"
+              >
+                <FloodPointPopupContent 
+                  point={selectedFloodPoint} 
                   onShowDetails={() => setShowDetailCard(true)} 
                 />
               </MapPopup>
@@ -434,17 +626,36 @@ export const MapView: React.FC = () => {
                       </div>
                     </div>
                   ) : locationInfo ? (
-                    <div className="p-4 space-y-4">
+                    <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar">
                       {/* Section 1: Source & Current Weather Summary */}
                       <div className="flex items-center justify-between px-1">
                         <div className="flex flex-col">
                           <span className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Análise de Local</span>
                           <span className="text-[9px] text-zinc-400 font-medium italic mt-0.5">Fonte: {locationInfo.preciseData.source}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                          <span className="text-[9px] text-emerald-500 font-bold uppercase tracking-tighter">Dados Otimizados</span>
-                        </div>
+                        {(() => {
+                          const hasRain = (locationInfo.preciseData.precipitation || 0) > 2;
+                          const highTide = (locationInfo.preciseData.tideHeight || 0) > 2.0;
+                          const isWarning = hasRain || highTide;
+                          const isCritical = hasRain && highTide;
+                          
+                          return (
+                            <div className={cn(
+                              "flex items-center gap-1.5 px-2.5 py-1 border rounded-full transition-all duration-500",
+                              isCritical ? "bg-red-500/10 border-red-500/20 text-red-500 shadow-[0_0_12px_rgba(239,68,68,0.2)]" :
+                              isWarning ? "bg-orange-500/10 border-orange-500/20 text-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.2)]" :
+                              "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                            )}>
+                              <div className={cn(
+                                "w-1.5 h-1.5 rounded-full animate-pulse shadow-sm",
+                                isCritical ? "bg-red-500" : isWarning ? "bg-orange-500" : "bg-emerald-500"
+                              )} />
+                              <span className="text-[9px] font-bold uppercase tracking-tighter">
+                                {isCritical ? 'Risco Crítico' : isWarning ? 'Alerta de Risco' : 'Condição Estável'}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Section 2: Primary Weather Grid */}
@@ -503,6 +714,65 @@ export const MapView: React.FC = () => {
                         )}
                       </div>
 
+                      {/* Section: Tide Comparison & Marine Data (Enhanced) */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                          <h4 className="text-[9px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-1.5">
+                            <Waves className="h-3 w-3 text-blue-400" /> Monitoramento Costeiro
+                          </h4>
+                          {nearestHarbor && (
+                            <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-zinc-800 text-zinc-400 font-bold border border-zinc-700 uppercase">
+                              Porto: {nearestHarbor.name}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-3">
+                          {/* Tide Comparison Card */}
+                          <div className="bg-gradient-to-r from-blue-600/10 to-transparent p-4 rounded-2xl border border-blue-500/20 flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-[8px] text-blue-400 uppercase font-black tracking-widest">Nível da Maré</p>
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-3xl font-black text-white">
+                                  {locationInfo.preciseData.tideHeight ?? '--'}
+                                </span>
+                                <span className="text-xs font-bold text-blue-400/60 uppercase">{locationInfo.preciseData.unitTide || 'm'}</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="px-1.5 py-0.5 bg-zinc-800 rounded text-[7px] text-zinc-500 font-bold uppercase">Previsto: {locationInfo.preciseData.tideHeightTabuaMare ?? '--'} m</div>
+                                {locationInfo.preciseData.tideHeight !== null && locationInfo.preciseData.tideHeightTabuaMare !== null && (
+                                  <div className={cn(
+                                    "text-[7px] font-bold uppercase",
+                                    locationInfo.preciseData.tideHeight > locationInfo.preciseData.tideHeightTabuaMare ? "text-red-400" : "text-emerald-400"
+                                  )}>
+                                    {locationInfo.preciseData.tideHeight > locationInfo.preciseData.tideHeightTabuaMare ? '↑ Elevação' : '↓ Recuo'}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-inner">
+                              <Waves className="h-6 w-6 text-blue-400" />
+                            </div>
+                          </div>
+
+                          {/* Marine Grid (Waves) */}
+                          {(locationInfo.preciseData.waveHeight !== null) && (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="bg-zinc-800/20 p-3 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center text-center gap-1">
+                                <Waves className="h-4 w-4 text-sky-400 opacity-60" />
+                                <span className="text-xs font-black text-white mt-1">{locationInfo.preciseData.waveHeight} m</span>
+                                <p className="text-[7px] text-zinc-600 uppercase font-black tracking-tighter">Alt. Ondas</p>
+                              </div>
+                              <div className="bg-zinc-800/20 p-3 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center text-center gap-1">
+                                <Clock className="h-4 w-4 text-emerald-400 opacity-60" />
+                                <span className="text-xs font-black text-white mt-1">{locationInfo.preciseData.wavePeriod ?? '--'} s</span>
+                                <p className="text-[7px] text-zinc-600 uppercase font-black tracking-tighter">Período</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Section 3: Detailed Metrics Grid */}
                       <div className="grid grid-cols-3 gap-2">
                          <div className="bg-zinc-800/20 p-2.5 rounded-xl border border-zinc-800/50 flex flex-col items-center justify-center text-center gap-1 group hover:border-zinc-700/50 transition-colors">
@@ -548,7 +818,7 @@ export const MapView: React.FC = () => {
                       {(locationInfo.preciseData.waterLevel !== null || locationInfo.preciseData.flowRate !== null) && (
                         <div className="p-3 bg-blue-500/5 rounded-xl border border-blue-500/10 space-y-2">
                           <p className="text-[8px] text-blue-400 uppercase font-black tracking-widest flex items-center gap-1.5">
-                            <Waves className="h-3 w-3" /> Monitoramento de Nível
+                            <Activity className="h-3 w-3" /> Níveis de Rio / Hidro
                           </p>
                           <div className="grid grid-cols-2 gap-3">
                              {locationInfo.preciseData.waterLevel !== null && (
@@ -580,7 +850,7 @@ export const MapView: React.FC = () => {
                       {/* Section 5: Optimization Message */}
                       {locationInfo.preciseData.message && (
                         <div className="px-3 py-2 bg-zinc-950/40 rounded-lg border border-zinc-800/80 flex items-start gap-2.5">
-                          <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                          <AlertTriangle className="h-3.5 w-3.5 text-orange-500 shrink-0 mt-0.5" />
                           <p className="text-[9px] text-zinc-500 font-medium leading-relaxed italic">
                             {locationInfo.preciseData.message}
                           </p>
@@ -804,6 +1074,56 @@ export const MapView: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Sensor History Section */}
+                    <div className="space-y-4">
+                      <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-2 border-b border-zinc-800 pb-2">
+                        <Clock className="h-4 w-4 text-primary" /> Histórico de Leituras Recentes
+                      </h4>
+                      
+                      {isFetchingHistory ? (
+                        <div className="py-12 flex flex-col items-center justify-center gap-3">
+                          <div className="h-6 w-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Carregando histórico...</p>
+                        </div>
+                      ) : sensorHistory.length > 0 ? (
+                        <div className="bg-zinc-950/40 border border-zinc-800 rounded-xl overflow-hidden">
+                          <table className="w-full text-left text-[10px]">
+                            <thead>
+                              <tr className="bg-zinc-800/40 text-zinc-500 uppercase font-black tracking-tighter">
+                                <th className="px-4 py-2 border-b border-zinc-800">Horário</th>
+                                <th className="px-4 py-2 border-b border-zinc-800">Valor</th>
+                                <th className="px-4 py-2 border-b border-zinc-800">Bateria</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sensorHistory.slice(0, 10).map((history, idx) => (
+                                <tr key={idx} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
+                                  <td className="px-4 py-2 text-zinc-400 font-medium">
+                                    {new Date(history.timestamp).toLocaleString('pt-BR')}
+                                  </td>
+                                  <td className="px-4 py-2 font-black text-white">
+                                    {history.value} <span className="text-zinc-600 font-bold">{history.unit}</span>
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    <span className={cn(
+                                      "px-1.5 py-0.5 rounded-sm font-bold uppercase text-[8px]",
+                                      getBatteryStatus(history.batteryStatus).isLow ? "text-red-500 bg-red-500/10" : "text-emerald-500 bg-emerald-500/10"
+                                    )}>
+                                      {history.batteryStatus || 'N/A'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-8 text-center bg-zinc-800/20 rounded-xl border border-dashed border-zinc-800">
+                          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Nenhum histórico disponível para esta estação.</p>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Geolocation Section */}
                     <div className="bg-zinc-950/60 p-6 rounded-2xl border border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-6">
                        <div className="flex items-center gap-4">
@@ -842,6 +1162,223 @@ export const MapView: React.FC = () => {
                             className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-xs font-bold uppercase tracking-widest h-10 px-6"
                             onClick={() => window.open(`https://www.google.com/maps?q=${selectedSensor.latitude},${selectedSensor.longitude}`, '_blank')}
                             disabled={selectedSensor.latitude === null}
+                          >
+                            Abrir no Maps
+                          </Button>
+                       </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {showDetailCard && selectedFloodPoint && (
+            <div className="absolute inset-0 z-50 bg-zinc-950/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+              <Card className="w-full max-w-4xl max-h-[90vh] shadow-2xl border-zinc-800 bg-zinc-900 border overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col ring-1 ring-white/10">
+                <CardHeader className="pb-4 flex flex-row items-center justify-between border-b border-zinc-800 bg-zinc-800/40 shrink-0">
+                  <div className="flex items-center gap-4 text-white">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-2xl border border-white/10 bg-red-600">
+                      <AlertTriangle className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-xl font-black tracking-tight">
+                          {selectedFloodPoint.nome}
+                        </CardTitle>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 font-bold uppercase border border-zinc-700">
+                          Ponto de Risco
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3" /> {selectedFloodPoint.municipio || 'Localidade não informada'} • ID: {selectedFloodPoint.id_ponto}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-10 w-10 rounded-full hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors" 
+                    onClick={() => setShowDetailCard(false)}
+                  >
+                    <CloseIcon className="h-6 w-6" />
+                  </Button>
+                </CardHeader>
+
+                <CardContent className="p-0 overflow-hidden flex flex-col">
+                  <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar">
+                    {/* Primary Highlight */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="md:col-span-2 bg-gradient-to-br from-red-900/20 to-zinc-900/50 p-6 rounded-2xl border border-red-900/30 shadow-xl flex items-center justify-between group relative overflow-hidden">
+                        {isFetchingStatus && (
+                          <div className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm flex items-center justify-center z-10">
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Atualizando Dados Precisos...</span>
+                            </div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <p className="text-xs text-zinc-500 uppercase font-black tracking-[0.2em]">Nível da Maré Atual</p>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-6xl font-black text-white tracking-tighter">
+                              {floodPointStatus?.preciseData.tideHeight ?? selectedFloodPoint.tideHeight ?? '--'}
+                            </span>
+                            <span className="text-xl font-bold text-zinc-600 uppercase">
+                              {floodPointStatus?.preciseData.unitTide ?? selectedFloodPoint.tideUnit ?? 'm'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-red-400 font-medium flex items-center gap-2 pt-2">
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            {floodPointStatus?.preciseData.message || (selectedFloodPoint.active ? 'Monitoramento Ativo' : 'Inativo')}
+                          </p>
+                        </div>
+                        <div className="h-24 w-24 rounded-3xl flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity bg-red-600">
+                          <Waves className="h-16 w-16" />
+                        </div>
+                      </div>
+
+                      <div className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 flex flex-col justify-between">
+                         <div className="flex justify-between items-start">
+                            <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Análise Ambiental</p>
+                            <div className="px-2 py-1 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase">
+                               {floodPointStatus?.preciseData.source || 'Referência Local'}
+                            </div>
+                         </div>
+                         <div className="pt-4 space-y-3">
+                            {floodPointStatus?.preciseData.precipitation !== null && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Precipitação</span>
+                                <span className="text-sm font-black text-white">{floodPointStatus?.preciseData.precipitation} mm</span>
+                              </div>
+                            )}
+                            {floodPointStatus?.preciseData.temperature !== null && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Temperatura</span>
+                                <span className="text-sm font-black text-white">{floodPointStatus?.preciseData.temperature} °C</span>
+                              </div>
+                            )}
+                         </div>
+                      </div>
+                    </div>
+
+                    {/* Marine & Tide Grid */}
+                    {floodPointStatus && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-2 border-b border-zinc-800 pb-2">
+                            <Waves className="h-4 w-4 text-blue-400" /> Condições Marítimas
+                          </h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50">
+                              <p className="text-[8px] text-zinc-500 uppercase font-black tracking-tighter">Altura das Ondas</p>
+                              <p className="text-lg font-black text-white">{floodPointStatus.preciseData.waveHeight ?? '--'} m</p>
+                            </div>
+                            <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50">
+                              <p className="text-[8px] text-zinc-500 uppercase font-black tracking-tighter">Período</p>
+                              <p className="text-lg font-black text-white">{floodPointStatus.preciseData.wavePeriod ?? '--'} s</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-2 border-b border-zinc-800 pb-2">
+                            <Clock className="h-4 w-4 text-emerald-400" /> Tábuas de Maré (Previsto)
+                          </h4>
+                          <div className="bg-zinc-950/40 p-4 rounded-xl border border-zinc-800 flex items-center justify-between">
+                             <div>
+                               <p className="text-[8px] text-zinc-600 uppercase font-black tracking-tighter">Referência Tábua</p>
+                               <p className="text-lg font-black text-emerald-500 mt-1">
+                                 {floodPointStatus.preciseData.tideHeightTabuaMare ?? '--'} m
+                               </p>
+                             </div>
+                             <div className="text-right">
+                                <p className="text-[8px] text-zinc-600 uppercase font-black tracking-tighter">Fonte</p>
+                                <p className="text-[10px] font-bold text-zinc-400 mt-1 uppercase">DevTu / Porto</p>
+                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Technical Specs */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-2 border-b border-zinc-800 pb-2">
+                          <Info className="h-4 w-4 text-primary" /> Características do Local
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50">
+                            <p className="text-[8px] text-zinc-500 uppercase font-black tracking-tighter">Distância do Canal</p>
+                            <p className="text-lg font-black text-white">{selectedFloodPoint.dist_canal_m !== null ? `${selectedFloodPoint.dist_canal_m} m` : 'N/A'}</p>
+                          </div>
+                          <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50">
+                            <p className="text-[8px] text-zinc-500 uppercase font-black tracking-tighter">Bacia Hidrográfica</p>
+                            <p className="text-sm font-bold text-white truncate">{selectedFloodPoint.bacia_hidrografica || 'Não informada'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] flex items-center gap-2 border-b border-zinc-800 pb-2">
+                          <Activity className="h-4 w-4 text-emerald-400" /> Sensores Vinculados
+                        </h4>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="bg-zinc-950/40 p-3 rounded-xl border border-zinc-800 flex items-center justify-between">
+                             <div>
+                               <p className="text-[8px] text-zinc-600 uppercase font-black tracking-tighter">Estação Pluviométrica</p>
+                               <p className="text-xs font-mono font-bold text-zinc-300 mt-1">
+                                 {selectedFloodPoint.config_sensores?.estacao_pluviometrica_id || 'Nenhum sensor configurado'}
+                               </p>
+                             </div>
+                             <CloudRain className="h-4 w-4 text-zinc-700" />
+                          </div>
+                          <div className="bg-zinc-950/40 p-3 rounded-xl border border-zinc-800 flex items-center justify-between">
+                             <div>
+                               <p className="text-[8px] text-zinc-600 uppercase font-black tracking-tighter">Estação Nível do Rio</p>
+                               <p className="text-xs font-mono font-bold text-zinc-300 mt-1">
+                                 {selectedFloodPoint.config_sensores?.estacao_nivel_rio_id || 'Nenhum sensor configurado'}
+                               </p>
+                             </div>
+                             <Waves className="h-4 w-4 text-zinc-700" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Geolocation Section */}
+                    <div className="bg-zinc-950/60 p-6 rounded-2xl border border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-6">
+                       <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500">
+                             <MapPin className="h-6 w-6" />
+                          </div>
+                          <div>
+                             <p className="text-xs font-bold text-white uppercase tracking-widest">Coordenadas Geográficas</p>
+                             <p className="text-sm text-zinc-500 font-mono mt-1">
+                               {selectedFloodPoint.latitude.toFixed(6)}, {selectedFloodPoint.longitude.toFixed(6)}
+                             </p>
+                          </div>
+                       </div>
+                       <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-xs font-bold uppercase tracking-widest h-10 px-6"
+                            onClick={() => {
+                              setShowDetailCard(false);
+                              mapRef.current?.flyTo({
+                                center: [selectedFloodPoint.longitude, selectedFloodPoint.latitude],
+                                zoom: 16
+                              });
+                            }}
+                          >
+                            Focar no Mapa
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 text-xs font-bold uppercase tracking-widest h-10 px-6"
+                            onClick={() => window.open(`https://www.google.com/maps?q=${selectedFloodPoint.latitude},${selectedFloodPoint.longitude}`, '_blank')}
                           >
                             Abrir no Maps
                           </Button>

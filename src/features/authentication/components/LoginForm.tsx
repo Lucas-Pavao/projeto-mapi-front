@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -26,9 +27,14 @@ export const LoginForm: React.FC = () => {
       login(response.user, response.token);
       navigate('/map');
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error && (err as any).response?.data?.message 
-        ? (err as any).response.data.message 
-        : 'Falha ao fazer login. Verifique suas credenciais.';
+      let errorMsg = 'Falha ao fazer login. Verifique suas credenciais.';
+      
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err instanceof Error) {
+        errorMsg = err.message;
+      }
+      
       setError(errorMsg);
     } finally {
       setIsLoading(false);
