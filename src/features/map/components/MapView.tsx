@@ -134,17 +134,22 @@ const SensorPopupContent = ({
  */
 const FloodPointPopupContent = ({ 
   point, 
-  onShowDetails 
+  onShowDetails,
+  prediction
 }: { 
   point: FloodPointResponseDTO; 
   onShowDetails: () => void;
+  prediction?: { floodProbability: number, riskLevel: string };
 }) => {
   return (
     <div className="bg-zinc-900 text-white rounded-lg border border-zinc-800 shadow-2xl overflow-hidden w-72">
-      <div className="p-4 text-white font-bold flex flex-col gap-1 relative bg-red-600">
+      <div className={cn(
+        "p-4 text-white font-bold flex flex-col gap-1 relative",
+        prediction?.riskLevel === 'HIGH' || prediction?.riskLevel === 'CRITICAL' ? "bg-red-700" : "bg-red-600"
+      )}>
         <div className="flex justify-between items-center">
           <span className="text-[10px] opacity-80 uppercase tracking-widest">Ponto Crítico</span>
-          <AlertTriangle className="h-4 w-4 animate-pulse" />
+          <AlertTriangle className={cn("h-4 w-4", prediction?.riskLevel === 'CRITICAL' ? "animate-bounce" : "animate-pulse")} />
         </div>
         <h3 className="text-sm leading-tight font-bold">{point.nome}</h3>
         <p className="text-[10px] opacity-70 font-medium truncate">{point.municipio || 'Localidade não informada'}</p>
@@ -153,28 +158,31 @@ const FloodPointPopupContent = ({
       <div className="p-4 space-y-4 bg-zinc-900/95">
         <div className="flex items-center justify-between">
           <div>
-             <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Nível da Maré</p>
+             <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Probabilidade de Alagamento</p>
              <p className="text-2xl font-black text-white">
-              {point.tideHeight !== null ? point.tideHeight : '--'} <small className="text-xs font-normal text-zinc-500">{point.tideUnit || 'm'}</small>
+              {prediction ? `${(prediction.floodProbability * 100).toFixed(0)}%` : '--'}
              </p>
           </div>
-          <div className="h-10 w-10 rounded-lg flex items-center justify-center bg-zinc-800/50 border border-zinc-700 shadow-inner text-red-400">
-            <Waves className="h-5 w-5" />
+          <div className={cn(
+            "h-10 w-10 rounded-lg flex items-center justify-center bg-zinc-800/50 border border-zinc-700 shadow-inner",
+            prediction?.riskLevel === 'CRITICAL' ? "text-red-500" : "text-red-400"
+          )}>
+            <AlertTriangle className="h-5 w-5" />
           </div>
         </div>
 
         <div className="space-y-2 pt-2 border-t border-zinc-800">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] text-zinc-500 uppercase font-medium">Altitude</span>
-            <span className="text-[10px] font-bold text-white uppercase">{point.altitude_m !== null ? `${point.altitude_m}m` : 'N/A'}</span>
+            <span className="text-[10px] text-zinc-500 uppercase font-medium">Nível Maré</span>
+            <span className="text-[10px] font-bold text-white uppercase">{point.tideHeight !== null ? `${point.tideHeight}${point.tideUnit || 'm'}` : 'N/A'}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-[10px] text-zinc-500 uppercase font-medium">Dist. Canal</span>
-            <span className="text-[10px] font-bold text-white uppercase">{point.dist_canal_m !== null ? `${point.dist_canal_m}m` : 'N/A'}</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] text-zinc-500 uppercase font-medium">Bacia</span>
-            <span className="text-[10px] font-bold text-white uppercase truncate max-w-[120px]">{point.bacia_hidrografica || 'N/A'}</span>
+            <span className="text-[10px] text-zinc-500 uppercase font-medium">Risco IA</span>
+            <span className={cn(
+              "text-[10px] font-bold uppercase",
+              prediction?.riskLevel === 'CRITICAL' ? "text-red-500" : 
+              prediction?.riskLevel === 'HIGH' ? "text-orange-500" : "text-emerald-500"
+            )}>{prediction?.riskLevel || 'ANALISANDO'}</span>
           </div>
         </div>
 
@@ -584,6 +592,7 @@ export const MapView: React.FC = () => {
                 <FloodPointPopupContent 
                   point={selectedFloodPoint} 
                   onShowDetails={() => setShowDetailCard(true)} 
+                  prediction={floodPointStatus?.floodPrediction}
                 />
               </MapPopup>
             )}
@@ -1209,7 +1218,12 @@ export const MapView: React.FC = () => {
                   <div className="overflow-y-auto p-6 space-y-8 custom-scrollbar">
                     {/* Primary Highlight */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="md:col-span-2 bg-gradient-to-br from-red-900/20 to-zinc-900/50 p-6 rounded-2xl border border-red-900/30 shadow-xl flex items-center justify-between group relative overflow-hidden">
+                      <div className={cn(
+                        "md:col-span-2 p-6 rounded-2xl border shadow-xl flex items-center justify-between group relative overflow-hidden transition-colors duration-500",
+                        floodPointStatus?.floodPrediction?.riskLevel === 'CRITICAL' ? "bg-red-950/40 border-red-500/50" :
+                        floodPointStatus?.floodPrediction?.riskLevel === 'HIGH' ? "bg-orange-950/30 border-orange-500/40" :
+                        "bg-zinc-800/50 border-zinc-800"
+                      )}>
                         {isFetchingStatus && (
                           <div className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm flex items-center justify-center z-10">
                             <div className="flex items-center gap-2">
@@ -1219,46 +1233,83 @@ export const MapView: React.FC = () => {
                           </div>
                         )}
                         <div className="space-y-2">
-                          <p className="text-xs text-zinc-500 uppercase font-black tracking-[0.2em]">Nível da Maré Atual</p>
+                          <p className="text-xs text-zinc-500 uppercase font-black tracking-[0.2em]">Risco de Alagamento (IA)</p>
                           <div className="flex items-baseline gap-2">
-                            <span className="text-6xl font-black text-white tracking-tighter">
-                              {floodPointStatus?.preciseData.tideHeight ?? selectedFloodPoint.tideHeight ?? '--'}
+                            <span className={cn(
+                              "text-6xl font-black tracking-tighter",
+                              floodPointStatus?.floodPrediction?.riskLevel === 'CRITICAL' ? "text-red-500" :
+                              floodPointStatus?.floodPrediction?.riskLevel === 'HIGH' ? "text-orange-500" : "text-white"
+                            )}>
+                              {floodPointStatus?.floodPrediction ? `${(floodPointStatus.floodPrediction.floodProbability * 100).toFixed(0)}%` : '--'}
                             </span>
                             <span className="text-xl font-bold text-zinc-600 uppercase">
-                              {floodPointStatus?.preciseData.unitTide ?? selectedFloodPoint.tideUnit ?? 'm'}
+                              Probabilidade
                             </span>
                           </div>
-                          <p className="text-xs text-red-400 font-medium flex items-center gap-2 pt-2">
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                            {floodPointStatus?.preciseData.message || (selectedFloodPoint.active ? 'Monitoramento Ativo' : 'Inativo')}
-                          </p>
+                          <div className="flex flex-col gap-1 pt-2">
+                            <p className={cn(
+                              "text-xs font-bold flex items-center gap-2",
+                              floodPointStatus?.floodPrediction?.riskLevel === 'CRITICAL' ? "text-red-400" :
+                              floodPointStatus?.floodPrediction?.riskLevel === 'HIGH' ? "text-orange-400" : "text-emerald-400"
+                            )}>
+                              <AlertTriangle className={cn("h-3.5 w-3.5", floodPointStatus?.floodPrediction?.riskLevel === 'CRITICAL' && "animate-pulse")} />
+                              Nível de Risco: {floodPointStatus?.floodPrediction?.riskLevel || 'Analisando...'}
+                            </p>
+                            {floodPointStatus?.floodPrediction?.estimatedTimeToEvent && (
+                              <p className="text-[10px] text-zinc-400 font-medium">
+                                Estimativa: {floodPointStatus.floodPrediction.estimatedTimeToEvent}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div className="h-24 w-24 rounded-3xl flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity bg-red-600">
-                          <Waves className="h-16 w-16" />
+                        <div className={cn(
+                          "h-24 w-24 rounded-3xl flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity",
+                          floodPointStatus?.floodPrediction?.riskLevel === 'CRITICAL' ? "bg-red-500" : "bg-primary"
+                        )}>
+                          <Zap className="h-16 w-16 text-white" />
                         </div>
                       </div>
 
                       <div className="bg-zinc-800/30 p-6 rounded-2xl border border-zinc-800 flex flex-col justify-between">
                          <div className="flex justify-between items-start">
-                            <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Análise Ambiental</p>
-                            <div className="px-2 py-1 rounded bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase">
-                               {floodPointStatus?.preciseData.source || 'Referência Local'}
+                            <p className="text-xs text-zinc-500 uppercase font-black tracking-widest">Mensagem da IA</p>
+                            <div className="px-2 py-1 rounded bg-primary/10 text-primary text-[10px] font-black uppercase">
+                               MAPI AI v1
                             </div>
                          </div>
-                         <div className="pt-4 space-y-3">
-                            {floodPointStatus?.preciseData.precipitation !== null && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Precipitação</span>
-                                <span className="text-sm font-black text-white">{floodPointStatus?.preciseData.precipitation} mm</span>
-                              </div>
-                            )}
-                            {floodPointStatus?.preciseData.temperature !== null && (
-                              <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-zinc-500 uppercase font-bold">Temperatura</span>
-                                <span className="text-sm font-black text-white">{floodPointStatus?.preciseData.temperature} °C</span>
-                              </div>
-                            )}
+                         <div className="pt-4">
+                            <p className="text-[11px] text-zinc-300 leading-relaxed italic">
+                              "{floodPointStatus?.floodPrediction?.message || 'Aguardando processamento dos dados meteorológicos e de maré para gerar predição.'}"
+                            </p>
                          </div>
+                      </div>
+                    </div>
+
+                    {/* Secondary Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50 flex flex-col gap-1">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-widest">Maré Atual</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-white">{floodPointStatus?.preciseData.tideHeight ?? selectedFloodPoint.tideHeight ?? '--'}</span>
+                          <span className="text-[10px] font-bold text-zinc-600 uppercase">{floodPointStatus?.preciseData.unitTide ?? selectedFloodPoint.tideUnit ?? 'm'}</span>
+                        </div>
+                      </div>
+                      <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50 flex flex-col gap-1">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-widest">Precipitação</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-black text-white">{floodPointStatus?.preciseData.precipitation ?? '--'}</span>
+                          <span className="text-[10px] font-bold text-zinc-600 uppercase">mm</span>
+                        </div>
+                      </div>
+                      <div className="bg-zinc-800/20 p-4 rounded-xl border border-zinc-800/50 flex flex-col gap-1">
+                        <span className="text-[9px] text-zinc-500 uppercase font-bold tracking-widest">Status Sensor</span>
+                        <div className="flex items-center gap-2">
+                           <div className={cn(
+                             "h-2 w-2 rounded-full animate-pulse",
+                             selectedFloodPoint.active ? "bg-emerald-500" : "bg-zinc-600"
+                           )} />
+                           <span className="text-xs font-bold text-white uppercase">{selectedFloodPoint.active ? 'Ativo' : 'Inativo'}</span>
+                        </div>
                       </div>
                     </div>
 

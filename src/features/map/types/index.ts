@@ -164,6 +164,13 @@ export interface PreciseData {
   message: string | null;
 }
 
+export interface FloodPredictionResponseDTO {
+  floodProbability: number;
+  riskLevel: string;
+  estimatedTimeToEvent: string;
+  message: string;
+}
+
 export interface MapiResponseDTO {
   requestedLatitude: number;
   requestedLongitude: number;
@@ -171,6 +178,57 @@ export interface MapiResponseDTO {
   nearestSensor: SensorResponseDTO;
   openMeteoData: WeatherResponseDTO;
   distanceToNearestSensorKm: number;
+  floodPrediction?: FloodPredictionResponseDTO;
+}
+
+export interface FloodEventDTO {
+  id: number;
+  floodPointSlug: string;
+  startTime: string;
+  endTime: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  confirmedBy: string;
+}
+
+export interface ScraperEventDTO {
+  latitude: number;
+  longitude: number;
+  startTime: string;
+  endTime: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  description: string;
+  source: string;
+}
+
+export interface DataHealthReportDTO {
+  slug: string;
+  totalWeatherRecords: number;
+  totalSensorRecords: number;
+  totalFloodEvents: number;
+  weatherRecordsByYear: Record<string, number>;
+  sensorRecordsByYear: Record<string, number>;
+  status: string;
+}
+
+export interface UnifiedDataDTO {
+  floodPointSlug: string;
+  timestamp: string;
+  sensorPrecipitation: number;
+  sensorWaterLevel: number;
+  sensorSoilHumidity: number;
+  weatherPrecipitation: number;
+  weatherTemperature: number;
+  weatherPressure: number;
+  weatherCode: number;
+  tideHeight: number;
+  isFlooded: boolean;
+  severity: string;
+  accumulated3h: number;
+  accumulated6h: number;
+  accumulated12h: number;
+  accumulated24h: number;
+  accumulated48h: number;
 }
 
 export type PreciseDataResponse = MapiResponseDTO;
