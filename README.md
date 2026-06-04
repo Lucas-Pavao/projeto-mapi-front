@@ -8,9 +8,11 @@ O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públ
 
 ### Principais Diferenciais:
 - **Visualização Geoespacial Dinâmica:** Uso de MapLibre GL para renderização eficiente de grandes conjuntos de dados.
-- **Integração IoT:** Exibição em tempo real de status de sensores e níveis críticos.
+- **Monitoramento IoT em Tempo Real:** Acompanhamento de sensores de nível, precipitação e status operacional.
+- **Dados Oceanográficos e Meteorológicos:** Integração de previsões de marés, condições marinhas e clima (ondas, vento, temperatura).
+- **Gestão de Eventos de Inundação:** Registro, visualização e análise de pontos críticos e histórico de alagamentos.
+- **Ferramentas Administrativas e de Exportação:** Gestão de dispositivos, controle de acesso e exportação de relatórios técnicos.
 - **Design Adaptativo:** Interface moderna com suporte a temas Dark e Light, otimizada para operação em centros de comando.
-- **Gestão de Alertas:** Sistema de monitoramento de pontos críticos com histórico de inundação.
 
 ## 🛠️ Tecnologias Escolhidas
 
@@ -36,7 +38,7 @@ src/
 │   └── ui/             # Componentes Shadcn (Button, Input, Map, etc.)
 ├── features/           # Módulos isolados por domínio de negócio
 │   ├── authentication/ # Login, AuthProvider, serviços de auth
-│   └── map/            # MapView, Sidebar de sensores, lógica de camadas
+│   └── map/            # MapView, Sidebar de sensores, lógica de camadas, clima e marés
 ├── hooks/              # Custom hooks globais (ex: useAuth)
 ├── lib/                # Configurações de libs externas e utilitários (cn, utils)
 ├── pages/              # Componentes de página (rotas principais)
