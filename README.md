@@ -27,23 +27,43 @@ O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públ
 | **Comunicação** | [Axios](https://axios-http.com/) |
 | **Ícones** | [Lucide React](https://lucide.dev/) |
 
-## 📂 Estrutura de Pastas
+## 📂 Estrutura de Pastas Detalhada
 
-O projeto adota uma **Arquitetura Baseada em Funcionalidades (Feature-Based Architecture)**, facilitando a escalabilidade e manutenção:
+A organização do projeto adota uma **Arquitetura Baseada em Funcionalidades (Feature-Based Architecture)**, otimizada para escalabilidade e separação de preocupações:
 
 ```text
-src/
-├── assets/             # Recursos estáticos (imagens, ícones globais)
-├── components/         # Componentes UI básicos e reutilizáveis
-│   └── ui/             # Componentes Shadcn (Button, Input, Map, etc.)
-├── features/           # Módulos isolados por domínio de negócio
-│   ├── authentication/ # Login, AuthProvider, serviços de auth
-│   └── map/            # MapView, Sidebar de sensores, lógica de camadas, clima e marés
-├── hooks/              # Custom hooks globais (ex: useAuth)
-├── lib/                # Configurações de libs externas e utilitários (cn, utils)
-├── pages/              # Componentes de página (rotas principais)
-├── App.tsx             # Orquestrador de rotas e providers
-└── main.tsx            # Ponto de entrada da aplicação
+projeto-mapi-front/
+├── public/                 # Ativos estáticos públicos (ícones, favicons)
+├── src/
+│   ├── assets/             # Recursos estáticos processados pelo bundler (imagens, SVGs)
+│   ├── components/         # Componentes React compartilhados e reutilizáveis
+│   │   └── ui/             # Primitivos de UI (Shadcn/UI) e o componente de mapa base
+│   ├── features/           # Módulos isolados por domínio de negócio (Core da lógica)
+│   │   ├── authentication/ # Gestão de identidade, formulários de login e tokens
+│   │   │   ├── components/ # Componentes específicos (LoginForm, etc.)
+│   │   │   ├── hooks/      # Hooks de lógica de autenticação
+│   │   │   ├── services/   # Integração com API de Auth
+│   │   │   └── types/      # Definições de tipos TypeScript para Auth
+│   │   └── map/            # Dashboard principal, camadas e interações geoespaciais
+│   │       ├── components/ # UI do mapa (Sidebar, Modais, Cards de detalhes)
+│   │       ├── hooks/      # Lógica de manipulação de dados e estados do mapa
+│   │       ├── services/   # Serviços de dados (Sensores, Marés, Clima, Flood)
+│   │       ├── types/      # Tipagem estruturada para entidades geoespaciais
+│   │       └── utils/      # Utilitários de conversão e formatação de dados
+│   ├── hooks/              # Hooks customizados globais (ex: useAuth context)
+│   ├── lib/                # Configurações de bibliotecas externas e utilitários (cn)
+│   ├── pages/              # Componentes de página que definem os pontos de entrada das rotas
+│   ├── App.tsx             # Root component com orquestração de rotas e provedores
+│   ├── main.tsx            # Ponto de entrada da aplicação e montagem do DOM
+│   └── index.css           # Estilos globais e diretivas do Tailwind CSS
+├── .env.example            # Template de variáveis de ambiente
+├── components.json         # Configuração do Shadcn/UI
+├── eslint.config.js        # Regras de linting para qualidade de código
+├── GEMINI.md               # Dicionário de convenções e diretrizes do projeto
+├── index.html              # Template HTML principal
+├── package.json            # Manifest do projeto e dependências
+├── tsconfig.json           # Configuração mestre do TypeScript
+└── vite.config.ts          # Configuração do build e aliases de caminho (@/*)
 ```
 
 ## 🚀 Como Rodar a Aplicação
@@ -86,7 +106,7 @@ src/
 ## 🌐 Ecossistema MAPI
 
 O MAPI é composto por diferentes módulos que trabalham de forma integrada:
-- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Backend em Node.js/Express (ou FastAPI) responsável pelo processamento de dados e regras de negócio.
+- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Backend em Spring Boot responsável pelo processamento de dados e regras de negócio.
 - **[MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai):** Componente de inteligência artificial para predição de níveis e análise de tendências.
 - **[MAPI CLI](https://github.com/Lucas-Pavao/projeto-mapi):** Ferramentas de automação e ingestão de dados legados.
 
