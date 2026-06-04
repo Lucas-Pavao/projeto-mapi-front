@@ -1,85 +1,92 @@
-# Projeto MAPI - Frontend 🗺️✨
+# MAPI - Plataforma de Monitoramento Ambiental 🗺️✨
 
-O **MAPI Frontend** é uma plataforma avançada de visualização geoespacial desenvolvida para o monitoramento em tempo real de dados ambientais e hidrológicos. Focado na Região Metropolitana do Recife, o sistema integra dados de diversos sensores IoT e APIs meteorológicas em uma interface intuitiva e moderna.
+O **MAPI Frontend** é a interface principal do ecossistema MAPI, uma solução avançada de visualização geoespacial focada na Região Metropolitana do Recife. O sistema foi projetado para consolidar dados de sensores IoT, previsões meteorológicas e informações hidrológicas em um dashboard interativo e de alta performance.
+
+## 📝 Descrição do Projeto
+
+O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públicos e pesquisadores, permitindo o acompanhamento em tempo real de níveis de marés, precipitação e áreas de risco. Através de uma integração fluida com o [MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api) e modelos de IA do [MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai), o frontend entrega visualizações precisas e alertas inteligentes.
+
+### Principais Diferenciais:
+- **Visualização Geoespacial Dinâmica:** Uso de MapLibre GL para renderização eficiente de grandes conjuntos de dados.
+- **Integração IoT:** Exibição em tempo real de status de sensores e níveis críticos.
+- **Design Adaptativo:** Interface moderna com suporte a temas Dark e Light, otimizada para operação em centros de comando.
+- **Gestão de Alertas:** Sistema de monitoramento de pontos críticos com histórico de inundação.
 
 ## 🛠️ Tecnologias Escolhidas
 
-- **Framework:** React 19 (Functional Components & Hooks)
-- **Linguagem:** TypeScript
-- **Build Tool:** Vite
-- **Estilização:** Tailwind CSS com Shadcn UI
-- **Mapas:** MapLibre GL e React Map GL
-- **Comunicação:** Axios
-- **Roteamento:** React Router
-
-## ✨ Funcionalidades / Features
-
-- 📍 **Mapa Interativo:** Visualização em tempo real de estações e sensores com suporte a temas Dark/Light.
-- 📊 **Monitoramento Live:** Acompanhamento de níveis de chuva, umidade e status de bateria dos sensores IoT.
-- 🌊 **Gestão de Marés:** Visualização de tábuas de marés e integração com dados do Porto de Recife.
-- 🔍 **Análise de Pontos Críticos:** Monitoramento específico de áreas com histórico de inundação.
-- 🔐 **Área Restrita:** Autenticação JWT para acesso a ferramentas de administração e ingestão de dados.
+| Categoria | Tecnologia |
+| :--- | :--- |
+| **Framework Core** | [React 19](https://react.dev/) |
+| **Linguagem** | [TypeScript](https://www.typescriptlang.org/) |
+| **Bundler** | [Vite 8](https://vitejs.dev/) |
+| **Mapas** | [MapLibre GL](https://maplibre.org/) & [React Map GL](https://visgl.github.io/react-map-gl/) |
+| **Estilização** | [Tailwind CSS 4](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/) |
+| **Roteamento** | [React Router 7](https://reactrouter.com/) |
+| **Comunicação** | [Axios](https://axios-http.com/) |
+| **Ícones** | [Lucide React](https://lucide.dev/) |
 
 ## 📂 Estrutura de Pastas
 
-O projeto utiliza uma **Arquitetura Baseada em Funcionalidades (Feature-Based Architecture)**:
+O projeto adota uma **Arquitetura Baseada em Funcionalidades (Feature-Based Architecture)**, facilitando a escalabilidade e manutenção:
 
 ```text
-projeto-mapi-front/
-├── src/
-│   ├── assets/             # Recursos estáticos (imagens, ícones)
-│   ├── components/         # Componentes UI reutilizáveis (Shadcn)
-│   ├── features/           # Módulos de domínio (auth, map, sensors)
-│   ├── hooks/              # Hooks globais (useAuth, useMap)
-│   ├── lib/                # Configurações de bibliotecas (axios, tailwind merge)
-│   ├── pages/              # Componentes de página (Login, Map)
-│   ├── services/           # Clientes de API e serviços globais
-│   ├── types/              # Definições de tipos TypeScript
-│   └── utils/              # Funções utilitárias
-├── public/                 # Arquivos públicos estáticos
-├── package.json            # Gestão de dependências e scripts
-└── vite.config.ts          # Configuração do Vite
+src/
+├── assets/             # Recursos estáticos (imagens, ícones globais)
+├── components/         # Componentes UI básicos e reutilizáveis
+│   └── ui/             # Componentes Shadcn (Button, Input, Map, etc.)
+├── features/           # Módulos isolados por domínio de negócio
+│   ├── authentication/ # Login, AuthProvider, serviços de auth
+│   └── map/            # MapView, Sidebar de sensores, lógica de camadas
+├── hooks/              # Custom hooks globais (ex: useAuth)
+├── lib/                # Configurações de libs externas e utilitários (cn, utils)
+├── pages/              # Componentes de página (rotas principais)
+├── App.tsx             # Orquestrador de rotas e providers
+└── main.tsx            # Ponto de entrada da aplicação
 ```
 
-## 📋 Pré-requisitos
+## 🚀 Como Rodar a Aplicação
 
-- Node.js v20 ou superior.
-- NPM ou PNPM instalado.
+### Pré-requisitos
+- **Node.js:** Versão 20 ou superior.
+- **Gerenciador de Pacotes:** NPM (incluído no Node).
 
-## 🚀 Como instalar e rodar
+### Passo a Passo
 
-1. **Clone o repositório:**
+1. **Clonar o Repositório:**
    ```bash
    git clone https://github.com/Lucas-Pavao/projeto-mapi-front.git
    cd projeto-mapi-front
    ```
 
-2. **Instale as dependências:**
+2. **Instalar Dependências:**
    ```bash
    npm install
    ```
 
-3. **Configure as variáveis de ambiente:**
+3. **Configuração de Ambiente:**
+   Crie um arquivo `.env` na raiz do projeto (ou copie do `.env.example`):
    ```bash
-   cp .env.example .env
-   # Ajuste a variável VITE_API_URL para apontar para o seu backend
+   VITE_API_URL=http://localhost:3000
    ```
+   *Certifique-se de que o [MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api) esteja rodando para o funcionamento completo.*
 
-4. **Inicie o servidor de desenvolvimento:**
+4. **Executar em Desenvolvimento:**
    ```bash
    npm run dev
    ```
+   Acesse: `http://localhost:5173`
 
-A aplicação estará disponível em `http://localhost:5173`.
+5. **Gerar Build de Produção:**
+   ```bash
+   npm run build
+   ```
 
-## 🤝 Como contribuir
+## 🌐 Ecossistema MAPI
 
-1. Faça um **Fork** do projeto.
-2. Crie uma **Branch** para sua modificação (`git checkout -b feature/nova-view`).
-3. Faça o **Commit** de suas alterações (`git commit -m 'Add: nova visualização de sensores'`).
-4. Faça o **Push** para a sua Branch (`git push origin feature/nova-view`).
-5. Abra um **Pull Request**.
+O MAPI é composto por diferentes módulos que trabalham de forma integrada:
+- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Backend em Node.js/Express (ou FastAPI) responsável pelo processamento de dados e regras de negócio.
+- **[MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai):** Componente de inteligência artificial para predição de níveis e análise de tendências.
+- **[MAPI CLI](https://github.com/Lucas-Pavao/projeto-mapi):** Ferramentas de automação e ingestão de dados legados.
 
-## 📄 Licença
-
-Este projeto está sob a licença **MIT**.
+---
+Desenvolvido com 💙 para o monitoramento inteligente.
