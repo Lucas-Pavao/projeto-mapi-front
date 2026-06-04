@@ -227,13 +227,10 @@ export const MapView: React.FC = () => {
   const [floodPointStatus, setFloodPointStatus] = useState<PreciseDataResponse | null>(null);
   const [isFetchingHistory, setIsFetchingHistory] = useState(false);
   const [isFetchingStatus, setIsFetchingStatus] = useState(false);
-  const [showSystemSettings, setShowSystemSettings] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSeverity, setReportSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [reportDescription, setReportDescription] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const mapRef = useRef<MapRef>(null);
 
   const selectedSensor = useMemo(() => 
@@ -455,29 +452,6 @@ export const MapView: React.FC = () => {
     }
   };
 
-  const handleFullSync = async () => {
-    setIsSyncing(true);
-    setSyncStatus('Iniciando sincronização completa...');
-    try {
-      const result = await mapService.startFullSync(1); // sync last year
-      setSyncStatus(`Sucesso: ${result}`);
-    } catch (error) {
-      setSyncStatus('Erro na sincronização histórica.');
-    } finally {
-      setIsSyncing(false);
-    }
-  };
-
-  const handleWipeData = async () => {
-    if (!confirm('ATENÇÃO: Isso apagará TODOS os dados históricos de clima e sensores. Continuar?')) return;
-    try {
-      await mapService.wipeDatabase();
-      alert('Banco de dados limpo com sucesso.');
-    } catch (error) {
-      alert('Erro ao limpar banco de dados.');
-    }
-  };
-
   const toggleLayer = (layer: string) => {
     setActiveLayers(prev => 
       prev.includes(layer) 
@@ -508,14 +482,6 @@ export const MapView: React.FC = () => {
 
         <div className="flex items-center gap-3 pointer-events-auto">
           <div className="bg-zinc-900/95 border border-zinc-800 px-4 py-2 rounded-lg flex items-center gap-3 shadow-2xl">
-            <button 
-              onClick={() => setShowSystemSettings(true)}
-              className="text-zinc-400 hover:text-primary transition-colors p-1"
-              title="Configurações do Sistema"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-            <div className="w-px h-4 bg-zinc-700 mx-1" />
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold text-white">{user?.username || 'Operador'}</p>
               <p className="text-[10px] text-zinc-500 uppercase font-bold tracking-tighter">Sessão Ativa</p>
@@ -1554,87 +1520,6 @@ export const MapView: React.FC = () => {
                 <h2 className="text-sm font-bold tracking-[0.2em] text-white uppercase animate-pulse">Carregando Sistema</h2>
                 <p className="text-[10px] text-zinc-500 mt-2 uppercase font-medium tracking-tighter">MAPI • Monitoramento Ambiental</p>
               </div>
-            </div>
-          )}
-
-          {/* System Settings Modal */}
-          {showSystemSettings && (
-            <div className="absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-              <Card className="w-full max-w-2xl bg-zinc-900 border-zinc-800 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                <CardHeader className="border-b border-zinc-800 flex flex-row items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Shield className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg font-bold text-white">Configurações do Sistema</CardTitle>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowSystemSettings(false)}>
-                    <CloseIcon className="h-5 w-5" />
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-800 space-y-3">
-                      <div className="flex items-center gap-2 text-zinc-300 font-bold text-xs uppercase tracking-widest">
-                        <Database className="h-4 w-4" /> Gestão de Dados
-                      </div>
-                      <div className="space-y-2">
-                        <Button 
-                          className="w-full justify-start gap-3 text-[10px] font-bold uppercase h-10" 
-                          variant="secondary"
-                          onClick={handleFullSync}
-                          disabled={isSyncing}
-                        >
-                          <RefreshCw className={cn("h-4 w-4", isSyncing && "animate-spin")} />
-                          Sincronização Histórica Total
-                        </Button>
-                        <Button 
-                          className="w-full justify-start gap-3 text-[10px] font-bold uppercase h-10 text-red-400 hover:text-red-300" 
-                          variant="ghost"
-                          onClick={handleWipeData}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Limpar Banco de Dados
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="bg-zinc-800/50 p-4 rounded-xl border border-zinc-800 space-y-3">
-                      <div className="flex items-center gap-2 text-zinc-300 font-bold text-xs uppercase tracking-widest">
-                        <Table className="h-4 w-4" /> Exportação Global
-                      </div>
-                      <div className="space-y-2">
-                        <Button 
-                          className="w-full justify-start gap-3 text-[10px] font-bold uppercase h-10" 
-                          variant="outline"
-                          onClick={async () => {
-                             try {
-                               const csv = await mapService.getAllPointsIADataCsv(30);
-                               const blob = new Blob([csv], { type: 'text/csv' });
-                               const url = URL.createObjectURL(blob);
-                               const link = document.createElement('a');
-                               link.href = url;
-                               link.download = `full_dataset_${new Date().toISOString().split('T')[0]}.csv`;
-                               link.click();
-                             } catch (e) { alert('Erro na exportação'); }
-                          }}
-                        >
-                          <FileDown className="h-4 w-4" />
-                          Dataset Todos os Pontos (30d)
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {syncStatus && (
-                    <div className="p-3 bg-zinc-950 rounded-lg border border-zinc-800">
-                      <p className="text-[10px] font-mono text-emerald-500 break-words">{syncStatus}</p>
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t border-zinc-800 flex justify-end">
-                    <Button variant="outline" className="text-xs uppercase font-bold" onClick={() => setShowSystemSettings(false)}>Fechar</Button>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
 
