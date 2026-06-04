@@ -9,7 +9,11 @@ import type {
   TideTableResponseDTO,
   TabuaMareResponseListObject,
   TabuaMareResponseListString,
-  TabuaMareResponseObject
+  TabuaMareResponseObject,
+  FloodEventDTO,
+  ScraperEventDTO,
+  DataHealthReportDTO,
+  UnifiedDataDTO
 } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -159,6 +163,90 @@ export const mapService = {
 
   async getHarborNamesByState(state: string): Promise<TabuaMareResponseListObject> {
     const response = await axios.get<TabuaMareResponseListObject>(`${API_URL}/api/tabua-mare/harbors/state/${state}`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  // Flood Events
+  async reportFlood(data: Partial<FloodEventDTO>): Promise<FloodEventDTO> {
+    const response = await axios.post<FloodEventDTO>(`${API_URL}/api/eventos-alagamento`, data, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async ingestScraperEvent(data: ScraperEventDTO): Promise<FloodEventDTO> {
+    const response = await axios.post<FloodEventDTO>(`${API_URL}/api/eventos-alagamento/ingest`, data, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async getFloodHistory(slug: string): Promise<FloodEventDTO[]> {
+    const response = await axios.get<FloodEventDTO[]>(`${API_URL}/api/eventos-alagamento/${slug}`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  // Export Data
+  async getUnifiedIAData(slug: string, days = 30): Promise<UnifiedDataDTO[]> {
+    const response = await axios.get<UnifiedDataDTO[]>(`${API_URL}/api/export/ia-dataset/${slug}`, {
+      params: { days },
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async getUnifiedIADataCsv(slug: string, days = 30): Promise<string> {
+    const response = await axios.get<string>(`${API_URL}/api/export/ia-dataset/${slug}/csv`, {
+      params: { days },
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async getAllPointsIADataCsv(days = 0): Promise<string> {
+    const response = await axios.get<string>(`${API_URL}/api/export/ia-dataset/all/csv`, {
+      params: { days },
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  // Admin Ingestion
+  async checkDataIntegrity(): Promise<DataHealthReportDTO[]> {
+    const response = await axios.get<DataHealthReportDTO[]>(`${API_URL}/api/admin/ingestion/check-integrity`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async repairStations(): Promise<string> {
+    const response = await axios.post<string>(`${API_URL}/api/admin/ingestion/repair-stations`, null, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async startFullSync(years = 5): Promise<string> {
+    const response = await axios.post<string>(`${API_URL}/api/admin/ingestion/historical-full-sync`, null, {
+      params: { years },
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async wipeDatabase(): Promise<string> {
+    const response = await axios.delete<string>(`${API_URL}/api/admin/ingestion/wipe-database`, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  },
+
+  async alignEvents(): Promise<string> {
+    const response = await axios.post<string>(`${API_URL}/api/admin/ingestion/align-events`, null, {
       headers: getAuthHeader(),
     });
     return response.data;
