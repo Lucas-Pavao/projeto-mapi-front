@@ -1,53 +1,85 @@
-# Projeto MAPI - Frontend 🗺️📊
+# Projeto MAPI - Frontend 🗺️✨
 
-O **MAPI Frontend** é a interface web do Projeto MAPI (Monitoramento de Águas e Pluviometria Inteligente). Construído com tecnologias de ponta, o dashboard oferece uma visualização intuitiva e em tempo real dos dados geoespaciais e ambientais da Região Metropolitana do Recife.
+O **MAPI Frontend** é uma plataforma avançada de visualização geoespacial desenvolvida para o monitoramento em tempo real de dados ambientais e hidrológicos. Focado na Região Metropolitana do Recife, o sistema integra dados de diversos sensores IoT e APIs meteorológicas em uma interface intuitiva e moderna.
 
-## 📋 O que é o projeto?
+## 🛠️ Tecnologias Escolhidas
 
-O frontend atua como a camada de visualização do sistema, permitindo que gestores públicos e a população monitorem o nível dos rios, a precipitação pluviométrica e a tábua de marés. O foco principal é a detecção visual de áreas de risco e o acompanhamento de sensores IoT distribuídos geograficamente.
+- **Framework:** React 19 (Functional Components & Hooks)
+- **Linguagem:** TypeScript
+- **Build Tool:** Vite
+- **Estilização:** Tailwind CSS com Shadcn UI
+- **Mapas:** MapLibre GL e React Map GL
+- **Comunicação:** Axios
+- **Roteamento:** React Router
 
-## 🏗️ Arquitetura
+## ✨ Funcionalidades / Features
 
-O projeto adota uma **Feature-Based Architecture** (Arquitetura Baseada em Funcionalidades), que organiza o código em torno de domínios de negócio em vez de tipos técnicos:
+- 📍 **Mapa Interativo:** Visualização em tempo real de estações e sensores com suporte a temas Dark/Light.
+- 📊 **Monitoramento Live:** Acompanhamento de níveis de chuva, umidade e status de bateria dos sensores IoT.
+- 🌊 **Gestão de Marés:** Visualização de tábuas de marés e integração com dados do Porto de Recife.
+- 🔍 **Análise de Pontos Críticos:** Monitoramento específico de áreas com histórico de inundação.
+- 🔐 **Área Restrita:** Autenticação JWT para acesso a ferramentas de administração e ingestão de dados.
 
-1.  **Funcionalidades (Features):** Cada módulo (ex: `authentication`, `map`) contém seus próprios componentes, hooks, serviços e tipos. Isso facilita o isolamento e a escalabilidade do projeto.
-2.  **Componentes UI:** Utiliza uma biblioteca de componentes baseada no **Shadcn UI**, garantindo consistência visual e acessibilidade.
-3.  **Gerenciamento de Estado:** Utiliza a Context API do React para estados globais como autenticação e preferências de mapa.
-4.  **Motor de Mapa:** Baseado no **MapLibre GL**, permitindo renderização de alta performance de camadas vetoriais e marcadores dinâmicos.
+## 📂 Estrutura de Pastas
 
-## 📂 Estrutura do Projeto
+O projeto utiliza uma **Arquitetura Baseada em Funcionalidades (Feature-Based Architecture)**:
 
 ```text
-src/
-├── assets/             # Imagens, ícones e arquivos estáticos
-├── components/
-│   └── ui/             # Componentes de interface reutilizáveis (botões, cards, etc.)
-├── features/           # Módulos principais por domínio
-│   ├── authentication/ # Login, registro e serviços de auth
-│   └── map/            # Visualização do mapa, sidebar de sensores e filtros
-├── hooks/              # Hooks customizados globais (ex: useAuth)
-├── lib/                # Configurações e utilitários (axios, tailwind merge)
-├── pages/              # Componentes de página (rotas principais)
-└── services/           # Clientes de API e comunicação externa
+projeto-mapi-front/
+├── src/
+│   ├── assets/             # Recursos estáticos (imagens, ícones)
+│   ├── components/         # Componentes UI reutilizáveis (Shadcn)
+│   ├── features/           # Módulos de domínio (auth, map, sensors)
+│   ├── hooks/              # Hooks globais (useAuth, useMap)
+│   ├── lib/                # Configurações de bibliotecas (axios, tailwind merge)
+│   ├── pages/              # Componentes de página (Login, Map)
+│   ├── services/           # Clientes de API e serviços globais
+│   ├── types/              # Definições de tipos TypeScript
+│   └── utils/              # Funções utilitárias
+├── public/                 # Arquivos públicos estáticos
+├── package.json            # Gestão de dependências e scripts
+└── vite.config.ts          # Configuração do Vite
 ```
 
-## ⚙️ Como o projeto funciona?
+## 📋 Pré-requisitos
 
-1.  **Renderização Geoespacial:** Ao carregar o mapa, o frontend consome as coordenadas dos sensores da API e os renderiza como marcadores dinâmicos sobre o MapLibre GL.
-2.  **Monitoramento em Tempo Real:** O dashboard exibe informações atualizadas vindas da API Spring Boot, incluindo gráficos de maré e alertas meteorológicos.
-3.  **Fluxo de Autenticação:** O sistema gerencia o ciclo de vida dos tokens JWT, armazenando o Access Token em memória/estado e o Refresh Token via cookies seguros ou armazenamento local, garantindo uma navegação sem interrupções.
-4.  **Responsividade:** A interface é construída com Tailwind CSS, sendo totalmente adaptável para dispositivos móveis e desktops.
+- Node.js v20 ou superior.
+- NPM ou PNPM instalado.
 
-## 🚀 Tecnologias Utilizadas
+## 🚀 Como instalar e rodar
 
-- **React 19**
-- **TypeScript**
-- **Vite** (Build Tool)
-- **Tailwind CSS** (Estilização)
-- **MapLibre GL** (Mapas)
-- **Shadcn UI + Lucide React** (Componentes e Ícones)
-- **Axios** (Comunicação HTTP)
-- **Zustand / Context API** (Estado)
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/Lucas-Pavao/projeto-mapi-front.git
+   cd projeto-mapi-front
+   ```
 
----
-**Interface desenvolvida para clareza e rapidez na tomada de decisão.**
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure as variáveis de ambiente:**
+   ```bash
+   cp .env.example .env
+   # Ajuste a variável VITE_API_URL para apontar para o seu backend
+   ```
+
+4. **Inicie o servidor de desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+
+A aplicação estará disponível em `http://localhost:5173`.
+
+## 🤝 Como contribuir
+
+1. Faça um **Fork** do projeto.
+2. Crie uma **Branch** para sua modificação (`git checkout -b feature/nova-view`).
+3. Faça o **Commit** de suas alterações (`git commit -m 'Add: nova visualização de sensores'`).
+4. Faça o **Push** para a sua Branch (`git push origin feature/nova-view`).
+5. Abra um **Pull Request**.
+
+## 📄 Licença
+
+Este projeto está sob a licença **MIT**.
