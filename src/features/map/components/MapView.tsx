@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Map, MapControls, MapMarker, MarkerContent, MapPopup } from '@/components/ui/map';
+import { Map, MapControls, MapMarker, MarkerContent, MapPopup, MapCircle } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,7 @@ import {
 
 import { exportService } from '../services/export.service';
 import { floodService } from '../services/flood.service';
-import { getSensorConfig, getBatteryStatus } from '../utils/sensor';
+import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
 import { FloodPointPopup } from './FloodPointPopup';
@@ -84,7 +84,99 @@ export const MapView: React.FC = () => {
       const fetchStatus = async () => {
         setIsFetchingStatus(true);
         try {
-          const data = await floodService.getPointStatus(selectedFloodPoint.id_ponto);
+          // Fetch BOTH point status (for sensor config) and rich analysis (for fallbacks)
+          const [pointData, preciseAnalysis] = await Promise.all([
+            floodService.getPointStatus(selectedFloodPoint.id_ponto),
+            floodService.getPreciseData(selectedFloodPoint.latitude, selectedFloodPoint.longitude)
+          ]);
+          
+          // Normalize data: FloodPointResponseDTO has liveData, MapiResponseDTO has preciseData.
+          // We prioritize the point-specific liveData if available.
+          const data: PreciseDataResponse = {
+            ...preciseAnalysis,
+            preciseData: pointData.liveData || preciseAnalysis.preciseData,
+            floodPrediction: pointData.floodPrediction || preciseAnalysis.floodPrediction,
+            // Keep nearestSensor and openMeteoData from preciseAnalysis as they are useful fallbacks
+          };
+          
+          // Augment with individual sensor data if metrics are still missing
+          if (isMounted) {
+            const sensorIds = pointData.sensores_proximos_ids || [];
+            if (sensorIds.length > 0) {
+              const sensorReadings = await Promise.all(
+                sensorIds.map(async (id) => {
+                  try {
+                    const s = await mapService.getLatestBySensorId(id);
+                    return s;
+                  } catch {
+                    return null;
+                  }
+                })
+              );
+              
+              const validSensors = sensorReadings.filter(s => s !== null);
+              
+              if (validSensors.length > 0) {
+                if (!data.preciseData) {
+                  data.preciseData = {
+                    source: 'Individual Sensors',
+                    timestamp: new Date().toISOString(),
+                    latestReadings: [],
+                    precipitation: null,
+                    temperature: null,
+                    humidity: null,
+                    pressure: null,
+                    windSpeed: null,
+                    waterLevel: null,
+                    flowRate: null,
+                    tideHeight: null,
+                    waveHeight: null,
+                    waveDirection: null,
+                    wavePeriod: null,
+                    tideHeightTabuaMare: null,
+                    solarRadiation: null,
+                    unitPrecipitation: null,
+                    unitTemperature: null,
+                    unitWaterLevel: null,
+                    unitTide: null,
+                    unitWave: null,
+                    unitWindSpeed: null,
+                    unitPressure: null,
+                    unitSolarRadiation: null,
+                    unitFlowRate: null,
+                    message: 'Dados consolidados via consulta individual.'
+                  };
+                }
+
+                // If the list of readings is empty, populate it
+                if (!data.preciseData.latestReadings || data.preciseData.latestReadings.length === 0) {
+                  data.preciseData.latestReadings = validSensors.map(s => ({
+                    sensorId: s.sensorId,
+                    value: s.value || 0,
+                    unit: s.unit || '',
+                    type: s.type || 'Sensor',
+                    timestamp: formatApiTimestamp(s.timestamp),
+                    latitude: s.latitude || 0,
+                    longitude: s.longitude || 0,
+                    distanceKm: 0
+                  }));
+                }
+
+                // Backfill missing top-level metrics from individual sensors
+                validSensors.forEach(s => {
+                  if (data.preciseData.temperature == null) data.preciseData.temperature = s.temperature;
+                  if (data.preciseData.humidity == null) data.preciseData.humidity = s.humidity;
+                  if (data.preciseData.pressure == null) data.preciseData.pressure = s.pressure;
+                  if (data.preciseData.windSpeed == null) data.preciseData.windSpeed = s.windSpeed;
+                  if (data.preciseData.precipitation == null) data.preciseData.precipitation = s.accumulatedPrecipitation;
+                  if (data.preciseData.waterLevel == null) data.preciseData.waterLevel = s.waterLevel;
+                  if (data.preciseData.flowRate == null) data.preciseData.flowRate = s.flowRate;
+                  if (data.preciseData.tideHeight == null) data.preciseData.tideHeight = s.tideHeight;
+                });
+              }
+            }
+          }
+
           if (isMounted) setFloodPointStatus(data);
         } catch (error) {
           console.error('Erro ao buscar status do ponto:', error);
@@ -98,7 +190,7 @@ export const MapView: React.FC = () => {
         setFloodPointStatus(null);
       };
     }
-  }, [selectedFloodPoint?.id_ponto, setIsFetchingStatus, setFloodPointStatus]);
+  }, [selectedFloodPoint?.id_ponto, selectedFloodPoint?.latitude, selectedFloodPoint?.longitude, setIsFetchingStatus, setFloodPointStatus]);
 
   const handleExportCsv = async (point: FloodPointResponseDTO) => {
     try {
@@ -158,6 +250,66 @@ export const MapView: React.FC = () => {
       point.latitude !== 0 && point.longitude !== 0
     );
   }, [floodPoints, activeLayers]);
+
+  // Highlighting logic
+  const circleCenter = useMemo<[number, number] | null>(() => {
+    if (clickedLocation) return [clickedLocation.lng, clickedLocation.lat];
+    if (selectedFloodPoint && selectedFloodPoint.latitude && selectedFloodPoint.longitude) {
+      return [selectedFloodPoint.longitude, selectedFloodPoint.latitude];
+    }
+    return null;
+  }, [clickedLocation, selectedFloodPoint]);
+
+  const circleColor = useMemo(() => {
+    if (clickedLocation) return "#6366f1"; // Primary color for clicked location
+    
+    if (selectedFloodPoint) {
+      // Prioritize the real-time status prediction, fallback to point prediction
+      const riskLevel = floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel;
+      if (riskLevel === 'CRITICAL') return '#ef4444'; // red-500
+      if (riskLevel === 'HIGH') return '#f97316';     // orange-500
+      if (riskLevel === 'MEDIUM') return '#f59e0b';   // amber-500
+      if (riskLevel === 'LOW') return '#10b981';      // emerald-500
+      return '#ef4444'; // Default red for flood points
+    }
+    
+    return "#6366f1";
+  }, [clickedLocation, selectedFloodPoint, floodPointStatus]);
+
+  const nearbySensorIds = useMemo(() => {
+    const ids = new Set<string>();
+    
+    // From clicked location info
+    if (locationInfo?.preciseData?.sensorIds) {
+      locationInfo.preciseData.sensorIds.forEach(id => ids.add(id));
+    }
+    if (locationInfo?.preciseData?.latestReadings) {
+      locationInfo.preciseData.latestReadings.forEach(d => ids.add(d.sensorId));
+    }
+    
+    // From selected flood point status
+    if (floodPointStatus?.preciseData?.sensorIds) {
+      floodPointStatus.preciseData.sensorIds.forEach(id => ids.add(id));
+    }
+    if (floodPointStatus?.preciseData?.latestReadings) {
+      floodPointStatus.preciseData.latestReadings.forEach(d => ids.add(d.sensorId));
+    }
+
+    // From selected flood point itself
+    if (selectedFloodPoint?.sensores_proximos_ids) {
+      selectedFloodPoint.sensores_proximos_ids.forEach(id => ids.add(id));
+    }
+
+    // From selected sensor status
+    if (sensorStatus?.preciseData?.sensorIds) {
+      sensorStatus.preciseData.sensorIds.forEach(id => ids.add(id));
+    }
+    if (sensorStatus?.preciseData?.latestReadings) {
+      sensorStatus.preciseData.latestReadings.forEach(d => ids.add(d.sensorId));
+    }
+
+    return ids;
+  }, [locationInfo, floodPointStatus, selectedFloodPoint, sensorStatus]);
 
   return (
     <div className="h-screen w-full bg-zinc-950 overflow-hidden font-sans selection:bg-primary/30 text-zinc-300 relative">
@@ -237,6 +389,18 @@ export const MapView: React.FC = () => {
         >
           <MapControls showLocate showFullscreen position="bottom-right" />
           
+          {circleCenter && (
+            <MapCircle 
+              center={circleCenter} 
+              radiusKm={3} 
+              color={circleColor} 
+              opacity={0.1} 
+              strokeColor={circleColor} 
+              strokeWidth={2}
+              strokeOpacity={0.4}
+            />
+          )}
+
           {/* Floating Controls Overlay (Right) */}
           <div className="absolute top-24 right-4 z-20 flex flex-col gap-3">
             <div className="relative">
@@ -299,6 +463,7 @@ export const MapView: React.FC = () => {
             const config = getSensorConfig(sensor);
             const { isCharging } = getBatteryStatus(sensor.batteryStatus);
             const isSelected = selectedSensorId === sensor.id;
+            const isNearby = nearbySensorIds.has(sensor.sensorId);
 
             return (
               <MapMarker 
@@ -323,7 +488,8 @@ export const MapView: React.FC = () => {
                     <div className={cn(
                       "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
                       isCharging ? "bg-emerald-600" : config.color,
-                      isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : ''
+                      isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : '',
+                      isNearby && !isSelected ? 'ring-2 ring-primary/60 scale-105' : ''
                     )}>
                       <div className="-rotate-45 flex items-center justify-center h-full w-full">
                          {isCharging ? <BatteryCharging className="h-5 w-5 text-white" /> : React.createElement(config.icon, { className: "h-5 w-5 text-white" })}
@@ -335,10 +501,14 @@ export const MapView: React.FC = () => {
                       <div className="absolute -bottom-1 w-2 h-2 bg-white rounded-full blur-[2px] animate-pulse" />
                     )}
 
-                    {(isCharging || isSelected) && (
+                    {isNearby && !isSelected && (
+                      <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary/60 rounded-full blur-[1px]" />
+                    )}
+
+                    {(isCharging || isSelected || isNearby) && (
                       <div className={cn(
                         "absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none",
-                        isCharging ? "bg-emerald-400" : "bg-white"
+                        isCharging ? "bg-emerald-400" : (isSelected ? "bg-white" : "bg-primary")
                       )} />
                     )}
                   </div>
@@ -349,6 +519,23 @@ export const MapView: React.FC = () => {
 
           {filteredFloodPointsForMap.map((point: FloodPointResponseDTO) => {
             const isSelected = selectedFloodPointId === point.id;
+            
+            // Risk level color mapping
+            const riskLevel = (isSelected && floodPointStatus?.floodPrediction?.riskLevel) || point.floodPrediction?.riskLevel;
+            const colorClass = 
+              riskLevel === 'CRITICAL' ? 'bg-red-600' :
+              riskLevel === 'HIGH' ? 'bg-orange-500' :
+              riskLevel === 'MEDIUM' ? 'bg-amber-500' :
+              riskLevel === 'LOW' ? 'bg-emerald-500' : 
+              'bg-red-600';
+            
+            const pingColorClass = 
+              riskLevel === 'CRITICAL' ? 'bg-red-400' :
+              riskLevel === 'HIGH' ? 'bg-orange-400' :
+              riskLevel === 'MEDIUM' ? 'bg-amber-400' :
+              riskLevel === 'LOW' ? 'bg-emerald-400' : 
+              'bg-red-400';
+
             return (
               <MapMarker 
                 key={point.id} 
@@ -371,7 +558,7 @@ export const MapView: React.FC = () => {
                   <div className="relative group cursor-pointer flex flex-col items-center">
                     <div className={cn(
                       "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
-                      "bg-red-600",
+                      colorClass,
                       isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : ''
                     )}>
                       <div className="-rotate-45 flex items-center justify-center h-full w-full">
@@ -384,7 +571,7 @@ export const MapView: React.FC = () => {
                       <div className="absolute -bottom-1 w-2 h-2 bg-white rounded-full blur-[2px] animate-pulse" />
                     )}
 
-                    <div className="absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none bg-red-400" />
+                    <div className={cn("absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none", pingColorClass)} />
                   </div>
                 </MarkerContent>
               </MapMarker>
@@ -420,6 +607,7 @@ export const MapView: React.FC = () => {
                   point={selectedFloodPoint}
                   onShowDetails={() => setShowDetailCard(true)}
                   status={floodPointStatus}
+                  isFetchingStatus={isFetchingStatus}
                 />
               </MapPopup>
             )}
@@ -576,6 +764,58 @@ export const MapView: React.FC = () => {
                          )}
                       </div>
 
+                      {/* Dynamic Nearby Sensors List */}
+                      {locationInfo.preciseData?.latestReadings && locationInfo.preciseData.latestReadings.length > 0 && (
+                        <div className="space-y-3">
+                           <div className="flex items-center justify-between px-1">
+                             <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em]">Sensores no Raio (3km)</p>
+                             <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                               {locationInfo.preciseData.latestReadings.length} ativos
+                             </span>
+                           </div>
+                           <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                             {locationInfo.preciseData.latestReadings.map((reading) => (
+                               <div 
+                                  key={`${reading.sensorId}-${reading.type}`}
+                                  className="bg-black/40 p-3 rounded-2xl border border-white/5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all hover:bg-white/5"
+                                  onClick={() => {
+                                    const fullSensor = sensors.find(s => s.sensorId === reading.sensorId);
+                                    if (fullSensor) {
+                                      handleSensorClick(fullSensor);
+                                      if (fullSensor.latitude && fullSensor.longitude) {
+                                        mapRef.current?.flyTo({
+                                          center: [fullSensor.longitude, fullSensor.latitude],
+                                          zoom: 16
+                                        });
+                                      }
+                                    }
+                                  }}
+                               >
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-primary transition-colors">
+                                      <Activity className="h-4 w-4" />
+                                    </div>
+                                    <div>
+                                       <p className="text-[10px] font-black text-white uppercase truncate max-w-[120px]">
+                                         {reading.sensorId}
+                                       </p>
+                                       <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+                                          {reading.type} • {reading.distanceKm.toFixed(1)}km
+                                       </p>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-sm font-black text-white italic">
+                                      {reading.value.toFixed(1)}
+                                      <small className="text-[9px] font-bold text-zinc-600 ml-1 not-italic">{reading.unit}</small>
+                                    </p>
+                                  </div>
+                               </div>
+                             ))}
+                           </div>
+                        </div>
+                      )}
+
                       {/* Tide & Harbor Status */}
                       {(locationInfo.preciseData?.tideHeight != null || nearestHarbor) && (
                         <div className="bg-blue-600/10 p-5 rounded-3xl border border-blue-500/20 space-y-4">
@@ -595,52 +835,6 @@ export const MapView: React.FC = () => {
                               <div className="space-y-1 text-right border-l border-white/10 pl-4">
                                  <p className="text-[8px] text-zinc-500 font-black uppercase">Monitorado</p>
                                  <p className="text-xl font-black text-blue-400 italic">{locationInfo.preciseData?.tideHeight?.toFixed(2) ?? '--'}m</p>
-                              </div>
-                           </div>
-                        </div>
-                      )}
-
-                      {/* Nearest Sensor Reference */}
-                      {locationInfo.nearestSensor && (
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between px-1">
-                             <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em]">Estação Próxima</p>
-                             <span className="text-[9px] text-primary font-black uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full">
-                               {locationInfo.distanceToNearestSensorKm?.toFixed(1)}km
-                             </span>
-                           </div>
-                           <div 
-                              className="bg-black/40 p-4 rounded-2xl border border-white/5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all hover:bg-white/5"
-                              onClick={() => {
-                                handleSensorClick(locationInfo.nearestSensor);
-                                if (locationInfo.nearestSensor.latitude && locationInfo.nearestSensor.longitude) {
-                                  mapRef.current?.flyTo({
-                                    center: [locationInfo.nearestSensor.longitude, locationInfo.nearestSensor.latitude],
-                                    zoom: 16
-                                  });
-                                }
-                              }}
-                           >
-                              <div className="flex items-center gap-4">
-                                <div className={cn(
-                                  "h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-110",
-                                  getSensorConfig(locationInfo.nearestSensor).color
-                                )}>
-                                  {React.createElement(getSensorConfig(locationInfo.nearestSensor).icon, { className: "h-5 w-5" })}
-                                </div>
-                                <div className="max-w-[140px]">
-                                   <p className="text-xs font-black text-white uppercase truncate">
-                                     {locationInfo.nearestSensor.stationName}
-                                   </p>
-                                   <p className="text-[9px] text-zinc-500 font-bold uppercase mt-0.5 tracking-tighter">
-                                      {locationInfo.nearestSensor.source} • {locationInfo.nearestSensor.type}
-                                   </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-lg font-black text-white italic">
-                                  {locationInfo.nearestSensor.value?.toFixed(1) ?? '--'}<span className="text-[10px] font-bold text-zinc-600 ml-1">{locationInfo.nearestSensor.unit}</span>
-                                </p>
                               </div>
                            </div>
                         </div>

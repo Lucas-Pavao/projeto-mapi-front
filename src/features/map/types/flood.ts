@@ -1,4 +1,5 @@
 import type { SensorConfigDTO } from './sensor';
+import type { PreciseData } from './common';
 
 export interface FloodPointResponseDTO {
   id: number;
@@ -12,6 +13,9 @@ export interface FloodPointResponseDTO {
   dist_canal_m: number | null;
   bacia_hidrografica: string | null;
   config_sensores: SensorConfigDTO | null;
+  sensores_proximos_ids?: string[];
+  liveData?: PreciseData;
+  floodPrediction?: FloodPredictionResponseDTO;
   active: boolean;
   tideHeight: number | null;
   tideUnit: string | null;

@@ -2,7 +2,6 @@ import api from '@/lib/api';
 import type { 
   FloodPointResponseDTO, 
   FloodPointRequestDTO, 
-  MapiResponseDTO, 
   FloodEventDTO, 
   ScraperEventDTO,
   PreciseDataResponse
@@ -19,8 +18,8 @@ export const floodService = {
     return response.data;
   },
 
-  async getPointStatus(id_ponto: string): Promise<MapiResponseDTO> {
-    const response = await api.get<MapiResponseDTO>(`/api/pontos/${id_ponto}`);
+  async getPointStatus(id_ponto: string): Promise<FloodPointResponseDTO> {
+    const response = await api.get<FloodPointResponseDTO>(`/api/pontos/${id_ponto}`);
     return response.data;
   },
 

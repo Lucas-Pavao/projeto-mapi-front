@@ -89,3 +89,21 @@ export const getBatteryStatus = (status?: string | null) => {
   
   return { isCharging, isLow, percentage };
 };
+
+export const formatApiTimestamp = (timestamp: unknown): string => {
+  if (!timestamp) return '';
+  if (Array.isArray(timestamp)) {
+    // [Year, Month, Day, Hour, Minute, Second, Nanoseconds]
+    const date = new Date(
+      timestamp[0],
+      timestamp[1] - 1,
+      timestamp[2],
+      timestamp[3] || 0,
+      timestamp[4] || 0,
+      timestamp[5] || 0
+    );
+    return date.toISOString();
+  }
+  return String(timestamp);
+};
+

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
-import { getSensorConfig, getBatteryStatus } from '../utils/sensor';
+import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
 
 interface SensorDetailCardProps {
   sensor: SensorResponseDTO;
@@ -91,7 +91,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                   </div>
                   <p className="text-xs text-zinc-400 font-medium flex items-center gap-2 pt-2">
                     <Clock className="h-3.5 w-3.5 text-primary" />
-                    Sincronizado em {sensor.timestamp ? new Date(sensor.timestamp).toLocaleString('pt-BR') : 'Data não disponível'}
+                    Sincronizado em {sensor.timestamp ? new Date(formatApiTimestamp(sensor.timestamp)).toLocaleString('pt-BR') : 'Data não disponível'}
                   </p>
                 </div>
                 <div className={cn(
