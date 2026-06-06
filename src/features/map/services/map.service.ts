@@ -23,4 +23,4 @@ export * from './weather.service';
 export * from './marine.service';
 export * from './export.service';
 export * from './admin.service';
-export * from './api';
+export * from '@/lib/api';

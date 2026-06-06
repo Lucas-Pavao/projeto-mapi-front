@@ -10,22 +10,30 @@ import {
   Zap,
   Thermometer,
   Droplets,
+  CloudRain,
   Wind,
   Sun,
-  Activity
+  Gauge
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { SensorResponseDTO } from '../types';
-import { getSensorConfig, getBatteryStatus } from '../utils/sensor';
+import type { SensorResponseDTO, PreciseDataResponse } from '../types';
+import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
 
 interface SensorDetailCardProps {
   sensor: SensorResponseDTO;
+  status?: PreciseDataResponse | null;
   onClose: () => void;
 }
 
-export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onClose }) => {
+export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, status, onClose }) => {
   const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
   const config = getSensorConfig(sensor);
+  const precise = status?.preciseData;
+
+  const formatValue = (val: number | null | undefined, decimals: number) => {
+    if (val != null && typeof val === 'number') return val.toFixed(decimals);
+    return '--';
+  };
 
   return (
     <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
@@ -75,7 +83,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onCl
                   <p className="text-xs text-zinc-500 uppercase font-bold tracking-[0.2em]">Leitura Atual</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-6xl font-black text-white tracking-tighter">
-                      {sensor.value !== null ? sensor.value : '--'}
+                      {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(2) : (sensor.value ?? '--')}
                     </span>
                     <span className="text-xl font-bold text-zinc-600 uppercase">
                       {sensor.unit || ''}
@@ -83,7 +91,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onCl
                   </div>
                   <p className="text-xs text-zinc-400 font-medium flex items-center gap-2 pt-2">
                     <Clock className="h-3.5 w-3.5 text-primary" />
-                    Sincronizado em {sensor.timestamp ? new Date(sensor.timestamp).toLocaleString('pt-BR') : 'Data não disponível'}
+                    Sincronizado em {sensor.timestamp ? new Date(formatApiTimestamp(sensor.timestamp)).toLocaleString('pt-BR') : 'Data não disponível'}
                   </p>
                 </div>
                 <div className={cn(
@@ -130,18 +138,19 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onCl
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: 'Temperatura', value: sensor.temperature, unit: '°C', icon: Thermometer, color: 'text-orange-400' },
-                    { label: 'Umidade', value: sensor.humidity, unit: '%', icon: Droplets, color: 'text-blue-400' },
-                    { label: 'Vento', value: sensor.windSpeed, unit: 'km/h', icon: Wind, color: 'text-emerald-400' },
-                    { label: 'Radiação', value: sensor.solarRadiation, unit: 'W/m²', icon: Sun, color: 'text-yellow-400' },
-                  ].map((item, idx) => (
+                    { label: 'Temperatura', value: sensor.temperature ?? precise?.temperature, unit: precise?.unitTemperature || '°C', icon: Thermometer, color: 'text-orange-400' },
+                    { label: 'Umidade', value: sensor.humidity ?? precise?.humidity, unit: '%', icon: Droplets, color: 'text-blue-400' },
+                    { label: 'Vento', value: sensor.windSpeed ?? precise?.windSpeed, unit: precise?.unitWindSpeed || 'km/h', icon: Wind, color: 'text-emerald-400' },
+                    { label: 'Radiação', value: sensor.solarRadiation ?? precise?.solarRadiation, unit: precise?.unitSolarRadiation || 'W/m²', icon: Sun, color: 'text-yellow-400' },
+                    { label: 'Chuva (Satélite)', value: precise?.precipitation, unit: precise?.unitPrecipitation || 'mm', icon: CloudRain, color: 'text-sky-400' },
+                    ].map((item, idx) => (
                     <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group">
                       <div className="flex justify-between items-center mb-1">
                          <item.icon className={cn("h-4 w-4 opacity-30 group-hover:opacity-100 transition-opacity", item.color)} />
                          <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">{item.label}</span>
                       </div>
                       <p className="text-lg font-black text-white">
-                        {item.value !== null ? item.value : '--'} <span className="text-[10px] text-zinc-600 font-bold">{item.unit}</span>
+                        {item.value != null && typeof item.value === 'number' ? item.value.toFixed(1) : (item.value ?? '--')} <span className="text-[10px] text-zinc-600 font-bold">{item.unit}</span>
                       </p>
                     </div>
                   ))}
@@ -150,17 +159,25 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onCl
 
               <div className="space-y-4">
                 <h4 className="text-[10px] text-zinc-500 uppercase font-bold tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-2">
-                  <Activity className="h-4 w-4 text-primary" /> Especificações Técnicas
+                  <Gauge className="h-4 w-4 text-primary" /> Contexto Preciso
                 </h4>
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Bacia Hidrográfica</p>
-                       <p className="text-xs font-bold text-zinc-300 mt-1 truncate">{sensor.basinName || 'Não especificada'}</p>
+                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Pressão Atmosférica</p>
+                       <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.pressure, 1)} <small className="opacity-50 ml-0.5">{precise?.unitPressure || 'hPa'}</small></p>
                     </div>
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Código da Estação</p>
-                       <p className="text-xs font-mono font-bold text-zinc-300 mt-1">{sensor.code || 'N/A'}</p>
+                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Maré Estimada</p>
+                       <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.tideHeightTabuaMare, 2)} <small className="opacity-50 ml-0.5">{precise?.unitTide || 'm'}</small></p>
+                    </div>
+                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
+                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Chuva (Satélite)</p>
+                       <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.precipitation, 1)} <small className="opacity-50 ml-0.5">{precise?.unitPrecipitation || 'mm'}</small></p>
+                    </div>
+                    <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
+                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Vazão Estimada</p>
+                       <p className="text-xs font-bold text-indigo-400 mt-1">{formatValue(precise?.flowRate, 2)} <small className="opacity-50 ml-0.5">{precise?.unitFlowRate || 'm³/s'}</small></p>
                     </div>
                   </div>
                 </div>
@@ -176,7 +193,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, onCl
                   <div>
                      <p className="text-xs font-bold text-white uppercase tracking-widest">Coordenadas Geográficas</p>
                      <p className="text-sm text-zinc-500 font-mono mt-1">
-                       {sensor.latitude !== null && sensor.longitude !== null 
+                       {sensor.latitude != null && sensor.longitude != null && typeof sensor.latitude === 'number' && typeof sensor.longitude === 'number'
                          ? `${sensor.latitude.toFixed(6)}, ${sensor.longitude.toFixed(6)}` 
                          : 'N/A'}
                      </p>

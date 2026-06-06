@@ -17,8 +17,11 @@ export const useMapData = (pollingInterval = 30000) => {
       
       setSensors(Array.isArray(sensorsData) ? sensorsData : []);
       setFloodPoints(Array.isArray(floodPointsData) ? floodPointsData : []);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Erro ao buscar dados do mapa:', error);
+      if (error instanceof Error && error.message === 'Network Error') {
+        console.warn('Backend (localhost:8080) parece estar offline ou inacessível.');
+      }
     } finally {
       setIsLoading(false);
     }

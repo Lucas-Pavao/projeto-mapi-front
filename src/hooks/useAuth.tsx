@@ -20,9 +20,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(() => {
+    const savedToken = localStorage.getItem('token');
+    if (!savedToken || savedToken === 'undefined' || savedToken === 'null') {
+      return null;
+    }
+    return savedToken;
+  });
 
   const login = (newUser: User, newToken: string) => {
+    if (!newToken) {
+      console.error('Login failed: Token is missing');
+      return;
+    }
     setUser(newUser);
     setToken(newToken);
     localStorage.setItem('user', JSON.stringify(newUser));

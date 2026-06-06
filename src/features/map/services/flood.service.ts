@@ -1,9 +1,7 @@
-import axios from 'axios';
-import { API_URL, getAuthHeader } from './api';
+import api from '@/lib/api';
 import type { 
   FloodPointResponseDTO, 
   FloodPointRequestDTO, 
-  MapiResponseDTO, 
   FloodEventDTO, 
   ScraperEventDTO,
   PreciseDataResponse
@@ -11,45 +9,34 @@ import type {
 
 export const floodService = {
   async getAllFloodPoints(): Promise<FloodPointResponseDTO[]> {
-    const response = await axios.get<FloodPointResponseDTO[]>(`${API_URL}/api/pontos`, {
-      headers: getAuthHeader(),
-    });
+    const response = await api.get<FloodPointResponseDTO[]>('/api/pontos');
     return response.data;
   },
 
   async createFloodPoint(data: FloodPointRequestDTO): Promise<FloodPointResponseDTO> {
-    const response = await axios.post<FloodPointResponseDTO>(`${API_URL}/api/pontos`, data, {
-      headers: getAuthHeader(),
-    });
+    const response = await api.post<FloodPointResponseDTO>('/api/pontos', data);
     return response.data;
   },
 
-  async getPointStatus(id_ponto: string): Promise<MapiResponseDTO> {
-    const response = await axios.get<MapiResponseDTO>(`${API_URL}/api/pontos/${id_ponto}`, {
-      headers: getAuthHeader(),
-    });
+  async getPointStatus(id_ponto: string): Promise<FloodPointResponseDTO> {
+    const response = await api.get<FloodPointResponseDTO>(`/api/pontos/${id_ponto}`);
     return response.data;
   },
 
   async getPreciseData(latitude: number, longitude: number): Promise<PreciseDataResponse> {
-    const response = await axios.get<PreciseDataResponse>(`${API_URL}/api/precise-data`, {
-      params: { latitude, longitude },
-      headers: getAuthHeader(),
+    const response = await api.get<PreciseDataResponse>('/api/precise-data', {
+      params: { latitude, longitude }
     });
     return response.data;
   },
 
   async reportFlood(data: Partial<FloodEventDTO>): Promise<FloodEventDTO> {
-    const response = await axios.post<FloodEventDTO>(`${API_URL}/api/eventos-alagamento`, data, {
-      headers: getAuthHeader(),
-    });
+    const response = await api.post<FloodEventDTO>('/api/eventos-alagamento', data);
     return response.data;
   },
 
   async ingestScraperEvent(data: ScraperEventDTO): Promise<FloodEventDTO> {
-    const response = await axios.post<FloodEventDTO>(`${API_URL}/api/eventos-alagamento/ingest`, data, {
-      headers: getAuthHeader(),
-    });
+    const response = await api.post<FloodEventDTO>('/api/eventos-alagamento/ingest', data);
     return response.data;
   },
 };

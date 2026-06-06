@@ -28,7 +28,18 @@ export interface SensorResponseDTO {
   rawData?: string;
 }
 
+export interface SensorReadingDTO {
+  sensorId: string;
+  latitude: number;
+  longitude: number;
+  value: number;
+  unit: string;
+  type: string;
+  timestamp: string;
+  distanceKm: number;
+}
+
 export interface SensorConfigDTO {
-  estacao_pluviometrica_id?: string;
-  estacao_nivel_rio_id?: string;
+  estacoes_pluviometricas_ids?: string[];
+  estacoes_nivel_rio_ids?: string[];
 }

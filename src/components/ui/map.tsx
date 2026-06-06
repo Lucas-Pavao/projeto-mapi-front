@@ -1214,6 +1214,144 @@ function MapRoute({
   return null;
 }
 
+type MapCircleProps = {
+  /** Optional unique identifier for the circle layer */
+  id?: string;
+  /** Center coordinates as [longitude, latitude] */
+  center: [number, number];
+  /** Radius in kilometers */
+  radiusKm: number;
+  /** Fill color as CSS color value (default: "#4285F4") */
+  color?: string;
+  /** Opacity of the fill (default: 0.2) */
+  opacity?: number;
+  /** Stroke color as CSS color value (default: "#4285F4") */
+  strokeColor?: string;
+  /** Stroke width in pixels (default: 2) */
+  strokeWidth?: number;
+  /** Stroke opacity (default: 0.5) */
+  strokeOpacity?: number;
+};
+
+function MapCircle({
+  id: propId,
+  center,
+  radiusKm,
+  color = "#4285F4",
+  opacity = 0.2,
+  strokeColor = "#4285F4",
+  strokeWidth = 2,
+  strokeOpacity = 0.5,
+}: MapCircleProps) {
+  const { map, isLoaded } = useMap();
+  const autoId = useId();
+  const id = propId ?? autoId;
+  const sourceId = `circle-source-${id}`;
+  const fillLayerId = `circle-fill-${id}`;
+  const strokeLayerId = `circle-stroke-${id}`;
+
+  const geoJSON = useMemo<GeoJSON.Feature<GeoJSON.Polygon>>(() => {
+    const [lng, lat] = center;
+    const points = 64;
+    const coordinates: [number, number][][] = [[]];
+    
+    // Accurate geodesic circle generation
+    const R = 6371; // Earth's radius in km
+    const d = radiusKm / R;
+    const lat1 = (lat * Math.PI) / 180;
+    const lon1 = (lng * Math.PI) / 180;
+
+    for (let i = 0; i <= points; i++) {
+      const bearing = (i * 2 * Math.PI) / points;
+      const lat2 = Math.asin(
+        Math.sin(lat1) * Math.cos(d) +
+          Math.cos(lat1) * Math.sin(d) * Math.cos(bearing)
+      );
+      const lon2 =
+        lon1 +
+        Math.atan2(
+          Math.sin(bearing) * Math.sin(d) * Math.cos(lat1),
+          Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+        );
+      
+      coordinates[0].push([(lon2 * 180) / Math.PI, (lat2 * 180) / Math.PI]);
+    }
+
+    return {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates,
+      },
+      properties: {},
+    };
+  }, [center, radiusKm]);
+
+  useEffect(() => {
+    if (!isLoaded || !map) return;
+
+    map.addSource(sourceId, {
+      type: "geojson",
+      data: geoJSON,
+    });
+
+    map.addLayer({
+      id: fillLayerId,
+      type: "fill",
+      source: sourceId,
+      paint: {
+        "fill-color": color,
+        "fill-opacity": opacity,
+      },
+    });
+
+    map.addLayer({
+      id: strokeLayerId,
+      type: "line",
+      source: sourceId,
+      paint: {
+        "line-color": strokeColor,
+        "line-width": strokeWidth,
+        "line-opacity": strokeOpacity,
+      },
+    });
+
+    return () => {
+      try {
+        if (map.getLayer(fillLayerId)) map.removeLayer(fillLayerId);
+        if (map.getLayer(strokeLayerId)) map.removeLayer(strokeLayerId);
+        if (map.getSource(sourceId)) map.removeSource(sourceId);
+      } catch {
+        // ignore
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, map]);
+
+  useEffect(() => {
+    if (!isLoaded || !map) return;
+    const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
+    if (source) {
+      source.setData(geoJSON);
+    }
+  }, [isLoaded, map, geoJSON, sourceId]);
+
+  useEffect(() => {
+    if (!isLoaded || !map) return;
+    if (map.getLayer(fillLayerId)) {
+      map.setPaintProperty(fillLayerId, "fill-color", color);
+      map.setPaintProperty(fillLayerId, "fill-opacity", opacity);
+    }
+    if (map.getLayer(strokeLayerId)) {
+      map.setPaintProperty(strokeLayerId, "line-color", strokeColor);
+      map.setPaintProperty(strokeLayerId, "line-width", strokeWidth);
+      map.setPaintProperty(strokeLayerId, "line-opacity", strokeOpacity);
+    }
+  }, [isLoaded, map, fillLayerId, strokeLayerId, color, opacity, strokeColor, strokeWidth, strokeOpacity]);
+
+  return null;
+}
+
 /** A single arc to render inside <MapArc data={...}>. */
 type MapArcDatum = {
   /** Unique identifier for this arc. Required for hover state tracking and event payloads. */
@@ -1889,6 +2027,7 @@ export {
   MapRoute,
   MapArc,
   MapClusterLayer,
+  MapCircle,
 };
 
 export type { MapRef, MapViewport, MapArcDatum, MapArcEvent };
