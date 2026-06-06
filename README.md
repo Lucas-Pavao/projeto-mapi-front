@@ -21,6 +21,12 @@ Este projeto é a **ponta de entrega visual** de todo o ecossistema:
   [ MAPI Front ] (React 19 / MapLibre GL) 💻✨ <-- (Este Serviço)
 ```
 
+### Componentes do Ecossistema:
+- **[MAPI Edge](https://github.com/Lucas-Pavao/projeto-mapi-sensores):** Produtor de dados primários e inteligência de borda (Virtualização de Sensores).
+- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Orquestrador central, ingestão MQTT, persistência temporal e API REST.
+- **[MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai):** Microserviço de inferência para predição de riscos de inundação.
+- **[MAPI Front](https://github.com/Lucas-Pavao/projeto-mapi-front):** Interface geoespacial para monitoramento em tempo real (Este Repositório).
+
 ### Relação de Consumo e Fluxo:
 - **Consumo do Core REST:** Conecta-se à MAPI API para obter sensores, históricos e marés.
 - **Exibição dos Alertas de IA:** Renderiza visualmente os mapas de calor e os níveis de alerta (LOW, MEDIUM, HIGH) gerados pelo MAPI AI.
