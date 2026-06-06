@@ -1,19 +1,16 @@
-import axios from 'axios';
-import { API_URL, getAuthHeader } from './api';
+import api from '@/lib/api';
 
 export const marineService = {
   async getMarineData(latitude: number, longitude: number): Promise<Record<string, unknown>> {
-    const response = await axios.get<Record<string, unknown>>(`${API_URL}/api/marine`, {
-      params: { latitude, longitude },
-      headers: getAuthHeader(),
+    const response = await api.get<Record<string, unknown>>('/api/marine', {
+      params: { latitude, longitude }
     });
     return response.data;
   },
 
   async getWaveHeight(latitude: number, longitude: number): Promise<number> {
-    const response = await axios.get<number>(`${API_URL}/api/marine/wave-height`, {
-      params: { latitude, longitude },
-      headers: getAuthHeader(),
+    const response = await api.get<number>('/api/marine/wave-height', {
+      params: { latitude, longitude }
     });
     return response.data;
   },

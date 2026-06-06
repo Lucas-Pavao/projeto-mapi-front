@@ -17,11 +17,16 @@ export interface PreciseData {
   waveDirection: number | null;
   wavePeriod: number | null;
   tideHeightTabuaMare: number | null;
+  solarRadiation: number | null;
   unitPrecipitation: string | null;
   unitTemperature: string | null;
   unitWaterLevel: string | null;
   unitTide: string | null;
   unitWave: string | null;
+  unitWindSpeed: string | null;
+  unitPressure: string | null;
+  unitSolarRadiation: string | null;
+  unitFlowRate: string | null;
   message: string | null;
 }
 

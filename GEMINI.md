@@ -1,63 +1,65 @@
 # Gemini CLI Context: Projeto Mapi Front
 
-This project is a React-based frontend application for a map-centric system, likely focused on sensor monitoring or geospatial data visualization. It uses modern tooling and a feature-based architecture.
+Este repositório contém o frontend da plataforma MAPI, focada no monitoramento em tempo real de sensores e visualização de dados geoespaciais (riscos de inundação, marés, meteorologia).
 
-## Project Overview
+---
 
-- **Core Technologies:** React 19, Vite, TypeScript, Tailwind CSS.
-- **Mapping Stack:** MapLibre GL via a custom `Map` component (located in `src/components/ui/map.tsx`). It uses CartoDB basemaps by default.
-- **UI Framework:** Shadcn UI (Radix UI primitives) and Lucide React icons.
-- **State Management:** React Context API for global state (e.g., Authentication).
-- **Architecture:** Feature-Based Architecture, organizing code by domain (e.g., `src/features/map`, `src/features/authentication`).
+## 🚀 Tecnologias Core
 
-## Architecture & Structure
+- **Framework:** React 19 (Uso intensivo de hooks e novas APIs de transição).
+- **Build Tool:** Vite 8.
+- **Linguagem:** TypeScript (Tipagem estrita obrigatória).
+- **Estilização:** Tailwind CSS 4 & Shadcn UI.
+- **Maps:** MapLibre GL com CartoDB Basemaps.
+- **Roteamento:** React Router 7.
 
-- `src/features/`: Contains domain-specific logic, components, hooks, and services.
-  - `authentication/`: Login logic, auth services, and types.
-  - `map/`: Map views and specific UI like `SensorSidebar`.
-- `src/components/ui/`: Generic, reusable UI components (Buttons, Inputs, Cards, and the core Map component).
-- `src/hooks/`: Global shared hooks like `useAuth`.
-- `src/pages/`: Main application routes (e.g., `LoginPage`, `MapPage`).
-- `src/lib/`: Shared utilities (e.g., Tailwind merge utility `cn`).
-- `src/assets/`: Static assets like images and SVGs.
+---
 
-## Development Workflow
+## 🏗️ Arquitetura (Feature-Based)
 
-### Key Commands
+O projeto utiliza uma **Arquitetura Baseada em Funcionalidades**. Toda lógica de domínio deve ser isolada em `src/features/`.
 
-- **Development:** `npm run dev` (starts Vite dev server).
-- **Build:** `npm run build` (compiles and builds for production).
-- **Lint:** `npm run lint` (runs ESLint).
-- **Preview:** `npm run preview` (previews production build locally).
+- `src/features/[feature-name]/`:
+  - `components/`: Componentes exclusivos da funcionalidade.
+  - `hooks/`: Hooks customizados para lógica de estado ou efeitos.
+  - `services/`: Camada de abstração para chamadas à API (Axios).
+  - `types/`: Definições TypeScript específicas do domínio.
+  - `utils/`: Funções utilitárias locais.
 
-### Environment Configuration
+### Funcionalidades Atuais:
+- **authentication:** Gerenciamento de sessão e JWT.
+- **map:** Visualização principal, camadas de sensores e alertas de inundação.
 
-The application requires a `.env` file in the root with the following variables:
+---
 
-- `VITE_API_URL`: The base URL for the backend API (e.g., `http://localhost:3000`).
+## 🛠️ Convenções de Desenvolvimento
 
-## Technical Conventions
+### 1. Padrões de Código
+- **Componentes:** Funcionais com exportação nomeada.
+- **Tipagem:** Proibido o uso de `any`. Utilize interfaces claras para Props e Payloads de API.
+- **Estilização:** Use o utilitário `cn` (`src/lib/utils.ts`) para merge de classes Tailwind condicionais.
 
-### Code Style & Patterns
+### 2. Integração com API
+- Todas as chamadas devem usar a base URL `import.meta.env.VITE_API_URL`.
+- Serviços devem ser os únicos locais onde o `axios` é instanciado ou configurado.
 
-- **Component Structure:** Prefer functional components with TypeScript interfaces for props.
-- **Alias:** Use `@/` to refer to the `src/` directory (configured in `vite.config.ts` and `tsconfig.json`).
-- **Auth Pattern:** Authentication state is managed via `AuthContext` in `src/hooks/useAuth.tsx`. Tokens and user data are persisted in `localStorage`.
-- **API Communication:** Use `axios`. Services should be organized within their respective feature folders (e.g., `src/features/authentication/services/auth.service.ts`).
-- **Styling:** Use Tailwind CSS utility classes. For complex conditional classes, use the `cn` utility from `src/lib/utils.ts`.
+### 3. Performance no Mapa
+- **Memoização:** Use `useMemo` e `useCallback` rigorosamente em componentes que interagem com o `MapLibre GL`.
+- **Cleanup:** Sempre implemente a remoção de fontes e camadas no retorno do `useEffect`.
 
-### Map Component Usage
+---
 
-The custom `Map` component in `src/components/ui/map.tsx` is highly flexible and supports:
-- **Themes:** Light/Dark mode detection.
-- **Markers & Popups:** Using `MapMarker`, `MarkerPopup`, and `MapPopup` sub-components via a Context/Portal pattern.
-- **Layers:** Support for `MapRoute`, `MapArc`, and `MapClusterLayer`.
-- **Controls:** `MapControls` for zoom, locate, and fullscreen.
+## 🤖 Operação com IA
 
-## Important Files
+Para garantir a integridade do código e aderência aos padrões arquiteturais, todos os agentes de IA devem consultar e seguir o manual de operação detalhado:
 
-- `package.json`: Dependency and script definitions.
-- `src/App.tsx`: Main routing and provider setup.
-- `src/components/ui/map.tsx`: Core mapping logic.
-- `src/hooks/useAuth.tsx`: Authentication hook and provider.
-- `vite.config.ts`: Vite configuration and aliases.
+👉 **[AGENTS.md](./AGENTS.md)**
+
+---
+
+## 📦 Comandos Úteis
+
+- `npm run dev`: Inicia o ambiente de desenvolvimento.
+- `npm run build`: Compila o projeto para produção (TypeScript + Vite).
+- `npm run lint`: Executa a verificação estática de código.
+- `npm run preview`: Visualiza o build de produção localmente.

@@ -44,6 +44,14 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
           (s.municipality && s.municipality.toLowerCase().includes(searchTerm));
       })
       .sort((a, b) => {
+        const hasCoordsA = a.latitude != null && a.longitude != null && a.latitude !== 0 && a.longitude !== 0;
+        const hasCoordsB = b.latitude != null && b.longitude != null && b.latitude !== 0 && b.longitude !== 0;
+
+        // 1. Prioritize items without coordinates
+        if (!hasCoordsA && hasCoordsB) return -1;
+        if (hasCoordsA && !hasCoordsB) return 1;
+
+        // 2. Then follow type priority
         const configA = getSensorConfig(a);
         const configB = getSensorConfig(b);
         
@@ -54,6 +62,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
           return priorityA - priorityB;
         }
 
+        // 3. Alphabetical fallback
         const nameA = a.stationName || '';
         const nameB = b.stationName || '';
         return nameA.localeCompare(nameB);
