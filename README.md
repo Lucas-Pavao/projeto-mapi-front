@@ -1,18 +1,18 @@
-# MAPI - Plataforma de Monitoramento Ambiental 🗺️✨
+# MAPI Front - Dashboard e Visualização Geoespacial 🗺️✨
 
-O **MAPI Frontend** é a interface principal do ecossistema MAPI, uma solução avançada de visualização geoespacial focada na Região Metropolitana do Recife. O sistema foi projetado para consolidar dados de sensores IoT, previsões meteorológicas e informações hidrológicas em um dashboard interativo e de alta performance.
+O **MAPI Front** é a interface principal do ecossistema MAPI, uma solução avançada de visualização geoespacial focada na Região Metropolitana do Recife. O sistema consolida dados de sensores IoT, previsões meteorológicas e alertas de risco em um dashboard interativo.
 
-## 📝 Descrição do Projeto
+---
 
-O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públicos e pesquisadores, permitindo o acompanhamento em tempo real de níveis de marés, precipitação e áreas de risco. Através de uma integração fluida com o [MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api) e modelos de IA do [MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai), o frontend entrega visualizações precisas e alertas inteligentes.
+## 🌐 Ecossistema MAPI
 
-### Principais Diferenciais:
-- **Visualização Geoespacial Dinâmica:** Uso de MapLibre GL para renderização eficiente de grandes conjuntos de dados.
-- **Monitoramento IoT em Tempo Real:** Acompanhamento de sensores de nível, precipitação e status operacional.
-- **Dados Oceanográficos e Meteorológicos:** Integração de previsões de marés, condições marinhas e clima (ondas, vento, temperatura).
-- **Gestão de Eventos de Inundação:** Registro, visualização e análise de pontos críticos e histórico de alagamentos.
-- **Ferramentas Administrativas e de Exportação:** Gestão de dispositivos, controle de acesso e exportação de relatórios técnicos.
-- **Design Adaptativo:** Interface moderna com suporte a temas Dark e Light, otimizada para operação em centros de comando.
+Este projeto é a **camada de apresentação** do ecossistema, consumindo dados de:
+
+- **[MAPI API (Backend)](../projeto-mapi-api):** Fonte de dados consolidada e regras de negócio.
+- **[MAPI AI (Inteligência)](../projeto-mapi-ai):** Fornece as predições de risco exibidas no mapa.
+- **[MAPI Edge (Sensores)](../projeto-mapi):** Origem dos dados telemétricos em tempo real.
+
+---
 
 ## 🛠️ Tecnologias Escolhidas
 
@@ -21,11 +21,23 @@ O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públ
 | **Framework Core** | [React 19](https://react.dev/) |
 | **Linguagem** | [TypeScript](https://www.typescriptlang.org/) |
 | **Bundler** | [Vite 8](https://vitejs.dev/) |
-| **Mapas** | [MapLibre GL](https://maplibre.org/) & [React Map GL](https://visgl.github.io/react-map-gl/) |
+| **Mapas** | [MapLibre GL](https://maplibre.org/) |
 | **Estilização** | [Tailwind CSS 4](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/) |
-| **Roteamento** | [React Router 7](https://reactrouter.com/) |
-| **Comunicação** | [Axios](https://axios-http.com/) |
-| **Ícones** | [Lucide React](https://lucide.dev/) |
+
+---
+
+## 📝 Descrição do Projeto
+
+O projeto visa fornecer uma ferramenta de tomada de decisão para órgãos públicos e pesquisadores, permitindo o acompanhamento em tempo real de níveis de marés, precipitação e áreas de risco. Através de uma integração fluida com o [MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api) e modelos de IA do [MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai), o frontend entrega visualizações precisas e alertas inteligentes.
+
+### Principais Diferenciais:
+- **Visualização Geoespacial Dinâmica:** Uso de MapLibre GL para renderização eficiente de grandes conjuntos de dados.
+- **Monitoramento IoT em Tempo Real:** Acompanhamento de sensores de nível, precipitação e status operacional.
+- **Dados Oceanográficos e Meteorológicos:** Integração de previsões de marés, condições marinhas e clima.
+- **Gestão de Eventos de Inundação:** Registro, visualização e análise de pontos críticos e histórico de alagamentos.
+- **Design Adaptativo:** Interface moderna com suporte a temas Dark e Light.
+
+---
 
 ## 📂 Estrutura de Pastas Detalhada
 
