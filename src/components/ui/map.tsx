@@ -21,8 +21,8 @@ import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const defaultStyles = {
-  dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-  light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+  dark: import.meta.env.VITE_MAP_STYLE_DARK || "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+  light: import.meta.env.VITE_MAP_STYLE_LIGHT || "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
 };
 
 type Theme = "light" | "dark";
@@ -860,9 +860,13 @@ function MapControls({
         },
         (error) => {
           console.error("Error getting location:", error);
+          alert("Não foi possível obter sua geolocalização. Por favor, verifique as permissões de localização no seu navegador.");
           setWaitingForLocation(false);
         },
       );
+    } else {
+      alert("Geolocalização não é suportada ou não está disponível neste navegador (verifique se está usando HTTPS).");
+      setWaitingForLocation(false);
     }
   }, [map, onLocate]);
 

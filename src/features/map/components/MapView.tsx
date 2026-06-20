@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Map, MapControls, MapMarker, MarkerContent, MapPopup, MapCircle } from '@/components/ui/map';
+import { Map, MapControls, MapMarker, MarkerContent, MapPopup, MapCircle, useMap } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,38 @@ import { useMapData } from '../hooks/useMapData';
 import { useMapInteractions } from '../hooks/useMapInteractions';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, FloodPointResponseDTO, PreciseDataResponse } from '../types';
+
+/**
+ * Component to request user geolocation when the map is loaded and fly to it.
+ */
+const LocationInitializer: React.FC = () => {
+  const { map, isLoaded } = useMap();
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (isLoaded && map && !hasInitialized.current) {
+      hasInitialized.current = true;
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            map.flyTo({
+              center: [longitude, latitude],
+              zoom: 14,
+              duration: 2000
+            });
+          },
+          (error) => {
+            console.warn("Could not retrieve user location on initial load:", error);
+          },
+          { enableHighAccuracy: false, timeout: 10000 }
+        );
+      }
+    }
+  }, [isLoaded, map]);
+
+  return null;
+};
 
 /**
  * Main View for the Map Monitoring System
@@ -244,7 +276,7 @@ export const MapView: React.FC = () => {
 
   const handleGetGeolocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocalização não é suportada pelo seu navegador.');
+      alert('Geolocalização não é suportada ou disponível neste navegador (verifique se está acessando via HTTPS ou localhost).');
       return;
     }
     
@@ -259,10 +291,21 @@ export const MapView: React.FC = () => {
       },
       (error) => {
         console.error('Erro de geolocalização:', error);
-        alert('Não foi possível obter sua geolocalização. Por favor, verifique suas permissões.');
         setIsGettingLocation(false);
+        
+        let msg = 'Não foi possível obter sua geolocalização. ';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg += 'Permissão negada. Por favor, libere o acesso à localização nas configurações do seu navegador para este site.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg += 'A informação de localização está indisponível.';
+        } else if (error.code === error.TIMEOUT) {
+          msg += 'O tempo limite expirou ao tentar buscar a localização.';
+        } else {
+          msg += 'Verifique as permissões de geolocalização do seu navegador.';
+        }
+        alert(msg);
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: false, timeout: 15000 }
     );
   };
 
@@ -442,6 +485,7 @@ export const MapView: React.FC = () => {
           center={[-34.877, -8.057]}
           zoom={12}
         >
+          <LocationInitializer />
           <MapControls showLocate showFullscreen position="bottom-right" />
           
           {circleCenter && (
@@ -988,15 +1032,21 @@ export const MapView: React.FC = () => {
               onClick={handleGetGeolocation}
               disabled={isGettingLocation}
               className={cn(
-                "h-14 w-14 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center justify-center group",
-                isGettingLocation ? "text-primary border-primary/40" : ""
+                "h-12 px-5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center gap-2 group",
+                isGettingLocation ? "text-primary border-primary/40 animate-pulse" : ""
               )}
-              title="Obter minha localização e reportar alagamento"
+              title="Obter minha localização atual e reportar se a área está alagada"
             >
               {isGettingLocation ? (
-                <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                <>
+                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-sm font-semibold text-primary">Obtendo Localização...</span>
+                </>
               ) : (
-                <Navigation className="h-6 w-6 text-primary group-hover:scale-110 transition-transform animate-pulse" />
+                <>
+                  <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold text-white/90 group-hover:text-white">Reportar Alagamento Local</span>
+                </>
               )}
             </Button>
           </div>
