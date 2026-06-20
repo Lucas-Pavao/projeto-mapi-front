@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatApiTimestamp } from '../utils/sensor';
-import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
+import type { FloodPointResponseDTO, PreciseDataResponse, PreciseData } from '../types';
 
 interface FloodPointDetailCardProps {
   point: FloodPointResponseDTO;
@@ -286,7 +286,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                  },
                  { 
                    label: 'Dinâmica do Vento', 
-                   value: getMetricValue('windSpeed', status?.openMeteoData?.current?.wind_speed_10m), 
+                   value: getMetricValue('windSpeed', (status?.openMeteoData?.current as any)?.wind_speed_10m), 
                    unit: precise?.unitWindSpeed || 'km/h', icon: Wind, color: 'text-emerald-400', bg: 'bg-emerald-500/10' 
                  },
                ].map((item, idx) => (
@@ -367,7 +367,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                            <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest">Pressão ATM</p>
                         </div>
                         <p className="text-xl font-black text-zinc-300 italic">
-                          {formatValue(getMetricValue('pressure', status?.openMeteoData?.current?.surface_pressure), 0)} 
+                          {formatValue(getMetricValue('pressure', (status?.openMeteoData?.current as any)?.surface_pressure), 0)} 
                           <small className="text-[11px] text-zinc-600 opacity-60 not-italic font-bold">HPA</small>
                         </p>
                      </div>
