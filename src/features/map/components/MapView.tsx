@@ -62,7 +62,7 @@ const LocationInitializer: React.FC = () => {
             });
           },
           (error) => {
-            console.warn("Could not retrieve user location on initial load:", error);
+            console.warn("Could not retrieve user location on initial load:", error.message || "Unknown error");
           },
           { enableHighAccuracy: false, timeout: 10000 }
         );
@@ -290,7 +290,7 @@ export const MapView: React.FC = () => {
         setIsGettingLocation(false);
       },
       (error) => {
-        console.error('Erro de geolocalização:', error);
+        console.warn('Erro de geolocalização:', error.message || "Unknown error");
         setIsGettingLocation(false);
         
         let msg = 'Não foi possível obter sua geolocalização. ';
@@ -741,7 +741,7 @@ export const MapView: React.FC = () => {
                     <div>
                       <h3 className="text-sm font-black text-white tracking-tight uppercase">Análise de Local</h3>
                       <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mt-0.5">
-                        {clickedLocation ? `${clickedLocation.lat.toFixed(4)}, ${clickedLocation.lng.toFixed(4)}` : 'Sincronizando...'}
+                        {clickedLocation ? `${clickedLocation.lat?.toFixed(4) ?? '--'}, ${clickedLocation.lng?.toFixed(4) ?? '--'}` : 'Sincronizando...'}
                       </p>
                     </div>
                   </div>
@@ -899,13 +899,13 @@ export const MapView: React.FC = () => {
                                          {reading.sensorId}
                                        </p>
                                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-                                          {reading.type} • {reading.distanceKm.toFixed(1)}km
+                                          {reading.type} • {reading.distanceKm?.toFixed(1) ?? '--'}km
                                        </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-sm font-black text-white italic">
-                                      {reading.value.toFixed(1)}
+                                      {reading.value?.toFixed(1) ?? '--'}
                                       <small className="text-[9px] font-bold text-zinc-600 ml-1 not-italic">{reading.unit}</small>
                                     </p>
                                   </div>

@@ -859,7 +859,7 @@ function MapControls({
           setWaitingForLocation(false);
         },
         (error) => {
-          console.error("Error getting location:", error);
+          console.warn("Error getting location:", error.message || "Unknown error");
           alert("Não foi possível obter sua geolocalização. Por favor, verifique as permissões de localização no seu navegador.");
           setWaitingForLocation(false);
         },
