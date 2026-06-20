@@ -39,4 +39,10 @@ export const floodService = {
     const response = await api.post<FloodEventDTO>('/api/eventos-alagamento/ingest', data);
     return response.data;
   },
+
+  async reportScenario(data: { latitude: number; longitude: number; isFlooded: boolean }): Promise<any> {
+    const response = await api.post('/api/pontos/scenarios', data);
+    return response.data;
+  },
 };
+

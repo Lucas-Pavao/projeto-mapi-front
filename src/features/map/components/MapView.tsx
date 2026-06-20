@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Map, MapControls, MapMarker, MarkerContent, MapPopup, MapCircle } from '@/components/ui/map';
+import { Map, MapControls, MapMarker, MarkerContent, MapPopup, MapCircle, useMap } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -21,11 +21,13 @@ import {
   MapPin,
   X,
   Sun,
-  Gauge
+  Gauge,
+  RefreshCw
 } from 'lucide-react';
 
 import { exportService } from '../services/export.service';
 import { floodService } from '../services/flood.service';
+import { mapService } from '../services/map.service';
 import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
@@ -33,10 +35,43 @@ import { FloodPointPopup } from './FloodPointPopup';
 import { SensorDetailCard } from './SensorDetailCard';
 import { FloodPointDetailCard } from './FloodPointDetailCard';
 import { ReportFloodModal } from './ReportFloodModal';
+import { ReportScenarioModal } from './ReportScenarioModal';
 import { useMapData } from '../hooks/useMapData';
 import { useMapInteractions } from '../hooks/useMapInteractions';
 import { cn } from '@/lib/utils';
-import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
+import type { SensorResponseDTO, FloodPointResponseDTO, PreciseDataResponse } from '../types';
+
+/**
+ * Component to request user geolocation when the map is loaded and fly to it.
+ */
+const LocationInitializer: React.FC = () => {
+  const { map, isLoaded } = useMap();
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    if (isLoaded && map && !hasInitialized.current) {
+      hasInitialized.current = true;
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            map.flyTo({
+              center: [longitude, latitude],
+              zoom: 14,
+              duration: 2000
+            });
+          },
+          (error) => {
+            console.warn("Could not retrieve user location on initial load:", error.message || "Unknown error");
+          },
+          { enableHighAccuracy: false, timeout: 10000 }
+        );
+      }
+    }
+  }, [isLoaded, map]);
+
+  return null;
+};
 
 /**
  * Main View for the Map Monitoring System
@@ -74,6 +109,12 @@ export const MapView: React.FC = () => {
   const [reportSeverity, setReportSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [reportDescription, setReportDescription] = useState('');
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  
+  const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [scenarioCoords, setScenarioCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [scenarioTitle, setScenarioTitle] = useState('');
+  const [isSubmittingScenario, setIsSubmittingScenario] = useState(false);
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   
   const mapRef = useRef<MapRef>(null);
 
@@ -114,7 +155,7 @@ export const MapView: React.FC = () => {
                 })
               );
               
-              const validSensors = sensorReadings.filter(s => s !== null);
+              const validSensors = sensorReadings.filter((s): s is SensorResponseDTO => s !== null);
               
               if (validSensors.length > 0) {
                 if (!data.preciseData) {
@@ -171,7 +212,7 @@ export const MapView: React.FC = () => {
                   if (data.preciseData.precipitation == null) data.preciseData.precipitation = s.accumulatedPrecipitation;
                   if (data.preciseData.waterLevel == null) data.preciseData.waterLevel = s.waterLevel;
                   if (data.preciseData.flowRate == null) data.preciseData.flowRate = s.flowRate;
-                  if (data.preciseData.tideHeight == null) data.preciseData.tideHeight = s.tideHeight;
+                  if (data.preciseData.tideHeight == null) data.preciseData.tideHeight = s.tideHeight ?? null;
                 });
               }
             }
@@ -232,6 +273,63 @@ export const MapView: React.FC = () => {
       setIsSubmittingReport(false);
     }
   };
+
+  const handleGetGeolocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocalização não é suportada ou disponível neste navegador (verifique se está acessando via HTTPS ou localhost).');
+      return;
+    }
+    
+    setIsGettingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setScenarioCoords({ lat: latitude, lng: longitude });
+        setScenarioTitle('A região onde você está se encontra alagada agora?');
+        setShowScenarioModal(true);
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        console.warn('Erro de geolocalização:', error.message || "Unknown error");
+        setIsGettingLocation(false);
+        
+        let msg = 'Não foi possível obter sua geolocalização. ';
+        if (error.code === error.PERMISSION_DENIED) {
+          msg += 'Permissão negada. Por favor, libere o acesso à localização nas configurações do seu navegador para este site.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg += 'A informação de localização está indisponível.';
+        } else if (error.code === error.TIMEOUT) {
+          msg += 'O tempo limite expirou ao tentar buscar a localização.';
+        } else {
+          msg += 'Verifique as permissões de geolocalização do seu navegador.';
+        }
+        alert(msg);
+      },
+      { enableHighAccuracy: false, timeout: 15000 }
+    );
+  };
+
+  const handleConfirmScenario = async (isFlooded: boolean) => {
+    if (!scenarioCoords) return;
+    
+    setIsSubmittingScenario(true);
+    try {
+      await floodService.reportScenario({
+        latitude: scenarioCoords.lat,
+        longitude: scenarioCoords.lng,
+        isFlooded
+      });
+      alert('Situação da região reportada com sucesso!');
+      setShowScenarioModal(false);
+      setScenarioCoords(null);
+    } catch (error) {
+      console.error('Erro ao reportar cenário:', error);
+      alert('Erro ao enviar o relato do cenário.');
+    } finally {
+      setIsSubmittingScenario(false);
+    }
+  };
+
 
   const filteredSensorsForMap = useMemo(() => {
     if (!Array.isArray(sensors)) return [];
@@ -387,6 +485,7 @@ export const MapView: React.FC = () => {
           center={[-34.877, -8.057]}
           zoom={12}
         >
+          <LocationInitializer />
           <MapControls showLocate showFullscreen position="bottom-right" />
           
           {circleCenter && (
@@ -642,7 +741,7 @@ export const MapView: React.FC = () => {
                     <div>
                       <h3 className="text-sm font-black text-white tracking-tight uppercase">Análise de Local</h3>
                       <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mt-0.5">
-                        {clickedLocation ? `${clickedLocation.lat.toFixed(4)}, ${clickedLocation.lng.toFixed(4)}` : 'Sincronizando...'}
+                        {clickedLocation ? `${clickedLocation.lat?.toFixed(4) ?? '--'}, ${clickedLocation.lng?.toFixed(4) ?? '--'}` : 'Sincronizando...'}
                       </p>
                     </div>
                   </div>
@@ -800,13 +899,13 @@ export const MapView: React.FC = () => {
                                          {reading.sensorId}
                                        </p>
                                        <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
-                                          {reading.type} • {reading.distanceKm.toFixed(1)}km
+                                          {reading.type} • {reading.distanceKm?.toFixed(1) ?? '--'}km
                                        </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-sm font-black text-white italic">
-                                      {reading.value.toFixed(1)}
+                                      {reading.value?.toFixed(1) ?? '--'}
                                       <small className="text-[9px] font-bold text-zinc-600 ml-1 not-italic">{reading.unit}</small>
                                     </p>
                                   </div>
@@ -839,6 +938,23 @@ export const MapView: React.FC = () => {
                            </div>
                         </div>
                       )}
+                      
+                      {/* Botão de Reportar Cenário para coordenada clicada */}
+                      <div className="pt-3 border-t border-white/5">
+                        <Button
+                          className="w-full bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl transition-all flex items-center justify-center gap-2"
+                          onClick={() => {
+                            if (clickedLocation) {
+                              setScenarioCoords({ lat: clickedLocation.lat, lng: clickedLocation.lng });
+                              setScenarioTitle('A região correspondente à coordenada clicada se encontra alagada agora?');
+                              setShowScenarioModal(true);
+                            }
+                          }}
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                          Reportar Alagamento Aqui
+                        </Button>
+                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -898,6 +1014,42 @@ export const MapView: React.FC = () => {
               onClose={() => setShowReportModal(false)}
             />
           )}
+
+          {showScenarioModal && scenarioCoords && (
+            <ReportScenarioModal
+              latitude={scenarioCoords.lat}
+              longitude={scenarioCoords.lng}
+              isSubmitting={isSubmittingScenario}
+              title={scenarioTitle}
+              onConfirm={handleConfirmScenario}
+              onClose={() => setShowScenarioModal(false)}
+            />
+          )}
+
+          {/* Botão Flutuante de Geolocalização */}
+          <div className="absolute bottom-6 right-20 z-40 pointer-events-auto">
+            <Button
+              onClick={handleGetGeolocation}
+              disabled={isGettingLocation}
+              className={cn(
+                "h-12 px-5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center gap-2 group",
+                isGettingLocation ? "text-primary border-primary/40 animate-pulse" : ""
+              )}
+              title="Obter minha localização atual e reportar se a área está alagada"
+            >
+              {isGettingLocation ? (
+                <>
+                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                  <span className="text-sm font-semibold text-primary">Obtendo Localização...</span>
+                </>
+              ) : (
+                <>
+                  <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-sm font-semibold text-white/90 group-hover:text-white">Reportar Alagamento Local</span>
+                </>
+              )}
+            </Button>
+          </div>
         </main>
     </div>
   );
