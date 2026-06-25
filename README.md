@@ -54,6 +54,7 @@ src/
 ├── hooks/           # Hooks globais (ex: useAuth)
 ├── lib/             # Utilitários compartilhados (ex: cn)
 ├── pages/           # Páginas principais da aplicação
+├── styles/          # Variáveis globais de estilo e temas (CSS)
 ├── App.tsx          # Roteamento e Provedores
 └── main.tsx         # Ponto de entrada
 ```
