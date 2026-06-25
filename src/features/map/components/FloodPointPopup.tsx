@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
-import { formatApiTimestamp } from '../utils/sensor';
+import { getSafeFormattedDate } from '../utils/sensor';
 
 interface FloodPointPopupProps {
   point: FloodPointResponseDTO;
@@ -74,7 +74,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5 shadow-sm">
                 <Clock className="h-3 w-3 text-zinc-500" />
                 <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tighter">
-                   {precise?.timestamp ? new Date(formatApiTimestamp(precise.timestamp)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                   {precise?.timestamp ? getSafeFormattedDate(precise.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
                 </span>
              </div>
              {isFetchingStatus && <Loader2 className="h-3 w-3 text-primary animate-spin mt-1" />}
