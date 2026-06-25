@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
-import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
+import { getSensorConfig, getBatteryStatus, getSafeFormattedDate } from '../utils/sensor';
 
 interface SensorPopupProps {
   sensor: SensorResponseDTO;
@@ -174,7 +174,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
               <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Sincronização</span>
             </div>
             <span className="text-[10px] font-black text-zinc-300 uppercase">
-              {sensor.timestamp ? new Date(formatApiTimestamp(sensor.timestamp)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+              {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
             </span>
           </div>
         </div>

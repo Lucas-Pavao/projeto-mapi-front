@@ -92,18 +92,33 @@ export const getBatteryStatus = (status?: string | null) => {
 
 export const formatApiTimestamp = (timestamp: unknown): string => {
   if (!timestamp) return '';
-  if (Array.isArray(timestamp)) {
-    // [Year, Month, Day, Hour, Minute, Second, Nanoseconds]
-    const date = new Date(
-      timestamp[0],
-      timestamp[1] - 1,
-      timestamp[2],
-      timestamp[3] || 0,
-      timestamp[4] || 0,
-      timestamp[5] || 0
-    );
-    return date.toISOString();
+  try {
+    if (Array.isArray(timestamp)) {
+      // [Year, Month, Day, Hour, Minute, Second, Nanoseconds]
+      const date = new Date(
+        timestamp[0],
+        timestamp[1] - 1,
+        timestamp[2],
+        timestamp[3] || 0,
+        timestamp[4] || 0,
+        timestamp[5] || 0
+      );
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString();
+    }
+    const d = new Date(String(timestamp));
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString();
+  } catch (e) {
+    return '';
   }
-  return String(timestamp);
+};
+
+export const getSafeFormattedDate = (timestamp: unknown): Date | null => {
+  const tsStr = formatApiTimestamp(timestamp);
+  if (!tsStr) return null;
+  const d = new Date(tsStr);
+  if (isNaN(d.getTime())) return null;
+  return d;
 };
 

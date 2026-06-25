@@ -44,9 +44,10 @@ import type { SensorResponseDTO, FloodPointResponseDTO, PreciseDataResponse } fr
 /**
  * Component to request user geolocation when the map is loaded and fly to it.
  */
-const LocationInitializer: React.FC = () => {
+const LocationInitializer: React.FC<{ onLocationUpdate: (loc: {lat: number, lng: number}) => void }> = ({ onLocationUpdate }) => {
   const { map, isLoaded } = useMap();
   const hasInitialized = useRef(false);
+  const watchId = useRef<number | null>(null);
 
   useEffect(() => {
     if (isLoaded && map && !hasInitialized.current) {
@@ -55,20 +56,42 @@ const LocationInitializer: React.FC = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
+            onLocationUpdate({ lat: latitude, lng: longitude });
             map.flyTo({
               center: [longitude, latitude],
               zoom: 14,
               duration: 2000
             });
+            
+            watchId.current = navigator.geolocation.watchPosition(
+              (pos) => {
+                onLocationUpdate({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              },
+              (err) => console.warn("Could not watch user location:", err.message),
+              { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+            );
           },
           (error) => {
             console.warn("Could not retrieve user location on initial load:", error.message || "Unknown error");
+            // Se falhar o getCurrentPosition, tenta o watchPosition mesmo assim
+            watchId.current = navigator.geolocation.watchPosition(
+              (pos) => {
+                onLocationUpdate({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+              },
+              (err) => console.warn("Could not watch user location:", err.message),
+              { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+            );
           },
-          { enableHighAccuracy: false, timeout: 10000 }
+          { enableHighAccuracy: true, timeout: 10000 }
         );
       }
     }
-  }, [isLoaded, map]);
+    return () => {
+      if (watchId.current !== null) {
+        navigator.geolocation.clearWatch(watchId.current);
+      }
+    };
+  }, [isLoaded, map, onLocationUpdate]);
 
   return null;
 };
@@ -115,6 +138,7 @@ export const MapView: React.FC = () => {
   const [scenarioTitle, setScenarioTitle] = useState('');
   const [isSubmittingScenario, setIsSubmittingScenario] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   const mapRef = useRef<MapRef>(null);
 
@@ -485,8 +509,27 @@ export const MapView: React.FC = () => {
           center={[-34.877, -8.057]}
           zoom={12}
         >
-          <LocationInitializer />
-          <MapControls showLocate showFullscreen position="bottom-right" />
+          <LocationInitializer onLocationUpdate={setUserLocation} />
+          <MapControls 
+            showLocate 
+            showFullscreen 
+            position="bottom-right" 
+            onLocate={(coords) => setUserLocation({ lat: coords.latitude, lng: coords.longitude })} 
+          />
+          
+          {userLocation && (
+            <MapMarker
+              longitude={userLocation.lng}
+              latitude={userLocation.lat}
+            >
+              <MarkerContent>
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-8 h-8 bg-blue-500/30 rounded-full animate-ping" />
+                  <div className="relative w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                </div>
+              </MarkerContent>
+            </MapMarker>
+          )}
           
           {circleCenter && (
             <MapCircle 
@@ -575,7 +618,7 @@ export const MapView: React.FC = () => {
                   if (sensor.latitude && sensor.longitude) {
                     mapRef.current?.flyTo({
                       center: [sensor.longitude, sensor.latitude],
-                      zoom: 15,
+                      zoom: 13.5,
                       duration: 1500
                     });
                   }
@@ -646,7 +689,7 @@ export const MapView: React.FC = () => {
                   if (point.latitude && point.longitude) {
                     mapRef.current?.flyTo({
                       center: [point.longitude, point.latitude],
-                      zoom: 15,
+                      zoom: 13.5,
                       duration: 1500
                     });
                   }

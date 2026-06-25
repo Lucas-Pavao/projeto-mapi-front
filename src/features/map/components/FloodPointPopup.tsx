@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
-import { formatApiTimestamp } from '../utils/sensor';
+import { getSafeFormattedDate } from '../utils/sensor';
 
 interface FloodPointPopupProps {
   point: FloodPointResponseDTO;
@@ -74,7 +74,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/5 shadow-sm">
                 <Clock className="h-3 w-3 text-zinc-500" />
                 <span className="text-[8px] font-black text-zinc-400 uppercase tracking-tighter">
-                   {precise?.timestamp ? new Date(formatApiTimestamp(precise.timestamp)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                   {precise?.timestamp ? getSafeFormattedDate(precise.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
                 </span>
              </div>
              {isFetchingStatus && <Loader2 className="h-3 w-3 text-primary animate-spin mt-1" />}
@@ -133,10 +133,10 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                           <Activity className="h-3 w-3 text-zinc-600 group-hover/sensor:text-primary transition-colors" />
                           <div>
                              <p className="text-[9px] font-black text-zinc-300 uppercase leading-none">{s.sensorId}</p>
-                             <p className="text-[7px] font-bold text-zinc-600 uppercase mt-0.5 tracking-tighter">{s.type} • {s.distanceKm.toFixed(1)}km</p>
+                             <p className="text-[7px] font-bold text-zinc-600 uppercase mt-0.5 tracking-tighter">{s.type} • {s.distanceKm?.toFixed(1) ?? '--'}km</p>
                           </div>
                        </div>
-                       <span className="text-[11px] font-black text-white italic">{s.value.toFixed(1)}<small className="ml-0.5 text-[8px] opacity-40 not-italic uppercase">{s.unit}</small></span>
+                       <span className="text-[11px] font-black text-white italic">{s.value?.toFixed(1) ?? '--'}<small className="ml-0.5 text-[8px] opacity-40 not-italic uppercase">{s.unit}</small></span>
                     </div>
                   ))
                 ) : (
