@@ -618,7 +618,7 @@ export const MapView: React.FC = () => {
                   if (sensor.latitude && sensor.longitude) {
                     mapRef.current?.flyTo({
                       center: [sensor.longitude, sensor.latitude],
-                      zoom: 15,
+                      zoom: 13.5,
                       duration: 1500
                     });
                   }
@@ -689,7 +689,7 @@ export const MapView: React.FC = () => {
                   if (point.latitude && point.longitude) {
                     mapRef.current?.flyTo({
                       center: [point.longitude, point.latitude],
-                      zoom: 15,
+                      zoom: 13.5,
                       duration: 1500
                     });
                   }

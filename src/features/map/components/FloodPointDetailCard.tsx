@@ -412,12 +412,12 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                               <div>
                                  <p className="text-[11px] font-black text-white uppercase tracking-tight truncate max-w-[120px]">{sensor.sensorId}</p>
                                  <p className="text-[8px] font-bold text-zinc-600 uppercase mt-0.5 tracking-tighter">
-                                    {sensor.type} • {sensor.distanceKm.toFixed(2)}km • {getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--'}
+                                    {sensor.type} • {sensor.distanceKm?.toFixed(2) ?? '--'}km • {getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--'}
                                  </p>
                               </div>
                            </div>
                            <div className="text-right">
-                              <p className="text-lg font-black text-white italic">{sensor.value.toFixed(1)}</p>
+                              <p className="text-lg font-black text-white italic">{sensor.value?.toFixed(1) ?? '--'}</p>
                               <p className="text-[9px] font-bold text-zinc-700 uppercase leading-none">{sensor.unit}</p>
                            </div>
                         </div>

@@ -133,10 +133,10 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                           <Activity className="h-3 w-3 text-zinc-600 group-hover/sensor:text-primary transition-colors" />
                           <div>
                              <p className="text-[9px] font-black text-zinc-300 uppercase leading-none">{s.sensorId}</p>
-                             <p className="text-[7px] font-bold text-zinc-600 uppercase mt-0.5 tracking-tighter">{s.type} • {s.distanceKm.toFixed(1)}km</p>
+                             <p className="text-[7px] font-bold text-zinc-600 uppercase mt-0.5 tracking-tighter">{s.type} • {s.distanceKm?.toFixed(1) ?? '--'}km</p>
                           </div>
                        </div>
-                       <span className="text-[11px] font-black text-white italic">{s.value.toFixed(1)}<small className="ml-0.5 text-[8px] opacity-40 not-italic uppercase">{s.unit}</small></span>
+                       <span className="text-[11px] font-black text-white italic">{s.value?.toFixed(1) ?? '--'}<small className="ml-0.5 text-[8px] opacity-40 not-italic uppercase">{s.unit}</small></span>
                     </div>
                   ))
                 ) : (
