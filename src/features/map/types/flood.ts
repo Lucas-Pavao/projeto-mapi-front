@@ -59,3 +59,34 @@ export interface FloodPredictionResponseDTO {
   estimatedTimeToEvent: string;
   message: string;
 }
+
+export interface FloodScenarioLabelRequestDTO {
+  latitude: number;
+  longitude: number;
+  isFlooded: boolean;
+}
+
+export interface FloodScenarioLabelResponseDTO {
+  id: number;
+  timestamp: string;
+  latitude: number;
+  longitude: number;
+  isFlooded: boolean;
+  currentRainfall: number | null;
+  rainfall3hAccumulated: number | null;
+  rainfall6hAccumulated: number | null;
+  rainfall12hAccumulated: number | null;
+  rainfall24hAccumulated: number | null;
+  tideLevel: number | null;
+  riverLevel: number | null;
+  windSpeed: number | null;
+  windDirection: string | null;
+  temperature: number | null;
+  apparentTemperature: number | null;
+  humidity: number | null;
+  pressure: number | null;
+  waveHeight: number | null;
+  wavePeriod: number | null;
+  waveDirection: number | null;
+  solarRadiation: number | null;
+}

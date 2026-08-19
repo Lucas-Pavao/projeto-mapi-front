@@ -1,6 +1,6 @@
 import React from 'react';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
-import { getSensorConfig, getBatteryStatus } from '../utils/sensor';
+import { getSensorConfig, getBatteryStatus, getSafeFormattedDate } from '../utils/sensor';
 import { Signal, Search, Filter, Battery, BatteryCharging, AlertTriangle, Waves, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -191,7 +191,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                   </div>
                   
                   <div className="mt-3 text-[10px] text-zinc-600 uppercase tracking-widest font-bold opacity-60">
-                    Lido às {sensor.timestamp ? new Date(sensor.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                    Lido às {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
                   </div>
                 </button>
               );

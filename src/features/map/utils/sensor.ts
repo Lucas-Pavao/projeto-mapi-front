@@ -109,7 +109,7 @@ export const formatApiTimestamp = (timestamp: unknown): string => {
     const d = new Date(String(timestamp));
     if (isNaN(d.getTime())) return '';
     return d.toISOString();
-  } catch (e) {
+  } catch {
     return '';
   }
 };
