@@ -964,7 +964,7 @@ export const MapView: React.FC = () => {
                            <div className="flex justify-between items-start">
                               <div>
                                  <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest mb-1">Previsão de Marés</p>
-                                 <h4 className="text-xs font-black text-white uppercase">{nearestHarbor?.name as string || 'Porto da Região'}</h4>
+                                 <h4 className="text-xs font-black text-white uppercase">{(nearestHarbor?.harbor_name as string) || 'Porto da Região'}</h4>
                               </div>
                               <Waves className="h-6 w-6 text-blue-400 opacity-50" />
                            </div>

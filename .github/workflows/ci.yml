@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Typecheck & build
+        run: npm run build
+        env:
+          VITE_API_URL: http://localhost:8080
+          VITE_MAP_STYLE_LIGHT: https://basemaps.cartocdn.com/gl/positron-gl-style/style.json
+          VITE_MAP_STYLE_DARK: https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json

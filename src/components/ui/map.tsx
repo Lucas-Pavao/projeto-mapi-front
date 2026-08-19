@@ -1,6 +1,6 @@
 "use client";
 
-import MapLibreGL, { type PopupOptions, type MarkerOptions } from "maplibre-gl";
+import MapLibreGL, { type PopupOptions, type MarkerOptions, type ErrorEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   createContext,
@@ -255,7 +255,7 @@ const Map = forwardRef<MapRef, MapProps>(function Map(
       }, 100);
     };
     const loadHandler = () => setIsLoaded(true);
-    const errorHandler = (e: any) => {
+    const errorHandler = (e: ErrorEvent) => {
       console.error("MapLibre error:", e);
       // Force loaded state on error to allow children (like overlays) to render 
       // or to at least show the map container

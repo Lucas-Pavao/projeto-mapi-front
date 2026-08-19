@@ -49,7 +49,16 @@ export const tideService = {
     const response = await api.get<TabuaMareResponseObject>('/api/tabua-mare/nearest', {
       params: { latitude, longitude }
     });
-    return response.data;
+    // The backend passes the external tabuamare API payload through as-is,
+    // and that upstream API is inconsistent: `data` can arrive as either a
+    // single harbor object or a one-item array of harbor objects (the
+    // backend's own TabuaMareServiceImpl.getTideHeightAt() branches on
+    // `instanceof List`/`instanceof Map` for this exact reason). Normalize
+    // to a single object here so every frontend consumer can rely on one
+    // shape instead of reimplementing the List/Map check.
+    const rawData = response.data?.data;
+    const normalizedData = Array.isArray(rawData) ? (rawData[0] ?? null) : rawData;
+    return { ...response.data, data: normalizedData };
   },
 
   async getHarbors(ids: string): Promise<TabuaMareResponseListObject> {
@@ -59,46 +68,6 @@ export const tideService = {
 
   async getHarborNamesByState(state: string): Promise<TabuaMareResponseListObject> {
     const response = await api.get<TabuaMareResponseListObject>(`/api/tabua-mare/harbors/state/${state}`);
-    return response.data;
-  },
-
-  async uploadTidePdf(file: File, state?: string, year?: number): Promise<TideTableResponseDTO> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const params: Record<string, string | number> = {};
-    if (state) params.state = state;
-    if (year) params.year = year;
-    
-    const response = await api.post<TideTableResponseDTO>('/api/tide/upload', formData, {
-      params,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
-  async ingestLocalRecife(year?: number): Promise<TideTableResponseDTO> {
-    const response = await api.post<TideTableResponseDTO>('/api/tide/ingest/local', null, {
-      params: { year }
-    });
-    return response.data;
-  },
-
-  async ingestFromHtml(year: number, html: string): Promise<TideTableResponseDTO[]> {
-    const response = await api.post<TideTableResponseDTO[]>('/api/tide/ingest/html', html, {
-      params: { year },
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    return response.data;
-  },
-
-  async triggerAutomaticIngestion(year?: number): Promise<TideTableResponseDTO[]> {
-    const response = await api.post<TideTableResponseDTO[]>('/api/tide/ingest/automatic', null, {
-      params: { year }
-    });
     return response.data;
   },
 };

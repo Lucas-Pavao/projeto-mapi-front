@@ -1,55 +1,58 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from '@/features/authentication/types';
+import { authService } from '@/features/authentication/services/auth.service';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  login: (user: User) => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  /** Verdadeiro enquanto a checagem inicial de sessão (`/api/auth/me`) ainda está em voo. */
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    try {
-      return savedUser ? JSON.parse(savedUser) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [token, setToken] = useState<string | null>(() => {
-    const savedToken = localStorage.getItem('token');
-    if (!savedToken || savedToken === 'undefined' || savedToken === 'null') {
-      return null;
-    }
-    return savedToken;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = (newUser: User, newToken: string) => {
-    if (!newToken) {
-      console.error('Login failed: Token is missing');
-      return;
-    }
+  // O token vive num cookie httpOnly, invisível pro JS por design — a única forma de saber se
+  // já existe uma sessão válida (ex: usuário deu F5 na página) é perguntar pro backend.
+  useEffect(() => {
+    let cancelled = false;
+    authService
+      .me()
+      .then((fetchedUser) => {
+        if (!cancelled) setUser(fetchedUser);
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const login = (newUser: User) => {
     setUser(newUser);
-    setToken(newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    localStorage.setItem('token', newToken);
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+  const logout = async () => {
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+    }
   };
 
-  const isAuthenticated = !!token;
+  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

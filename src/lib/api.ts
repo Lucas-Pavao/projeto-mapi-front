@@ -1,51 +1,26 @@
 import axios from 'axios';
 
-export const API_URL = import.meta.env.VITE_API_URL;
-
+// Sem baseURL absoluta: front e API são "same-origin" (nginx/vite proxeiam /api pro backend
+// real — ver nginx.conf e vite.config.ts), então caminhos relativos como '/api/pontos' já
+// resolvem certo sozinhos.
 const api = axios.create({
-  baseURL: API_URL,
+  // Necessário pro navegador enviar/receber o cookie httpOnly de sessão em cada requisição.
+  withCredentials: true,
 });
 
-// Request Interceptor: Automatically attach JWT token to all requests
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  
-  // Robust check for valid token strings
-  if (token && token !== 'undefined' && token !== 'null') {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  
-  return config;
-}, (error) => {
-  return Promise.reject(error);
-});
-
-// Response Interceptor: Handle auth errors (401, 403)
+// Response Interceptor: em 401 (sessão ausente/inválida/expirada — o cookie httpOnly não pode
+// ser inspecionado pelo JS, então só descobrimos isso pela resposta da API), a sessão local não
+// serve mais pra nada — desloga e manda pro login. Um 403 é diferente (usuário autenticado mas
+// sem permissão pra aquele recurso específico) e não deve derrubar uma sessão válida.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      // If we get a 403 on a protected route while we THINK we are logged in,
-      // it might mean the token is invalid or expired.
-      console.warn('Auth Error Detected (401/403). Clearing session...');
-      // Uncomment if you want automatic logout on auth failure
-      // localStorage.removeItem('token');
-      // window.location.href = '/login';
+    if (error.response && error.response.status === 401 && window.location.pathname !== '/login') {
+      console.warn('Sessão expirada ou inválida. Encerrando sessão local...');
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
 );
 
 export default api;
-
-/**
- * @deprecated Use the centralized 'api' instance instead.
- * Keeping this for backward compatibility during migration.
- */
-export const getAuthHeader = () => {
-  const token = localStorage.getItem('token');
-  if (!token || token === 'undefined' || token === 'null') {
-    return {};
-  }
-  return { Authorization: `Bearer ${token}` };
-};

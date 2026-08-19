@@ -18,5 +18,12 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // Padrão comum em arquivos shadcn (ex: button.tsx exporta `buttonVariants` cva junto
+      // com o componente) e em hooks de contexto (ex: useAuth.tsx exporta o hook `useAuth`
+      // junto com o `AuthProvider`). `allowConstantExport` é a opção oficial da regra pra
+      // não marcar esses exports não-componente como erro de Fast Refresh.
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
   },
 ])

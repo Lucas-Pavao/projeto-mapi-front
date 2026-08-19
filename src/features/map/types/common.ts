@@ -46,9 +46,9 @@ export interface MapiResponseDTO {
   requestedLatitude: number;
   requestedLongitude: number;
   preciseData: PreciseData;
-  nearestSensor: SensorResponseDTO;
+  nearestSensor: SensorResponseDTO | null;
   openMeteoData: WeatherResponseDTO;
-  distanceToNearestSensorKm: number;
+  distanceToNearestSensorKm: number | null;
   floodPrediction?: FloodPredictionResponseDTO;
 }
 

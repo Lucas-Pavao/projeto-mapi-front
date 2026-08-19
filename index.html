@@ -4,6 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      CSP pragmática: bloqueia os dois vetores mais perigosos e baratos de mitigar (scripts
+      injetados/eval e enquadramento em iframe de terceiros/clickjacking) sem quebrar o mapa.
+      img-src/connect-src ficam abertos para https: de propósito — o MapLibre GL busca tiles e
+      estilos de domínios que variam por VITE_MAP_STYLE_*, definidos em build-time, então não dá
+      pra fixar uma allowlist exaustiva aqui sem arriscar quebrar o mapa a cada mudança de estilo.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+    />
     <title>projeto-mapi-front</title>
   </head>
   <body>
