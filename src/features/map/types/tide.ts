@@ -60,3 +60,10 @@ export interface TabuaMareResponseObject {
   total: number;
   error: TabuaMareError | null;
 }
+
+export interface TideSyncSummaryDTO {
+  harborsSynced: number;
+  monthsSynced: number;
+  errors: number;
+  harborNames: string[];
+}
