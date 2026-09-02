@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
-import { getSensorConfig, getBatteryStatus, getSafeFormattedDate } from '../utils/sensor';
-import { Signal, Search, Filter, Battery, BatteryCharging, AlertTriangle, Waves, MapPin } from 'lucide-react';
+import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
+import { Signal, Search, Filter, AlertTriangle, Waves, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -127,7 +127,12 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+      <div className="relative flex-1 min-h-0">
+        {/* Indica visualmente que a lista continua além do que está visível — sem isso, com o
+            scrollbar fino, não fica claro que dá pra rolar mais até o usuário tentar. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/50 to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/50 to-transparent z-10" />
+        <div className="h-full overflow-y-auto p-3 space-y-1 custom-scrollbar">
         {activeTab === 'sensors' ? (
           (filteredSensors || []).length === 0 ? (
             <div className="p-12 text-center space-y-2">
@@ -137,7 +142,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
           ) : (
             filteredSensors.map((sensor) => {
               const config = getSensorConfig(sensor);
-              const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
+              const freshness = getDataFreshness(sensor.timestamp);
               const hasCoords = sensor.latitude != null && sensor.longitude != null && sensor.latitude !== 0 && sensor.longitude !== 0;
               
               return (
@@ -175,21 +180,14 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                       {React.createElement(config.icon, { className: "h-3.5 w-3.5 text-zinc-600" })}
                       <span>{sensor.value !== null ? `${sensor.value} ${sensor.unit || ''}` : '--'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-zinc-500">
-                      {isCharging ? (
-                        <BatteryCharging className="h-3.5 w-3.5 text-emerald-500" />
-                      ) : (
-                        <Battery className={cn(
-                          "h-3.5 w-3.5",
-                          isLow ? 'text-red-500' : 'text-emerald-500'
-                        )} />
-                      )}
-                      <span className="text-[10px] uppercase font-bold">
-                        {percentage !== null ? `${percentage}%` : (sensor.batteryStatus || 'N/A')}
+                    <div className="flex items-center gap-1.5 text-zinc-500" title={freshness.label}>
+                      <div className={cn("h-2 w-2 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
+                      <span className={cn("text-[10px] uppercase font-bold", freshness.text)}>
+                        {freshness.label}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-3 text-[10px] text-zinc-600 uppercase tracking-widest font-bold opacity-60">
                     Lido às {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
                   </div>
@@ -249,6 +247,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
             ))
           )
         )}
+        </div>
       </div>
 
       <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-sm">

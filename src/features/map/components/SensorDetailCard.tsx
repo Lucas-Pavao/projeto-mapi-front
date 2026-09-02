@@ -1,23 +1,22 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  MapPin, 
-  Battery, 
-  BatteryCharging, 
-  Clock, 
-  X as CloseIcon, 
-  Zap,
+import {
+  MapPin,
+  Clock,
+  X as CloseIcon,
   Thermometer,
   Droplets,
   CloudRain,
   Wind,
   Sun,
-  Gauge
+  Gauge,
+  ShieldAlert,
+  Waves
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
-import { getSensorConfig, getBatteryStatus, getSafeFormattedDate } from '../utils/sensor';
+import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 
 interface SensorDetailCardProps {
   sensor: SensorResponseDTO;
@@ -26,9 +25,10 @@ interface SensorDetailCardProps {
 }
 
 export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, status, onClose }) => {
-  const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
   const config = getSensorConfig(sensor);
+  const freshness = getDataFreshness(sensor.timestamp);
   const precise = status?.preciseData;
+  const hasRiverAlert = sensor.riverPreAlertLevel != null || sensor.riverAlertLevel != null || sensor.riverFloodLevel != null;
 
   const formatValue = (val: number | null | undefined, decimals: number) => {
     if (val != null && typeof val === 'number') return val.toFixed(decimals);
@@ -41,14 +41,10 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
         <CardHeader className="pb-4 flex flex-row items-center justify-between border-b border-white/5 bg-white/5 shrink-0">
           <div className="flex items-center gap-4 text-white">
             <div className={cn(
-              "w-12 h-12 rounded-xl flex items-center justify-center shadow-2xl border border-white/10", 
-              isCharging ? "bg-emerald-600/80" : config.color.replace('bg-', 'bg-') + '/80'
+              "w-12 h-12 rounded-xl flex items-center justify-center shadow-2xl border border-white/10",
+              config.color + '/80'
             )}>
-              {isCharging ? (
-                <BatteryCharging className="h-7 w-7" />
-              ) : (
-                React.createElement(config.icon, { className: "h-7 w-7" })
-              )}
+              {React.createElement(config.icon, { className: "h-7 w-7" })}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -104,31 +100,62 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
 
               <div className="bg-white/5 p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
                  <div className="flex justify-between items-start">
-                    <p className="text-xs text-zinc-500 uppercase font-bold tracking-widest">Bateria</p>
+                    <p className="text-xs text-zinc-500 uppercase font-bold tracking-widest">Status da Coleta</p>
                     <div className={cn(
-                      "px-2 py-1 rounded-lg flex items-center gap-1.5 text-[10px] font-bold uppercase",
-                      isLow ? "bg-red-500/10 text-red-500 border border-red-500/20" : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                      "px-2 py-1 rounded-lg flex items-center gap-1.5 text-[10px] font-bold uppercase border",
+                      freshness.status === 'fresh' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+                      freshness.status === 'aging' && "bg-amber-500/10 text-amber-500 border-amber-500/20",
+                      freshness.status === 'stale' && "bg-red-500/10 text-red-500 border-red-500/20"
                     )}>
-                       {isCharging ? <Zap className="h-3 w-3 animate-pulse" /> : <Battery className="h-3 w-3" />}
-                       {percentage !== null ? `${percentage}%` : (sensor.batteryStatus || 'N/A')}
+                       <div className={cn("h-2 w-2 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
+                       {freshness.label}
                     </div>
                  </div>
                  <div className="pt-4">
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-2">
-                       <div 
-                         className={cn(
-                           "h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)]",
-                           isLow ? "bg-red-500" : "bg-emerald-500"
-                         )} 
-                         style={{ width: `${percentage || 0}%` }}
-                       />
-                    </div>
-                    <p className="text-[10px] text-zinc-600 font-bold uppercase text-right">
-                      Status: {isCharging ? 'Carregando' : 'Operando'}
+                    <p className="text-3xl font-black text-white leading-none">
+                      {freshness.minutesAgo != null ? freshness.minutesAgo : '--'}
+                      <span className="text-xs text-zinc-600 font-bold uppercase ml-1.5">min atrás</span>
+                    </p>
+                    <p className="text-[10px] text-zinc-600 font-bold uppercase text-right mt-3">
+                      Fonte: {sensor.source || 'N/A'}
                     </p>
                  </div>
               </div>
             </div>
+
+            {/* River Alert Section — thresholds oficiais da APAC (só aparece pra estações fluviométricas) */}
+            {hasRiverAlert && (
+              <div className="bg-rose-500/[0.04] p-6 rounded-2xl border border-rose-500/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] text-rose-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4" /> Alerta Oficial de Rio (APAC)
+                  </h4>
+                  {sensor.riverName && (
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+                      <Waves className="h-3 w-3 text-rose-400" /> {sensor.riverName}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                    <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Nível Atual</p>
+                    <p className="text-lg font-black text-white mt-1">{formatValue(sensor.waterLevel, 1)}</p>
+                  </div>
+                  <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
+                    <p className="text-[8px] text-amber-400/70 font-bold uppercase tracking-tighter">Pré-Alerta</p>
+                    <p className="text-lg font-black text-amber-400 mt-1">{formatValue(sensor.riverPreAlertLevel, 1)}</p>
+                  </div>
+                  <div className="bg-orange-500/10 p-4 rounded-xl border border-orange-500/20">
+                    <p className="text-[8px] text-orange-400/70 font-bold uppercase tracking-tighter">Alerta</p>
+                    <p className="text-lg font-black text-orange-400 mt-1">{formatValue(sensor.riverAlertLevel, 1)}</p>
+                  </div>
+                  <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
+                    <p className="text-[8px] text-rose-400/70 font-bold uppercase tracking-tighter">Inundação</p>
+                    <p className="text-lg font-black text-rose-400 mt-1">{formatValue(sensor.riverFloodLevel, 1)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Technical & Environmental Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

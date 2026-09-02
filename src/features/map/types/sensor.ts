@@ -26,6 +26,11 @@ export interface SensorResponseDTO {
   basinName: string | null;
   tideHeight?: number | null;
   rawData?: string;
+  // Estações fluviométricas da APAC com alerta oficial (ex.: Rio Duas Unas)
+  riverName?: string | null;
+  riverPreAlertLevel?: number | null;
+  riverAlertLevel?: number | null;
+  riverFloodLevel?: number | null;
 }
 
 export interface SensorReadingDTO {
