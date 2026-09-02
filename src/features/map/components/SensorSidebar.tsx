@@ -127,7 +127,12 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
+      <div className="relative flex-1 min-h-0">
+        {/* Indica visualmente que a lista continua além do que está visível — sem isso, com o
+            scrollbar fino, não fica claro que dá pra rolar mais até o usuário tentar. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-black/50 to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/50 to-transparent z-10" />
+        <div className="h-full overflow-y-auto p-3 space-y-1 custom-scrollbar">
         {activeTab === 'sensors' ? (
           (filteredSensors || []).length === 0 ? (
             <div className="p-12 text-center space-y-2">
@@ -242,6 +247,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
             ))
           )
         )}
+        </div>
       </div>
 
       <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-sm">
