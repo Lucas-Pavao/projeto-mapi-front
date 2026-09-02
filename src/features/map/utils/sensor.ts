@@ -1,17 +1,33 @@
-import { 
-  Waves, 
-  CloudRain, 
-  Thermometer, 
-  Wind, 
-  Gauge, 
-  Activity
+import {
+  Waves,
+  CloudRain,
+  Thermometer,
+  Wind,
+  Gauge,
+  Activity,
+  ShieldAlert
 } from 'lucide-react';
 import type { SensorResponseDTO } from '../types';
 
 export const getSensorConfig = (sensor: SensorResponseDTO) => {
   const source = sensor.source?.toUpperCase() || '';
   const type = sensor.type?.toLowerCase() || '';
-  
+
+  // Estação fluviométrica com alerta oficial (APAC) — identidade própria, tem prioridade sobre
+  // a checagem por fonte/tipo genérica abaixo: não é chuva nem meteo, é o dado central de alerta
+  // de alagamento (pré-alerta/alerta/inundação de um rio específico).
+  const hasRiverAlert = sensor.riverPreAlertLevel != null || sensor.riverAlertLevel != null || sensor.riverFloodLevel != null;
+  if (hasRiverAlert || type.includes('fluviom')) {
+    return {
+      icon: ShieldAlert,
+      color: 'bg-rose-600',
+      sidebarColor: "bg-rose-500/10 text-rose-400",
+      ping: 'bg-rose-400',
+      text: 'text-rose-400',
+      label: 'Alerta de Rio'
+    };
+  }
+
   // ANA - Usually Hydrological (Rivers)
   if (source.includes('ANA')) {
     return { 

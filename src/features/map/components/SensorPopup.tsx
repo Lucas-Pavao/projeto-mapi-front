@@ -1,16 +1,17 @@
 import React from 'react';
-import { 
-  Thermometer, 
-  Droplets, 
-  Battery, 
-  BatteryCharging, 
-  Clock, 
-  MapPin, 
+import {
+  Thermometer,
+  Droplets,
+  Battery,
+  BatteryCharging,
+  Clock,
+  MapPin,
   ExternalLink,
   Zap,
   CloudRain,
   Wind,
-  Loader2
+  Loader2,
+  Waves
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
   const config = getSensorConfig(sensor);
   const precise = status?.preciseData;
+  const hasRiverAlert = sensor.riverPreAlertLevel != null || sensor.riverAlertLevel != null || sensor.riverFloodLevel != null;
 
   const getMetric = (sensorVal: number | null | undefined, preciseVal: number | null | undefined) => {
     if (sensorVal != null && typeof sensorVal === 'number') return sensorVal.toFixed(1);
@@ -96,57 +98,83 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         </div>
 
         {/* Secondary Metrics Grid */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-            <div className="p-1.5 bg-orange-500/10 rounded-lg">
-              <Thermometer className="h-3.5 w-3.5 text-orange-400" />
+        {hasRiverAlert ? (
+          <div className="space-y-2.5">
+            {sensor.riverName && (
+              <div className="flex items-center gap-1.5 text-rose-400">
+                <Waves className="h-3 w-3" />
+                <span className="text-[10px] font-black uppercase tracking-widest">{sensor.riverName}</span>
+              </div>
+            )}
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/10 flex flex-col items-center text-center">
+                <span className="text-[8px] text-amber-400/70 font-black uppercase tracking-tighter">Pré-Alerta</span>
+                <span className="text-xs font-black text-amber-400">{getMetric(sensor.riverPreAlertLevel, null)}</span>
+              </div>
+              <div className="bg-orange-500/10 p-2.5 rounded-xl border border-orange-500/10 flex flex-col items-center text-center">
+                <span className="text-[8px] text-orange-400/70 font-black uppercase tracking-tighter">Alerta</span>
+                <span className="text-xs font-black text-orange-400">{getMetric(sensor.riverAlertLevel, null)}</span>
+              </div>
+              <div className="bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/10 flex flex-col items-center text-center">
+                <span className="text-[8px] text-rose-400/70 font-black uppercase tracking-tighter">Inundação</span>
+                <span className="text-xs font-black text-rose-400">{getMetric(sensor.riverFloodLevel, null)}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Temp</span>
-              <span className="text-xs font-black text-white">
-                {getMetric(sensor.temperature, precise?.temperature)}
-                <small className="ml-0.5 opacity-50">{precise?.unitTemperature || '°C'}</small>
-              </span>
-            </div>
+            <p className="text-[9px] text-zinc-500 font-medium italic px-0.5">Limiares oficiais da APAC para este ponto do rio.</p>
           </div>
-          
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-            <div className="p-1.5 bg-blue-500/10 rounded-lg">
-              <Droplets className="h-3.5 w-3.5 text-blue-400" />
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
+              <div className="p-1.5 bg-orange-500/10 rounded-lg">
+                <Thermometer className="h-3.5 w-3.5 text-orange-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Temp</span>
+                <span className="text-xs font-black text-white">
+                  {getMetric(sensor.temperature, precise?.temperature)}
+                  <small className="ml-0.5 opacity-50">{precise?.unitTemperature || '°C'}</small>
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Humid</span>
-              <span className="text-xs font-black text-white">{getMetric(sensor.humidity, precise?.humidity)}%</span>
-            </div>
-          </div>
 
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-            <div className="p-1.5 bg-sky-500/10 rounded-lg">
-              <CloudRain className="h-3.5 w-3.5 text-sky-400" />
+            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
+              <div className="p-1.5 bg-blue-500/10 rounded-lg">
+                <Droplets className="h-3.5 w-3.5 text-blue-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Humid</span>
+                <span className="text-xs font-black text-white">{getMetric(sensor.humidity, precise?.humidity)}%</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Chuva</span>
-              <span className="text-xs font-black text-white">
-                {getMetric(sensor.accumulatedPrecipitation, precise?.precipitation)}
-                <small className="ml-0.5 opacity-50">{precise?.unitPrecipitation || 'mm'}</small>
-              </span>
-            </div>
-          </div>
 
-          <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-            <div className="p-1.5 bg-slate-500/10 rounded-lg">
-              <Wind className="h-3.5 w-3.5 text-slate-400" />
+            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
+              <div className="p-1.5 bg-sky-500/10 rounded-lg">
+                <CloudRain className="h-3.5 w-3.5 text-sky-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Chuva</span>
+                <span className="text-xs font-black text-white">
+                  {getMetric(sensor.accumulatedPrecipitation, precise?.precipitation)}
+                  <small className="ml-0.5 opacity-50">{precise?.unitPrecipitation || 'mm'}</small>
+                </span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Vento</span>
-              <span className="text-xs font-black text-white">
-                {getMetric(sensor.windSpeed, precise?.windSpeed)}
-                <small className="ml-0.5 opacity-50">{precise?.unitWindSpeed || 'km/h'}</small>
-              </span>
+
+            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
+              <div className="p-1.5 bg-slate-500/10 rounded-lg">
+                <Wind className="h-3.5 w-3.5 text-slate-400" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Vento</span>
+                <span className="text-xs font-black text-white">
+                  {getMetric(sensor.windSpeed, precise?.windSpeed)}
+                  <small className="ml-0.5 opacity-50">{precise?.unitWindSpeed || 'km/h'}</small>
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-        
+        )}
+
         {/* Status Bar */}
         <div className="pt-4 border-t border-white/5 space-y-3">
           <div className="flex justify-between items-center">

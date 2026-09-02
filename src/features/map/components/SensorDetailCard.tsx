@@ -1,19 +1,21 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  MapPin, 
-  Battery, 
-  BatteryCharging, 
-  Clock, 
-  X as CloseIcon, 
+import {
+  MapPin,
+  Battery,
+  BatteryCharging,
+  Clock,
+  X as CloseIcon,
   Zap,
   Thermometer,
   Droplets,
   CloudRain,
   Wind,
   Sun,
-  Gauge
+  Gauge,
+  ShieldAlert,
+  Waves
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
@@ -29,6 +31,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
   const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
   const config = getSensorConfig(sensor);
   const precise = status?.preciseData;
+  const hasRiverAlert = sensor.riverPreAlertLevel != null || sensor.riverAlertLevel != null || sensor.riverFloodLevel != null;
 
   const formatValue = (val: number | null | undefined, decimals: number) => {
     if (val != null && typeof val === 'number') return val.toFixed(decimals);
@@ -129,6 +132,40 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                  </div>
               </div>
             </div>
+
+            {/* River Alert Section — thresholds oficiais da APAC (só aparece pra estações fluviométricas) */}
+            {hasRiverAlert && (
+              <div className="bg-rose-500/[0.04] p-6 rounded-2xl border border-rose-500/20 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] text-rose-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4" /> Alerta Oficial de Rio (APAC)
+                  </h4>
+                  {sensor.riverName && (
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+                      <Waves className="h-3 w-3 text-rose-400" /> {sensor.riverName}
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                    <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Nível Atual</p>
+                    <p className="text-lg font-black text-white mt-1">{formatValue(sensor.waterLevel, 1)}</p>
+                  </div>
+                  <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
+                    <p className="text-[8px] text-amber-400/70 font-bold uppercase tracking-tighter">Pré-Alerta</p>
+                    <p className="text-lg font-black text-amber-400 mt-1">{formatValue(sensor.riverPreAlertLevel, 1)}</p>
+                  </div>
+                  <div className="bg-orange-500/10 p-4 rounded-xl border border-orange-500/20">
+                    <p className="text-[8px] text-orange-400/70 font-bold uppercase tracking-tighter">Alerta</p>
+                    <p className="text-lg font-black text-orange-400 mt-1">{formatValue(sensor.riverAlertLevel, 1)}</p>
+                  </div>
+                  <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
+                    <p className="text-[8px] text-rose-400/70 font-bold uppercase tracking-tighter">Inundação</p>
+                    <p className="text-lg font-black text-rose-400 mt-1">{formatValue(sensor.riverFloodLevel, 1)}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Technical & Environmental Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
