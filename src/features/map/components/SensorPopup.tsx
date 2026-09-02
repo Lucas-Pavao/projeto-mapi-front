@@ -2,12 +2,9 @@ import React from 'react';
 import {
   Thermometer,
   Droplets,
-  Battery,
-  BatteryCharging,
   Clock,
   MapPin,
   ExternalLink,
-  Zap,
   CloudRain,
   Wind,
   Loader2,
@@ -16,7 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
-import { getSensorConfig, getBatteryStatus, getSafeFormattedDate } from '../utils/sensor';
+import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 
 interface SensorPopupProps {
   sensor: SensorResponseDTO;
@@ -31,8 +28,8 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   isFetchingStatus,
   onShowDetails 
 }) => {
-  const { isCharging, isLow, percentage } = getBatteryStatus(sensor.batteryStatus);
   const config = getSensorConfig(sensor);
+  const freshness = getDataFreshness(sensor.timestamp);
   const precise = status?.preciseData;
   const hasRiverAlert = sensor.riverPreAlertLevel != null || sensor.riverAlertLevel != null || sensor.riverFloodLevel != null;
 
@@ -45,10 +42,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   return (
     <div className="bg-zinc-900/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden w-80 ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
       {/* Header with Gradient */}
-      <div className={cn(
-        "px-5 py-4 text-white relative overflow-hidden",
-        isCharging ? "bg-emerald-600/90" : config.color + "/90"
-      )}>
+      <div className={cn("px-5 py-4 text-white relative overflow-hidden", config.color + "/90")}>
         <div className="absolute top-0 right-0 p-4 opacity-10">
            {React.createElement(config.icon, { className: "h-16 w-16 -mr-4 -mt-4 rotate-12" })}
         </div>
@@ -91,9 +85,9 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           </div>
           <div className={cn(
             "h-14 w-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 shadow-inner group transition-transform hover:scale-105 duration-300",
-            isCharging ? "text-emerald-400" : config.text
+            config.text
           )}>
-            {isCharging ? <BatteryCharging className="h-7 w-7" /> : React.createElement(config.icon, { className: "h-7 w-7" })}
+            {React.createElement(config.icon, { className: "h-7 w-7" })}
           </div>
         </div>
 
@@ -179,27 +173,18 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         <div className="pt-4 border-t border-white/5 space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Battery className={cn(
-                "h-3.5 w-3.5",
-                isLow ? 'text-red-500' : 'text-emerald-500'
-              )} />
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Status Energia</span>
+              <div className={cn("h-2.5 w-2.5 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Status da Coleta</span>
             </div>
-            <div className="flex items-center gap-1.5">
-               {isCharging && <Zap className="h-3 w-3 text-emerald-400 animate-pulse" />}
-               <span className={cn(
-                 "text-[10px] font-black uppercase tracking-widest",
-                 isLow ? "text-red-500" : "text-emerald-500"
-               )}>
-                  {percentage !== null ? `${percentage}%` : (sensor.batteryStatus || 'N/A')}
-               </span>
-            </div>
+            <span className={cn("text-[10px] font-black uppercase tracking-widest", freshness.text)}>
+              {freshness.label}
+            </span>
           </div>
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-zinc-500" />
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Sincronização</span>
+              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Última Leitura</span>
             </div>
             <span className="text-[10px] font-black text-zinc-300 uppercase">
               {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}

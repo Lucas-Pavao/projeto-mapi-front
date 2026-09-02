@@ -15,7 +15,6 @@ import {
   Droplets,
   Navigation,
   CloudRain,
-  BatteryCharging,
   Thermometer,
   Wind,
   MapPin,
@@ -28,7 +27,7 @@ import {
 import { exportService } from '../services/export.service';
 import { floodService } from '../services/flood.service';
 import { mapService } from '../services/map.service';
-import { getSensorConfig, getBatteryStatus, formatApiTimestamp } from '../utils/sensor';
+import { getSensorConfig, getDataFreshness, formatApiTimestamp } from '../utils/sensor';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
 import { FloodPointPopup } from './FloodPointPopup';
@@ -603,7 +602,8 @@ export const MapView: React.FC = () => {
 
           {filteredSensorsForMap.map((sensor: SensorResponseDTO) => {
             const config = getSensorConfig(sensor);
-            const { isCharging } = getBatteryStatus(sensor.batteryStatus);
+            const freshness = getDataFreshness(sensor.timestamp);
+            const isStale = freshness.status === 'stale';
             const isSelected = selectedSensorId === sensor.id;
             const isNearby = nearbySensorIds.has(sensor.sensorId);
 
@@ -629,15 +629,20 @@ export const MapView: React.FC = () => {
                   <div className="relative group cursor-pointer flex flex-col items-center">
                     <div className={cn(
                       "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
-                      isCharging ? "bg-emerald-600" : config.color,
+                      config.color,
+                      isStale && "opacity-50 grayscale",
                       isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : '',
                       isNearby && !isSelected ? 'ring-2 ring-primary/60 scale-105' : ''
                     )}>
                       <div className="-rotate-45 flex items-center justify-center h-full w-full">
-                         {isCharging ? <BatteryCharging className="h-5 w-5 text-white" /> : React.createElement(config.icon, { className: "h-5 w-5 text-white" })}
+                         {React.createElement(config.icon, { className: "h-5 w-5 text-white" })}
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
                     </div>
+
+                    {isStale && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-zinc-950 z-20" title="Sensor sem resposta recente" />
+                    )}
 
                     {isSelected && (
                       <div className="absolute -bottom-1 w-2 h-2 bg-white rounded-full blur-[2px] animate-pulse" />
@@ -647,10 +652,10 @@ export const MapView: React.FC = () => {
                       <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary/60 rounded-full blur-[1px]" />
                     )}
 
-                    {(isCharging || isSelected || isNearby) && (
+                    {(isSelected || isNearby) && (
                       <div className={cn(
                         "absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none",
-                        isCharging ? "bg-emerald-400" : (isSelected ? "bg-white" : "bg-primary")
+                        isSelected ? "bg-white" : "bg-primary"
                       )} />
                     )}
                   </div>

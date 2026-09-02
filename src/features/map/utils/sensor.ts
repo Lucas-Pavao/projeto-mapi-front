@@ -91,21 +91,6 @@ export const getSensorConfig = (sensor: SensorResponseDTO) => {
   };
 };
 
-export const getBatteryStatus = (status?: string | null) => {
-  if (!status) return { isCharging: false, isLow: false, percentage: null };
-  
-  const normalized = status.toLowerCase();
-  const isCharging = normalized.includes('charging') || normalized.includes('carregando');
-  
-  // Try to parse percentage
-  const match = normalized.match(/(\d+(\.\d+)?)/);
-  const percentage = match ? parseFloat(match[1]) : null;
-  
-  const isLow = percentage !== null ? percentage < 20 : (normalized.includes('low') || normalized.includes('baixo') || normalized.includes('crítico') || normalized.includes('critical'));
-  
-  return { isCharging, isLow, percentage };
-};
-
 export const formatApiTimestamp = (timestamp: unknown): string => {
   if (!timestamp) return '';
   try {
@@ -136,5 +121,38 @@ export const getSafeFormattedDate = (timestamp: unknown): Date | null => {
   const d = new Date(tsStr);
   if (isNaN(d.getTime())) return null;
   return d;
+};
+
+export type DataFreshnessStatus = 'fresh' | 'aging' | 'stale';
+
+export interface DataFreshness {
+  status: DataFreshnessStatus;
+  minutesAgo: number | null;
+  label: string;
+  color: string;
+  text: string;
+  dot: string;
+}
+
+// Sensores agora vêm de coleta agendada direto da ANA/APAC (sem o antigo "sensor virtual" MQTT
+// que simulava bateria/carregamento) — não existe mais um sinal de "saúde do dispositivo" pra
+// mostrar. O que substitui esse papel é a frescor do último dado: se um coletor externo começar
+// a falhar (ex.: ANA fora do ar), a leitura mais recente do sensor vai ficando velha, e é isso
+// que o usuário do painel precisa perceber rápido — não uma bateria que nunca existiu de verdade.
+export const getDataFreshness = (timestamp: unknown): DataFreshness => {
+  const date = getSafeFormattedDate(timestamp);
+  if (!date) {
+    return { status: 'stale', minutesAgo: null, label: 'Sem dados', color: 'bg-zinc-600', text: 'text-zinc-500', dot: 'bg-zinc-500' };
+  }
+
+  const minutesAgo = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
+
+  if (minutesAgo <= 20) {
+    return { status: 'fresh', minutesAgo, label: 'Atualizado', color: 'bg-emerald-600', text: 'text-emerald-500', dot: 'bg-emerald-400' };
+  }
+  if (minutesAgo <= 120) {
+    return { status: 'aging', minutesAgo, label: 'Atrasando', color: 'bg-amber-600', text: 'text-amber-500', dot: 'bg-amber-400' };
+  }
+  return { status: 'stale', minutesAgo, label: 'Sem resposta', color: 'bg-red-600', text: 'text-red-500', dot: 'bg-red-400' };
 };
 
