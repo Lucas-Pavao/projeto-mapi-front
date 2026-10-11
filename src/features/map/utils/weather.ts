@@ -29,5 +29,5 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
   if (code >= 85 && code <= 86) return { label: 'Pancadas de Neve', icon: CloudSnow, color: 'text-zinc-100' };
   if (code >= 95) return { label: 'Tempestade', icon: CloudLightning, color: 'text-amber-500' };
   
-  return { label: 'Desconhecido', icon: Cloud, color: 'text-zinc-500' };
+  return { label: 'Desconhecido', icon: Cloud, color: 'text-zinc-400' };
 };

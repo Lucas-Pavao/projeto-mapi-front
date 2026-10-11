@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, MapPin, RefreshCw, X, Check } from 'lucide-react';
+import { ModalDialog } from '@/components/ui/modal-dialog';
 
 interface ReportScenarioModalProps {
   latitude: number;
@@ -21,7 +22,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
   onClose
 }) => {
   return (
-    <div className="absolute inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <ModalDialog label="Reportar cenário no local" onClose={() => { if (!isSubmitting) onClose(); }} className="absolute inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 shadow-2xl overflow-hidden animate-in scale-in-95 duration-200">
         <CardHeader className="bg-primary/10 border-b border-primary/20 p-6 relative">
           <div className="flex items-center gap-3">
@@ -30,17 +31,19 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
             </div>
             <div>
               <CardTitle className="text-lg font-black text-white uppercase tracking-tight">Reportar Cenário</CardTitle>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
+              <p className="text-2xs text-zinc-400 font-bold uppercase tracking-widest mt-1">
                 Coord: {latitude.toFixed(5)}, {longitude.toFixed(5)}
               </p>
             </div>
           </div>
           <button 
+            type="button"
+            aria-label="Fechar"
             onClick={onClose} 
             className="absolute top-4 right-4 h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
             disabled={isSubmitting}
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
@@ -52,7 +55,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
 
           <div className="flex flex-col gap-3">
             <Button 
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase text-[11px] tracking-widest h-14 shadow-lg shadow-red-900/20 flex items-center justify-center gap-2"
+              className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase text-2xs tracking-widest h-14 shadow-lg shadow-red-900/20 flex items-center justify-center gap-2"
               onClick={() => onConfirm(true)}
               disabled={isSubmitting}
             >
@@ -67,7 +70,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
             </Button>
             
             <Button 
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-[11px] tracking-widest h-14 shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-2xs tracking-widest h-14 shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2"
               onClick={() => onConfirm(false)}
               disabled={isSubmitting}
             >
@@ -84,7 +87,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
 
           <div className="text-center">
             <button 
-              className="text-[10px] text-zinc-500 hover:text-zinc-400 font-bold uppercase tracking-widest transition-colors"
+              className="text-2xs text-zinc-400 hover:text-zinc-400 font-bold uppercase tracking-widest transition-colors"
               onClick={onClose}
               disabled={isSubmitting}
             >
@@ -93,7 +96,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </ModalDialog>
   );
 };
 

@@ -45,6 +45,6 @@ export interface SensorReadingDTO {
 }
 
 export interface SensorConfigDTO {
-  estacoes_pluviometricas_ids?: string[];
-  estacoes_nivel_rio_ids?: string[];
+  pluviometerStationIds?: string[];
+  riverLevelStationIds?: string[];
 }

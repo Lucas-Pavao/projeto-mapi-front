@@ -142,7 +142,7 @@ export interface DataFreshness {
 export const getDataFreshness = (timestamp: unknown): DataFreshness => {
   const date = getSafeFormattedDate(timestamp);
   if (!date) {
-    return { status: 'stale', minutesAgo: null, label: 'Sem dados', color: 'bg-zinc-600', text: 'text-zinc-500', dot: 'bg-zinc-500' };
+    return { status: 'stale', minutesAgo: null, label: 'Sem dados', color: 'bg-zinc-600', text: 'text-zinc-400', dot: 'bg-zinc-500' };
   }
 
   const minutesAgo = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
