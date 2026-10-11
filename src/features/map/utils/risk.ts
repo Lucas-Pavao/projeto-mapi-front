@@ -1,4 +1,4 @@
-import type { DegradationReason, RiskLevel } from '../schemas/floodPointResponse.schema';
+import type { DegradationReason, ModelValidationStatus, RiskLevel } from '../schemas/floodPointResponse.schema';
 
 /** Visual de um nível de risco. UNKNOWN usa cinza neutro, fora da paleta de risco. */
 export interface RiskVisual {
@@ -75,3 +75,25 @@ export const RISK_MEANING: Record<RiskLevel, string> = {
 
 /** Ordem de exibição da legenda (do menor ao maior risco; indisponível por último). */
 export const RISK_LEGEND_ORDER: readonly RiskLevel[] = ['LOW', 'MEDIUM', 'HIGH', 'UNKNOWN'];
+
+/** Rótulo obrigatório junto da classe enquanto o modelo não for validado (ADR 0007, emenda 1). */
+export const EXPERIMENTAL_LABEL = 'Previsão experimental — modelo não validado';
+
+/** Estado de validação efetivo: ausente (backend antigo) = NOT_VALIDATED. */
+export function validationStatusOf(
+  prediction: { modelValidationStatus?: ModelValidationStatus | null } | null | undefined,
+): ModelValidationStatus {
+  return prediction?.modelValidationStatus === 'VALIDATED' ? 'VALIDATED' : 'NOT_VALIDATED';
+}
+
+/** true quando a classe (LOW/MEDIUM/HIGH) deve vir com o rótulo experimental. UNKNOWN tem estado próprio. */
+export function showsExperimentalLabel(
+  prediction: { riskLevel?: RiskLevel | null; modelValidationStatus?: ModelValidationStatus | null } | null | undefined,
+): boolean {
+  if (!prediction || !getRiskVisual(prediction.riskLevel).showsProbability) return false;
+  return validationStatusOf(prediction) === 'NOT_VALIDATED';
+}
+
+/** Frase da legenda sobre o rótulo experimental. */
+export const EXPERIMENTAL_LEGEND_TEXT =
+  'As classes acima são experimentais: o modelo ainda não passou por validação formal, por isso cada classe vem marcada como previsão experimental.';

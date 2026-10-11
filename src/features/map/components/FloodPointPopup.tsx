@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { getSafeFormattedDate } from '../utils/sensor';
-import { getRiskVisual, formatProbability } from '../utils/risk';
+import { getRiskVisual, formatProbability, showsExperimentalLabel } from '../utils/risk';
+import { ExperimentalBadge } from './ExperimentalBadge';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 
 interface FloodPointPopupProps {
@@ -111,6 +112,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                  <p className="text-2xs font-bold text-zinc-400 uppercase tracking-[0.1em]">Análise Preditiva</p>
               </div>
            </div>
+           {showsExperimentalLabel(prediction) && <ExperimentalBadge className="relative z-10 mt-4" />}
            <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.02] to-transparent pointer-events-none" />
         </div>
 

@@ -30,6 +30,11 @@ const riskLevelSchema = z.enum(RISK_LEVELS).catch((ctx) => {
   return 'UNKNOWN';
 });
 
+export const MODEL_VALIDATION_STATUSES = ['NOT_VALIDATED', 'VALIDATED'] as const;
+
+/** ADR 0007 emenda 1 (RC-03): ausente ou valor desconhecido = NOT_VALIDATED (nunca presume validação). */
+const modelValidationStatusSchema = z.enum(MODEL_VALIDATION_STATUSES).optional().catch('NOT_VALIDATED');
+
 const degradationReasonSchema = z.enum(DEGRADATION_REASONS);
 
 const floodPredictionSchema = z
@@ -38,6 +43,7 @@ const floodPredictionSchema = z
     floodProbability: z.number().nullable(),
     estimatedTimeToEvent: z.string().nullable().optional(),
     message: z.string().nullable().optional(),
+    modelValidationStatus: modelValidationStatusSchema,
     modelVersion: z.string().nullable().optional(),
     issuedAt: z.string().nullable().optional(),
     horizonHours: z.number().nullable().optional(),
@@ -54,6 +60,7 @@ const floodPredictionSchema = z
 export { floodPredictionSchema };
 export type FloodPrediction = z.infer<typeof floodPredictionSchema>;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
+export type ModelValidationStatus = (typeof MODEL_VALIDATION_STATUSES)[number];
 export type DegradationReason = (typeof DEGRADATION_REASONS)[number];
 
 const preciseDataSchema = z

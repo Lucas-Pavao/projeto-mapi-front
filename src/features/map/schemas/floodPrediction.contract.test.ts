@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { floodPredictionSchema, RISK_LEVELS } from './floodPointResponse.schema';
+import { validationStatusOf } from '../utils/risk';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -38,5 +39,21 @@ describe('contrato de predição (ADR 0007)', () => {
       floodPredictionSchema.parse({ floodProbability: 0.5, riskLevel });
     }
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('modelValidationStatus (ADR 0007, emenda 1)', () => {
+  it('aceita NOT_VALIDATED e VALIDATED', () => {
+    for (const s of ['NOT_VALIDATED', 'VALIDATED']) {
+      expect(floodPredictionSchema.parse({ floodProbability: 0.5, riskLevel: 'LOW', modelValidationStatus: s }).modelValidationStatus).toBe(s);
+    }
+  });
+  it('ausente é aceito e tratado como NOT_VALIDATED', () => {
+    const r = floodPredictionSchema.parse({ floodProbability: 0.5, riskLevel: 'LOW' });
+    expect(validationStatusOf(r)).toBe('NOT_VALIDATED');
+  });
+  it('valor desconhecido nunca vira VALIDATED', () => {
+    const r = floodPredictionSchema.parse({ floodProbability: 0.5, riskLevel: 'LOW', modelValidationStatus: 'OK' });
+    expect(r.modelValidationStatus).toBe('NOT_VALIDATED');
   });
 });

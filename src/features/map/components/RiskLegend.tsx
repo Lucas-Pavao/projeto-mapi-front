@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getRiskVisual, RISK_LEGEND_ORDER, RISK_MEANING } from '../utils/risk';
+import { getRiskVisual, RISK_LEGEND_ORDER, RISK_MEANING, EXPERIMENTAL_LEGEND_TEXT } from '../utils/risk';
 import { RiskIcon } from './RiskIcon';
 
 function startsOpen(): boolean {
@@ -56,7 +56,7 @@ export const RiskLegend: React.FC<{ className?: string }> = ({ className }) => {
           })}
         </ul>
         <p className="border-t border-white/10 px-3 py-2 text-2xs leading-snug text-zinc-400">
-          Classes vêm da probabilidade estimada pelo modelo, ainda em validação. Confirme em campo antes de decidir.
+          {EXPERIMENTAL_LEGEND_TEXT} Confirme em campo antes de decidir.
         </p>
       </div>
     </section>

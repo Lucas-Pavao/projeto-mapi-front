@@ -24,7 +24,8 @@ import {
 import { cn } from '@/lib/utils';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { getSafeFormattedDate } from '../utils/sensor';
-import { getRiskVisual, formatProbability } from '../utils/risk';
+import { getRiskVisual, formatProbability, showsExperimentalLabel } from '../utils/risk';
+import { ExperimentalBadge } from './ExperimentalBadge';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import type { FloodPointResponseDTO, PreciseDataResponse, PreciseData } from '../types';
@@ -203,6 +204,8 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                     )}
                   </div>
                   
+                  {showsExperimentalLabel(prediction) && <ExperimentalBadge className="text-xs" />}
+
                   <div className="flex flex-wrap gap-4">
                     <div className={cn(
                       "px-6 py-3 rounded-2xl border flex items-center gap-4 transition-all duration-700 shadow-lg",
