@@ -28,6 +28,9 @@ import { getRiskVisual, formatProbability, showsExperimentalLabel } from '../uti
 import { ExperimentalBadge } from './ExperimentalBadge';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
+import { InfoHint } from './InfoHint';
+import { TerrainFacts } from './TerrainFacts';
+import { resolveRain, TIDE_UNIT, TIDE_NOTE } from '../utils/provenance';
 import type { FloodPointResponseDTO, PreciseDataResponse, PreciseData } from '../types';
 
 interface FloodPointDetailCardProps {
@@ -80,6 +83,12 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
     if (val != null && typeof val === 'number') return val.toFixed(decimals);
     return '--';
   };
+
+  const rain = resolveRain({
+    precise,
+    sensor: status?.nearestSensor,
+    openMeteoPrecipitation: status?.openMeteoData?.current?.precipitation,
+  });
 
   const visual = getRiskVisual(prediction?.riskLevel);
   const risk = { color: visual.text, border: visual.border, bg: visual.softBg, header: visual.header, label: visual.label };
@@ -280,21 +289,26 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                {[
                  { 
+                   kind: 'other',
                    label: 'Telemetria Térmica', 
                    value: getMetricValue('temperature', status?.openMeteoData?.current?.temperature_2m), 
                    unit: precise?.unitTemperature || '°C', icon: Thermometer, color: 'text-orange-400', bg: 'bg-orange-500/10' 
                  },
                  { 
+                   kind: 'tide',
                    label: 'Status da Maré', 
                    value: precise?.tideHeight ?? status?.nearestSensor?.tideHeight ?? point.tideHeight, 
-                   unit: precise?.unitTide || 'm', icon: Waves, color: 'text-blue-400', bg: 'bg-blue-500/10' 
+                   unit: TIDE_UNIT, icon: Waves, color: 'text-blue-400', bg: 'bg-blue-500/10' 
                  },
                  { 
-                   label: 'Acumulado Chuva (24h)', 
-                   value: precise?.historicalAggregates?.rain24h ?? getMetricValue('precipitation', status?.openMeteoData?.current?.precipitation), 
-                   unit: precise?.unitPrecipitation || 'mm', icon: CloudRain, color: 'text-sky-400', bg: 'bg-sky-500/10' 
+                   kind: 'rain',
+                   label: rain.quantity, 
+                   source: rain.source,
+                   value: rain.value, 
+                   unit: rain.unit, icon: CloudRain, color: 'text-sky-400', bg: 'bg-sky-500/10' 
                  },
                  { 
+                   kind: 'other',
                    label: 'Dinâmica do Vento', 
                    value: getMetricValue('windSpeed', status?.openMeteoData?.current?.wind_speed_10m),
                    unit: precise?.unitWindSpeed || 'km/h', icon: Wind, color: 'text-emerald-400', bg: 'bg-emerald-500/10' 
@@ -305,7 +319,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                        <div className={cn("p-2.5 rounded-xl transition-transform group-hover:scale-110", item.bg)}>
                           <item.icon className={cn("h-5 w-5", item.color)} />
                        </div>
-                       {item.label.includes('Chuva') && precise?.historicalAggregates && (
+                       {item.kind === 'rain' && precise?.historicalAggregates && (
                          <div className="flex gap-1">
                             {[
                               { label: '3h', val: precise.historicalAggregates.rain3h },
@@ -319,13 +333,17 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                             ))}
                          </div>
                        )}
-                       {!item.label.includes('Chuva') && <div className="h-1 w-8 rounded-full bg-white/5" />}
+                       {item.kind !== 'rain' && <div className="h-1 w-8 rounded-full bg-white/5" />}
                     </div>
                     <div>
                        <span className="text-2xs text-zinc-400 font-black uppercase tracking-[0.2em] mb-1 block">{item.label}</span>
+                       {item.kind === 'rain' && (
+                         <span data-testid="rain-source" className="text-2xs text-zinc-300 mb-1 block">Fonte: {item.source}</span>
+                       )}
                        <p className="text-4xl font-black text-white italic tracking-tighter">
-                         {formatValue(item.value, item.label.includes('Maré') ? 2 : 1)}
+                         {formatValue(item.value, item.kind === 'tide' ? 2 : 1)}
                          <small className="text-xs font-bold text-zinc-400 ml-2 not-italic uppercase tracking-widest">{item.unit}</small>
+                         {item.kind === 'tide' && <InfoHint label="Sobre a referência da maré" text={TIDE_NOTE} className="ml-1" />}
                        </p>
                     </div>
                     {/* Tiny decorative graph placeholder */}
@@ -337,6 +355,8 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                  </div>
                ))}
             </div>
+
+            <TerrainFacts slug={point.slug} />
 
             {/* 3. Detailed Infrastructure & Marine Row */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -357,7 +377,8 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                       <div className="flex items-baseline gap-3">
                          <p className="text-5xl font-black text-white italic tracking-tighter">
                            {formatValue(getMetricValue('tideHeightTabuaMare'), 2)}
-                           <small className="text-sm ml-2 text-zinc-400 uppercase italic font-bold">meters</small>
+                           <small className="text-sm ml-2 text-zinc-400 italic font-bold">{TIDE_UNIT}</small>
+                           <InfoHint label="Sobre a referência da maré" text={TIDE_NOTE} className="ml-1" />
                          </p>
                       </div>
                     </div>
