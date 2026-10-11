@@ -45,6 +45,7 @@ import { ApiStatusIndicator } from './ApiStatusIndicator';
 import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
 import { RiskLegend } from './RiskLegend';
 import { TerrainControl } from './TerrainControl';
+import { MapToolPopover } from './MapToolPopover';
 import { TerrainLayer } from './TerrainLayer';
 import type { TerrainStatus } from '../utils/terrain';
 import { RiskIcon } from './RiskIcon';
@@ -141,7 +142,12 @@ export const MapView: React.FC = () => {
   const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos Críticos', 'Meteo', 'Vento', 'Sensor']);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
-  const [showLayerPanel, setShowLayerPanel] = useState(false);
+  // Barra direita do mapa: um painel aberto por vez (camadas, terreno ou legenda).
+  const [openTool, setOpenTool] = useState<'layers' | 'terrain' | 'legend' | null>(null);
+  const toolProps = (tool: 'layers' | 'terrain' | 'legend') => ({
+    open: openTool === tool,
+    onOpenChange: (v: boolean) => setOpenTool(v ? tool : null),
+  });
   const [showMobileList, setShowMobileList] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSeverity, setReportSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
@@ -163,12 +169,12 @@ export const MapView: React.FC = () => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || showDetailCard || showReportModal || showScenarioModal) return;
       if (showMobileList) setShowMobileList(false);
-      else if (showLayerPanel) setShowLayerPanel(false);
+      else if (openTool) setOpenTool(null);
       else closePopups();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [showDetailCard, showReportModal, showScenarioModal, showMobileList, showLayerPanel, closePopups]);
+  }, [showDetailCard, showReportModal, showScenarioModal, showMobileList, openTool, closePopups]);
 
   // Fetch real-time status when a flood point is selected
   useEffect(() => {
@@ -600,30 +606,8 @@ export const MapView: React.FC = () => {
 
           {/* Floating Controls Overlay (Right) */}
           <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 md:bottom-[12rem] z-20 flex flex-col items-end gap-3">
-            <div className="pointer-events-auto relative shrink-0">
-              <Button 
-                variant="secondary" 
-                size="icon" 
-                onClick={() => setShowLayerPanel(!showLayerPanel)}
-                aria-label="Camadas do mapa"
-                aria-expanded={showLayerPanel}
-                aria-controls="layer-panel"
-                title="Camadas do mapa"
-                className={cn(
-                  "h-12 w-12 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/10 transition-all",
-                  showLayerPanel ? "text-primary border-primary/40 bg-white/10" : "text-zinc-400"
-                )}
-              >
-                 <Layers className="h-5 w-5" aria-hidden="true" />
-              </Button>
-
-              {showLayerPanel && (
-                <div id="layer-panel" role="group" aria-label="Camadas" className="absolute right-14 top-0 z-30 bg-black/80 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl shadow-black/60 flex flex-col gap-1 w-56 animate-in slide-in-from-right-2 duration-200 overflow-y-auto max-h-[60vh]">
-                   <div className="px-3 py-2 border-b border-white/5 mb-1">
-                      <p className="text-2xs font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
-                         <Layers className="h-3 w-3" /> Camadas
-                      </p>
-                   </div>
+            <MapToolPopover id="layer-panel" label="Camadas do mapa" icon={<Layers className="h-5 w-5" aria-hidden="true" />} panelClassName="w-56 p-1.5" {...toolProps('layers')}>
+              <div role="group" aria-label="Camadas" className="flex flex-col gap-1 pt-1">
                    {[
                      { id: 'Mista / Meteo', icon: Activity, color: 'text-emerald-500' },
                      { id: 'Geotécnica', icon: Shield, color: 'text-amber-500' },
@@ -653,15 +637,10 @@ export const MapView: React.FC = () => {
                        {activeLayers.includes(layer.id) && <div className="ml-auto h-1 w-1 rounded-full bg-primary shadow-[0_0_5px_rgba(99,102,241,0.5)]" />}
                      </button>
                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Cartões de legenda: rolam dentro da coluna e nunca descem até os controles de zoom (canto inferior direito) */}
-            <div className="pointer-events-auto custom-scrollbar [scrollbar-color:rgba(255,255,255,0.45)_transparent] flex min-h-0 flex-col items-end gap-2 overflow-y-auto overscroll-contain">
-              <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} className="w-64 sm:w-72" />
-              <RiskLegend className="w-64 sm:w-72" />
-            </div>
+              </div>
+            </MapToolPopover>
+            <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
+            <RiskLegend {...toolProps('legend')} />
           </div>
 
           {filteredSensorsForMap.map((sensor: SensorResponseDTO) => {
@@ -788,6 +767,8 @@ export const MapView: React.FC = () => {
                 onClose={() => setSelectedSensorId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
                 offset={[0, -45]}
+                anchor="bottom"
+                autoPan
                 label={`Detalhes do sensor ${selectedSensor.stationName || selectedSensor.sensorId}`}
               >
                 <SensorPopup 
@@ -806,6 +787,8 @@ export const MapView: React.FC = () => {
                 onClose={() => setSelectedFloodPointId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
                 offset={[0, -45]}
+                anchor="bottom"
+                autoPan
                 label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
               >
                 <FloodPointPopup 
@@ -837,9 +820,10 @@ export const MapView: React.FC = () => {
           </Map>
 
           {(clickedLocation || isFetchingLocation) && (
-            <section aria-label="Análise de local" className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-10 lg:left-[26rem] lg:w-[26.25rem] z-30 max-h-[75vh] overflow-y-auto rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/5">
-                <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 bg-white/5">
+            <section aria-label="Análise de local" className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-10 lg:left-[26rem] lg:w-[26.25rem] z-30 flex max-h-[70vh] lg:max-h-[calc(100vh-8rem)] flex-col rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Cabeçalho fixo; só o corpo rola (uma única rolagem, sem rolagem aninhada na lista de sensores) */}
+              <div className="flex min-h-0 flex-col bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/5">
+                <div className="shrink-0 px-5 py-4 flex items-center justify-between border-b border-white/5 bg-white/5">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20">
                       <Navigation className="h-5 w-5 text-primary" />
@@ -862,7 +846,7 @@ export const MapView: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="p-5 space-y-5">
+                <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 space-y-5">
                   {isFetchingLocation ? (
                     <div className="py-12 flex flex-col items-center justify-center gap-4">
                        <div className="relative">
@@ -979,7 +963,7 @@ export const MapView: React.FC = () => {
                                {locationInfo.preciseData.latestReadings.length} ativos
                              </span>
                            </div>
-                           <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+                           <div className="grid grid-cols-1 gap-2">
                              {locationInfo.preciseData.latestReadings.map((reading) => (
                                <button 
                                   type="button"

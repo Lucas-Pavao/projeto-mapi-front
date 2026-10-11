@@ -79,6 +79,30 @@ describe('TerrainLayer status', () => {
     unmount();
     expect(fakeMap.off).toHaveBeenCalledWith('idle', handlers.idle);
   });
+  it('ready quando a fonte avisa que carregou, mesmo sem idle (mapa animando)', () => {
+    const cb = vi.fn();
+    const handlers: Record<string, (e: { sourceId?: string; isSourceLoaded?: boolean }) => void> = {};
+    fakeMap.on.mockImplementation((ev: string, h: (e: { sourceId?: string; isSourceLoaded?: boolean }) => void) => {
+      handlers[ev] = h;
+    });
+    render(<TerrainLayer enabled onStatusChange={cb} />);
+    handlers.sourcedata({ sourceId: TERRAIN_SOURCE_ID, isSourceLoaded: false });
+    expect(cb).toHaveBeenLastCalledWith('loading');
+    handlers.sourcedata({ sourceId: 'outra', isSourceLoaded: true });
+    expect(cb).toHaveBeenLastCalledWith('loading');
+    handlers.sourcedata({ sourceId: TERRAIN_SOURCE_ID, isSourceLoaded: true });
+    expect(cb).toHaveBeenLastCalledWith('ready');
+  });
+});
+
+describe('tile ausente no PMTiles', () => {
+  it('buffer vazio vira PNG transparente; tile com dado passa intacto', async () => {
+    const { fillMissingRasterTile } = await import('../utils/terrain');
+    const png = fillMissingRasterTile(new Uint8Array()) as ArrayBuffer;
+    expect(new Uint8Array(png).slice(1, 4)).toEqual(new Uint8Array([0x50, 0x4e, 0x47]));
+    const cheio = new Uint8Array([1, 2, 3]);
+    expect(fillMissingRasterTile(cheio)).toBe(cheio);
+  });
 });
 
 describe('terrain utils', () => {

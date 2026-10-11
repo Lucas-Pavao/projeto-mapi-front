@@ -36,6 +36,11 @@ export function TerrainLayer({ enabled, onStatusChange }: { enabled: boolean; on
     const onIdle = () => {
       if (!failedRef.current && map.getSource(TERRAIN_SOURCE_ID) && map.isSourceLoaded(TERRAIN_SOURCE_ID)) statusCbRef.current?.('ready');
     };
+    // 'idle' pode demorar ou não vir enquanto o mapa anima (marcadores, círculo de raio); a própria fonte avisa
+    // quando terminou de carregar os tiles da vista, e isso já basta para sair de "carregando".
+    const onSourceData = (e: { sourceId?: string; isSourceLoaded?: boolean }) => {
+      if (e.sourceId === TERRAIN_SOURCE_ID && e.isSourceLoaded && !failedRef.current) statusCbRef.current?.('ready');
+    };
     const onLoading = (e: { sourceId?: string }) => {
       if (e.sourceId === TERRAIN_SOURCE_ID) statusCbRef.current?.('loading');
     };
@@ -46,10 +51,12 @@ export function TerrainLayer({ enabled, onStatusChange }: { enabled: boolean; on
       }
     };
     map.on('idle', onIdle);
+    map.on('sourcedata', onSourceData);
     map.on('sourcedataloading', onLoading);
     map.on('error', onError);
     return () => {
       map.off('idle', onIdle);
+      map.off('sourcedata', onSourceData);
       map.off('sourcedataloading', onLoading);
       map.off('error', onError);
     };

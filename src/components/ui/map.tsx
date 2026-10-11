@@ -999,6 +999,8 @@ type MapPopupProps = {
   closeButton?: boolean;
   /** Nome acessível do popup (role="dialog"). */
   label?: string;
+  /** Desloca o mapa ao abrir para o popup (ancorado acima do ponto) caber na tela. */
+  autoPan?: boolean;
 } & Omit<PopupOptions, "className" | "closeButton">;
 
 function MapPopup({
@@ -1009,6 +1011,7 @@ function MapPopup({
   className,
   closeButton = false,
   label,
+  autoPan = false,
   ...popupOptions
 }: MapPopupProps) {
   const { map } = useMap();
@@ -1044,6 +1047,11 @@ function MapPopup({
 
     popup.setDOMContent(container);
     popup.addTo(map);
+    if (autoPan) {
+      // Leva o ponto para perto da base da tela: o popup abre acima dele e ganha a altura disponível.
+      const h = map.getContainer().clientHeight;
+      map.easeTo({ center: [longitude, latitude], offset: [0, Math.max(0, h / 2 - 72)], duration: 400 });
+    }
 
     return () => {
       popup.off("close", onCloseProp);
