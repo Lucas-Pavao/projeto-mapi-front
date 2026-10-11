@@ -35,8 +35,25 @@ let protocolRegistered = false;
 export function ensurePmtilesProtocol(): void {
   if (protocolRegistered) return;
   const protocol = new Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
+  maplibregl.addProtocol('pmtiles', async (params, abortController) => {
+    const res = await protocol.tile(params, abortController);
+    return params.type === 'json' ? res : { ...res, data: fillMissingRasterTile(res.data) };
+  });
   protocolRegistered = true;
+}
+
+// PNG 1x1 transparente. O arquivo PMTiles não guarda tiles vazios (mar, área sem folha do MDT); para esses o
+// protocolo devolve um buffer vazio, e o maplibre deixa o tile raster em "loading" para sempre. Com isso a fonte nunca
+// fica carregada e o painel ficava preso em "Carregando terreno…".
+const TRANSPARENT_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGNgAAIAAAUAAXpeqz8AAAAASUVORK5CYII='; // RGBA (0,0,0,0)
+
+/** Troca o buffer vazio de tile ausente por um PNG transparente; tile com dado passa intacto. */
+export function fillMissingRasterTile<T>(data: T): T | ArrayBuffer {
+  const empty = data == null
+    || (data instanceof ArrayBuffer && data.byteLength === 0)
+    || (ArrayBuffer.isView(data) && data.byteLength === 0);
+  if (!empty) return data;
+  return Uint8Array.from(atob(TRANSPARENT_PNG_B64), (c) => c.charCodeAt(0)).buffer;
 }
 
 export function terrainSourceUrl(origin: string = window.location.origin): string {

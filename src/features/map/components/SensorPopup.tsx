@@ -40,9 +40,9 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   };
 
   return (
-    <div className="bg-zinc-900/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden w-80 ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
-      {/* Header with Gradient */}
-      <div className={cn("px-5 py-4 text-white relative overflow-hidden", config.color + "/90")}>
+    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-zinc-900/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden w-80 ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
+      {/* Header with Gradient (fixo; só o corpo rola) */}
+      <div className={cn("shrink-0 px-5 py-4 text-white relative overflow-hidden", config.color + "/90")}>
         <div className="absolute top-0 right-0 p-4 opacity-10">
            {React.createElement(config.icon, { className: "h-16 w-16 -mr-4 -mt-4 rotate-12" })}
         </div>
@@ -71,7 +71,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         </div>
       </div>
       
-      <div className="p-5 space-y-5">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 space-y-5">
         {/* Main Reading Section */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">

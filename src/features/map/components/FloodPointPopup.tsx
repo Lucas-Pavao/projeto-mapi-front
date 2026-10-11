@@ -39,10 +39,10 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
   const isUnknown = !visual.showsProbability;
 
   return (
-    <div className="bg-[#0c0c0e]/95 backdrop-blur-2xl text-white rounded-[2.5rem] border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.7)] overflow-hidden w-[min(22.5rem,calc(100vw-2rem))] ring-1 ring-white/10 animate-in fade-in zoom-in-95 duration-500">
-      {/* 1. Header with Risk Identity */}
+    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-[#0c0c0e]/95 backdrop-blur-2xl text-white rounded-[2.5rem] border border-white/10 shadow-[0_40px_80px_rgba(0,0,0,0.7)] overflow-hidden w-[min(22.5rem,calc(100vw-2rem))] ring-1 ring-white/10 animate-in fade-in zoom-in-95 duration-500">
+      {/* 1. Header with Risk Identity (fixo; só o corpo rola) */}
       <div className={cn(
-        "px-6 py-5 border-b border-white/5 relative overflow-hidden transition-colors duration-700",
+        "shrink-0 px-6 py-5 border-b border-white/5 relative overflow-hidden transition-colors duration-700",
         risk.color.replace('bg-', 'bg-').concat('/5')
       )}>
         <div className="flex justify-between items-start relative z-10">
@@ -81,7 +81,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
         <div className={cn("absolute -top-12 -right-12 w-32 h-32 blur-3xl opacity-20 transition-all duration-700 rounded-full", risk.color)} />
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-6">
         {/* 2. Probability Hero Section */}
         <div className="bg-white/[0.03] rounded-[2rem] p-6 border border-white/5 relative overflow-hidden group">
            <div className="relative z-10 flex items-center justify-between">
@@ -126,7 +126,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                   {precise?.latestReadings?.length || point.nearbySensorIds?.length || 0} Ativos
                 </span>
              </div>
-             <div className="grid grid-cols-1 gap-2 max-h-[120px] overflow-y-auto pr-1 custom-scrollbar">
+             <div className="grid grid-cols-1 gap-2">
                 {precise?.latestReadings && precise.latestReadings.length > 0 ? (
                   precise.latestReadings.slice(0, 3).map((s) => (
                     <div key={`${s.sensorId}-${s.type}`} className="bg-white/5 px-4 py-2.5 rounded-xl border border-white/5 flex items-center justify-between group/sensor">
