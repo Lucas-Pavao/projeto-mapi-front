@@ -15,6 +15,7 @@ import {
   Waves
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModalDialog } from '@/components/ui/modal-dialog';
 import type { SensorResponseDTO, PreciseDataResponse } from '../types';
 import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 
@@ -36,7 +37,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
+    <ModalDialog label={`Detalhes do sensor ${sensor.stationName ?? sensor.sensorId}`} onClose={onClose} className="absolute inset-0 z-50 bg-black/40 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
       <Card className="w-full max-w-4xl max-h-[90vh] shadow-2xl border-white/10 bg-zinc-950/60 backdrop-blur-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col ring-1 ring-white/5">
         <CardHeader className="pb-4 flex flex-row items-center justify-between border-b border-white/5 bg-white/5 shrink-0">
           <div className="flex items-center gap-4 text-white">
@@ -51,11 +52,11 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                 <CardTitle className="text-xl font-bold tracking-tight">
                   {sensor.stationName || 'Estação sem nome'}
                 </CardTitle>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-zinc-400 font-bold uppercase border border-white/5">
+                <span className="text-2xs px-2 py-0.5 rounded-full bg-white/10 text-zinc-400 font-bold uppercase border border-white/5">
                   {sensor.source}
                 </span>
               </div>
-              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
+              <p className="text-2xs text-zinc-400 font-bold uppercase tracking-widest mt-0.5 flex items-center gap-1.5">
                 <MapPin className="h-3 w-3" /> {sensor.municipality || 'Localidade não informada'} • {sensor.type || 'Tipo não informado'}
               </p>
             </div>
@@ -65,8 +66,9 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
             size="icon" 
             className="h-10 w-10 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors" 
             onClick={onClose}
+            aria-label="Fechar detalhes do sensor"
           >
-            <CloseIcon className="h-6 w-6" />
+            <CloseIcon className="h-6 w-6" aria-hidden="true" />
           </Button>
         </CardHeader>
 
@@ -76,12 +78,12 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2 bg-white/5 p-6 rounded-2xl border border-white/5 shadow-xl flex items-center justify-between group">
                 <div className="space-y-2">
-                  <p className="text-xs text-zinc-500 uppercase font-bold tracking-[0.2em]">Leitura Atual</p>
+                  <p className="text-xs text-zinc-400 uppercase font-bold tracking-[0.2em]">Leitura Atual</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-6xl font-black text-white tracking-tighter">
                       {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(2) : (sensor.value ?? '--')}
                     </span>
-                    <span className="text-xl font-bold text-zinc-600 uppercase">
+                    <span className="text-xl font-bold text-zinc-400 uppercase">
                       {sensor.unit || ''}
                     </span>
                   </div>
@@ -100,9 +102,9 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
 
               <div className="bg-white/5 p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
                  <div className="flex justify-between items-start">
-                    <p className="text-xs text-zinc-500 uppercase font-bold tracking-widest">Status da Coleta</p>
+                    <p className="text-xs text-zinc-400 uppercase font-bold tracking-widest">Status da Coleta</p>
                     <div className={cn(
-                      "px-2 py-1 rounded-lg flex items-center gap-1.5 text-[10px] font-bold uppercase border",
+                      "px-2 py-1 rounded-lg flex items-center gap-1.5 text-2xs font-bold uppercase border",
                       freshness.status === 'fresh' && "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
                       freshness.status === 'aging' && "bg-amber-500/10 text-amber-500 border-amber-500/20",
                       freshness.status === 'stale' && "bg-red-500/10 text-red-500 border-red-500/20"
@@ -114,9 +116,9 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                  <div className="pt-4">
                     <p className="text-3xl font-black text-white leading-none">
                       {freshness.minutesAgo != null ? freshness.minutesAgo : '--'}
-                      <span className="text-xs text-zinc-600 font-bold uppercase ml-1.5">min atrás</span>
+                      <span className="text-xs text-zinc-400 font-bold uppercase ml-1.5">min atrás</span>
                     </p>
-                    <p className="text-[10px] text-zinc-600 font-bold uppercase text-right mt-3">
+                    <p className="text-2xs text-zinc-400 font-bold uppercase text-right mt-3">
                       Fonte: {sensor.source || 'N/A'}
                     </p>
                  </div>
@@ -127,30 +129,30 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
             {hasRiverAlert && (
               <div className="bg-rose-500/[0.04] p-6 rounded-2xl border border-rose-500/20 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] text-rose-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2">
+                  <h4 className="text-2xs text-rose-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2">
                     <ShieldAlert className="h-4 w-4" /> Alerta Oficial de Rio (APAC)
                   </h4>
                   {sensor.riverName && (
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase flex items-center gap-1.5">
+                    <span className="text-2xs text-zinc-400 font-bold uppercase flex items-center gap-1.5">
                       <Waves className="h-3 w-3 text-rose-400" /> {sensor.riverName}
                     </span>
                   )}
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-black/40 p-4 rounded-xl border border-white/5">
-                    <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Nível Atual</p>
+                    <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">Nível Atual</p>
                     <p className="text-lg font-black text-white mt-1">{formatValue(sensor.waterLevel, 1)}</p>
                   </div>
                   <div className="bg-amber-500/10 p-4 rounded-xl border border-amber-500/20">
-                    <p className="text-[8px] text-amber-400/70 font-bold uppercase tracking-tighter">Pré-Alerta</p>
+                    <p className="text-2xs text-amber-400/70 font-bold uppercase tracking-tighter">Pré-Alerta</p>
                     <p className="text-lg font-black text-amber-400 mt-1">{formatValue(sensor.riverPreAlertLevel, 1)}</p>
                   </div>
                   <div className="bg-orange-500/10 p-4 rounded-xl border border-orange-500/20">
-                    <p className="text-[8px] text-orange-400/70 font-bold uppercase tracking-tighter">Alerta</p>
+                    <p className="text-2xs text-orange-400/70 font-bold uppercase tracking-tighter">Alerta</p>
                     <p className="text-lg font-black text-orange-400 mt-1">{formatValue(sensor.riverAlertLevel, 1)}</p>
                   </div>
                   <div className="bg-rose-500/10 p-4 rounded-xl border border-rose-500/20">
-                    <p className="text-[8px] text-rose-400/70 font-bold uppercase tracking-tighter">Inundação</p>
+                    <p className="text-2xs text-rose-400/70 font-bold uppercase tracking-tighter">Inundação</p>
                     <p className="text-lg font-black text-rose-400 mt-1">{formatValue(sensor.riverFloodLevel, 1)}</p>
                   </div>
                 </div>
@@ -160,7 +162,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
             {/* Technical & Environmental Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">
-                <h4 className="text-[10px] text-zinc-500 uppercase font-bold tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-2">
+                <h4 className="text-2xs text-zinc-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-2">
                   <Thermometer className="h-4 w-4 text-primary" /> Dados Ambientais
                 </h4>
                 <div className="grid grid-cols-2 gap-3">
@@ -174,10 +176,10 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                     <div key={idx} className="bg-white/5 p-4 rounded-xl border border-white/5 hover:bg-white/10 transition-colors group">
                       <div className="flex justify-between items-center mb-1">
                          <item.icon className={cn("h-4 w-4 opacity-30 group-hover:opacity-100 transition-opacity", item.color)} />
-                         <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-tighter">{item.label}</span>
+                         <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">{item.label}</span>
                       </div>
                       <p className="text-lg font-black text-white">
-                        {item.value != null && typeof item.value === 'number' ? item.value.toFixed(1) : (item.value ?? '--')} <span className="text-[10px] text-zinc-600 font-bold">{item.unit}</span>
+                        {item.value != null && typeof item.value === 'number' ? item.value.toFixed(1) : (item.value ?? '--')} <span className="text-2xs text-zinc-400 font-bold">{item.unit}</span>
                       </p>
                     </div>
                   ))}
@@ -185,25 +187,25 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-[10px] text-zinc-500 uppercase font-bold tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-2">
+                <h4 className="text-2xs text-zinc-400 uppercase font-bold tracking-[0.2em] flex items-center gap-2 border-b border-white/5 pb-2">
                   <Gauge className="h-4 w-4 text-primary" /> Contexto Preciso
                 </h4>
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Pressão Atmosférica</p>
+                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">Pressão Atmosférica</p>
                        <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.pressure, 1)} <small className="opacity-50 ml-0.5">{precise?.unitPressure || 'hPa'}</small></p>
                     </div>
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Maré Estimada</p>
+                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">Maré Estimada</p>
                        <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.tideHeightTabuaMare, 2)} <small className="opacity-50 ml-0.5">{precise?.unitTide || 'm'}</small></p>
                     </div>
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Chuva (Satélite)</p>
+                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">Chuva (Satélite)</p>
                        <p className="text-xs font-bold text-zinc-300 mt-1">{formatValue(precise?.precipitation, 1)} <small className="opacity-50 ml-0.5">{precise?.unitPrecipitation || 'mm'}</small></p>
                     </div>
                     <div className="bg-black/40 p-3 rounded-xl border border-white/5 flex flex-col justify-between">
-                       <p className="text-[8px] text-zinc-600 font-bold uppercase tracking-tighter">Vazão Estimada</p>
+                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">Vazão Estimada</p>
                        <p className="text-xs font-bold text-indigo-400 mt-1">{formatValue(precise?.flowRate, 2)} <small className="opacity-50 ml-0.5">{precise?.unitFlowRate || 'm³/s'}</small></p>
                     </div>
                   </div>
@@ -214,12 +216,12 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
             {/* Geolocation Section */}
             <div className="bg-black/40 p-6 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-500">
+                  <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400">
                      <MapPin className="h-6 w-6" />
                   </div>
                   <div>
                      <p className="text-xs font-bold text-white uppercase tracking-widest">Coordenadas Geográficas</p>
-                     <p className="text-sm text-zinc-500 font-mono mt-1">
+                     <p className="text-sm text-zinc-400 font-mono mt-1">
                        {sensor.latitude != null && sensor.longitude != null && typeof sensor.latitude === 'number' && typeof sensor.longitude === 'number'
                          ? `${sensor.latitude.toFixed(6)}, ${sensor.longitude.toFixed(6)}` 
                          : 'N/A'}
@@ -227,10 +229,10 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                   </div>
                </div>
                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-zinc-400 hover:text-white text-[10px] uppercase font-bold tracking-widest px-4 h-10 rounded-xl transition-all">
+                  <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-zinc-400 hover:text-white text-2xs uppercase font-bold tracking-widest px-4 h-10 rounded-xl transition-all">
                     Copiar
                   </Button>
-                  <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-zinc-400 hover:text-white text-[10px] uppercase font-bold tracking-widest px-4 h-10 rounded-xl transition-all">
+                  <Button variant="outline" size="sm" className="bg-white/5 border-white/10 text-zinc-400 hover:text-white text-2xs uppercase font-bold tracking-widest px-4 h-10 rounded-xl transition-all">
                     Navegar
                   </Button>
                </div>
@@ -238,6 +240,6 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
           </div>
         </CardContent>
       </Card>
-    </div>
+    </ModalDialog>
   );
 };

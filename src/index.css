@@ -8,6 +8,17 @@
 @theme {
   --color-primary: #6366f1;
   --color-secondary: #18181b;
+  /* Menor tamanho de texto do app. Substitui os antigos text-[7..11px]. Em rem, escala com o
+     font-size da raiz: 12 px normal; 15 px no modo projeção (>= 1920 px, ver abaixo). */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
+}
+
+/* Modo projeção (sala de situação / defesa): raiz a 125 % => 12 px -> 15 px, nada abaixo de 14 px. */
+@media (min-width: 1920px) {
+  html {
+    font-size: 125%;
+  }
 }
 
 body {
@@ -24,6 +35,24 @@ code {
 @import "./styles/theme.css";
 
 @layer base {
+  /* Foco visível em qualquer controle nativo, também sobre fundos translúcidos. */
+  :focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px #6366f1;
+  }
+  .maplibregl-marker:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+    border-radius: 0.75rem;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
   * {
     @apply border-border outline-ring/50;
   }

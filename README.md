@@ -7,8 +7,8 @@ O **MAPI Front** é a camada de interação com o usuário final do ecossistema 
 Este projeto é a **ponta de entrega visual** de todo o ecossistema:
 
 ```text
-  [ MAPI Edge ] (Python / MQTT) 📡
-        │   (Pulsações Telemétricas e Inteligência de Borda)
+  [ Agências (ANA / APAC) ] 📡
+        │   (APIs REST/HTTP públicas de estações hidrometeorológicas reais)
         ▼
   [  MAPI API  ] (Java 21 / Spring Boot / TimescaleDB) 🌊🚀
         │ ▲
@@ -21,15 +21,16 @@ Este projeto é a **ponta de entrega visual** de todo o ecossistema:
   [ MAPI Front ] (React 19 / MapLibre GL) 💻✨ <-- (Este Serviço)
 ```
 
+> **Nota de arquitetura:** o antigo componente "MAPI Edge" (processo Python separado que buscava dados da ANA/APAC e os publicava via MQTT) foi descontinuado — a própria MAPI API busca esses dados diretamente, em jobs agendados, eliminando essa camada de infraestrutura. Ver o README da MAPI API para detalhes.
+
 ### Componentes do Ecossistema:
-- **[MAPI Edge](https://github.com/Lucas-Pavao/projeto-mapi-sensores):** Produtor de dados primários e inteligência de borda (Virtualização de Sensores).
-- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Orquestrador central, ingestão MQTT, persistência temporal e API REST.
-- **[MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai):** Microserviço de inferência para predição de riscos de inundação.
+- **[MAPI API](https://github.com/Lucas-Pavao/projeto-mapi-api):** Orquestrador central — coleta os dados de sensores diretamente das agências e persiste na base temporal.
+- **[MAPI AI](https://github.com/Lucas-Pavao/projeto-mapi-ai):** Microserviço de inferência para predição de riscos de inundação. **Status atual: ainda não está funcional/em produção** — a MAPI API já trata isso com fallback (risco "UNKNOWN") quando a predição não responde.
 - **[MAPI Front](https://github.com/Lucas-Pavao/projeto-mapi-front):** Interface geoespacial para monitoramento em tempo real (Este Repositório).
 
 ### Relação de Consumo e Fluxo:
-- **Consumo do Core REST:** Conecta-se à MAPI API para obter sensores, históricos e marés.
-- **Exibição dos Alertas de IA:** Renderiza visualmente os mapas de calor e os níveis de alerta (LOW, MEDIUM, HIGH) gerados pelo MAPI AI.
+- **Consumo do Core REST:** Conecta-se à MAPI API para obter sensores, pontos de monitoramento, dado ambiental (`/api/environmental-data`), maré e históricos.
+- **Exibição dos Alertas de IA:** Renderiza visualmente os níveis de alerta (LOW, MEDIUM, HIGH, CRITICAL) obtidos via `/api/flood-predictions`, quando a MAPI AI estiver disponível.
 
 ## 🛠️ Tecnologias Escolhidas
 
@@ -91,10 +92,10 @@ npm run build
 ```
 
 ## 🐳 Execução via Docker (Ecossistema Completo)
-Para executar todo o ecossistema MAPI (Edge, AI, API e Front) de forma orquestrada, utilizamos o Docker Compose centralizado no repositório da **MAPI API**.
+Para executar todo o ecossistema MAPI (API, AI e Front) de forma orquestrada, utilizamos o Docker Compose centralizado no repositório da **MAPI API**.
 
 As instruções detalhadas de como subir todos os serviços simultaneamente podem ser encontradas aqui:
-[Guia de Orquestração MAPI (Docker Compose)](https://github.com/Lucas-Pavao/projeto-mapi-api/tree/feature/docs-readme-refactor)
+[Guia de Orquestração MAPI (Docker Compose)](https://github.com/Lucas-Pavao/projeto-mapi-api)
 
 ## 📄 Licença
 Este projeto está sob a licença **MIT**.

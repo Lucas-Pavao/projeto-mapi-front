@@ -52,6 +52,10 @@ export interface MapiResponseDTO {
   floodPrediction?: FloodPredictionResponseDTO;
 }
 
+export interface IngestionAcceptedDTO {
+  message: string;
+}
+
 export interface DataHealthReportDTO {
   slug: string;
   totalWeatherRecords: number;

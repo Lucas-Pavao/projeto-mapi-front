@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import type { DataHealthReportDTO, TideSyncSummaryDTO } from '../types';
+import type { DataHealthReportDTO, TideSyncSummaryDTO, IngestionAcceptedDTO } from '../types';
 
 export const adminService = {
   async checkDataIntegrity(): Promise<DataHealthReportDTO[]> {
@@ -7,13 +7,15 @@ export const adminService = {
     return response.data;
   },
 
-  async startFullSync(years = 5): Promise<string> {
-    const response = await api.post<string>(`/api/admin/ingestion/historical-full-sync?years=${years}`);
+  // 202 Accepted: o job roda em background, ainda não terminou quando a resposta chega.
+  async startFullSync(years = 5): Promise<IngestionAcceptedDTO> {
+    const response = await api.post<IngestionAcceptedDTO>(`/api/admin/ingestion/historical-full-sync?years=${years}`);
     return response.data;
   },
 
-  async alignEvents(): Promise<string> {
-    const response = await api.post<string>('/api/admin/ingestion/align-events');
+  // Síncrono no backend (200 OK) — já terminou quando a resposta chega.
+  async alignEvents(): Promise<IngestionAcceptedDTO> {
+    const response = await api.post<IngestionAcceptedDTO>('/api/admin/ingestion/align-events');
     return response.data;
   },
 
