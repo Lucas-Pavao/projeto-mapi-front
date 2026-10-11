@@ -29,6 +29,6 @@ describe('rótulo experimental', () => {
   });
   it('legenda explica em uma frase', () => {
     render(<RiskLegend />);
-    expect(screen.getByText(/experimentais.*não passou por validação formal/)).toBeInTheDocument();
+    expect(screen.getByText(/Classes experimentais: modelo não validado\./)).toBeInTheDocument();
   });
 });

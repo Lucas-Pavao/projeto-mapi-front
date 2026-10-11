@@ -95,5 +95,4 @@ export function showsExperimentalLabel(
 }
 
 /** Frase da legenda sobre o rótulo experimental. */
-export const EXPERIMENTAL_LEGEND_TEXT =
-  'As classes acima são experimentais: o modelo ainda não passou por validação formal, por isso cada classe vem marcada como previsão experimental.';
+export const EXPERIMENTAL_LEGEND_TEXT = 'Classes experimentais: modelo não validado.';

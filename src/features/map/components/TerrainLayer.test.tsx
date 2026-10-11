@@ -19,7 +19,7 @@ const fakeMap = {
   on: vi.fn(),
   off: vi.fn(),
   isSourceLoaded: vi.fn(() => true),
-  getStyle: vi.fn(() => ({ layers: [{ id: 'labels', type: 'symbol' }] })),
+  getStyle: vi.fn(() => ({ layers: [{ id: 'water', type: 'fill' }, { id: 'road_minor_case', type: 'line' }, { id: 'labels', type: 'symbol' }] })),
 };
 vi.mock('@/components/ui/map', () => ({ useMap: () => ({ map: fakeMap, isLoaded: true }) }));
 
@@ -35,12 +35,12 @@ describe('TerrainLayer', () => {
     render(<TerrainLayer enabled={false} />);
     expect(fakeMap.addSource).not.toHaveBeenCalled();
   });
-  it('liga: cria fonte pmtiles:// e camada raster abaixo dos rótulos; alternar não recria', () => {
+  it('liga: cria fonte pmtiles:// e camada raster abaixo das vias (ruas e rótulos ficam por cima); alternar não recria', () => {
     const { rerender } = render(<TerrainLayer enabled />);
     expect(fakeMap.addSource).toHaveBeenCalledTimes(1);
     expect(fakeMap.addSource.mock.calls[0][1]).toMatchObject({ type: 'raster', tileSize: 256 });
     expect(fakeMap.addLayer).toHaveBeenCalledTimes(1);
-    expect(fakeMap.addLayer.mock.calls[0][1]).toBe('labels');
+    expect(fakeMap.addLayer.mock.calls[0][1]).toBe('road_minor_case');
     expect(fakeMap.addLayer.mock.calls[0][0]).toMatchObject({ type: 'raster', paint: { 'raster-opacity': TERRAIN_OPACITY } });
     expect(fakeMap.addSource.mock.calls[0][1]).toMatchObject({ url: expect.stringMatching(/^pmtiles:\/\//) });
     expect(addProtocol).toHaveBeenCalledWith('pmtiles', expect.any(Function));

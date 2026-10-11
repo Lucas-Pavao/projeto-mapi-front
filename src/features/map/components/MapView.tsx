@@ -599,7 +599,7 @@ export const MapView: React.FC = () => {
           )}
 
           {/* Floating Controls Overlay (Right) */}
-          <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 z-20 flex flex-col items-end gap-3">
+          <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 md:bottom-[12rem] z-20 flex flex-col items-end gap-3">
             <div className="pointer-events-auto relative shrink-0">
               <Button 
                 variant="secondary" 
@@ -618,7 +618,7 @@ export const MapView: React.FC = () => {
               </Button>
 
               {showLayerPanel && (
-                <div id="layer-panel" role="group" aria-label="Camadas" className="absolute right-14 top-0 z-30 bg-black/80 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl shadow-black/60 flex flex-col gap-1 w-48 animate-in slide-in-from-right-2 duration-200 overflow-y-auto max-h-[60vh]">
+                <div id="layer-panel" role="group" aria-label="Camadas" className="absolute right-14 top-0 z-30 bg-black/80 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl shadow-black/60 flex flex-col gap-1 w-56 animate-in slide-in-from-right-2 duration-200 overflow-y-auto max-h-[60vh]">
                    <div className="px-3 py-2 border-b border-white/5 mb-1">
                       <p className="text-2xs font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
                          <Layers className="h-3 w-3" /> Camadas
@@ -658,7 +658,7 @@ export const MapView: React.FC = () => {
             </div>
 
             {/* Cartões de legenda: rolam dentro da coluna e nunca descem até os controles de zoom (canto inferior direito) */}
-            <div className="pointer-events-auto flex min-h-0 flex-col items-end gap-3 overflow-y-auto overscroll-contain">
+            <div className="pointer-events-auto custom-scrollbar [scrollbar-color:rgba(255,255,255,0.45)_transparent] flex min-h-0 flex-col items-end gap-2 overflow-y-auto overscroll-contain">
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} className="w-64 sm:w-72" />
               <RiskLegend className="w-64 sm:w-72" />
             </div>

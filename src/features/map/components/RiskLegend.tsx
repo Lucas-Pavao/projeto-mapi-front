@@ -36,7 +36,7 @@ export const RiskLegend: React.FC<{ className?: string }> = ({ className }) => {
         </button>
       </h2>
       <div id="risk-legend-body" hidden={!open}>
-        <ul className="space-y-2 px-3 pb-3">
+        <ul className="space-y-1.5 px-3 pb-2">
           {RISK_LEGEND_ORDER.map((level) => {
             const v = getRiskVisual(level);
             return (
@@ -55,8 +55,8 @@ export const RiskLegend: React.FC<{ className?: string }> = ({ className }) => {
             );
           })}
         </ul>
-        <p className="border-t border-white/10 px-3 py-2 text-2xs leading-snug text-zinc-400">
-          {EXPERIMENTAL_LEGEND_TEXT} Confirme em campo antes de decidir.
+        <p className="border-t border-white/10 px-3 py-1.5 text-2xs leading-snug text-zinc-400">
+          {EXPERIMENTAL_LEGEND_TEXT}
         </p>
       </div>
     </section>

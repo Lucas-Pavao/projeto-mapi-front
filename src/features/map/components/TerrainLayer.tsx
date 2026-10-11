@@ -65,7 +65,7 @@ export function TerrainLayer({ enabled, onStatusChange }: { enabled: boolean; on
       if (!map.getLayer(TERRAIN_LAYER_ID)) {
         map.addLayer(
           { id: TERRAIN_LAYER_ID, type: 'raster', source: TERRAIN_SOURCE_ID, paint: { 'raster-opacity': TERRAIN_OPACITY } },
-          firstSymbolLayerId(map),
+          terrainBeforeId(map),
         );
       }
       createdRef.current = true;
@@ -92,7 +92,13 @@ export function TerrainLayer({ enabled, onStatusChange }: { enabled: boolean; on
   return null;
 }
 
-/** Insere o raster abaixo dos rótulos do mapa-base para não cobrir nomes de ruas. */
-function firstSymbolLayerId(map: MapLibreMap): string | undefined {
-  return map.getStyle()?.layers?.find((l) => l.type === 'symbol')?.id;
+/**
+ * Posição do raster: logo abaixo da primeira camada de via (túnel, rua, ponte, ferrovia) do mapa-base. Assim a
+ * hipsometria colore o terreno, mas o traço das ruas e os rótulos ficam por cima, sem perder contraste. Sem camada de
+ * via reconhecida (estilo customizado), cai para abaixo do primeiro rótulo.
+ */
+const ROAD_LAYER_ID = /^(tunnel|road|bridge|rail)/;
+function terrainBeforeId(map: MapLibreMap): string | undefined {
+  const layers = map.getStyle()?.layers ?? [];
+  return (layers.find((l) => l.type === 'line' && ROAD_LAYER_ID.test(l.id)) ?? layers.find((l) => l.type === 'symbol'))?.id;
 }

@@ -8,7 +8,7 @@ export const TerrainLegend: React.FC = () => {
   const stops = terrainLegendStops();
   const gradient = `linear-gradient(to right, ${stops.map((s) => `${s.color} ${pct(s.valueM)}%`).join(', ')})`;
   return (
-    <div data-testid="terrain-legend" className="px-3 pb-3 pt-1">
+    <div data-testid="terrain-legend" className="px-3 pb-2 pt-0.5">
       <div
         role="img"
         aria-label={`Escala de cota do terreno, de ${TERRAIN_MIN_M} a ${TERRAIN_MAX_M} metros ou mais`}
@@ -26,8 +26,8 @@ export const TerrainLegend: React.FC = () => {
           </li>
         ))}
       </ol>
-      <p className="mt-1 text-2xs leading-snug text-zinc-300">Cota do terreno (m).</p>
-      <p className="mt-1 text-2xs leading-snug text-zinc-400">
+      <p className="mt-0.5 text-2xs leading-snug text-zinc-300">Cota do terreno (m).</p>
+      <p className="mt-0.5 text-2xs leading-snug text-zinc-400">
         Datum não confirmado — cotas relativas. Fonte: MDT PE3D, voo de 2016.
       </p>
     </div>
