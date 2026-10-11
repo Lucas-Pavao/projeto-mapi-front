@@ -7,7 +7,7 @@ import {
   LogOut, 
   User, 
   Layers, 
-  Settings, 
+  List,
   Shield, 
   Activity,
   AlertTriangle,
@@ -28,6 +28,7 @@ import { exportService } from '../services/export.service';
 import { floodService } from '../services/flood.service';
 import { mapService } from '../services/map.service';
 import { getSensorConfig, getDataFreshness, formatApiTimestamp } from '../utils/sensor';
+import { getRiskVisual } from '../utils/risk';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
 import { FloodPointPopup } from './FloodPointPopup';
@@ -37,6 +38,16 @@ import { ReportFloodModal } from './ReportFloodModal';
 import { ReportScenarioModal } from './ReportScenarioModal';
 import { useMapData } from '../hooks/useMapData';
 import { useMapInteractions } from '../hooks/useMapInteractions';
+import { useNotices } from '@/hooks/useNotices';
+import { NoticeRegion } from '@/components/ui/notice-region';
+import { deriveApiStatus } from '../utils/apiStatus';
+import { ApiStatusIndicator } from './ApiStatusIndicator';
+import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
+import { RiskLegend } from './RiskLegend';
+import { TerrainControl } from './TerrainControl';
+import { TerrainLayer } from './TerrainLayer';
+import type { TerrainStatus } from '../utils/terrain';
+import { RiskIcon } from './RiskIcon';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, FloodPointResponseDTO, PreciseDataResponse } from '../types';
 
@@ -100,7 +111,9 @@ const LocationInitializer: React.FC<{ onLocationUpdate: (loc: {lat: number, lng:
  */
 export const MapView: React.FC = () => {
   const { user, logout } = useAuth();
-  const { sensors, floodPoints, isLoading } = useMapData();
+  const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch } = useMapData();
+  const apiStatus = deriveApiStatus({ isLoading, hasError });
+  const { notices, notify, dismiss } = useNotices();
   const {
     selectedSensorId,
     setSelectedSensorId,
@@ -126,7 +139,10 @@ export const MapView: React.FC = () => {
   } = useMapInteractions(sensors, floodPoints);
 
   const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos Críticos', 'Meteo', 'Vento', 'Sensor']);
+  const [showTerrain, setShowTerrain] = useState(false);
+  const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
   const [showLayerPanel, setShowLayerPanel] = useState(false);
+  const [showMobileList, setShowMobileList] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportSeverity, setReportSeverity] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'>('MEDIUM');
   const [reportDescription, setReportDescription] = useState('');
@@ -141,16 +157,29 @@ export const MapView: React.FC = () => {
   
   const mapRef = useRef<MapRef>(null);
 
+  // Esc: fecha, em ordem, lista (celular) > painel de camadas > popups/painel de local.
+  // Modais e popups tratam o próprio Esc; os modais interrompem a propagação.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || showDetailCard || showReportModal || showScenarioModal) return;
+      if (showMobileList) setShowMobileList(false);
+      else if (showLayerPanel) setShowLayerPanel(false);
+      else closePopups();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showDetailCard, showReportModal, showScenarioModal, showMobileList, showLayerPanel, closePopups]);
+
   // Fetch real-time status when a flood point is selected
   useEffect(() => {
-    if (selectedFloodPoint?.id_ponto) {
+    if (selectedFloodPoint?.slug) {
       let isMounted = true;
       const fetchStatus = async () => {
         setIsFetchingStatus(true);
         try {
           // Fetch BOTH point status (for sensor config) and rich analysis (for fallbacks)
           const [pointData, preciseAnalysis] = await Promise.all([
-            floodService.getPointStatus(selectedFloodPoint.id_ponto),
+            floodService.getPointStatus(selectedFloodPoint.slug),
             floodService.getPreciseData(selectedFloodPoint.latitude, selectedFloodPoint.longitude)
           ]);
           
@@ -165,7 +194,7 @@ export const MapView: React.FC = () => {
           
           // Augment with individual sensor data if metrics are still missing
           if (isMounted) {
-            const sensorIds = pointData.sensores_proximos_ids || [];
+            const sensorIds = pointData.nearbySensorIds || [];
             if (sensorIds.length > 0) {
               const sensorReadings = await Promise.all(
                 sensorIds.map(async (id) => {
@@ -244,6 +273,7 @@ export const MapView: React.FC = () => {
           if (isMounted) setFloodPointStatus(data);
         } catch (error) {
           console.error('Erro ao buscar status do ponto:', error);
+          if (isMounted) notify('error', 'Não foi possível carregar o status em tempo real deste ponto. Os dados exibidos podem estar incompletos.');
         } finally {
           if (isMounted) setIsFetchingStatus(false);
         }
@@ -254,22 +284,22 @@ export const MapView: React.FC = () => {
         setFloodPointStatus(null);
       };
     }
-  }, [selectedFloodPoint?.id_ponto, selectedFloodPoint?.latitude, selectedFloodPoint?.longitude, setIsFetchingStatus, setFloodPointStatus]);
+  }, [selectedFloodPoint?.slug, selectedFloodPoint?.latitude, selectedFloodPoint?.longitude, setIsFetchingStatus, setFloodPointStatus, notify]);
 
   const handleExportCsv = async (point: FloodPointResponseDTO) => {
     try {
-      const csvData = await exportService.getUnifiedIADataCsv(point.id_ponto);
+      const csvData = await exportService.getUnifiedIADataCsv(point.slug);
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.setAttribute('href', url);
-      link.setAttribute('download', `dataset_${point.id_ponto}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `dataset_${point.slug}_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
       console.error('Erro ao exportar CSV:', error);
-      alert('Erro ao exportar dados para CSV.');
+      notify('error', 'Erro ao exportar dados para CSV.');
     }
   };
 
@@ -279,19 +309,19 @@ export const MapView: React.FC = () => {
     setIsSubmittingReport(true);
     try {
       await floodService.reportFlood({
-        floodPointSlug: selectedFloodPoint.id_ponto,
+        floodPointSlug: selectedFloodPoint.slug,
         severity: reportSeverity,
         description: reportDescription,
         startTime: new Date().toISOString(),
         endTime: new Date(Date.now() + 3600000).toISOString(), // 1h default
         confirmedBy: user?.username || 'Operador'
       });
-      alert('Evento de alagamento registrado com sucesso!');
+      notify('success', 'Evento de alagamento registrado com sucesso.');
       setShowReportModal(false);
       setReportDescription('');
     } catch (error) {
       console.error('Erro ao reportar alagamento:', error);
-      alert('Erro ao registrar evento.');
+      notify('error', 'Erro ao registrar evento.');
     } finally {
       setIsSubmittingReport(false);
     }
@@ -299,7 +329,7 @@ export const MapView: React.FC = () => {
 
   const handleGetGeolocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocalização não é suportada ou disponível neste navegador (verifique se está acessando via HTTPS ou localhost).');
+      notify('error', 'Geolocalização não é suportada ou disponível neste navegador (verifique se está acessando via HTTPS ou localhost).');
       return;
     }
     
@@ -326,7 +356,7 @@ export const MapView: React.FC = () => {
         } else {
           msg += 'Verifique as permissões de geolocalização do seu navegador.';
         }
-        alert(msg);
+        notify('error', msg);
       },
       { enableHighAccuracy: false, timeout: 15000 }
     );
@@ -342,12 +372,12 @@ export const MapView: React.FC = () => {
         longitude: scenarioCoords.lng,
         isFlooded
       });
-      alert('Situação da região reportada com sucesso!');
+      notify('success', 'Situação da região reportada com sucesso.');
       setShowScenarioModal(false);
       setScenarioCoords(null);
     } catch (error) {
       console.error('Erro ao reportar cenário:', error);
-      alert('Erro ao enviar o relato do cenário.');
+      notify('error', 'Erro ao enviar o relato do cenário.');
     } finally {
       setIsSubmittingScenario(false);
     }
@@ -387,11 +417,7 @@ export const MapView: React.FC = () => {
     if (selectedFloodPoint) {
       // Prioritize the real-time status prediction, fallback to point prediction
       const riskLevel = floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel;
-      if (riskLevel === 'CRITICAL') return '#ef4444'; // red-500
-      if (riskLevel === 'HIGH') return '#f97316';     // orange-500
-      if (riskLevel === 'MEDIUM') return '#f59e0b';   // amber-500
-      if (riskLevel === 'LOW') return '#10b981';      // emerald-500
-      return '#ef4444'; // Default red for flood points
+      return getRiskVisual(riskLevel).hex;
     }
     
     return "#6366f1";
@@ -417,8 +443,8 @@ export const MapView: React.FC = () => {
     }
 
     // From selected flood point itself
-    if (selectedFloodPoint?.sensores_proximos_ids) {
-      selectedFloodPoint.sensores_proximos_ids.forEach(id => ids.add(id));
+    if (selectedFloodPoint?.nearbySensorIds) {
+      selectedFloodPoint.nearbySensorIds.forEach(id => ids.add(id));
     }
 
     // From selected sensor status
@@ -436,45 +462,60 @@ export const MapView: React.FC = () => {
     <div className="h-screen w-full bg-zinc-950 overflow-hidden font-sans selection:bg-primary/30 text-zinc-300 relative">
       {/* Brand Floating Island */}
       <div className="absolute top-4 left-4 z-40 pointer-events-auto">
-        <div className="h-16 border border-white/10 bg-black/40 backdrop-blur-xl flex items-center px-6 rounded-2xl shadow-2xl shadow-black/50 transition-all duration-500 hover:bg-black/60">
+        <div className="h-16 border border-white/10 bg-black/60 backdrop-blur-xl flex items-center px-3 sm:px-6 rounded-2xl shadow-2xl shadow-black/50 transition-all duration-500 hover:bg-black/60">
           <div className="flex flex-col">
-            <h1 className="text-sm font-black text-white uppercase tracking-[0.3em]">MAPI Portal</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sistemas Online</span>
-            </div>
+            <h1 className="text-sm font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.3em]">MAPI Portal</h1>
+            <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
           </div>
         </div>
       </div>
 
       {/* User Controls Floating Island */}
       <div className="absolute top-4 right-4 z-40 pointer-events-auto">
-        <div className="h-16 border border-white/10 bg-black/40 backdrop-blur-xl flex items-center gap-3 px-4 rounded-2xl shadow-2xl shadow-black/50 hover:bg-black/60 transition-all">
+        <div className="h-16 border border-white/10 bg-black/60 backdrop-blur-xl flex items-center gap-3 px-4 rounded-2xl shadow-2xl shadow-black/50 hover:bg-black/60 transition-all">
            <div className="flex flex-col items-end mr-1 hidden sm:flex">
-              <span className="text-[10px] font-black text-white uppercase tracking-tighter">{user?.username || 'Convidado'}</span>
-              <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest">Admin</span>
+              <span className="text-2xs font-black text-white uppercase tracking-tighter">{user?.username || 'Convidado'}</span>
            </div>
-           <div className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 hover:text-primary transition-colors cursor-pointer group">
+           <div aria-hidden="true" className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 group">
               <User className="h-5 w-5 group-hover:scale-110 transition-transform" />
            </div>
            <Button 
              variant="ghost" 
              size="icon" 
              onClick={logout}
-             className="h-10 w-10 rounded-xl hover:bg-red-500/10 hover:text-red-500 text-zinc-500 transition-all border border-transparent hover:border-red-500/20"
+             aria-label="Sair da conta"
+             title="Sair da conta"
+             className="h-10 w-10 rounded-xl hover:bg-red-500/10 hover:text-red-500 text-zinc-400 transition-all border border-transparent hover:border-red-500/20"
            >
-             <LogOut className="h-5 w-5" />
+             <LogOut className="h-5 w-5" aria-hidden="true" />
            </Button>
         </div>
       </div>
 
       {/* Floating Sidebar Overlay */}
-      <div className="absolute top-24 left-4 bottom-4 z-20 pointer-events-none hidden md:flex">
-        <div className="pointer-events-auto h-full shadow-2xl shadow-black/60 rounded-2xl overflow-hidden border border-white/10 ring-1 ring-white/5">
+      <button
+        type="button"
+        onClick={() => setShowMobileList(true)}
+        aria-expanded={showMobileList}
+        aria-controls="sensor-sheet"
+        className="md:hidden absolute bottom-6 left-4 z-30 flex h-12 items-center gap-2 rounded-full border border-white/20 bg-black/80 px-4 text-sm font-semibold text-white shadow-2xl backdrop-blur-xl"
+      >
+        <List className="h-5 w-5" aria-hidden="true" />
+        Sensores e pontos
+      </button>
+      <div
+        id="sensor-sheet"
+        className={cn(
+          'absolute z-40 pointer-events-none md:z-20 md:flex md:inset-x-auto md:top-24 md:left-4 md:bottom-4 md:h-auto',
+          showMobileList ? 'flex inset-x-2 bottom-2 h-[70vh]' : 'hidden'
+        )}
+      >
+        <div className="pointer-events-auto h-full w-full md:w-auto shadow-2xl shadow-black/60 rounded-2xl overflow-hidden border border-white/10 ring-1 ring-white/5">
           <SensorSidebar 
             sensors={sensors} 
             floodPoints={floodPoints}
             onSensorClick={(sensor) => {
+              setShowMobileList(false);
               handleSensorClick(sensor);
               if (sensor.latitude && sensor.longitude) {
                 mapRef.current?.flyTo({
@@ -485,6 +526,7 @@ export const MapView: React.FC = () => {
               }
             }}
             onFloodPointClick={(point) => {
+              setShowMobileList(false);
               handleFloodPointClick(point);
               if (point.latitude && point.longitude) {
                 mapRef.current?.flyTo({
@@ -496,9 +538,21 @@ export const MapView: React.FC = () => {
             }}
             selectedSensorId={selectedSensorId}
             selectedFloodPointId={selectedFloodPointId}
+            onClose={() => setShowMobileList(false)}
           />
         </div>
       </div>
+
+      {/* Avisos de API: erro com horário do último dado válido, ou estado vazio explícito */}
+      {(hasError || (!isLoading && sensors.length === 0 && floodPoints.length === 0)) && (
+        <div className="absolute top-24 inset-x-4 z-30 md:left-[23rem] md:right-[21rem] md:inset-x-auto pointer-events-auto">
+          {hasError ? (
+            <ApiErrorBanner lastSuccessAt={lastSuccessAt} isRetrying={isRefreshing} onRetry={refetch} />
+          ) : (
+            <EmptyDataNotice />
+          )}
+        </div>
+      )}
       
       <main className="h-full w-full relative">
         <Map
@@ -509,11 +563,13 @@ export const MapView: React.FC = () => {
           zoom={12}
         >
           <LocationInitializer onLocationUpdate={setUserLocation} />
+          <TerrainLayer enabled={showTerrain} onStatusChange={setTerrainStatus} />
           <MapControls 
             showLocate 
             showFullscreen 
             position="bottom-right" 
             onLocate={(coords) => setUserLocation({ lat: coords.latitude, lng: coords.longitude })} 
+            onLocateError={(msg) => notify('error', msg)}
           />
           
           {userLocation && (
@@ -543,24 +599,28 @@ export const MapView: React.FC = () => {
           )}
 
           {/* Floating Controls Overlay (Right) */}
-          <div className="absolute top-24 right-4 z-20 flex flex-col gap-3">
-            <div className="relative">
+          <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 md:bottom-[12rem] z-20 flex flex-col items-end gap-3">
+            <div className="pointer-events-auto relative shrink-0">
               <Button 
                 variant="secondary" 
                 size="icon" 
                 onClick={() => setShowLayerPanel(!showLayerPanel)}
+                aria-label="Camadas do mapa"
+                aria-expanded={showLayerPanel}
+                aria-controls="layer-panel"
+                title="Camadas do mapa"
                 className={cn(
                   "h-12 w-12 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/10 transition-all",
                   showLayerPanel ? "text-primary border-primary/40 bg-white/10" : "text-zinc-400"
                 )}
               >
-                 <Layers className="h-5 w-5" />
+                 <Layers className="h-5 w-5" aria-hidden="true" />
               </Button>
 
               {showLayerPanel && (
-                <div className="absolute right-14 top-0 bg-black/60 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl shadow-black/60 flex flex-col gap-1 w-48 animate-in slide-in-from-right-2 duration-200 overflow-y-auto max-h-[60vh]">
+                <div id="layer-panel" role="group" aria-label="Camadas" className="absolute right-14 top-0 z-30 bg-black/80 backdrop-blur-xl border border-white/10 p-1.5 rounded-2xl shadow-2xl shadow-black/60 flex flex-col gap-1 w-56 animate-in slide-in-from-right-2 duration-200 overflow-y-auto max-h-[60vh]">
                    <div className="px-3 py-2 border-b border-white/5 mb-1">
-                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                      <p className="text-2xs font-black text-zinc-400 uppercase tracking-[0.2em] flex items-center gap-2">
                          <Layers className="h-3 w-3" /> Camadas
                       </p>
                    </div>
@@ -576,14 +636,16 @@ export const MapView: React.FC = () => {
                    ].map((layer) => (
                      <button
                        key={layer.id}
+                       type="button"
+                       aria-pressed={activeLayers.includes(layer.id)}
                        onClick={() => setActiveLayers(prev => 
                          prev.includes(layer.id) ? prev.filter(l => l !== layer.id) : [...prev, layer.id]
                        )}
                        className={cn(
-                         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all group",
+                         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-2xs font-bold uppercase tracking-widest transition-all group",
                          activeLayers.includes(layer.id) 
                           ? "bg-white/10 text-white shadow-inner" 
-                          : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+                          : "text-zinc-400 hover:text-zinc-300 hover:bg-white/5"
                        )}
                      >
                        <layer.icon className={cn("h-3.5 w-3.5", activeLayers.includes(layer.id) ? layer.color : "opacity-30")} />
@@ -595,9 +657,11 @@ export const MapView: React.FC = () => {
               )}
             </div>
 
-            <Button variant="secondary" size="icon" className="h-12 w-12 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/10 text-zinc-400">
-               <Settings className="h-5 w-5" />
-            </Button>
+            {/* Cartões de legenda: rolam dentro da coluna e nunca descem até os controles de zoom (canto inferior direito) */}
+            <div className="pointer-events-auto custom-scrollbar [scrollbar-color:rgba(255,255,255,0.45)_transparent] flex min-h-0 flex-col items-end gap-2 overflow-y-auto overscroll-contain">
+              <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} className="w-64 sm:w-72" />
+              <RiskLegend className="w-64 sm:w-72" />
+            </div>
           </div>
 
           {filteredSensorsForMap.map((sensor: SensorResponseDTO) => {
@@ -624,6 +688,7 @@ export const MapView: React.FC = () => {
                   }
                 }}
                 offset={[0, -20]}
+                label={`Sensor ${sensor.stationName || sensor.sensorId}, ${config.label}${isStale ? ', sem resposta recente' : ''}. Pressione Enter para abrir.`}
               >
                 <MarkerContent>
                   <div className="relative group cursor-pointer flex flex-col items-center">
@@ -641,7 +706,7 @@ export const MapView: React.FC = () => {
                     </div>
 
                     {isStale && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-zinc-950 z-20" title="Sensor sem resposta recente" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-zinc-950 z-20" title="Sensor sem resposta recente" aria-hidden="true" />
                     )}
 
                     {isSelected && (
@@ -669,19 +734,8 @@ export const MapView: React.FC = () => {
             
             // Risk level color mapping
             const riskLevel = (isSelected && floodPointStatus?.floodPrediction?.riskLevel) || point.floodPrediction?.riskLevel;
-            const colorClass = 
-              riskLevel === 'CRITICAL' ? 'bg-red-600' :
-              riskLevel === 'HIGH' ? 'bg-orange-500' :
-              riskLevel === 'MEDIUM' ? 'bg-amber-500' :
-              riskLevel === 'LOW' ? 'bg-emerald-500' : 
-              'bg-red-600';
-            
-            const pingColorClass = 
-              riskLevel === 'CRITICAL' ? 'bg-red-400' :
-              riskLevel === 'HIGH' ? 'bg-orange-400' :
-              riskLevel === 'MEDIUM' ? 'bg-amber-400' :
-              riskLevel === 'LOW' ? 'bg-emerald-400' : 
-              'bg-red-400';
+            const { bg: colorClass, ping: pingColorClass, label: riskLabel } = getRiskVisual(riskLevel);
+            const isUnknownRisk = !getRiskVisual(riskLevel).showsProbability;
 
             return (
               <MapMarker 
@@ -700,16 +754,18 @@ export const MapView: React.FC = () => {
                   }
                 }}
                 offset={[0, -20]}
+                label={`Ponto crítico ${point.name}: risco ${riskLabel}. Pressione Enter para abrir.`}
               >
                 <MarkerContent>
                   <div className="relative group cursor-pointer flex flex-col items-center">
                     <div className={cn(
                       "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
                       colorClass,
+                      isUnknownRisk && "border-dashed border-white/80",
                       isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : ''
                     )}>
                       <div className="-rotate-45 flex items-center justify-center h-full w-full">
-                         <AlertTriangle className="h-5 w-5 text-white" />
+                         <RiskIcon level={riskLevel} className="h-5 w-5 text-white" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
                     </div>
@@ -732,6 +788,7 @@ export const MapView: React.FC = () => {
                 onClose={() => setSelectedSensorId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
                 offset={[0, -45]}
+                label={`Detalhes do sensor ${selectedSensor.stationName || selectedSensor.sensorId}`}
               >
                 <SensorPopup 
                   sensor={selectedSensor} 
@@ -749,6 +806,7 @@ export const MapView: React.FC = () => {
                 onClose={() => setSelectedFloodPointId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
                 offset={[0, -45]}
+                label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
               >
                 <FloodPointPopup 
                   point={selectedFloodPoint}
@@ -779,7 +837,7 @@ export const MapView: React.FC = () => {
           </Map>
 
           {(clickedLocation || isFetchingLocation) && (
-            <div className="absolute bottom-10 left-[416px] z-30 w-[420px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <section aria-label="Análise de local" className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-10 lg:left-[26rem] lg:w-[26.25rem] z-30 max-h-[75vh] overflow-y-auto rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/5">
                 <div className="px-5 py-4 flex items-center justify-between border-b border-white/5 bg-white/5">
                   <div className="flex items-center gap-4">
@@ -788,7 +846,7 @@ export const MapView: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-black text-white tracking-tight uppercase">Análise de Local</h3>
-                      <p className="text-[9px] text-zinc-500 font-black uppercase tracking-widest mt-0.5">
+                      <p className="text-2xs text-zinc-400 font-black uppercase tracking-widest mt-0.5">
                         {clickedLocation ? `${clickedLocation.lat?.toFixed(4) ?? '--'}, ${clickedLocation.lng?.toFixed(4) ?? '--'}` : 'Sincronizando...'}
                       </p>
                     </div>
@@ -796,10 +854,11 @@ export const MapView: React.FC = () => {
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-500 hover:text-white transition-colors" 
+                    className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors" 
                     onClick={() => closePopups()}
+                    aria-label="Fechar análise de local"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
 
@@ -810,7 +869,7 @@ export const MapView: React.FC = () => {
                           <div className="h-12 w-12 border-2 border-primary/20 rounded-full" />
                           <div className="absolute inset-0 h-12 w-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                        </div>
-                       <span className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] animate-pulse">Consultando Dados Geoespaciais...</span>
+                       <span className="text-2xs text-zinc-400 font-black uppercase tracking-[0.2em] animate-pulse">Consultando Dados Geoespaciais...</span>
                     </div>
                   ) : locationInfo ? (
                     <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-500">
@@ -820,11 +879,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Thermometer className="h-3.5 w-3.5 text-orange-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Temperatura</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Temperatura</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.temperature.toFixed(1)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitTemperature || '°C'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitTemperature || '°C'}</small>
                                </span>
                             </div>
                          )}
@@ -832,7 +891,7 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Droplets className="h-3.5 w-3.5 text-blue-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Umidade</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Umidade</span>
                                </div>
                                <span className="text-lg font-black text-white italic">{locationInfo.preciseData.humidity.toFixed(0)}%</span>
                             </div>
@@ -841,11 +900,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <CloudRain className="h-3.5 w-3.5 text-sky-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Chuva</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Chuva</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.precipitation.toFixed(1)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitPrecipitation || 'mm'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitPrecipitation || 'mm'}</small>
                                </span>
                             </div>
                          )}
@@ -853,11 +912,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Wind className="h-3.5 w-3.5 text-slate-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Vento</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vento</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.windSpeed.toFixed(1)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitWindSpeed || 'km/h'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitWindSpeed || 'km/h'}</small>
                                </span>
                             </div>
                          )}
@@ -865,11 +924,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Pressão</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Pressão</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.pressure.toFixed(0)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitPressure || 'hPa'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitPressure || 'hPa'}</small>
                                </span>
                             </div>
                          )}
@@ -877,11 +936,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Sun className="h-3.5 w-3.5 text-yellow-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Radiação</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Radiação</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.solarRadiation.toFixed(1)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitSolarRadiation || 'W/m²'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitSolarRadiation || 'W/m²'}</small>
                                </span>
                             </div>
                          )}
@@ -889,11 +948,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Waves className="h-3.5 w-3.5 text-blue-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Nível Água</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Nível Água</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.waterLevel.toFixed(2)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitWaterLevel || 'm'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitWaterLevel || 'm'}</small>
                                </span>
                             </div>
                          )}
@@ -901,11 +960,11 @@ export const MapView: React.FC = () => {
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">
                                   <Gauge className="h-3.5 w-3.5 text-indigo-400" />
-                                  <span className="text-[9px] text-zinc-500 font-black uppercase tracking-tighter">Vazão</span>
+                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vazão</span>
                                </div>
                                <span className="text-lg font-black text-white italic">
                                  {locationInfo.preciseData.flowRate.toFixed(2)}
-                                 <small className="text-[10px] ml-1 opacity-50 not-italic">{locationInfo.preciseData.unitFlowRate || 'm³/s'}</small>
+                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitFlowRate || 'm³/s'}</small>
                                </span>
                             </div>
                          )}
@@ -915,16 +974,17 @@ export const MapView: React.FC = () => {
                       {locationInfo.preciseData?.latestReadings && locationInfo.preciseData.latestReadings.length > 0 && (
                         <div className="space-y-3">
                            <div className="flex items-center justify-between px-1">
-                             <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em]">Sensores no Raio (3km)</p>
-                             <span className="text-[9px] text-emerald-500 font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                             <p className="text-2xs text-zinc-400 font-black uppercase tracking-[0.2em]">Sensores no Raio (3km)</p>
+                             <span className="text-2xs text-emerald-500 font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-full">
                                {locationInfo.preciseData.latestReadings.length} ativos
                              </span>
                            </div>
                            <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
                              {locationInfo.preciseData.latestReadings.map((reading) => (
-                               <div 
+                               <button 
+                                  type="button"
                                   key={`${reading.sensorId}-${reading.type}`}
-                                  className="bg-black/40 p-3 rounded-2xl border border-white/5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all hover:bg-white/5"
+                                  className="w-full text-left bg-black/40 p-3 rounded-2xl border border-white/5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all hover:bg-white/5"
                                   onClick={() => {
                                     const fullSensor = sensors.find(s => s.sensorId === reading.sensorId);
                                     if (fullSensor) {
@@ -943,10 +1003,10 @@ export const MapView: React.FC = () => {
                                       <Activity className="h-4 w-4" />
                                     </div>
                                     <div>
-                                       <p className="text-[10px] font-black text-white uppercase truncate max-w-[120px]">
+                                       <p className="text-2xs font-black text-white uppercase truncate max-w-[120px]">
                                          {reading.sensorId}
                                        </p>
-                                       <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter">
+                                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">
                                           {reading.type} • {reading.distanceKm?.toFixed(1) ?? '--'}km
                                        </p>
                                     </div>
@@ -954,10 +1014,10 @@ export const MapView: React.FC = () => {
                                   <div className="text-right">
                                     <p className="text-sm font-black text-white italic">
                                       {reading.value?.toFixed(1) ?? '--'}
-                                      <small className="text-[9px] font-bold text-zinc-600 ml-1 not-italic">{reading.unit}</small>
+                                      <small className="text-2xs font-bold text-zinc-400 ml-1 not-italic">{reading.unit}</small>
                                     </p>
                                   </div>
-                               </div>
+                               </button>
                              ))}
                            </div>
                         </div>
@@ -968,7 +1028,7 @@ export const MapView: React.FC = () => {
                         <div className="bg-blue-600/10 p-5 rounded-3xl border border-blue-500/20 space-y-4">
                            <div className="flex justify-between items-start">
                               <div>
-                                 <p className="text-[9px] text-blue-400 font-black uppercase tracking-widest mb-1">Previsão de Marés</p>
+                                 <p className="text-2xs text-blue-400 font-black uppercase tracking-widest mb-1">Previsão de Marés</p>
                                  <h4 className="text-xs font-black text-white uppercase">{(nearestHarbor?.harbor_name as string) || 'Porto da Região'}</h4>
                               </div>
                               <Waves className="h-6 w-6 text-blue-400 opacity-50" />
@@ -976,11 +1036,11 @@ export const MapView: React.FC = () => {
                            
                            <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1">
-                                 <p className="text-[8px] text-zinc-500 font-black uppercase">Estimado (Tábua)</p>
+                                 <p className="text-2xs text-zinc-400 font-black uppercase">Estimado (Tábua)</p>
                                  <p className="text-xl font-black text-white italic">{locationInfo.preciseData?.tideHeightTabuaMare?.toFixed(2) ?? '--'}m</p>
                               </div>
                               <div className="space-y-1 text-right border-l border-white/10 pl-4">
-                                 <p className="text-[8px] text-zinc-500 font-black uppercase">Monitorado</p>
+                                 <p className="text-2xs text-zinc-400 font-black uppercase">Monitorado</p>
                                  <p className="text-xl font-black text-blue-400 italic">{locationInfo.preciseData?.tideHeight?.toFixed(2) ?? '--'}m</p>
                               </div>
                            </div>
@@ -990,7 +1050,7 @@ export const MapView: React.FC = () => {
                       {/* Botão de Reportar Cenário para coordenada clicada */}
                       <div className="pt-3 border-t border-white/5">
                         <Button
-                          className="w-full bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 font-black uppercase text-[10px] tracking-widest h-12 rounded-2xl transition-all flex items-center justify-center gap-2"
+                          className="w-full bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 font-black uppercase text-2xs tracking-widest h-12 rounded-2xl transition-all flex items-center justify-center gap-2"
                           onClick={() => {
                             if (clickedLocation) {
                               setScenarioCoords({ lat: clickedLocation.lat, lng: clickedLocation.lng });
@@ -1007,7 +1067,7 @@ export const MapView: React.FC = () => {
                   ) : null}
                 </div>
               </div>
-            </div>
+          </section>
           )}
 
           {showDetailCard && selectedSensor && (
@@ -1037,7 +1097,7 @@ export const MapView: React.FC = () => {
           )}
 
           {isLoading && (
-            <div className="absolute inset-0 bg-slate-950 flex items-center justify-center z-50">
+            <div role="status" aria-live="polite" className="absolute inset-0 bg-slate-950 flex items-center justify-center z-50">
               <div className="flex flex-col items-center p-8 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl">
                 <div className="relative h-16 w-16 mb-6 flex items-center justify-center">
                    <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
@@ -1045,7 +1105,7 @@ export const MapView: React.FC = () => {
                    <Activity className="h-8 w-8 text-primary animate-pulse" />
                 </div>
                 <h2 className="text-sm font-bold tracking-[0.2em] text-white uppercase animate-pulse">Carregando Sistema</h2>
-                <p className="text-[10px] text-zinc-500 mt-2 uppercase font-medium tracking-tighter">MAPI • Monitoramento Ambiental</p>
+                <p className="text-2xs text-zinc-400 mt-2 uppercase font-medium tracking-tighter">MAPI • Monitoramento Ambiental</p>
               </div>
             </div>
           )}
@@ -1075,30 +1135,32 @@ export const MapView: React.FC = () => {
           )}
 
           {/* Botão Flutuante de Geolocalização */}
-          <div className="absolute bottom-6 right-20 z-40 pointer-events-auto">
+          <div className="absolute bottom-6 right-16 sm:right-20 z-40 pointer-events-auto">
             <Button
               onClick={handleGetGeolocation}
               disabled={isGettingLocation}
               className={cn(
-                "h-12 px-5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center gap-2 group",
+                "h-12 px-3 sm:px-5 rounded-full bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center gap-2 group",
                 isGettingLocation ? "text-primary border-primary/40 animate-pulse" : ""
               )}
               title="Obter minha localização atual e reportar se a área está alagada"
+              aria-label={isGettingLocation ? 'Obtendo localização' : 'Reportar alagamento no local onde estou'}
             >
               {isGettingLocation ? (
                 <>
-                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                  <span className="text-sm font-semibold text-primary">Obtendo Localização...</span>
+                  <RefreshCw className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
+                  <span className="hidden sm:inline text-sm font-semibold text-primary">Obtendo Localização...</span>
                 </>
               ) : (
                 <>
-                  <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-sm font-semibold text-white/90 group-hover:text-white">Reportar Alagamento Local</span>
+                  <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
+                  <span className="hidden sm:inline text-sm font-semibold text-white/90 group-hover:text-white">Reportar Alagamento Local</span>
                 </>
               )}
             </Button>
           </div>
         </main>
+      <NoticeRegion notices={notices} onDismiss={dismiss} />
     </div>
   );
 };

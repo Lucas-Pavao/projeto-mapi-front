@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
-import { Signal, Search, Filter, AlertTriangle, Waves, MapPin } from 'lucide-react';
+import { Signal, Search, Filter, AlertTriangle, Waves, MapPin, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,8 @@ interface SensorSidebarProps {
   onFloodPointClick?: (point: FloodPointResponseDTO) => void;
   selectedSensorId?: number;
   selectedFloodPointId?: number;
+  /** Se informado, mostra um botão Fechar visível só em telas pequenas (sheet inferior). */
+  onClose?: () => void;
 }
 
 export const SensorSidebar: React.FC<SensorSidebarProps> = ({ 
@@ -20,7 +22,8 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
   onSensorClick,
   onFloodPointClick,
   selectedSensorId,
-  selectedFloodPointId
+  selectedFloodPointId,
+  onClose
 }) => {
   const [search, setSearch] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'sensors' | 'floodPoints'>('sensors');
@@ -72,17 +75,17 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
   const filteredFloodPoints = React.useMemo(() => {
     return (floodPoints || [])
       .filter(p => {
-        if (!p || !p.nome) return false;
+        if (!p || !p.name) return false;
         const searchTerm = (search || '').toLowerCase();
-        return p.nome.toLowerCase().includes(searchTerm) ||
-          (p.municipio && p.municipio.toLowerCase().includes(searchTerm)) ||
-          (p.id_ponto && p.id_ponto.toLowerCase().includes(searchTerm));
+        return p.name.toLowerCase().includes(searchTerm) ||
+          (p.municipality && p.municipality.toLowerCase().includes(searchTerm)) ||
+          (p.slug && p.slug.toLowerCase().includes(searchTerm));
       })
-      .sort((a, b) => a.nome.localeCompare(b.nome));
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, [floodPoints, search]);
 
   return (
-    <div className="w-full md:w-[340px] h-full bg-black/40 backdrop-blur-xl flex flex-col z-20">
+    <div className="w-full md:w-[21.25rem] h-full bg-black/40 backdrop-blur-xl flex flex-col z-20">
       <div className="p-6 border-b border-white/5 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -93,23 +96,39 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
               Monitoramento
             </h2>
           </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Fechar lista de sensores e pontos"
+              className="md:hidden h-10 w-10 rounded-xl flex items-center justify-center text-zinc-300 hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-5 w-5" aria-hidden="true" />
+            </button>
+          )}
         </div>
         
-        <div className="flex p-1 bg-white/5 rounded-xl border border-white/5">
+        <div role="tablist" aria-label="Tipo de lista" className="flex p-1 bg-white/5 rounded-xl border border-white/5">
           <button 
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'sensors'}
             onClick={() => setActiveTab('sensors')}
             className={cn(
-              "flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all",
-              activeTab === 'sensors' ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" : "text-zinc-500 hover:text-zinc-300"
+              "flex-1 py-2 text-2xs font-bold uppercase tracking-widest rounded-lg transition-all",
+              activeTab === 'sensors' ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" : "text-zinc-400 hover:text-zinc-300"
             )}
           >
             Sensores
           </button>
           <button 
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'floodPoints'}
             onClick={() => setActiveTab('floodPoints')}
             className={cn(
-              "flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all",
-              activeTab === 'floodPoints' ? "bg-red-600/20 text-red-500 shadow-sm ring-1 ring-red-500/20" : "text-zinc-500 hover:text-zinc-300"
+              "flex-1 py-2 text-2xs font-bold uppercase tracking-widest rounded-lg transition-all",
+              activeTab === 'floodPoints' ? "bg-red-600/20 text-red-500 shadow-sm ring-1 ring-red-500/20" : "text-zinc-400 hover:text-zinc-300"
             )}
           >
             Riscos
@@ -117,10 +136,11 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-600" />
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" aria-hidden="true" />
           <Input 
+            aria-label={activeTab === 'sensors' ? 'Buscar estação' : 'Buscar ponto de risco'}
             placeholder={activeTab === 'sensors' ? "Buscar estação..." : "Buscar ponto de risco..."}
-            className="pl-9 bg-white/5 border-white/5 text-sm text-white placeholder:text-zinc-600 focus:bg-white/10 transition-all rounded-xl" 
+            className="pl-9 bg-white/5 border-white/5 text-sm text-white placeholder:text-zinc-400 focus:bg-white/10 transition-all rounded-xl" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -137,7 +157,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
           (filteredSensors || []).length === 0 ? (
             <div className="p-12 text-center space-y-2">
               <Filter className="h-10 w-10 mx-auto opacity-10 text-white" />
-              <p className="text-xs text-zinc-500">Nenhum sensor encontrado.</p>
+              <p className="text-xs text-zinc-400">Nenhum sensor encontrado.</p>
             </div>
           ) : (
             filteredSensors.map((sensor) => {
@@ -147,6 +167,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
               
               return (
                 <button
+                  type="button"
                   key={sensor.id}
                   onClick={() => onSensorClick(sensor)}
                   className={cn(
@@ -164,11 +185,11 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                         {sensor.stationName || 'Estação sem nome'}
                       </span>
                       {!hasCoords && (
-                        <span className="text-[8px] text-zinc-500 font-bold uppercase tracking-tighter mt-0.5">Sem coordenadas</span>
+                        <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter mt-0.5">Sem coordenadas</span>
                       )}
                     </div>
                     <span className={cn(
-                      "text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider whitespace-nowrap border border-white/5",
+                      "text-2xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider whitespace-nowrap border border-white/5",
                       config.sidebarColor
                     )}>
                       {config.label}
@@ -177,18 +198,18 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
 
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1.5 text-zinc-400 font-medium">
-                      {React.createElement(config.icon, { className: "h-3.5 w-3.5 text-zinc-600" })}
+                      {React.createElement(config.icon, { className: "h-3.5 w-3.5 text-zinc-400" })}
                       <span>{sensor.value !== null ? `${sensor.value} ${sensor.unit || ''}` : '--'}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-zinc-500" title={freshness.label}>
+                    <div className="flex items-center gap-1.5 text-zinc-400" title={freshness.label}>
                       <div className={cn("h-2 w-2 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
-                      <span className={cn("text-[10px] uppercase font-bold", freshness.text)}>
+                      <span className={cn("text-2xs uppercase font-bold", freshness.text)}>
                         {freshness.label}
                       </span>
                     </div>
                   </div>
 
-                  <div className="mt-3 text-[10px] text-zinc-600 uppercase tracking-widest font-bold opacity-60">
+                  <div className="mt-3 text-2xs text-zinc-400 uppercase tracking-widest font-bold">
                     Lido às {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
                   </div>
                 </button>
@@ -199,11 +220,12 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
           (filteredFloodPoints || []).length === 0 ? (
             <div className="p-12 text-center space-y-2">
               <AlertTriangle className="h-10 w-10 mx-auto opacity-10 text-white" />
-              <p className="text-xs text-zinc-500">Nenhum ponto de risco encontrado.</p>
+              <p className="text-xs text-zinc-400">Nenhum ponto de risco encontrado.</p>
             </div>
           ) : (
             filteredFloodPoints.map((point) => (
               <button
+                type="button"
                 key={point.id}
                 onClick={() => onFloodPointClick?.(point)}
                 className={cn(
@@ -218,9 +240,9 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-col">
                     <span className="font-bold text-sm text-white group-hover:text-red-400 transition-colors pr-2">
-                      {point.nome}
+                      {point.name}
                     </span>
-                    <span className="text-[9px] text-zinc-500 font-bold uppercase tracking-tighter mt-0.5">{point.municipio || 'Localidade não informada'}</span>
+                    <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter mt-0.5">{point.municipality || 'Localidade não informada'}</span>
                   </div>
                   <div className="h-7 w-7 rounded bg-red-600/20 border border-red-600/20 flex items-center justify-center">
                     <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
@@ -232,15 +254,15 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                     <Waves className="h-3.5 w-3.5 text-blue-500" />
                     <span>{point.tideHeight !== null ? `${point.tideHeight} ${point.tideUnit || 'm'}` : '--'}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-zinc-500">
-                    <MapPin className="h-3.5 w-3.5 text-zinc-600" />
-                    <span className="text-[10px] uppercase font-bold">{point.id_ponto}</span>
+                  <div className="flex items-center gap-1.5 text-zinc-400">
+                    <MapPin className="h-3.5 w-3.5 text-zinc-400" />
+                    <span className="text-2xs uppercase font-bold">{point.slug}</span>
                   </div>
                 </div>
-                
-                {point.bacia_hidrografica && (
-                  <div className="mt-3 text-[10px] text-zinc-600 uppercase tracking-widest font-bold opacity-60 truncate">
-                    Bacia: {point.bacia_hidrografica}
+
+                {point.basinName && (
+                  <div className="mt-3 text-2xs text-zinc-400 uppercase tracking-widest font-bold truncate">
+                    Bacia: {point.basinName}
                   </div>
                 )}
               </button>
@@ -251,8 +273,8 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
       </div>
 
       <div className="p-4 border-t border-white/5 bg-black/20 backdrop-blur-sm">
-        <div className="flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
-          <span className="text-zinc-600">Status do Sistema</span>
+        <div className="flex justify-between items-center text-2xs uppercase tracking-widest font-bold">
+          <span className="text-zinc-400">Itens listados</span>
           <span className={cn(
             "flex items-center gap-1.5",
             activeTab === 'sensors' ? "text-primary" : "text-red-500"

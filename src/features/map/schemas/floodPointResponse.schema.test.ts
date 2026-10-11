@@ -6,8 +6,8 @@ describe('validateFloodPoint', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const validPoint = {
       id: 1,
-      id_ponto: 'CIN_UFPE',
-      nome: 'CIn UFPE',
+      slug: 'CIN_UFPE',
+      name: 'CIn UFPE',
       latitude: -8.05,
       longitude: -34.9,
       active: true,
@@ -16,7 +16,7 @@ describe('validateFloodPoint', () => {
     const result = validateFloodPoint(validPoint);
 
     expect(errorSpy).not.toHaveBeenCalled();
-    expect(result).toBe(validPoint);
+    expect(result).toEqual(validPoint);
     errorSpy.mockRestore();
   });
 
@@ -24,8 +24,8 @@ describe('validateFloodPoint', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const brokenPoint = {
       id: 1,
-      id_ponto: 'CIN_UFPE',
-      // "nome" ausente de propósito
+      slug: 'CIN_UFPE',
+      // "name" ausente de propósito
       latitude: -8.05,
       longitude: -34.9,
       active: true,

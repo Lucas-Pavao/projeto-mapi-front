@@ -50,9 +50,9 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         <div className="flex justify-between items-start relative z-10">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-80">{config.label}</span>
+              <span className="text-2xs font-black uppercase tracking-[0.2em] opacity-80">{config.label}</span>
               <div className="h-1 w-1 rounded-full bg-white/50" />
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60">{sensor.source}</span>
+              <span className="text-2xs font-black uppercase tracking-[0.2em] opacity-60">{sensor.source}</span>
             </div>
             <h3 className="text-sm font-black leading-tight tracking-tight drop-shadow-sm">{sensor.stationName || 'Estação sem nome'}</h3>
           </div>
@@ -67,7 +67,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         
         <div className="flex items-center gap-1.5 mt-2 opacity-80 relative z-10">
           <MapPin className="h-3 w-3" />
-          <p className="text-[10px] font-bold truncate tracking-tight">{sensor.municipality || 'Localidade não informada'}</p>
+          <p className="text-2xs font-bold truncate tracking-tight">{sensor.municipality || 'Localidade não informada'}</p>
         </div>
       </div>
       
@@ -75,12 +75,12 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         {/* Main Reading Section */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-             <p className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Leitura Atual</p>
+             <p className="text-2xs text-zinc-400 uppercase font-black tracking-widest">Leitura Atual</p>
              <div className="flex items-baseline gap-1.5">
                <span className="text-4xl font-black text-white tracking-tighter italic">
                 {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(1) : (sensor.value ?? '--')}
                </span>
-               <span className="text-sm font-bold text-zinc-500 uppercase">{sensor.unit || ''}</span>
+               <span className="text-sm font-bold text-zinc-400 uppercase">{sensor.unit || ''}</span>
              </div>
           </div>
           <div className={cn(
@@ -97,24 +97,24 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
             {sensor.riverName && (
               <div className="flex items-center gap-1.5 text-rose-400">
                 <Waves className="h-3 w-3" />
-                <span className="text-[10px] font-black uppercase tracking-widest">{sensor.riverName}</span>
+                <span className="text-2xs font-black uppercase tracking-widest">{sensor.riverName}</span>
               </div>
             )}
             <div className="grid grid-cols-3 gap-2.5">
               <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/10 flex flex-col items-center text-center">
-                <span className="text-[8px] text-amber-400/70 font-black uppercase tracking-tighter">Pré-Alerta</span>
+                <span className="text-2xs text-amber-400/70 font-black uppercase tracking-tighter">Pré-Alerta</span>
                 <span className="text-xs font-black text-amber-400">{getMetric(sensor.riverPreAlertLevel, null)}</span>
               </div>
               <div className="bg-orange-500/10 p-2.5 rounded-xl border border-orange-500/10 flex flex-col items-center text-center">
-                <span className="text-[8px] text-orange-400/70 font-black uppercase tracking-tighter">Alerta</span>
+                <span className="text-2xs text-orange-400/70 font-black uppercase tracking-tighter">Alerta</span>
                 <span className="text-xs font-black text-orange-400">{getMetric(sensor.riverAlertLevel, null)}</span>
               </div>
               <div className="bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/10 flex flex-col items-center text-center">
-                <span className="text-[8px] text-rose-400/70 font-black uppercase tracking-tighter">Inundação</span>
+                <span className="text-2xs text-rose-400/70 font-black uppercase tracking-tighter">Inundação</span>
                 <span className="text-xs font-black text-rose-400">{getMetric(sensor.riverFloodLevel, null)}</span>
               </div>
             </div>
-            <p className="text-[9px] text-zinc-500 font-medium italic px-0.5">Limiares oficiais da APAC para este ponto do rio.</p>
+            <p className="text-2xs text-zinc-400 font-medium italic px-0.5">Limiares oficiais da APAC para este ponto do rio.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5">
@@ -123,7 +123,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
                 <Thermometer className="h-3.5 w-3.5 text-orange-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Temp</span>
+                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Temp</span>
                 <span className="text-xs font-black text-white">
                   {getMetric(sensor.temperature, precise?.temperature)}
                   <small className="ml-0.5 opacity-50">{precise?.unitTemperature || '°C'}</small>
@@ -136,7 +136,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
                 <Droplets className="h-3.5 w-3.5 text-blue-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Humid</span>
+                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Humid</span>
                 <span className="text-xs font-black text-white">{getMetric(sensor.humidity, precise?.humidity)}%</span>
               </div>
             </div>
@@ -146,7 +146,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
                 <CloudRain className="h-3.5 w-3.5 text-sky-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Chuva</span>
+                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Chuva</span>
                 <span className="text-xs font-black text-white">
                   {getMetric(sensor.accumulatedPrecipitation, precise?.precipitation)}
                   <small className="ml-0.5 opacity-50">{precise?.unitPrecipitation || 'mm'}</small>
@@ -159,7 +159,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
                 <Wind className="h-3.5 w-3.5 text-slate-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[8px] text-zinc-500 font-black uppercase tracking-tighter">Vento</span>
+                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vento</span>
                 <span className="text-xs font-black text-white">
                   {getMetric(sensor.windSpeed, precise?.windSpeed)}
                   <small className="ml-0.5 opacity-50">{precise?.unitWindSpeed || 'km/h'}</small>
@@ -174,19 +174,19 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className={cn("h-2.5 w-2.5 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Status da Coleta</span>
+              <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tight">Status da Coleta</span>
             </div>
-            <span className={cn("text-[10px] font-black uppercase tracking-widest", freshness.text)}>
+            <span className={cn("text-2xs font-black uppercase tracking-widest", freshness.text)}>
               {freshness.label}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-zinc-500" />
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Última Leitura</span>
+              <Clock className="h-3.5 w-3.5 text-zinc-400" />
+              <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tight">Última Leitura</span>
             </div>
-            <span className="text-[10px] font-black text-zinc-300 uppercase">
+            <span className="text-2xs font-black text-zinc-300 uppercase">
               {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
             </span>
           </div>
@@ -194,7 +194,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
 
         <Button 
           onClick={onShowDetails}
-          className="w-full h-10 text-[10px] font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-primary hover:text-white text-zinc-400 border border-white/5 hover:border-primary transition-all duration-300 rounded-xl group shadow-lg shadow-black/20"
+          className="w-full h-10 text-2xs font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-primary hover:text-white text-zinc-400 border border-white/5 hover:border-primary transition-all duration-300 rounded-xl group shadow-lg shadow-black/20"
         >
           <span>Analisar Dados Completos</span>
           <ExternalLink className="h-3 w-3 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

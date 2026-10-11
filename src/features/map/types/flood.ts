@@ -1,19 +1,20 @@
+import type { FloodPrediction } from '../schemas/floodPointResponse.schema';
 import type { SensorConfigDTO } from './sensor';
 import type { PreciseData } from './common';
 
 export interface FloodPointResponseDTO {
   id: number;
-  id_ponto: string;
-  nome: string;
-  municipio: string | null;
-  descricao: string | null;
+  slug: string;
+  name: string;
+  municipality: string | null;
+  description: string | null;
   latitude: number;
   longitude: number;
-  altitude_m: number | null;
-  dist_canal_m: number | null;
-  bacia_hidrografica: string | null;
-  config_sensores: SensorConfigDTO | null;
-  sensores_proximos_ids?: string[];
+  altitudeM: number | null;
+  distanceToChannelM: number | null;
+  basinName: string | null;
+  sensorConfig: SensorConfigDTO | null;
+  nearbySensorIds?: string[];
   liveData?: PreciseData;
   floodPrediction?: FloodPredictionResponseDTO;
   active: boolean;
@@ -22,15 +23,15 @@ export interface FloodPointResponseDTO {
 }
 
 export interface FloodPointRequestDTO {
-  id_ponto: string;
-  nome: string;
-  municipio?: string;
-  descricao?: string;
+  slug: string;
+  name: string;
+  municipality?: string;
+  description?: string;
   latitude: number;
   longitude: number;
-  altitude_m?: number;
-  dist_canal_m?: number;
-  config_sensores?: SensorConfigDTO;
+  altitudeM?: number;
+  distanceToChannelM?: number;
+  sensorConfig?: SensorConfigDTO;
 }
 
 export interface FloodEventDTO {
@@ -53,12 +54,8 @@ export interface ScraperEventDTO {
   source: string;
 }
 
-export interface FloodPredictionResponseDTO {
-  floodProbability: number;
-  riskLevel: string;
-  estimatedTimeToEvent: string;
-  message: string;
-}
+/** Derivado do schema zod (ADR 0007): fonte única do contrato de predição. */
+export type FloodPredictionResponseDTO = FloodPrediction;
 
 export interface FloodScenarioLabelRequestDTO {
   latitude: number;

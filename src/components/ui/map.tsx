@@ -19,6 +19,7 @@ import { createPortal } from "react-dom";
 import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { makeOperable } from "@/lib/a11y";
 
 const defaultStyles = {
   dark: import.meta.env.VITE_MAP_STYLE_DARK || "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -395,6 +396,8 @@ type MapMarkerProps = {
   onDrag?: (lngLat: { lng: number; lat: number }) => void;
   /** Callback when marker drag ends (requires draggable: true) */
   onDragEnd?: (lngLat: { lng: number; lat: number }) => void;
+  /** Nome acessível do marcador. Com `onClick`, o marcador vira botão operável por teclado. */
+  label?: string;
 } & Omit<MarkerOptions, "element">;
 
 function MapMarker({
@@ -408,6 +411,7 @@ function MapMarker({
   onDrag,
   onDragEnd,
   draggable = false,
+  label,
   ...markerOptions
 }: MapMarkerProps) {
   const { map } = useMap();
@@ -452,6 +456,10 @@ function MapMarker({
       callbacksRef.current.onMouseLeave?.(e);
 
     element.addEventListener("click", handleClick);
+    // Teclado: Enter/Espaço ativam o marcador (WCAG 2.1.1).
+    const detachKeyboard = callbacksRef.current.onClick
+      ? makeOperable(element, label)
+      : undefined;
     element.addEventListener("mouseenter", handleMouseEnter);
     element.addEventListener("mouseleave", handleMouseLeave);
 
@@ -474,12 +482,14 @@ function MapMarker({
 
     return () => {
       element.removeEventListener("click", handleClick);
+      detachKeyboard?.();
       element.removeEventListener("mouseenter", handleMouseEnter);
       element.removeEventListener("mouseleave", handleMouseLeave);
       marker.off("dragstart", handleDragStart);
       marker.off("drag", handleDrag);
       marker.off("dragend", handleDragEnd);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marker]);
 
   useEffect(() => {
@@ -559,7 +569,7 @@ function PopupCloseButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      aria-label="Close popup"
+      aria-label="Fechar"
       className="focus-visible:ring-primary hover:bg-zinc-800 text-muted-foreground hover:text-foreground absolute top-1 right-1 z-10 inline-flex size-6 cursor-pointer items-center justify-center rounded-md transition-all focus:outline-none focus-visible:ring-2"
     >
       <X className="size-4" />
@@ -744,7 +754,7 @@ function MarkerLabel({
     <div
       className={cn(
         "absolute left-1/2 -translate-x-1/2 whitespace-nowrap",
-        "text-foreground text-[10px] font-medium",
+        "text-foreground text-2xs font-medium",
         positionClasses[position],
         className,
       )}
@@ -769,6 +779,8 @@ type MapControlsProps = {
   className?: string;
   /** Callback with user coordinates when located */
   onLocate?: (coords: { longitude: number; latitude: number }) => void;
+  /** Falha ao localizar (substitui o antigo alert() bloqueante). */
+  onLocateError?: (message: string) => void;
 };
 
 const positionClasses = {
@@ -825,6 +837,7 @@ function MapControls({
   showFullscreen = false,
   className,
   onLocate,
+  onLocateError,
 }: MapControlsProps) {
   const { map } = useMap();
   const [waitingForLocation, setWaitingForLocation] = useState(false);
@@ -860,15 +873,15 @@ function MapControls({
         },
         (error) => {
           console.warn("Error getting location:", error.message || "Unknown error");
-          alert("Não foi possível obter sua geolocalização. Por favor, verifique as permissões de localização no seu navegador.");
+          onLocateError?.("Não foi possível obter sua geolocalização. Por favor, verifique as permissões de localização no seu navegador.");
           setWaitingForLocation(false);
         },
       );
     } else {
-      alert("Geolocalização não é suportada ou não está disponível neste navegador (verifique se está usando HTTPS).");
+      onLocateError?.("Geolocalização não é suportada ou não está disponível neste navegador (verifique se está usando HTTPS).");
       setWaitingForLocation(false);
     }
-  }, [map, onLocate]);
+  }, [map, onLocate, onLocateError]);
 
   const handleFullscreen = useCallback(() => {
     const container = map?.getContainer();
@@ -890,10 +903,10 @@ function MapControls({
     >
       {showZoom && (
         <ControlGroup>
-          <ControlButton onClick={handleZoomIn} label="Zoom in">
+          <ControlButton onClick={handleZoomIn} label="Aproximar">
             <Plus className="size-4" />
           </ControlButton>
-          <ControlButton onClick={handleZoomOut} label="Zoom out">
+          <ControlButton onClick={handleZoomOut} label="Afastar">
             <Minus className="size-4" />
           </ControlButton>
         </ControlGroup>
@@ -907,7 +920,7 @@ function MapControls({
         <ControlGroup>
           <ControlButton
             onClick={handleLocate}
-            label="Find my location"
+            label="Minha localização"
             disabled={waitingForLocation}
           >
             {waitingForLocation ? (
@@ -920,7 +933,7 @@ function MapControls({
       )}
       {showFullscreen && (
         <ControlGroup>
-          <ControlButton onClick={handleFullscreen} label="Toggle fullscreen">
+          <ControlButton onClick={handleFullscreen} label="Tela cheia">
             <Maximize className="size-4" />
           </ControlButton>
         </ControlGroup>
@@ -955,7 +968,7 @@ function CompassButton({ onClick }: { onClick: () => void }) {
   }, [map]);
 
   return (
-    <ControlButton onClick={onClick} label="Reset bearing to north">
+    <ControlButton onClick={onClick} label="Orientar para o norte">
       <svg
         ref={compassRef}
         viewBox="0 0 24 24"
@@ -984,6 +997,8 @@ type MapPopupProps = {
   className?: string;
   /** Show a close button in the popup (default: false) */
   closeButton?: boolean;
+  /** Nome acessível do popup (role="dialog"). */
+  label?: string;
 } & Omit<PopupOptions, "className" | "closeButton">;
 
 function MapPopup({
@@ -993,9 +1008,11 @@ function MapPopup({
   children,
   className,
   closeButton = false,
+  label,
   ...popupOptions
 }: MapPopupProps) {
   const { map } = useMap();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const popupOptionsRef = useRef(popupOptions);
   const onCloseRef = useRef(onClose);
 
@@ -1062,8 +1079,26 @@ function MapPopup({
     popup.remove();
   };
 
+  // Teclado: ao abrir, o foco vai para o popup; ao fechar, volta para quem o abriu (o marcador).
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    const id = requestAnimationFrame(() => dialogRef.current?.focus({ preventScroll: true }));
+    return () => {
+      cancelAnimationFrame(id);
+      if (previous && previous.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
+
   return createPortal(
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-label={label}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        // Esc fecha. Não interrompe a propagação: o contêiner também limpa a seleção.
+        if (e.key === "Escape") handleClose();
+      }}
       className={cn(
         "bg-popover text-popover-foreground relative max-w-64 rounded-lg border border-border p-4 shadow-2xl",
         "animate-in fade-in-0 zoom-in-95 duration-200 ease-out",
