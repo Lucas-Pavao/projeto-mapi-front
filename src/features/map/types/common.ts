@@ -7,6 +7,8 @@ export interface Aggregates {
   rain6h: number | null;
   rain12h: number | null;
   rain24h: number | null;
+  /** Origem dos acumulados: OPEN_METEO_ARCHIVE (grade do pipeline) ou OPEN_METEO_FORECAST (últimas 24 h). */
+  rainSource?: string | null;
   maxRiverLevel24h: number | null;
   avgTemperature24h: number | null;
 }

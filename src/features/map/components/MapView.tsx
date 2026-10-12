@@ -7,21 +7,15 @@ import {
   LogOut, 
   User, 
   Layers, 
-  Mountain,
   List,
   Shield, 
   Activity,
   AlertTriangle,
   Waves,
-  Droplets,
-  Navigation,
   CloudRain,
   Thermometer,
   Wind,
   MapPin,
-  X,
-  Sun,
-  Gauge,
   RefreshCw
 } from 'lucide-react';
 
@@ -47,6 +41,7 @@ import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
 import { RiskLegend } from './RiskLegend';
 import { TerrainControl } from './TerrainControl';
 import { MapToolPopover } from './MapToolPopover';
+import { LocationAnalysisCard } from './LocationAnalysisCard';
 import { TerrainLayer } from './TerrainLayer';
 import type { TerrainStatus } from '../utils/terrain';
 import { RiskIcon } from './RiskIcon';
@@ -821,259 +816,29 @@ export const MapView: React.FC = () => {
           </Map>
 
           {(clickedLocation || isFetchingLocation) && (
-            <section aria-label="Análise de local" className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-10 lg:left-[26rem] lg:w-[26.25rem] z-30 flex max-h-[70vh] lg:max-h-[calc(100vh-8rem)] flex-col rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Cabeçalho fixo; só o corpo rola (uma única rolagem, sem rolagem aninhada na lista de sensores) */}
-              <div className="flex min-h-0 flex-col bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden ring-1 ring-white/5">
-                <div className="shrink-0 px-5 py-4 flex items-center justify-between border-b border-white/5 bg-white/5">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/20">
-                      <Navigation className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-black text-white tracking-tight uppercase">Análise de Local</h3>
-                      <p className="text-2xs text-zinc-400 font-black uppercase tracking-widest mt-0.5">
-                        {clickedLocation ? `${clickedLocation.lat?.toFixed(4) ?? '--'}, ${clickedLocation.lng?.toFixed(4) ?? '--'}` : 'Sincronizando...'}
-                      </p>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 rounded-full hover:bg-white/10 text-zinc-400 hover:text-white transition-colors" 
-                    onClick={() => closePopups()}
-                    aria-label="Fechar análise de local"
-                  >
-                    <X className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                </div>
-
-                <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 space-y-5">
-                  {isFetchingLocation ? (
-                    <div className="py-12 flex flex-col items-center justify-center gap-4">
-                       <div className="relative">
-                          <div className="h-12 w-12 border-2 border-primary/20 rounded-full" />
-                          <div className="absolute inset-0 h-12 w-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                       </div>
-                       <span className="text-2xs text-zinc-400 font-black uppercase tracking-[0.2em] animate-pulse">Consultando Dados Geoespaciais...</span>
-                    </div>
-                  ) : locationInfo ? (
-                    <div className="space-y-5 animate-in fade-in slide-in-from-top-2 duration-500">
-                      {/* Detailed Metrics Grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                         {locationInfo.preciseData?.temperature != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Thermometer className="h-3.5 w-3.5 text-orange-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Temperatura</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.temperature.toFixed(1)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitTemperature || '°C'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.humidity != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Droplets className="h-3.5 w-3.5 text-blue-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Umidade</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">{locationInfo.preciseData.humidity.toFixed(0)}%</span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.precipitation != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <CloudRain className="h-3.5 w-3.5 text-sky-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Chuva</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.precipitation.toFixed(1)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitPrecipitation || 'mm'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.windSpeed != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Wind className="h-3.5 w-3.5 text-slate-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vento</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.windSpeed.toFixed(1)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitWindSpeed || 'km/h'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.pressure != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Activity className="h-3.5 w-3.5 text-emerald-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Pressão</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.pressure.toFixed(0)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitPressure || 'hPa'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.solarRadiation != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Sun className="h-3.5 w-3.5 text-yellow-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Radiação</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.solarRadiation.toFixed(1)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitSolarRadiation || 'W/m²'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {locationInfo.preciseData?.waterLevel != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Waves className="h-3.5 w-3.5 text-blue-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Nível Água</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.waterLevel.toFixed(2)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitWaterLevel || 'm'}</small>
-                               </span>
-                            </div>
-                         )}
-                         {/* Altitude do local (API: localElevation). Na área do PE3D é a cota do MDT (média de 5 m, cota
-                             relativa, ADR 0009); fora dela, o Open-Meteo (modelo de 90 m), marcado como aproximado. */}
-                         {locationInfo.localElevation?.meters != null && (() => {
-                            const elev = locationInfo.localElevation!;
-                            const isMdt = elev.source === 'PE3D_MDT_5M';
-                            return (
-                              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1" title={elev.note ?? undefined}>
-                                 <div className="flex items-center gap-2">
-                                    <Mountain className="h-3.5 w-3.5 text-lime-400" />
-                                    <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Altitude</span>
-                                 </div>
-                                 <span className="text-lg font-black text-white italic">
-                                   {isMdt ? elev.meters!.toFixed(1) : `≈ ${Math.round(elev.meters!)}`}
-                                   <small className="text-2xs ml-1 opacity-70 not-italic">m</small>
-                                 </span>
-                                 <span className="text-2xs text-zinc-500 leading-tight">
-                                   {isMdt ? 'MDT PE3D (5 m) · cota relativa' : 'aprox. · Open-Meteo (90 m)'}
-                                 </span>
-                              </div>
-                            );
-                         })()}
-                         {locationInfo.preciseData?.flowRate != null && (
-                            <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
-                               <div className="flex items-center gap-2">
-                                  <Gauge className="h-3.5 w-3.5 text-indigo-400" />
-                                  <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vazão</span>
-                               </div>
-                               <span className="text-lg font-black text-white italic">
-                                 {locationInfo.preciseData.flowRate.toFixed(2)}
-                                 <small className="text-2xs ml-1 opacity-70 not-italic">{locationInfo.preciseData.unitFlowRate || 'm³/s'}</small>
-                               </span>
-                            </div>
-                         )}
-                      </div>
-
-                      {/* Dynamic Nearby Sensors List */}
-                      {locationInfo.preciseData?.latestReadings && locationInfo.preciseData.latestReadings.length > 0 && (
-                        <div className="space-y-3">
-                           <div className="flex items-center justify-between px-1">
-                             <p className="text-2xs text-zinc-400 font-black uppercase tracking-[0.2em]">Sensores no Raio (3km)</p>
-                             <span className="text-2xs text-emerald-500 font-black uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                               {locationInfo.preciseData.latestReadings.length} ativos
-                             </span>
-                           </div>
-                           <div className="grid grid-cols-1 gap-2">
-                             {locationInfo.preciseData.latestReadings.map((reading) => (
-                               <button 
-                                  type="button"
-                                  key={`${reading.sensorId}-${reading.type}`}
-                                  className="w-full text-left bg-black/40 p-3 rounded-2xl border border-white/5 flex items-center justify-between group cursor-pointer hover:border-primary/30 transition-all hover:bg-white/5"
-                                  onClick={() => {
-                                    const fullSensor = sensors.find(s => s.sensorId === reading.sensorId);
-                                    if (fullSensor) {
-                                      handleSensorClick(fullSensor);
-                                      if (fullSensor.latitude && fullSensor.longitude) {
-                                        mapRef.current?.flyTo({
-                                          center: [fullSensor.longitude, fullSensor.latitude],
-                                          zoom: 16
-                                        });
-                                      }
-                                    }
-                                  }}
-                               >
-                                  <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-primary transition-colors">
-                                      <Activity className="h-4 w-4" />
-                                    </div>
-                                    <div>
-                                       <p className="text-2xs font-black text-white uppercase truncate max-w-[120px]">
-                                         {reading.sensorId}
-                                       </p>
-                                       <p className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter">
-                                          {reading.type} • {reading.distanceKm?.toFixed(1) ?? '--'}km
-                                       </p>
-                                    </div>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="text-sm font-black text-white italic">
-                                      {reading.value?.toFixed(1) ?? '--'}
-                                      <small className="text-2xs font-bold text-zinc-400 ml-1 not-italic">{reading.unit}</small>
-                                    </p>
-                                  </div>
-                               </button>
-                             ))}
-                           </div>
-                        </div>
-                      )}
-
-                      {/* Tide & Harbor Status */}
-                      {(locationInfo.preciseData?.tideHeight != null || nearestHarbor) && (
-                        <div className="bg-blue-600/10 p-5 rounded-3xl border border-blue-500/20 space-y-4">
-                           <div className="flex justify-between items-start">
-                              <div>
-                                 <p className="text-2xs text-blue-400 font-black uppercase tracking-widest mb-1">Previsão de Marés</p>
-                                 <h4 className="text-xs font-black text-white uppercase">{(nearestHarbor?.harbor_name as string) || 'Porto da Região'}</h4>
-                              </div>
-                              <Waves className="h-6 w-6 text-blue-400 opacity-50" />
-                           </div>
-                           
-                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                 <p className="text-2xs text-zinc-400 font-black uppercase">Estimado (Tábua)</p>
-                                 <p className="text-xl font-black text-white italic">{locationInfo.preciseData?.tideHeightTabuaMare?.toFixed(2) ?? '--'}m</p>
-                              </div>
-                              <div className="space-y-1 text-right border-l border-white/10 pl-4">
-                                 <p className="text-2xs text-zinc-400 font-black uppercase">Monitorado</p>
-                                 <p className="text-xl font-black text-blue-400 italic">{locationInfo.preciseData?.tideHeight?.toFixed(2) ?? '--'}m</p>
-                              </div>
-                           </div>
-                        </div>
-                      )}
-                      
-                      {/* Botão de Reportar Cenário para coordenada clicada */}
-                      <div className="pt-3 border-t border-white/5">
-                        <Button
-                          className="w-full bg-red-600/20 hover:bg-red-600 text-red-500 hover:text-white border border-red-500/30 font-black uppercase text-2xs tracking-widest h-12 rounded-2xl transition-all flex items-center justify-center gap-2"
-                          onClick={() => {
-                            if (clickedLocation) {
-                              setScenarioCoords({ lat: clickedLocation.lat, lng: clickedLocation.lng });
-                              setScenarioTitle('A região correspondente à coordenada clicada se encontra alagada agora?');
-                              setShowScenarioModal(true);
-                            }
-                          }}
-                        >
-                          <AlertTriangle className="h-4 w-4" />
-                          Reportar Alagamento Aqui
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-          </section>
+            <LocationAnalysisCard
+              coords={clickedLocation}
+              loading={isFetchingLocation}
+              info={locationInfo}
+              harborName={(nearestHarbor?.harbor_name as string | undefined) ?? null}
+              onClose={() => closePopups()}
+              onSensorSelect={(reading) => {
+                const fullSensor = sensors.find(s => s.sensorId === reading.sensorId);
+                if (fullSensor) {
+                  handleSensorClick(fullSensor);
+                  if (fullSensor.latitude && fullSensor.longitude) {
+                    mapRef.current?.flyTo({ center: [fullSensor.longitude, fullSensor.latitude], zoom: 16 });
+                  }
+                }
+              }}
+              onReport={() => {
+                if (clickedLocation) {
+                  setScenarioCoords({ lat: clickedLocation.lat, lng: clickedLocation.lng });
+                  setScenarioTitle('A região correspondente à coordenada clicada se encontra alagada agora?');
+                  setShowScenarioModal(true);
+                }
+              }}
+            />
           )}
 
           {showDetailCard && selectedSensor && (
@@ -1141,7 +906,8 @@ export const MapView: React.FC = () => {
           )}
 
           {/* Botão Flutuante de Geolocalização */}
-          <div className="absolute bottom-6 right-16 sm:right-20 z-40 pointer-events-auto">
+          {/* No celular o card de análise de local ocupa a base da tela e já tem "Reportar alagamento aqui": o botão some. */}
+          <div className={cn("absolute bottom-6 right-16 sm:right-20 z-40 pointer-events-auto", (clickedLocation || isFetchingLocation) && "hidden lg:block")}>
             <Button
               onClick={handleGetGeolocation}
               disabled={isGettingLocation}
