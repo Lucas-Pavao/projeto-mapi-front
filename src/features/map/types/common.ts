@@ -42,12 +42,21 @@ export interface PreciseData {
   message: string | null;
 }
 
+export interface LocalElevation {
+  meters: number | null;
+  source: 'PE3D_MDT_5M' | 'OPEN_METEO_90M' | string;
+  resolutionM: number | null;
+  note: string | null;
+}
+
 export interface MapiResponseDTO {
   requestedLatitude: number;
   requestedLongitude: number;
   preciseData: PreciseData;
   nearestSensor: SensorResponseDTO | null;
   openMeteoData: WeatherResponseDTO;
+  /** Altitude do local: cota do MDT do PE3D (5 m, relativa) ou, fora da área do MDT, Open-Meteo (90 m, aproximada). */
+  localElevation?: LocalElevation | null;
   distanceToNearestSensorKm: number | null;
   floodPrediction?: FloodPredictionResponseDTO;
 }
