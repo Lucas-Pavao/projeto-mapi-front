@@ -7,6 +7,7 @@ import {
   LogOut, 
   User, 
   Layers, 
+  Mountain,
   List,
   Shield, 
   Activity,
@@ -940,6 +941,27 @@ export const MapView: React.FC = () => {
                                </span>
                             </div>
                          )}
+                         {/* Altitude do local (API: localElevation). Na área do PE3D é a cota do MDT (média de 5 m, cota
+                             relativa, ADR 0009); fora dela, o Open-Meteo (modelo de 90 m), marcado como aproximado. */}
+                         {locationInfo.localElevation?.meters != null && (() => {
+                            const elev = locationInfo.localElevation!;
+                            const isMdt = elev.source === 'PE3D_MDT_5M';
+                            return (
+                              <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1" title={elev.note ?? undefined}>
+                                 <div className="flex items-center gap-2">
+                                    <Mountain className="h-3.5 w-3.5 text-lime-400" />
+                                    <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Altitude</span>
+                                 </div>
+                                 <span className="text-lg font-black text-white italic">
+                                   {isMdt ? elev.meters!.toFixed(1) : `≈ ${Math.round(elev.meters!)}`}
+                                   <small className="text-2xs ml-1 opacity-70 not-italic">m</small>
+                                 </span>
+                                 <span className="text-2xs text-zinc-500 leading-tight">
+                                   {isMdt ? 'MDT PE3D (5 m) · cota relativa' : 'aprox. · Open-Meteo (90 m)'}
+                                 </span>
+                              </div>
+                            );
+                         })()}
                          {locationInfo.preciseData?.flowRate != null && (
                             <div className="bg-white/5 p-3 rounded-2xl border border-white/5 flex flex-col gap-1">
                                <div className="flex items-center gap-2">

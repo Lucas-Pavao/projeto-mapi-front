@@ -1,4 +1,6 @@
 import React from 'react';
+import { getRiskVisual } from '../utils/risk';
+import { RiskIcon } from './RiskIcon';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 import { Signal, Search, Filter, AlertTriangle, Waves, MapPin, X } from 'lucide-react';
@@ -223,29 +225,36 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
               <p className="text-xs text-zinc-400">Nenhum ponto de risco encontrado.</p>
             </div>
           ) : (
-            filteredFloodPoints.map((point) => (
+            filteredFloodPoints.map((point) => {
+              // Mesma cor, ícone e rótulo do marcador no mapa (getRiskVisual / RiskIcon).
+              const riskLevel = point.floodPrediction?.riskLevel;
+              const risk = getRiskVisual(riskLevel);
+              return (
               <button
                 type="button"
                 key={point.id}
                 onClick={() => onFloodPointClick?.(point)}
                 className={cn(
                   "w-full text-left p-4 rounded-xl transition-all hover:bg-white/5 group relative border border-transparent",
-                  selectedFloodPointId === point.id ? "bg-red-500/10 border-red-500/10 shadow-xl" : ""
+                  selectedFloodPointId === point.id ? cn(risk.softBg, risk.border, "shadow-xl") : ""
                 )}
               >
                 {selectedFloodPointId === point.id && (
-                  <div className="absolute left-0 top-4 bottom-4 w-1 bg-red-600 rounded-r-full shadow-[0_0_10px_rgba(220,38,38,0.5)]" />
+                  <div className={cn("absolute left-0 top-4 bottom-4 w-1 rounded-r-full", risk.bg)} />
                 )}
                 
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex flex-col">
-                    <span className="font-bold text-sm text-white group-hover:text-red-400 transition-colors pr-2">
+                    <span className="font-bold text-sm text-white transition-colors pr-2">
                       {point.name}
                     </span>
                     <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tighter mt-0.5">{point.municipality || 'Localidade não informada'}</span>
                   </div>
-                  <div className="h-7 w-7 rounded bg-red-600/20 border border-red-600/20 flex items-center justify-center">
-                    <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+                  <div className="flex shrink-0 items-center gap-1.5" aria-label={`Risco: ${risk.label}`}>
+                    <span className={cn("text-2xs font-black uppercase tracking-widest", risk.text)}>{risk.label}</span>
+                    <span className={cn("h-7 w-7 rounded flex items-center justify-center text-white", risk.bg, riskLevel == null || riskLevel === 'UNKNOWN' ? "border-2 border-dashed border-white/70" : "")}>
+                      <RiskIcon level={riskLevel} className="h-3.5 w-3.5" />
+                    </span>
                   </div>
                 </div>
 
@@ -266,7 +275,8 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                   </div>
                 )}
               </button>
-            ))
+              );
+            })
           )
         )}
         </div>
