@@ -16,23 +16,31 @@ describe('SensorsPage', () => {
   it('lista sensores com valor, unidade e hora; o velho vem como "sem resposta"', async () => {
     renderPage(<SensorsPage />);
     const pluv1 = (await screen.findByText('Sintético: pluviômetro 1')).closest('li')!;
-    expect(within(pluv1).getByText(/2,4/)).toBeInTheDocument();
-    expect(within(pluv1).getByText('mm')).toBeInTheDocument();
     expect(pluv1).toHaveAttribute('data-stale', 'false');
+    expect(within(pluv1).getByText(/Pluviômetro · 2,4 mm/)).toBeInTheDocument();
     const pluv2 = screen.getByText('Sintético: pluviômetro 2').closest('li')!;
     expect(pluv2).toHaveAttribute('data-stale', 'true');
-    expect(within(pluv2).getByRole('status')).toHaveTextContent('Sem resposta recente');
+    expect(within(pluv2).getByText(/sem resposta há/)).toBeInTheDocument();
     expect(within(pluv2).getByText('—')).toBeInTheDocument(); // sem valor: nunca zero
-    expect(screen.getByText(/3 sensores, 1 sem resposta recente/)).toBeInTheDocument();
+    expect(screen.getByText('2 de 3 respondendo')).toBeInTheDocument();
   });
 
-  it('filtra por tipo (consulta com ?type=)', async () => {
+  it('seleciona o sensor e mostra o detalhe; sensor velho vem com aviso', async () => {
     renderPage(<SensorsPage />);
-    await screen.findByText('Sintético: rio 1');
-    fireEvent.click(screen.getByRole('button', { name: 'Nível do rio' }));
-    await waitFor(() => expect(screen.queryByText('Sintético: pluviômetro 1')).toBeNull());
-    expect(screen.getByText('Sintético: rio 1')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Nível do rio' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(await screen.findByRole('button', { name: /Sintético: pluviômetro 2/ }));
+    const det = await screen.findByRole('region', { name: 'Sensor selecionado' });
+    expect(within(det).getByText('Sem resposta recente')).toBeInTheDocument();
+    expect(within(det).getByText('—')).toBeInTheDocument();
+  });
+
+  it('filtra por tipo na lista', async () => {
+    renderPage(<SensorsPage />);
+    const lista = within(await screen.findByRole('complementary', { name: 'Sensores' }));
+    await lista.findByText('Sintético: rio 1');
+    fireEvent.click(screen.getByRole('radio', { name: 'Rio' }));
+    await waitFor(() => expect(lista.queryByText('Sintético: pluviômetro 1')).toBeNull());
+    expect(lista.getByText('Sintético: rio 1')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: 'Rio' })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('vazio', async () => {

@@ -1,52 +1,49 @@
-import React, { useState } from 'react';
-import { PageShell } from '@/components/layout/PageShell';
+import React, { useMemo, useState } from 'react';
 import { QueryState } from '@/components/ui/query-state';
 import { useSensorsLatest } from '@/features/sensors/hooks/useSensorsLatest';
-import { SensorCard } from '@/features/sensors/components/SensorCard';
-import { SENSOR_TYPE_LABEL } from '@/features/sensors/utils/age';
-import type { SensorType } from '@/features/sensors/schemas/sensor.schema';
-import { cn } from '@/lib/utils';
+import { useTimeline } from '@/features/events/hooks/useTimeline';
+import { SensorList } from '@/features/sensors/components/SensorList';
+import { SensorDetail } from '@/features/sensors/components/SensorDetail';
+import { PageFrame } from '@/features/operacao/components/Panel';
+import { TIDE_KEY, buildItems, type Kind } from '@/features/sensors/utils/sensorView';
 
-const FILTERS: ReadonlyArray<{ value: SensorType | undefined; label: string }> = [
-  { value: undefined, label: 'Todos' },
-  { value: 'PRECIPITATION', label: SENSOR_TYPE_LABEL.PRECIPITATION },
-  { value: 'RIVER_LEVEL', label: SENSOR_TYPE_LABEL.RIVER_LEVEL },
-];
+const HOUR = 3_600_000;
 
 export const SensorsPage: React.FC = () => {
-  const [type, setType] = useState<SensorType | undefined>(undefined);
-  const query = useSensorsLatest(type);
+  const [filter, setFilter] = useState<Kind | 'all'>('all');
+  const [chosen, setChosen] = useState<string | null>(null);
+  const query = useSensorsLatest();
+  // 18 h atrás e 6 h à frente: a maré prevista aparece inteira; "agora" fica a 75 % da janela.
+  const tl = useTimeline(18, 6);
+
   return (
-    <PageShell title="Sensores" description="Última leitura de cada sensor e há quanto tempo ela chegou. Sensor sem resposta recente aparece destacado.">
-      <div role="group" aria-label="Filtrar por tipo" className="flex flex-wrap gap-2">
-        {FILTERS.map((f) => (
-          <button
-            key={f.label}
-            type="button"
-            aria-pressed={type === f.value}
-            onClick={() => setType(f.value)}
-            className={cn('h-11 rounded-full border px-4 text-body-strong md:h-8', type === f.value ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:bg-muted')}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-      <QueryState query={query} what="sensores" emptyTitle="Nenhum sensor com leitura." emptyHint={type ? 'Tente outro tipo ou volte para Todos.' : 'Quando a coleta trouxer leituras, elas aparecem aqui.'}>
-        {(items) => {
-          const stale = items.filter((s) => s.stale).length;
-          return (
-            <>
-              <p className="text-caption text-muted-foreground" aria-live="polite">
-                {items.length} sensor{items.length === 1 ? '' : 'es'}{stale > 0 ? `, ${stale} sem resposta recente` : ', todos respondendo'}.
-              </p>
-              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {items.map((s) => <SensorCard key={s.sensorId} sensor={s} />)}
-              </ul>
-            </>
-          );
-        }}
+    <PageFrame className="lg:flex-row">
+      <QueryState query={query} what="sensores" emptyTitle="Nenhum sensor com leitura." emptyHint="Quando a coleta trouxer leituras, elas aparecem aqui.">
+        {(sensors) => <Content sensors={sensors} tl={tl} filter={filter} setFilter={setFilter} chosen={chosen} setChosen={setChosen} />}
       </QueryState>
-    </PageShell>
+    </PageFrame>
+  );
+};
+
+type Sensors = NonNullable<ReturnType<typeof useSensorsLatest>['data']>;
+interface CP { sensors: Sensors; tl: ReturnType<typeof useTimeline>; filter: Kind | 'all'; setFilter: (f: Kind | 'all') => void; chosen: string | null; setChosen: (k: string) => void }
+
+const Content: React.FC<CP> = ({ sensors, tl, filter, setFilter, chosen, setChosen }) => {
+  const all = useMemo(() => buildItems(sensors, tl.data, tl.now), [sensors, tl.data, tl.now]);
+  const list = all.filter((r) => filter === 'all' || r.kind === filter);
+  const current = list.find((r) => r.key === chosen) ?? list[0] ?? null;
+  const online = `${sensors.filter((s) => !s.stale).length} de ${sensors.length} respondendo`;
+  const sensor = current && current.key !== TIDE_KEY ? sensors.find((s) => s.sensorId === current.key) : undefined;
+  const sel = current?.key === TIDE_KEY ? ({ kind: 'mare' } as const) : sensor ? ({ kind: current!.kind as 'chuva' | 'rio', sensor } as const) : null;
+  const t0 = tl.now - 18 * HOUR;
+  const t1 = tl.now + 6 * HOUR;
+  return (
+    <>
+      <SensorList items={list} selected={current?.key ?? ''} filter={filter} onFilter={setFilter} onSelect={setChosen} online={online} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr_auto]">
+        {sel ? <SensorDetail sel={sel} timeline={tl.data} now={tl.now} t0={t0} t1={t1} /> : <p className="text-body text-muted-foreground lg:col-span-12">Nenhum sensor neste filtro.</p>}
+      </div>
+    </>
   );
 };
 export default SensorsPage;

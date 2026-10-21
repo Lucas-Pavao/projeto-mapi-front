@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
@@ -30,7 +30,7 @@ export const PointPage: React.FC = () => {
   const point = usePoint(slug);
   const all = useFloodPoints();
   const series = usePredictionSeries(slug);
-  const now = useMemo(() => Date.now(), []);
+  const [now] = useState(() => Date.now());
 
   const items = useMemo(() => [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt)), [series.data]);
   const p = point.data;

@@ -41,3 +41,35 @@ for (const tema of ['dark', 'light'] as const) {
     await fim();
   });
 }
+
+// ---------- Sensores ----------
+const HORA = 3_600_000;
+const estacoes = ['Várzea 1', 'Areias', 'Ibura', 'Imbiribeira', 'Pina', 'San Martin', 'Torreão'];
+const SENSORES = [
+  { sensorId: '260790119H', type: 'RIVER_LEVEL', value: 1.8, unit: 'm', observedAt: ago(5), ageSeconds: 300, stale: false, stationName: 'Rio Duas Unas · Engenho Velho', municipality: 'Jaboatão dos Guararapes', source: 'APAC', riverPreAlertLevel: 1.8, riverAlertLevel: 2.3, riverFloodLevel: 2.8 },
+  ...estacoes.map((n, i) => ({ sensorId: `PLUV-${i}`, type: 'PRECIPITATION', value: n === 'San Martin' ? null : [0.4, 0.6, 0.4, 1.1, 5.1, 0, 5.8][i], unit: 'mm', observedAt: n === 'San Martin' ? ago(420) : ago(3), ageSeconds: n === 'San Martin' ? 25200 : 180, stale: n === 'San Martin', stationName: n, municipality: 'Recife', source: 'Cemaden' })),
+];
+function tl(from: number, to: number) {
+  const chuva = (k: number) => { const out = []; for (let e = Math.ceil(from / HORA) * HORA; e <= to; e += HORA) { const h = (e - from) / HORA; out.push({ t: new Date(e).toISOString(), v: e > Date.now() ? null : Math.max(0, +(Math.sin((h - 4 - k) / 3) * 12 + 5).toFixed(1)) }); } return out; };
+  const rio = [], mare = [];
+  for (let x = from; x <= to; x += 600_000) {
+    const h = (x - from) / HORA;
+    rio.push({ t: new Date(x).toISOString(), v: x > Date.now() ? null : +(1.8 + 1.0 * Math.exp(-((h - 9) ** 2) / 4)).toFixed(2) });
+    mare.push({ t: new Date(x).toISOString(), v: +(1.2 + 1.1 * Math.sin((x / HORA / 12.4) * Math.PI * 2)).toFixed(2) });
+  }
+  return { from: new Date(from).toISOString(), to: new Date(to).toISOString(), stepMinutes: 10, rain: estacoes.map((_, i) => ({ stationId: `PLUV-${i}`, points: chuva(i) })), tide: { harbor: 'pe02', points: mare }, river: [{ stationId: '260790119H', points: rio }], risk: [], floodEvents: [] };
+}
+const rotaTimeline = ({ url }: { url: URL }) => tl(Date.parse(url.searchParams.get('from') ?? ''), Date.parse(url.searchParams.get('to') ?? ''));
+
+for (const tema of ['dark', 'light'] as const) {
+  test(`fidelidade sensores ${tema}`, async ({ page }) => {
+    const fim = await capturar(page, '03-sensores', tema, { routes: { 'GET /api/sensors/latest': () => SENSORES, 'GET /api/events/timeline': rotaTimeline } }, '/sensores');
+    await fim();
+    await page.getByRole('button', { name: /Várzea 1/ }).click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `test-results/fidelidade/03-sensores-chuva-${tema}.png` });
+    await page.getByRole('button', { name: /Maré/ }).click();
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: `test-results/fidelidade/03-sensores-mare-${tema}.png` });
+  });
+}
