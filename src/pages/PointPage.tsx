@@ -18,20 +18,12 @@ import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Pan
 import { httpStatus } from '@/lib/apiError';
 import { cn } from '@/lib/utils';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
-import type { FloodPointResponseDTO } from '@/features/map/types';
 
 const MapLink: React.FC = () => (
   <Link to="/map" className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-body-strong text-foreground hover:bg-muted md:h-8">
     <ArrowLeft className="size-4" aria-hidden="true" /> Voltar ao mapa
   </Link>
 );
-
-/** Previsão mais recente: a da série; sem série, a que o ponto já traz. */
-function fromPoint(p: FloodPointResponseDTO): PredictionSummary | null {
-  const f = p.floodPrediction;
-  if (!f?.issuedAt) return null;
-  return { slug: p.slug, riskLevel: f.riskLevel, probability: f.floodProbability, issuedAt: f.issuedAt, validUntil: f.validUntil, horizonHours: f.horizonHours, modelVersion: f.modelVersion, degradationReason: f.degradationReason, lastValidIssuedAt: f.lastValidIssuedAt, modelValidationStatus: f.modelValidationStatus };
-}
 
 export const PointPage: React.FC = () => {
   const { slug = '' } = useParams();
@@ -42,7 +34,7 @@ export const PointPage: React.FC = () => {
 
   const items = useMemo(() => [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt)), [series.data]);
   const p = point.data;
-  const latest = useMemo<PredictionSummary | null>(() => items[items.length - 1] ?? (p ? fromPoint(p) : null), [items, p]);
+  const latest = useMemo<PredictionSummary | null>(() => items[items.length - 1] ?? null, [items]);
 
   if (point.isError && httpStatus(point.error) === 404) {
     return (
