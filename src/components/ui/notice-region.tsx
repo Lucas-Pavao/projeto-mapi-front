@@ -19,7 +19,7 @@ export const NoticeRegion: React.FC<{ notices: Notice[]; onDismiss: (id: number)
     aria-live="polite"
     aria-relevant="additions"
     className={cn(
-      'pointer-events-none fixed inset-x-2 bottom-20 z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2',
+      'pointer-events-none fixed inset-x-2 top-[68px] z-[100] flex flex-col items-center gap-2 sm:inset-x-auto sm:bottom-6 sm:top-auto sm:left-1/2 sm:-translate-x-1/2',
       className,
     )}
   >

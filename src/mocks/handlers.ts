@@ -144,10 +144,15 @@ export const handlers = [
   }),
   http.get('/api/admin/ingestion/check-integrity', () => HttpResponse.json(d.integrity)),
   http.get('/api/admin/users', () => HttpResponse.json(page(d.users))),
-  http.post('/api/admin/invites', () =>
-    HttpResponse.json({ token: 'sintetico-token', role: 'USER', expiresAt: new Date(Date.now() + 72 * 3_600_000).toISOString() }, { status: 201 }),
-  ),
-
+  http.patch<{ id: string }>('/api/admin/users/:id', async ({ params, request }) => {
+    const u = d.users.find((x) => x.id === Number(params.id));
+    if (!u) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({ ...u, ...((await request.json()) as object) });
+  }),
+  http.post<never, { role: string; email?: string | null }>('/api/admin/invites', async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ token: 'sintetico-token', role: body.role, expiresAt: new Date(Date.now() + 72 * 3_600_000).toISOString() }, { status: 201 });
+  }),
   http.get('/api/public/risk', async ({ request }) => {
     const u = new URL(request.url);
     const lat = Number(u.searchParams.get('lat'));
