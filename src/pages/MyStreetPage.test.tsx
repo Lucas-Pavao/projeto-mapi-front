@@ -1,9 +1,20 @@
+import React from 'react';
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { RISK_MEANING } from '@/components/risk/risk';
 import { renderPage } from '@/test/render';
+// O mapa precisa de WebGL: aqui vira um botão que "clica" em coordenadas escolhidas pelo teste.
+let clickAt: { lat: number; lng: number } = { lat: -8.0476, lng: -34.877 };
+vi.mock('@/components/ui/map', () => ({
+  Map: ({ children, onClick }: { children?: React.ReactNode; onClick?: (e: { lngLat: { lat: number; lng: number } }) => void }) => (
+    <div><button type="button" onClick={() => onClick?.({ lngLat: clickAt })}>mapa-clique</button>{children}</div>
+  ),
+  MapMarker: ({ children, latitude, longitude }: { children?: React.ReactNode; latitude: number; longitude: number }) => <div data-testid="marcador" data-lat={latitude} data-lon={longitude}>{children}</div>,
+  MarkerContent: ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+  useMap: () => ({ map: null, isLoaded: false }),
+}));
 import { MyStreetPage } from './MyStreetPage';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -87,6 +98,33 @@ describe('MyStreetPage', () => {
     go();
     expect(await screen.findByText(/Espere 30 segundos/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
+  });
+
+  it('toque no mapa escolhe o local: marcador no ponto, consulta com posição arredondada, sem busca por endereço', async () => {
+    let url: URL | null = null;
+    server.use(http.get('/api/public/risk', ({ request }) => { url = new URL(request.url); return HttpResponse.json({ nearestPoint: pt({}), rainLastHourMm: null, rainStationId: null, modelValidationStatus: 'NOT_VALIDATED', meaning: RISK_MEANING.MEDIUM }); }));
+    renderPage(<MyStreetPage />);
+    expect(screen.getByText(/Sem busca por endereço/)).toBeInTheDocument();
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(screen.queryByLabelText(/endereço/i)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'mapa-clique' }));
+    await screen.findByRole('region', { name: 'Risco perto de você' });
+    expect(url!.searchParams.get('lat')).toBe('-8.048');
+    expect(url!.searchParams.get('lon')).toBe('-34.877');
+    expect(screen.getByTestId('marcador')).toHaveAttribute('data-lat', '-8.0476');
+    expect(screen.getByRole('img', { name: 'Local escolhido' })).toBeInTheDocument();
+  });
+
+  it('toque no mapa fora da RMR não consulta e explica', async () => {
+    let called = 0;
+    server.use(http.get('/api/public/risk', () => { called++; return HttpResponse.json({}); }));
+    clickAt = { lat: -23.55, lng: -46.63 };
+    renderPage(<MyStreetPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'mapa-clique' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('fora da Região Metropolitana do Recife');
+    expect(called).toBe(0);
+    expect(screen.queryByTestId('marcador')).toBeNull();
+    clickAt = { lat: -8.0476, lng: -34.877 };
   });
 
   it('erro de servidor oferece nova tentativa', async () => {

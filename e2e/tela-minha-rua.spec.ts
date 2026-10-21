@@ -54,3 +54,23 @@ test('/minha-rua: 429 com espera', async ({ page }, testInfo) => {
   await expect(page.getByText(/Espere 20 segundos/)).toBeVisible();
   await shot(page, testInfo, 'minha-rua-429');
 });
+
+test('/minha-rua: toque no mapa escolhe o local e consulta com posição arredondada', async ({ page }, testInfo) => {
+  await lightTheme(page);
+  const api = await installApi(page, { role: null, routes: { 'GET /api/public/risk': () => PUBLICO('MEDIUM') } });
+  await page.goto('/minha-rua');
+  await expect(page.getByText(/Sem busca por endereço/)).toBeVisible();
+  await expect(page.getByRole('searchbox')).toHaveCount(0);
+  const canvas = page.locator('.maplibregl-canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(1200); // o mapa precisa terminar de montar
+  await canvas.click(); // centro do mapa: Recife
+  await expect(page.getByRole('region', { name: 'Risco perto de você' }).locator('[data-risk="MEDIUM"]')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Local escolhido' })).toBeVisible();
+  const chamada = api.calls.find((c) => c.path.startsWith('/api/public/risk'))!;
+  const q = new URL(chamada.path, 'http://x').searchParams;
+  expect(q.get('lat')).toMatch(/^-8\.\d{1,3}$/);
+  expect(q.get('lon')).toMatch(/^-34\.\d{1,3}$/);
+  await semRolagemHorizontal(page);
+  await shot(page, testInfo, 'minha-rua-mapa');
+});
