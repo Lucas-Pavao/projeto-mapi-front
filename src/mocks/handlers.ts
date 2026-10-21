@@ -155,6 +155,15 @@ export const handlers = [
     }
     return HttpResponse.json(d.publicRisk());
   }),
+  http.post('/api/pontos', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ id: 99, active: true, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, tideHeight: null, tideUnit: null, municipality: null, description: null, ...body }, { status: 201 });
+  }),
+  http.patch<{ slug: string }>('/api/pontos/:slug', async ({ params, request }) => {
+    const p = d.points.find((x) => x.slug === params.slug);
+    if (!p) return HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
+    return HttpResponse.json({ ...p, ...((await request.json()) as object) });
+  }),
   http.get<{ slug: string }>('/api/pontos/:slug', ({ params }) => {
     const p = d.points.find((x) => x.slug === params.slug);
     return p ? HttpResponse.json(p) : HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
