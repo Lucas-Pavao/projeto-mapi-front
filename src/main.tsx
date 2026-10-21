@@ -14,10 +14,12 @@ async function enableMocks() {
   }
 }
 
-void enableMocks().then(() => {
-  createRoot(document.getElementById('root')!).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  )
-})
+void enableMocks()
+  .catch((e) => console.warn('MSW não iniciou:', e))
+  .then(() => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    )
+  })
