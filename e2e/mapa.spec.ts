@@ -32,8 +32,8 @@ async function abreMapa(page: Page) {
   await page.route(/\/api\/pontos\/sintetico-1/, (route) => route.fulfill({ json: { ...PONTO, floodPrediction: PONTO.floodPrediction } }));
   await page.goto('/map');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await expect(page.getByRole('navigation', { name: 'Principal' })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  if ((page.viewportSize()?.width ?? 0) > 640) await expect(page.getByRole('navigation', { name: 'Principal' })).toBeVisible(); // no celular o mapa tem a própria barra
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(1500); // tiles
 }
 
@@ -89,7 +89,7 @@ test('popup do ponto não cobre o marcador (desktop; no celular vale a folha, ve
   test.skip(testInfo.project.name !== 'desktop');
   await prepara(page);
   await abreMapa(page);
-  const marcador = page.getByRole('img', { name: 'Risco Alto' });
+  const marcador = page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' });
   await marcador.click();
   const popup = page.locator('.maplibregl-popup-content');
   await expect(popup).toBeVisible();

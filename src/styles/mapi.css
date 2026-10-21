@@ -9,3 +9,11 @@
 }
 /* Rolagem fina das listas dos painéis. */
 .scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+
+/* Mapa: a atribuição obrigatória sai de baixo da legenda (canto inferior direito) e vai para ao lado do painel esquerdo. */
+@media (min-width: 641px) {
+  .maplibregl-ctrl-bottom-right { right: auto; left: 392px; }
+}
+
+/* Contêineres focados por código (popup, diálogos) não desenham o aro de foco; controles continuam com ele. */
+[tabindex="-1"]:focus-visible { outline: none; }

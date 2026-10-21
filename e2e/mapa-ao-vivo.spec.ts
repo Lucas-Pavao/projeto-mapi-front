@@ -20,7 +20,7 @@ test('mapa ao vivo: contagem por risco, previsão do stream e pulso só com aler
     },
   });
   await page.goto('/map');
-  await expect(page.getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
 
   // Contagem do stream (ícone + rótulo + número).
   const resumo = page.getByRole('region', { name: 'Pontos por nível de risco' });
@@ -29,8 +29,8 @@ test('mapa ao vivo: contagem por risco, previsão do stream e pulso só com aler
   await expect(resumo.locator('[data-risk-count="UNKNOWN"]')).toContainText('Previsão indisponível');
 
   // prediction do stream trocou o marcador do ponto baixo para Moderado.
-  await expect(page.getByRole('img', { name: 'Risco Moderado' })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Risco Baixo' })).toHaveCount(0);
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Moderado' })).toBeVisible();
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Baixo' })).toHaveCount(0);
 
   // Pulso: só o ponto com alerta ativo.
   await expect(page.getByRole('button', { name: /Ponto crítico Sintético: ponto alto.*com alerta ativo/ })).toBeVisible();
@@ -44,7 +44,7 @@ test('USER: mapa sem alertas e sem pulso, ainda com a contagem', async ({ page }
   await lightTheme(page);
   const api = await installApi(page, { role: 'USER' });
   await page.goto('/map');
-  await expect(page.getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole('region', { name: 'Pontos por nível de risco' })).toBeVisible();
   expect(api.calls.some((c) => c.path.startsWith('/api/alerts'))).toBe(false);
   await expect(page.locator('.maplibregl-marker .animate-ping')).toHaveCount(0);

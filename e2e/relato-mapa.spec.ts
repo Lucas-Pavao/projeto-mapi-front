@@ -19,14 +19,15 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('relato pela posição do aparelho: folha, POST /api/reports e nada de /pontos/scenarios', async ({ page }, testInfo) => {
+test('relato pela posição do aparelho (desktop): diálogo, POST /api/reports e nada de /pontos/scenarios', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
   await lightTheme(page);
   const api = await installApi(page, {
     role: 'USER',
     routes: { 'POST /api/reports': ({ body }) => ({ status: 201, json: { id: 55, status: 'PENDING', createdAt: new Date().toISOString(), ...(body as object) } }) },
   });
   await page.goto('/map');
-  await expect(page.getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
   await page.getByRole('button', { name: 'Reportar alagamento no local onde estou' }).click();
   const dlg = page.getByRole('dialog', { name: 'Reportar alagamento' });
   await expect(dlg).toContainText('Sua posição');
@@ -44,19 +45,51 @@ test('relato pela posição do aparelho: folha, POST /api/reports e nada de /pon
   expect(api.calls.some((c) => c.path.includes('/pontos/scenarios') || c.path.includes('/eventos-alagamento'))).toBe(false);
 });
 
-test('relato a partir do ponto crítico (painel analítico) e erro 403 no diálogo', async ({ page }, testInfo) => {
+test('relato em etapas (celular): onde, alagado e até onde, descrição, POST /api/reports', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'celular');
   await lightTheme(page);
-  const api = await installApi(page, { role: 'USER', routes: { 'POST /api/reports': () => ({ status: 403, json: {} }) } });
+  const api = await installApi(page, {
+    role: 'USER',
+    routes: { 'POST /api/reports': ({ body }) => ({ status: 201, json: { id: 55, status: 'PENDING', createdAt: new Date().toISOString(), ...(body as object) } }) },
+  });
   await page.goto('/map');
-  await page.getByRole('img', { name: 'Risco Alto' }).click();
-  await page.getByRole('button', { name: /Painel analítico completo/ }).click();
-  // O painel analítico tem animação contínua no celular (o botão nunca fica "estável" para o Playwright): clique direto.
-  await page.getByRole('button', { name: 'Reportar alagamento', exact: true }).evaluate((el) => (el as HTMLElement).click());
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Reportar alagamento', exact: true }).click();
   const dlg = page.getByRole('dialog', { name: 'Reportar alagamento' });
-  await expect(dlg).toContainText('Sintético: ponto alto');
+  await expect(dlg.getByText('Onde está alagado?')).toBeVisible();
+  const continuar = dlg.getByRole('button', { name: 'Continuar' });
+  await expect(continuar).toBeEnabled();
+  expect((await continuar.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await continuar.click();
+  // Escolha obrigatória antes de seguir.
+  await dlg.getByRole('button', { name: 'Continuar' }).click();
+  await expect(dlg.getByRole('alert')).toContainText('Escolha uma opção');
+  await dlg.getByRole('radio', { name: 'Sim, está alagada' }).click();
+  await dlg.getByRole('button', { name: 'Até o joelho' }).click();
+  await shot(page, testInfo, 'relato-mapa-celular');
+  await dlg.getByRole('button', { name: 'Continuar' }).click();
+  await dlg.getByLabel(/Descrição/).fill('Sintético: rua alagada até o joelho');
+  await dlg.getByRole('button', { name: 'Enviar relato' }).click();
+  await expect(dlg.getByText('Relato enviado')).toBeVisible();
+  const post = api.calls.find((c) => c.method === 'POST' && c.path === '/api/reports')!;
+  expect(post.body).toMatchObject({ waterDepth: 'KNEE', description: 'Sintético: rua alagada até o joelho' });
+  expect((post.body as { latitude: number }).latitude).toBeCloseTo(-8.0521, 4);
+  expect(api.calls.some((c) => c.path.includes('/pontos/scenarios'))).toBe(false);
+});
+
+test('relato a partir do ponto crítico (celular) e erro 403 na etapa final', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'celular');
+  await lightTheme(page);
+  await installApi(page, { role: 'USER', routes: { 'POST /api/reports': () => ({ status: 403, json: {} }) } });
+  await page.goto('/map');
+  await page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' }).click();
+  await page.getByRole('dialog', { name: 'Sintético: ponto alto' }).getByRole('button', { name: 'Reportar cenário no local' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Reportar alagamento' });
+  await expect(dlg.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+  await dlg.getByRole('button', { name: 'Continuar' }).click();
+  await dlg.getByRole('radio', { name: 'Não, está seca' }).click();
+  await dlg.getByRole('button', { name: 'Continuar' }).click();
   await dlg.getByRole('button', { name: 'Enviar relato' }).click();
   await expect(dlg.getByRole('alert')).toContainText('Sem permissão para enviar o relato');
   await shot(page, testInfo, 'relato-mapa-erro');
-  const post = api.calls.find((c) => c.method === 'POST' && c.path === '/api/reports')!;
-  expect((post.body as { latitude: number }).latitude).toBeCloseTo(-8.05, 4);
 });

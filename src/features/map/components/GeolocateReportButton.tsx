@@ -12,7 +12,7 @@ interface Props {
 
 /** Botão flutuante: obtém a localização atual e abre o relato "esta área está alagada?". */
 export const GeolocateReportButton: React.FC<Props> = ({ isGettingLocation, hiddenOnSmall, onClick }) => (
-  <div className={cn('absolute bottom-6 right-16 sm:right-20 z-40 pointer-events-auto', hiddenOnSmall && 'hidden lg:block')}>
+  <div className={cn('absolute bottom-4 right-[332px] z-40 pointer-events-auto', hiddenOnSmall && 'hidden lg:block')}>
     <Button
       onClick={onClick}
       disabled={isGettingLocation}

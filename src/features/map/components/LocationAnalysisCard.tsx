@@ -79,7 +79,7 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
   return (
     <section
       aria-label="Análise de local"
-      className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-10 lg:left-[26rem] lg:w-[25rem] z-30 flex max-h-[70vh] lg:max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-border bg-popover shadow-elevation-overlay ring-1 ring-border animate-in fade-in slide-in-from-bottom-4 duration-500"
+      className="absolute bottom-2 inset-x-2 lg:inset-x-auto lg:bottom-4 lg:left-[392px] lg:w-[25rem] z-30 flex max-h-[70vh] lg:max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-border bg-popover shadow-elevation-overlay ring-1 ring-border animate-in fade-in slide-in-from-bottom-4 duration-500"
     >
       {/* Cabeçalho: o lugar (coordenada e altitude) */}
       <header className="flex shrink-0 items-start justify-between gap-3 border-b border-border bg-muted px-4 py-3">

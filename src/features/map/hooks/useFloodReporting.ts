@@ -71,6 +71,11 @@ export function useFloodReporting({ notify }: Options) {
     [reportTarget, notify],
   );
 
+  /** Envia um relato direto (fluxo em etapas do celular), sem o diálogo. Devolve o relato criado; o erro sobe para a tela tratar. */
+  const sendReport = useCallback(async (target: { lat: number; lng: number }, v: ReportFormValues) => {
+    return reportsService.create({ latitude: target.lat, longitude: target.lng, observedAt: new Date().toISOString(), waterDepth: v.waterDepth, description: v.description });
+  }, []);
+
   const handleExportCsv = useCallback(
     async (point: FloodPointResponseDTO) => {
       try {
@@ -121,6 +126,7 @@ export function useFloodReporting({ notify }: Options) {
     openReportAt,
     closeReport,
     submitReport,
+    sendReport,
     handleExportCsv,
     handleGetGeolocation,
   };

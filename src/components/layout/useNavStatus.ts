@@ -3,7 +3,8 @@ import { useAlerts } from '@/features/alerts/hooks/useAlerts';
 import { REPORTS_KEY } from '@/features/reports/hooks/useReports';
 import { reportsService } from '@/features/reports/services/reports.service';
 import { useRiskSummary } from '@/features/points/hooks/useRiskSummary';
-import { hasRole, type Role } from '@/lib/roles';
+import { hasRole } from '@/lib/roles';
+import type { Role } from '@/lib/apiSchemas';
 
 /**
  * Dados da barra: contadores dos selos (alertas abertos, relatos pendentes; só OPERADOR e ADMIN, ADR 0010)

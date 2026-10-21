@@ -2,7 +2,6 @@ import React from 'react';
 import { MapMarker, MarkerContent } from '@/components/ui/map';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { getRiskVisual } from '@/components/risk/risk';
-import { cn } from '@/lib/utils';
 import type { RiskLevel } from '../schemas/floodPointResponse.schema';
 import type { FloodPointResponseDTO } from '../types';
 
@@ -34,18 +33,14 @@ export const FloodPointMarkers: React.FC<Props> = ({ points, selectedFloodPointI
             e.stopPropagation();
             onSelect(point);
           }}
-          offset={[0, -20]}
           label={`Ponto crítico ${point.name}: risco ${riskLabel}${hasAlert ? ', com alerta ativo' : ''}. Pressione enter para abrir.`}
         >
           <MarkerContent>
             {/* Alvo de toque >= 44 px (marcador 32 px + 6 px de cada lado). */}
             <div className="group relative flex cursor-pointer flex-col items-center p-1.5">
-              <RiskBadge
-                level={riskLevel}
-                variant="marker"
-                pulse={hasAlert}
-                className={cn('transition-transform duration-200 group-hover:scale-110', isSelected && 'scale-125 rounded-lg ring-2 ring-ring ring-offset-2 ring-offset-background')}
-              />
+              {/* Seleção como no protótipo: aro de 2 px na cor do texto, a 2 px do alvo. */}
+              {isSelected && <span aria-hidden="true" className="absolute -inset-0.5 rounded-[14px] border-2 border-foreground" />}
+              <RiskBadge level={riskLevel} variant="marker" pulse={hasAlert} className="transition-transform duration-200 group-hover:scale-110" />
             </div>
           </MarkerContent>
         </MapMarker>

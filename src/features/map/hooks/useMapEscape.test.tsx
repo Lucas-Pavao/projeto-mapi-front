@@ -6,23 +6,15 @@ import { useMapEscape } from './useMapEscape';
 type Props = Parameters<typeof useMapEscape>[0];
 const base = (): Props => ({
   blocked: false,
-  showMobileList: false,
-  closeMobileList: vi.fn(),
   openTool: null,
   closeTool: vi.fn(),
   closePopups: vi.fn(),
 });
 
 describe('useMapEscape', () => {
-  it('fecha na ordem: lista, ferramenta, popups', () => {
+  it('fecha na ordem: ferramenta, popups', () => {
     const a = base();
-    const first: Props = { ...a, showMobileList: true, openTool: 'layers' };
-    const { rerender } = renderHook((p: Props) => useMapEscape(p), { initialProps: first });
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(a.closeMobileList).toHaveBeenCalledTimes(1);
-    expect(a.closeTool).not.toHaveBeenCalled();
-
-    rerender({ ...a, showMobileList: false, openTool: 'layers' });
+    const { rerender } = renderHook((p: Props) => useMapEscape(p), { initialProps: { ...a, openTool: 'layers' } as Props });
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(a.closeTool).toHaveBeenCalledTimes(1);
     expect(a.closePopups).not.toHaveBeenCalled();

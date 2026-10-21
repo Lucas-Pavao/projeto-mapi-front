@@ -18,6 +18,8 @@ interface Props {
   summary: RiskSummary | undefined;
   /** Contagem indisponível (falha da API): mostra "—" em vez de zero, que seria lido como "sem risco". */
   failed?: boolean;
+  /** "sm": versão do celular (número 800 de 20 px, sem espaço entre número e rótulo). */
+  size?: 'md' | 'sm';
   className?: string;
 }
 
@@ -25,14 +27,14 @@ interface Props {
  * Quatro blocos de contagem por nível de risco. O rótulo fica sempre visível (o risco não depende só da cor);
  * UNKNOWN nunca soma no baixo e usa o filete tracejado.
  */
-export const RiskCountTiles: React.FC<Props> = ({ summary, failed = false, className }) => (
+export const RiskCountTiles: React.FC<Props> = ({ summary, failed = false, size = 'md', className }) => (
   <section aria-label="Pontos por nível de risco" className={cn('grid grid-cols-4 gap-1.5', className)}>
     {ORDER.map((level) => {
       const v = getRiskVisual(level);
       const n = summary ? String(summary[level]) : failed ? '—' : '…';
       return (
-        <div key={level} data-risk-count={level} className={cn('flex min-w-0 flex-col gap-0.5 rounded-[10px] border-t-[3px] bg-muted p-2', TOP[level])}>
-          <span className={cn('font-mono text-[22px] leading-[26px] font-bold', v.text)}>{n}</span>
+        <div key={level} data-risk-count={level} className={cn('flex min-w-0 flex-col rounded-[10px] border-t-[3px] bg-muted p-2', size === 'md' && 'gap-0.5', TOP[level])}>
+          <span className={cn('font-mono', size === 'md' ? 'text-[22px] leading-[26px] font-bold' : 'text-xl leading-6 font-extrabold', v.text)}>{n}</span>
           <span className="truncate text-[11px] leading-[14px] text-muted-foreground">
             <span aria-hidden={level === 'UNKNOWN' ? 'true' : undefined}>{SHORT[level]}</span>
             {level === 'UNKNOWN' && <span className="sr-only">{v.label}</span>}

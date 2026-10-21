@@ -44,25 +44,19 @@ export const MapSelectionPopups: React.FC<Props> = ({
       )
     )}
 
-    {selectedFloodPoint && (
-      isMobile ? (
-        <BottomSheet title="Ponto crítico" srTitle={selectedFloodPoint.name} onClose={onClose}>
-          <FloodPointPopup point={selectedFloodPoint} onShowDetails={onShowDetails} status={floodPointStatus} isFetchingStatus={isFetchingStatus} variant="sheet" />
-        </BottomSheet>
-      ) : (
-        <MapPopup
-          longitude={selectedFloodPoint.longitude}
-          latitude={selectedFloodPoint.latitude}
-          onClose={onClose}
-          className={POPUP_CLASS}
-          offset={[0, -60]}
-          anchor="bottom"
-          autoPan
-          label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
-        >
-          <FloodPointPopup point={selectedFloodPoint} onShowDetails={onShowDetails} status={floodPointStatus} isFetchingStatus={isFetchingStatus} />
-        </MapPopup>
-      )
+    {/* Celular: o ponto crítico abre a folha MobilePointSheet (no MapView). */}
+    {selectedFloodPoint && !isMobile && (
+      <MapPopup
+        longitude={selectedFloodPoint.longitude}
+        latitude={selectedFloodPoint.latitude}
+        onClose={onClose}
+        className={POPUP_CLASS}
+        offset={[34, 0]}
+        anchor="left"
+        label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
+      >
+        <FloodPointPopup point={selectedFloodPoint} status={floodPointStatus} isFetchingStatus={isFetchingStatus} onClose={onClose} />
+      </MapPopup>
     )}
   </>
 );

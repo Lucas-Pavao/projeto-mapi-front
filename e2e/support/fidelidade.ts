@@ -2,12 +2,13 @@ import type { Page } from '@playwright/test';
 import { ago, installApi, timeline, type ApiOptions } from './api';
 
 /** Dados de fixture da comparação visual com o protótipo (sintéticos; nada aqui é medição). */
-const base = { municipality: 'Recife', description: null, altitudeM: 3, distanceToChannelM: 100, basinName: null, sensorConfig: null, active: true, tideHeight: null, tideUnit: null };
+const base = { municipality: 'Recife', description: 'Maré bloqueando a saída da galeria', altitudeM: 3, distanceToChannelM: 100, basinName: null, sensorConfig: null, active: true, tideHeight: null, tideUnit: null };
 const pred = (level: string, p: number | null, extra: Record<string, unknown> = {}) => ({
   riskLevel: level, floodProbability: p, modelValidationStatus: 'NOT_VALIDATED', issuedAt: ago(10), validUntil: new Date(Date.now() + 50 * 60_000).toISOString(), horizonHours: 3,
   contributors: [{ featureId: 'rain3h', label: 'Chuva acumulada em 3 horas', contribution: 0.58 }, { featureId: 'tide', label: 'Nível da maré', contribution: 0.3 }, { featureId: 'rain6h', label: 'Chuva acumulada em 6 horas', contribution: 0.12 }],
   ...extra,
 });
+const live = { source: 'sintetico', timestamp: ago(3), sensorIds: [], latestReadings: [], precipitation: 1.5, temperature: 28, humidity: 80, pressure: 1010, windSpeed: 10, waterLevel: null, flowRate: null, tideHeight: null, waveHeight: null, waveDirection: null, wavePeriod: null, tideHeightTabuaMare: 0.22, solarRadiation: null, unitPrecipitation: 'mm/h', unitTemperature: null, unitWaterLevel: null, unitTide: 'm', unitWave: null, unitWindSpeed: null, unitPressure: null, unitSolarRadiation: null, unitFlowRate: null, message: null, historicalAggregates: { rain3h: 31.7, rain6h: 40, rain12h: 50, rain24h: 60, maxRiverLevel24h: null, avgTemperature24h: null } };
 export const PONTOS_FID = [
   { ...base, id: 1, slug: 'mascarenhas', name: 'Mascarenhas', latitude: -8.0905, longitude: -34.9, floodPrediction: pred('LOW', 0.15) },
   { ...base, id: 2, slug: 'agamenon-derby', name: 'Av. Agamenon Magalhães (Derby)', latitude: -8.0522, longitude: -34.8975, floodPrediction: pred('LOW', 0.1) },
@@ -51,7 +52,7 @@ export async function prepara(page: Page, theme: 'dark' | 'light', opts: ApiOpti
     ...opts,
     routes: {
       'GET /api/pontos': () => PONTOS_FID,
-      'GET /api/pontos/:slug': ({ url }) => PONTOS_FID.find((p) => url.pathname.endsWith(`/${p.slug}`)) ?? { status: 404, json: {} },
+      'GET /api/pontos/:slug': ({ url }) => (() => { const p = PONTOS_FID.find((x) => url.pathname.endsWith(`/${x.slug}`)); return p ? { ...p, liveData: live, nearbySensorIds: [] } : { status: 404, json: {} }; })(),
       'GET /api/sensors/latest': () => SENSORES_FID,
       'GET /api/pontos/risk-summary': () => ({ LOW: 5, MEDIUM: 0, HIGH: 0, UNKNOWN: 0, computedAt: ago(1) }),
       'GET /api/alerts': () => ({ page: 0, size: 100, totalElements: 19, content: [] }),
@@ -67,7 +68,7 @@ export async function prepara(page: Page, theme: 'dark' | 'light', opts: ApiOpti
             issuedAt: new Date(from + (i * (to - from)) / 24).toISOString(), validUntil: null, horizonHours: 3, modelVersion: 's', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED',
           })),
         }));
-        return { ...t, risk };
+        return { ...t, rain: t.rain.map((st) => ({ ...st, points: st.points.filter((q) => Date.parse(q.t) <= now) })), risk };
       },
       ...opts.routes,
     },

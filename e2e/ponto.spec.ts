@@ -45,14 +45,14 @@ async function anexa(page: Page, testInfo: TestInfo, nome: string) {
 async function abre(page: Page) {
   await mocks(page);
   await page.goto('/map');
-  await expect(page.getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' })).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(1200);
 }
 
 test('desktop: popup do ponto HIGH com RiskBadge e rótulo experimental', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await abre(page);
-  await page.getByRole('img', { name: 'Risco Alto' }).click();
+  await page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' }).click();
   const popup = page.locator('.maplibregl-popup-content');
   await expect(popup).toBeVisible();
   await expect(popup.locator('[data-risk="HIGH"]')).toContainText('Alto');
@@ -63,23 +63,25 @@ test('desktop: popup do ponto HIGH com RiskBadge e rótulo experimental', async 
   await anexa(page, testInfo, 'desktop-popup-alto');
 });
 
-test('celular: folha inferior com ponto HIGH e com ponto UNKNOWN', async ({ page }, testInfo) => {
+test('celular: folha do ponto com ponto HIGH e com ponto UNKNOWN', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'celular');
   await abre(page);
 
   // HIGH
-  const marcador = page.getByRole('img', { name: 'Risco Alto' });
+  const marcador = page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Alto' });
   await marcador.click();
-  const folha = page.getByRole('dialog', { name: /Ponto crítico/ });
+  const folha = page.getByRole('dialog', { name: 'Sintético: ponto alto' });
   await expect(folha).toBeVisible();
   await expect(folha.locator('[data-risk="HIGH"]')).toContainText('78%');
   await expect(folha.getByText('Previsão experimental — modelo não validado')).toBeVisible();
   await page.waitForTimeout(1200); // deslocamento do mapa
-  const [m, f] = await Promise.all([marcador.boundingBox(), folha.boundingBox()]);
+  const sheet = folha.locator('section');
+  const [m, f] = await Promise.all([marcador.boundingBox(), sheet.boundingBox()]);
   expect(m!.y + m!.height).toBeLessThanOrEqual(f!.y + 1); // marcador acima da folha
-  expect(f!.height).toBeLessThanOrEqual(page.viewportSize()!.height * 0.7 + 2);
-  const fechar = folha.getByRole('button', { name: 'Fechar' });
-  expect((await fechar.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  expect(f!.height).toBeLessThanOrEqual(640 + 2);
+  for (const nome of ['Voltar ao mapa', 'Ponto anterior', 'Próximo ponto', 'Reportar cenário no local']) {
+    expect((await folha.getByRole('button', { name: nome }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  }
   await anexa(page, testInfo, 'celular-folha-alto');
 
   await page.keyboard.press('Escape');
@@ -87,8 +89,8 @@ test('celular: folha inferior com ponto HIGH e com ponto UNKNOWN', async ({ page
 
   // UNKNOWN
   await page.waitForTimeout(800);
-  await page.getByRole('img', { name: 'Risco Previsão indisponível' }).click();
-  const folha2 = page.getByRole('dialog', { name: /Ponto crítico/ });
+  await page.locator('.maplibregl-marker').getByRole('img', { name: 'Risco Previsão indisponível' }).click();
+  const folha2 = page.getByRole('dialog', { name: 'Sintético: ponto sem previsão' });
   await expect(folha2).toBeVisible();
   const selo = folha2.locator('[data-risk="UNKNOWN"]').first();
   await expect(selo).toHaveClass(/border-dashed/);
@@ -97,10 +99,9 @@ test('celular: folha inferior com ponto HIGH e com ponto UNKNOWN', async ({ page
   await anexa(page, testInfo, 'celular-folha-indisponivel');
 });
 
-test('celular: chip Online sozinho no topo e sem painel do usuário; Sair no menu', async ({ page }, testInfo) => {
+test('celular: o menu abre pelo logotipo da barra do mapa e tem Sair', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'celular');
   await abre(page);
-  await expect(page.getByText(/Online/)).toBeVisible();
   await expect(page.getByText('operador.sintetico')).toBeHidden();
   await page.getByRole('button', { name: 'Abrir menu' }).click();
   await expect(page.getByRole('dialog', { name: 'Menu principal' }).getByRole('button', { name: 'Sair' })).toBeVisible();

@@ -2,6 +2,7 @@ import React from 'react';
 import { MapMarker, MarkerContent } from '@/components/ui/map';
 import { cn } from '@/lib/utils';
 import { getSensorConfig, getDataFreshness } from '../utils/sensor';
+import { fmtNum, riverState } from '../utils/overview';
 import type { SensorResponseDTO } from '../types';
 
 interface Props {
@@ -11,16 +12,25 @@ interface Props {
   onSelect: (sensor: SensorResponseDTO) => void;
 }
 
-/** Marcadores de sensores no mapa: ícone da camada, "sem resposta" quando velho, destaque de seleção/vizinhança. */
+const RIVER_EDGE = { Inundação: 'border-risk-high-edge', Alerta: 'border-risk-moderate', 'Pré-alerta': 'border-risk-moderate', normal: 'border-primary' } as const;
+const RIVER_STROKE = { Inundação: 'stroke-risk-high-edge', Alerta: 'stroke-risk-moderate', 'Pré-alerta': 'stroke-risk-moderate', normal: 'stroke-primary' } as const;
+
+/**
+ * Sensores no mapa como rótulos de leitura (Main.dc.html): ponto de cor + valor para chuva; onda + "rio valor · estado"
+ * para a estação fluvial com cotas da APAC; "sem resposta" tracejado quando a leitura está velha (nunca um zero).
+ */
 export const SensorMarkers: React.FC<Props> = ({ sensors, selectedSensorId, nearbySensorIds, onSelect }) => (
   <>
     {sensors.map((sensor) => {
       const config = getSensorConfig(sensor);
       const freshness = getDataFreshness(sensor.timestamp);
-      const isStale = freshness.status === 'stale';
+      const stale = freshness.status === 'stale';
       const isSelected = selectedSensorId === sensor.id;
-      const isNearby = nearbySensorIds.has(sensor.sensorId);
-
+      const isNearby = nearbySensorIds.has(sensor.sensorId) && !isSelected;
+      const state = riverState(sensor.value, sensor);
+      const isRiver = state !== null;
+      const value = sensor.value != null ? `${fmtNum(sensor.value, isRiver ? 2 : 1)} ${sensor.unit ?? ''}`.trim() : '—';
+      const ring = isSelected ? 'ring-2 ring-ring' : isNearby ? 'ring-2 ring-primary/60' : '';
       return (
         <MapMarker
           key={sensor.id}
@@ -30,35 +40,24 @@ export const SensorMarkers: React.FC<Props> = ({ sensors, selectedSensorId, near
             e.stopPropagation();
             onSelect(sensor);
           }}
-          offset={[0, -20]}
-          label={`Sensor ${sensor.stationName || sensor.sensorId}, ${config.label}${isStale ? ', sem resposta recente' : ''}. Pressione enter para abrir.`}
+          label={`Sensor ${sensor.stationName || sensor.sensorId}, ${config.label}${stale ? ', sem resposta recente' : `, ${value}`}. Pressione enter para abrir.`}
         >
           <MarkerContent>
-            <div className="relative group cursor-pointer flex flex-col items-center">
-              <div
-                className={cn(
-                  'h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-border shadow-elevation-overlay flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden',
-                  config.color,
-                  isStale && 'opacity-50 grayscale',
-                  isSelected ? 'ring-2 ring-ring scale-110' : '',
-                  isNearby && !isSelected ? 'ring-2 ring-primary/60 scale-105' : '',
-                )}
-              >
-                <div className="-rotate-45 flex items-center justify-center h-full w-full">
-                  {React.createElement(config.icon, { className: 'h-5 w-5 text-background' })}
+            {/* Alvo de toque >= 44 px no celular: o rótulo tem 22–26 px e ganha folga vertical. */}
+            <div className="cursor-pointer py-[11px] md:py-0">
+              {isRiver && !stale ? (
+                <div className={cn('flex h-[26px] items-center gap-1.5 whitespace-nowrap rounded-full border-[1.5px] bg-popover pl-1.5 pr-2.5 font-mono text-xs leading-4 font-bold text-foreground shadow-elevation-overlay', RIVER_EDGE[state], ring)}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true" className={RIVER_STROKE[state]}>
+                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
+                  </svg>
+                  {sensor.riverName ?? sensor.stationName} {value}
+                  {state !== 'normal' && <> · {state}</>}
                 </div>
-              </div>
-
-              {isStale && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-destructive border-2 border-border z-20" title="Sensor sem resposta recente" aria-hidden="true" />
-              )}
-
-              {isSelected && <div className="absolute -bottom-1 w-2 h-2 bg-foreground rounded-full animate-pulse" />}
-
-              {isNearby && !isSelected && <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary/60 rounded-full" />}
-
-              {(isSelected || isNearby) && (
-                <div className={cn('absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none', isSelected ? 'bg-foreground' : 'bg-primary')} />
+              ) : (
+                <div className={cn('flex h-[22px] items-center gap-[5px] whitespace-nowrap rounded-full border bg-popover pl-[5px] pr-2 font-mono text-[11px] leading-[14px] font-semibold shadow-elevation-raised', stale ? 'border-warning text-warning' : 'border-border text-foreground', ring)}>
+                  <span aria-hidden="true" className={cn('size-2 rounded-full', stale ? 'border border-dashed border-warning bg-transparent' : config.color)} />
+                  {stale ? 'sem resposta' : value}
+                </div>
               )}
             </div>
           </MarkerContent>

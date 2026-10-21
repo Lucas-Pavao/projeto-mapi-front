@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { FloodPointPopup } from '@/features/map/components/FloodPointPopup';
 import { RiskLegend } from './RiskLegend';
 import { EXPERIMENTAL_LABEL, showsExperimentalLabel } from './risk';
@@ -13,16 +14,16 @@ const status = (floodPrediction: Record<string, unknown>) =>
 
 describe('rótulo experimental', () => {
   it('popup mostra o rótulo com classe e ausência do campo (NOT_VALIDATED)', () => {
-    render(<FloodPointPopup point={point} status={status({ riskLevel: 'HIGH', floodProbability: 0.8 })} onShowDetails={() => {}} />);
+    render(<MemoryRouter><FloodPointPopup point={point} status={status({ riskLevel: 'HIGH', floodProbability: 0.8 })} onClose={() => {}} /></MemoryRouter>);
     expect(screen.getByText(EXPERIMENTAL_LABEL)).toBeInTheDocument();
     expect(screen.getByText('Alto')).toBeInTheDocument();
   });
   it('popup com VALIDATED não mostra o rótulo', () => {
-    render(<FloodPointPopup point={point} status={status({ riskLevel: 'HIGH', floodProbability: 0.8, modelValidationStatus: 'VALIDATED' })} onShowDetails={() => {}} />);
+    render(<MemoryRouter><FloodPointPopup point={point} status={status({ riskLevel: 'HIGH', floodProbability: 0.8, modelValidationStatus: 'VALIDATED' })} onClose={() => {}} /></MemoryRouter>);
     expect(screen.queryByText(EXPERIMENTAL_LABEL)).toBeNull();
   });
   it('UNKNOWN mantém estado próprio, sem rótulo experimental', () => {
-    render(<FloodPointPopup point={point} status={status({ riskLevel: 'UNKNOWN', floodProbability: null })} onShowDetails={() => {}} />);
+    render(<MemoryRouter><FloodPointPopup point={point} status={status({ riskLevel: 'UNKNOWN', floodProbability: null })} onClose={() => {}} /></MemoryRouter>);
     expect(screen.queryByText(EXPERIMENTAL_LABEL)).toBeNull();
     expect(screen.getAllByText('Previsão indisponível').length).toBeGreaterThan(0);
     expect(showsExperimentalLabel({ riskLevel: 'UNKNOWN' })).toBe(false);

@@ -2,14 +2,20 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Map, MapControls, MapMarker, MarkerContent, MapCircle } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
-import { List, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useTokenColor } from '@/lib/tokens';
-import { SensorSidebar } from './SensorSidebar';
+import { LivePanel } from './LivePanel';
+import { RainTideCard } from './RainTideCard';
+import { TideMarker } from './TideMarker';
+import { MobileMapa } from './MobileMapa';
+import { MobilePointSheet } from './MobilePointSheet';
+import { MobileReportFlow } from './MobileReportFlow';
+import { useMapOverview } from '../hooks/useMapOverview';
+import { sortPoints } from '../utils/overview';
 import { SensorDetailCard } from './SensorDetailCard';
-import { FloodPointDetailCard } from './FloodPointDetailCard';
 import { ReportFloodModal } from './ReportFloodModal';
 import { useMapData } from '../hooks/useMapData';
 import { useMapInteractions } from '../hooks/useMapInteractions';
@@ -19,11 +25,8 @@ import { useMapEscape } from '../hooks/useMapEscape';
 import { useMapSheetFocus } from '../hooks/useMapSheetFocus';
 import { useMapLive } from '../hooks/useMapLive';
 import { hasRole, parseRole } from '@/lib/roles';
-import { RiskSummaryBar } from '@/components/risk/RiskSummaryBar';
 import { useNotices } from '@/hooks/useNotices';
 import { NoticeRegion } from '@/components/ui/notice-region';
-import { deriveApiStatus } from '../utils/apiStatus';
-import { ApiStatusIndicator } from './ApiStatusIndicator';
 import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
 import { RiskLegend } from '@/components/risk/RiskLegend';
 import { TerrainControl } from './TerrainControl';
@@ -31,7 +34,6 @@ import { LocationAnalysisCard } from './LocationAnalysisCard';
 import { TerrainLayer } from './TerrainLayer';
 import { LocationInitializer } from './LocationInitializer';
 import { MapLayerPanel } from './MapLayerPanel';
-import { MapUserIsland } from './MapUserIsland';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
@@ -40,7 +42,6 @@ import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
 import type { TerrainStatus } from '../utils/terrain';
-import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
 /** Foco do mapa num ponto/sensor: voo suave até a coordenada. */
@@ -51,11 +52,10 @@ type FlyTo = (lng: number, lat: number, zoom: number, duration?: number) => void
  * relatos (useFloodReporting) e compõe os componentes de apresentação.
  */
 export const MapView: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch, applyPrediction } = useMapData();
-  const apiStatus = deriveApiStatus({ isLoading, hasError });
   const { notices, notify, dismiss } = useNotices();
   const {
     selectedSensorId,
@@ -82,13 +82,14 @@ export const MapView: React.FC = () => {
   const [activeLayers, setActiveLayers] = useState<string[]>([...DEFAULT_ACTIVE_LAYERS]);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
-  // Barra direita do mapa: um painel aberto por vez (camadas, terreno ou legenda).
-  const [openTool, setOpenTool] = useState<'layers' | 'terrain' | 'legend' | null>(null);
-  const toolProps = (tool: 'layers' | 'terrain' | 'legend') => ({
+  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas ou terreno).
+  const [openTool, setOpenTool] = useState<'layers' | 'terrain' | null>(null);
+  const toolProps = (tool: 'layers' | 'terrain') => ({
     open: openTool === tool,
     onOpenChange: (v: boolean) => setOpenTool(v ? tool : null),
   });
-  const [showMobileList, setShowMobileList] = useState(false);
+  // Relato em etapas do celular; `point` é o ponto crítico de onde partiu (posição de reserva).
+  const [wizard, setWizard] = useState<{ point?: FloodPointResponseDTO } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const mapRef = useRef<MapRef>(null);
@@ -99,9 +100,7 @@ export const MapView: React.FC = () => {
   const reporting = useFloodReporting({ notify });
 
   useMapEscape({
-    blocked: showDetailCard || reporting.reportTarget !== null,
-    showMobileList,
-    closeMobileList: useCallback(() => setShowMobileList(false), []),
+    blocked: showDetailCard || reporting.reportTarget !== null || wizard !== null,
     openTool,
     closeTool: useCallback(() => setOpenTool(null), []),
     closePopups,
@@ -119,12 +118,10 @@ export const MapView: React.FC = () => {
 
   // Highlighting logic
   const circleCenter = useMemo<[number, number] | null>(() => {
+    // Só o local tocado ganha a zona de análise; o ponto crítico selecionado fica limpo, como no protótipo.
     if (clickedLocation) return [clickedLocation.lng, clickedLocation.lat];
-    if (selectedFloodPoint && selectedFloodPoint.latitude && selectedFloodPoint.longitude) {
-      return [selectedFloodPoint.longitude, selectedFloodPoint.latitude];
-    }
     return null;
-  }, [clickedLocation, selectedFloodPoint]);
+  }, [clickedLocation]);
 
   // Cores do paint do MapLibre vêm dos tokens em runtime e seguem tema e destaque.
   const primaryColor = useTokenColor('--primary', '#5cb8ff');
@@ -136,7 +133,7 @@ export const MapView: React.FC = () => {
   // Celular: a folha inferior cobre até 70 vh; o mapa desloca o marcador para a área livre acima dela.
   const focusLat = selectedFloodPoint?.latitude ?? selectedSensor?.latitude ?? null;
   const focusLng = selectedFloodPoint?.longitude ?? selectedSensor?.longitude ?? null;
-  useMapSheetFocus(mapRef, isMobile && focusLat != null && focusLng != null, focusLat, focusLng);
+  useMapSheetFocus(mapRef, isMobile && focusLat != null && focusLng != null, focusLat, focusLng, selectedFloodPoint ? 640 : undefined);
 
   const nearbySensorIds = useMemo(
     () => collectNearbySensorIds({ locationInfo, floodPointStatus, selectedFloodPoint, sensorStatus }),
@@ -144,6 +141,7 @@ export const MapView: React.FC = () => {
   );
 
   // Ao vivo (ADR 0012): contagem por risco e previsões novas; o pulso do marcador segue o alerta ativo (ADR 0011).
+  const overview = useMapOverview();
   const { riskSummary, riskSummaryFailed, liveStatus, alertSlugs } = useMapLive({
     applyPrediction,
     canSeeAlerts: hasRole(parseRole(user?.role), 'OPERADOR'),
@@ -164,60 +162,44 @@ export const MapView: React.FC = () => {
     [handleFloodPointClick, flyTo],
   );
 
+  const sortedPoints = useMemo(() => sortPoints(floodPoints), [floodPoints]);
+  const selectedIndex = selectedFloodPoint ? sortedPoints.findIndex((p) => p.id === selectedFloodPoint.id) : -1;
+  const stepPoint = (delta: number) => {
+    if (sortedPoints.length === 0) return;
+    selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
+  };
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
-      {/* Estado da conexão com os dados e contagem por risco (marca e relógio ficam na Nav) */}
-      <div className="absolute top-4 left-4 right-4 z-40 flex flex-wrap items-center gap-2 pointer-events-none md:right-[21rem]">
-        <div className="pointer-events-auto flex h-8 items-center rounded-full border border-border bg-card px-3 shadow-elevation-raised">
-          <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
-        </div>
-        <RiskSummaryBar summary={riskSummary} failed={riskSummaryFailed} liveStatus={liveStatus} className="pointer-events-auto" />
-      </div>
-
-      <MapUserIsland username={user?.username} onLogout={logout} />
-
-      {/* Floating sidebar overlay */}
-      <button
-        type="button"
-        onClick={() => setShowMobileList(true)}
-        aria-expanded={showMobileList}
-        aria-controls="sensor-sheet"
-        className="md:hidden absolute bottom-6 left-4 z-30 flex h-12 items-center gap-2 rounded-full border border-border bg-popover px-4 text-sm font-semibold text-foreground shadow-elevation-overlay"
-      >
-        <List className="h-5 w-5" aria-hidden="true" />
-        Sensores e pontos
-      </button>
-      <div
-        id="sensor-sheet"
-        className={cn(
-          'absolute z-40 pointer-events-none md:z-20 md:flex md:inset-x-auto md:top-16 md:left-4 md:bottom-4 md:h-auto',
-          showMobileList ? 'flex inset-x-2 bottom-2 h-[70vh]' : 'hidden',
-        )}
-      >
-        <div className="pointer-events-auto h-full w-full md:w-auto shadow-elevation-overlay rounded-2xl overflow-hidden border border-border ring-1 ring-border">
-          <SensorSidebar
+      {/* Desktop: painel "Agora na RMR" à esquerda (360 px, a 16 px das bordas) e cartão de chuva e maré à direita (300 px). */}
+      {!isMobile && (
+        <>
+          <LivePanel
+            className="absolute bottom-4 left-4 top-4 z-20 w-[360px]"
+            points={floodPoints}
             sensors={sensors}
-            floodPoints={floodPoints}
-            onSensorClick={(sensor) => {
-              setShowMobileList(false);
-              handleSensorClick(sensor);
-              if (sensor.latitude && sensor.longitude) flyTo(sensor.longitude, sensor.latitude, 15, 2000);
-            }}
-            onFloodPointClick={(point) => {
-              setShowMobileList(false);
-              handleFloodPointClick(point);
-              if (point.latitude && point.longitude) flyTo(point.longitude, point.latitude, 15, 2000);
-            }}
-            selectedSensorId={selectedSensorId}
+            summary={riskSummary}
+            summaryFailed={riskSummaryFailed}
+            liveStatus={liveStatus}
+            lastSuccessAt={lastSuccessAt}
+            overview={overview}
             selectedFloodPointId={selectedFloodPointId}
-            onClose={() => setShowMobileList(false)}
+            selectedSensorId={selectedSensorId}
+            onFloodPointClick={selectFloodPoint}
+            onSensorClick={selectSensor}
+            canSeeDataHealth={isAdmin}
           />
-        </div>
-      </div>
+          <RainTideCard overview={overview} className="absolute right-4 top-4 z-20 flex w-[300px] flex-col gap-2 p-3.5" />
+          <div className="absolute bottom-4 right-4 z-20 w-[300px]">
+            <RiskLegend showExperimentalNote={false} />
+          </div>
+        </>
+      )}
 
       {/* Avisos de API: erro com horário do último dado válido, ou estado vazio explícito */}
       {(hasError || (!isLoading && sensors.length === 0 && floodPoints.length === 0)) && (
-        <div className="absolute top-24 inset-x-4 z-30 md:left-[23rem] md:right-[21rem] md:inset-x-auto pointer-events-auto">
+        <div className="absolute inset-x-4 top-[88px] z-30 pointer-events-auto md:inset-x-auto md:left-[392px] md:right-[332px] md:top-4">
           {hasError ? <ApiErrorBanner lastSuccessAt={lastSuccessAt} isRetrying={isRefreshing} onRetry={refetch} /> : <EmptyDataNotice />}
         </div>
       )}
@@ -226,13 +208,16 @@ export const MapView: React.FC = () => {
         <Map ref={mapRef} theme={theme} onClick={handleMapClick} center={[-34.877, -8.057]} zoom={12}>
           <LocationInitializer onLocationUpdate={setUserLocation} />
           <TerrainLayer enabled={showTerrain} onStatusChange={setTerrainStatus} />
-          <MapControls
-            showLocate
-            showFullscreen
-            position="bottom-right"
-            onLocate={(coords) => setUserLocation({ lat: coords.latitude, lng: coords.longitude })}
-            onLocateError={(msg) => notify('error', msg)}
-          />
+          {!isMobile && (
+            <MapControls
+              showLocate
+              showFullscreen
+              position="bottom-left"
+              className="bottom-10 left-[392px]"
+              onLocate={(coords) => setUserLocation({ lat: coords.latitude, lng: coords.longitude })}
+              onLocateError={(msg) => notify('error', msg)}
+            />
+          )}
 
           {userLocation && (
             <MapMarker longitude={userLocation.lng} latitude={userLocation.lat}>
@@ -249,14 +234,16 @@ export const MapView: React.FC = () => {
             <MapCircle center={circleCenter} radiusKm={3} color={circleColor} opacity={0.1} strokeColor={circleColor} strokeWidth={2} strokeOpacity={0.4} />
           )}
 
-          {/* Floating controls overlay (Right) */}
-          <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 md:bottom-[12rem] z-20 flex flex-col items-end gap-3">
-            <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
-            <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
-            <RiskLegend {...toolProps('legend')} />
-          </div>
+          {/* Ferramentas do mapa (desktop): entre o cartão de chuva e a legenda, à direita. */}
+          {!isMobile && (
+            <div className="pointer-events-none absolute right-4 top-[248px] z-20 flex flex-col items-end gap-3">
+              <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
+              <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
+            </div>
+          )}
 
           <SensorMarkers sensors={filteredSensorsForMap} selectedSensorId={selectedSensorId} nearbySensorIds={nearbySensorIds} onSelect={selectSensor} />
+          {!isMobile && overview.tideNow && <TideMarker tide={overview.tideNow} />}
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
             selectedFloodPointId={selectedFloodPointId}
@@ -312,21 +299,6 @@ export const MapView: React.FC = () => {
 
         {showDetailCard && selectedSensor && <SensorDetailCard sensor={selectedSensor} status={sensorStatus} onClose={() => setShowDetailCard(false)} />}
 
-        {showDetailCard && selectedFloodPoint && (
-          <FloodPointDetailCard
-            point={selectedFloodPoint}
-            status={floodPointStatus}
-            isFetchingStatus={isFetchingStatus}
-            onClose={() => setShowDetailCard(false)}
-            onReportFlood={() => reporting.openReportForPoint(selectedFloodPoint)}
-            onExportCsv={() => reporting.handleExportCsv(selectedFloodPoint)}
-            onFocusMap={() => {
-              setShowDetailCard(false);
-              flyTo(selectedFloodPoint.longitude, selectedFloodPoint.latitude, 16);
-            }}
-          />
-        )}
-
         {isLoading && <MapLoadingOverlay />}
 
         {reporting.reportTarget && (
@@ -339,13 +311,45 @@ export const MapView: React.FC = () => {
           />
         )}
 
-        <GeolocateReportButton
-          isGettingLocation={reporting.isGettingLocation}
-          hiddenOnSmall={Boolean(clickedLocation || isFetchingLocation)}
-          onClick={reporting.handleGetGeolocation}
-        />
+        {!isMobile && (
+          <GeolocateReportButton
+            isGettingLocation={reporting.isGettingLocation}
+            hiddenOnSmall={Boolean(clickedLocation || isFetchingLocation)}
+            onClick={reporting.handleGetGeolocation}
+          />
+        )}
       </main>
-      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[640px]:bottom-auto max-[640px]:top-[68px]" />
+
+      {isMobile && (
+        <>
+          <MobileMapa
+            points={floodPoints}
+            summary={riskSummary}
+            summaryFailed={riskSummaryFailed}
+            overview={overview}
+            lastSuccessAt={lastSuccessAt}
+            onSelect={selectFloodPoint}
+            onReport={() => setWizard({})}
+            hidden={selectedFloodPointId !== undefined || selectedSensorId !== undefined || Boolean(clickedLocation || isFetchingLocation)}
+          />
+          {selectedFloodPoint && (
+            <MobilePointSheet
+              key={selectedFloodPoint.id}
+              point={selectedFloodPoint}
+              status={floodPointStatus}
+              isFetchingStatus={isFetchingStatus}
+              index={Math.max(selectedIndex, 0)}
+              total={sortedPoints.length}
+              onPrev={() => stepPoint(-1)}
+              onNext={() => stepPoint(1)}
+              onBack={closePopups}
+              onReport={() => setWizard({ point: selectedFloodPoint })}
+            />
+          )}
+          {wizard && <MobileReportFlow fallbackPoint={wizard.point} points={floodPoints} send={reporting.sendReport} onClose={() => setWizard(null)} />}
+        </>
+      )}
+      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[640px]:bottom-auto max-[640px]:top-[116px]" />
     </div>
   );
 };
