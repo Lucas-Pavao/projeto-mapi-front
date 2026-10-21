@@ -79,6 +79,7 @@ const USUARIOS_PROTO = [
 ];
 
 const TELAS: Tela[] = [
+  { id: '15-login', path: '/login', espera: 2500, api: { role: null } },
   {
     id: '14-minha-rua', path: '/minha-rua', espera: 2500,
     api: { role: null, routes: { 'GET /api/public/risk': () => ({ nearestPoint: { slug: 'sintetico-alto', name: 'Sintético: ponto alto', distanceM: 300, riskLevel: 'HIGH', issuedAt: new Date().toISOString(), validUntil: null, degradationReason: null }, rainLastHourMm: 4.7, rainStationId: 'SINTETICO-PLUV-01', modelValidationStatus: 'NOT_VALIDATED', meaning: 'Alta probabilidade. Evite passar pelo local e acompanhe os avisos da Defesa Civil.' }) } },

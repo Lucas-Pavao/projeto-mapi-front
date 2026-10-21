@@ -1,8 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
-import { screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
+
+// O mapa decorativo precisa de WebGL: no jsdom vira um bloco vazio.
+vi.mock('@/components/ui/map', () => ({ Map: () => <div data-testid="mapa-hero" /> }));
 
 const state = { authed: false, loading: false, login: vi.fn() };
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ isAuthenticated: state.authed, isLoading: state.loading, login: state.login, user: null }) }));
@@ -82,11 +86,30 @@ describe('LoginPage', () => {
     let body: unknown = null;
     server.use(http.post('/api/auth/register', async ({ request }) => { body = await request.json(); return new HttpResponse(null, { status: 201 }); }), http.post('/api/auth/login', () => new HttpResponse(null, { status: 200 })));
     open();
-    fireEvent.click(screen.getByRole('button', { name: 'Criar uma nova conta' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Criar conta' }));
     expect(screen.queryByText(/Você chegou por um convite/)).toBeNull();
     fill('caio', 'senha-boa-1');
     fireEvent.click(screen.getByRole('button', { name: 'CRIAR CONTA' }));
     await waitFor(() => expect(body).toEqual({ username: 'caio', password: 'senha-boa-1' }));
+  });
+
+  it('abas Entrar e Criar conta trocam título, botão e campo de e-mail; mostrar revela a senha', () => {
+    open();
+    expect(screen.getByRole('tab', { name: 'Entrar' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { name: 'Entrar na plataforma' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('E-mail (opcional)')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: 'Criar conta' }));
+    expect(screen.getByRole('heading', { name: 'Criar uma nova conta' })).toBeInTheDocument();
+    expect(screen.getByLabelText('E-mail (opcional)')).toBeInTheDocument();
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'password');
+    fireEvent.click(screen.getByRole('button', { name: 'mostrar' }));
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'text');
+    expect(screen.getByRole('link', { name: 'Ver a página pública sem entrar' })).toHaveAttribute('href', '/minha-rua');
+  });
+
+  it('sessão expirada mostra o aviso', () => {
+    render(<MemoryRouter initialEntries={[{ pathname: '/login', state: { expired: true } }]}><LoginPage /></MemoryRouter>);
+    expect(screen.getByRole('status')).toHaveTextContent('Sua sessão expirou. Entre de novo para continuar.');
   });
 
   it('já autenticado vai para o mapa', () => {
