@@ -24,14 +24,15 @@ test('/modelo/simulador: simula, mostra aviso, gráfico e erro 422', async ({ pa
   await shot(page, testInfo, 'simulador-vazio');
 
   await page.getByLabel('Ponto', { exact: true }).selectOption('sintetico-alto');
-  await page.getByLabel('Intensidade (mm/h)').fill('40');
-  await page.getByLabel('Duração (h)').fill('4');
+  await page.getByRole('radio', { name: 'Constante' }).click();
+  await page.getByLabel('Intensidade da chuva (pico)').fill('40');
+  await page.getByLabel('Duração', { exact: false }).first().fill('4');
   await page.getByRole('button', { name: 'Simular' }).click();
   const res = page.getByRole('region', { name: 'Resultado da simulação' });
-  await expect(res).toContainText('Resultado (simulação, não é previsão)');
-  await expect(res.getByTestId('cross')).toContainText('Sim, na hora');
-  await expect(res.getByTestId('chart-Lâmina simulada no ponto')).toBeVisible();
-  expect(api.calls.find((c) => c.method === 'POST')?.body).toEqual({ slug: 'sintetico-alto', rainfallMmH: [40, 40, 40, 40], f: 1, curveScale: 1 });
+  await expect(res).toContainText('A rua alaga');
+  await expect(res.getByTestId('cross')).toContainText(' h');
+  await expect(res.getByRole('img', { name: /Chuva \(área\) e lâmina/ })).toBeVisible();
+  expect(api.calls.find((c) => c.method === 'POST')?.body).toEqual({ slug: 'sintetico-alto', rainfallMmH: [40, 40, 40, 40, 0, 0], f: 1, curveScale: 1 });
   await semRolagemHorizontal(page);
   await shot(page, testInfo, 'simulador');
 
