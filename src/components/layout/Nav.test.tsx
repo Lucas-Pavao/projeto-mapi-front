@@ -5,7 +5,8 @@ import { Nav } from './Nav';
 import { initTheme } from '@/lib/theme';
 
 let role: string | undefined = 'ADMIN';
-vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'op', role } }) }));
+const logout = vi.fn(async () => {});
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'op', role }, logout }) }));
 
 afterEach(() => {
   role = 'ADMIN';
@@ -124,5 +125,16 @@ describe('Nav: menu Mais (641-1440 px)', () => {
     const menu = document.getElementById('menu-mais')!;
     expect(within(menu).queryByRole('link', { name: 'Dados' })).toBeNull();
     expect(within(menu).getByRole('link', { name: 'Maré' })).toBeInTheDocument();
+  });
+});
+
+describe('Nav no celular: Sair no menu', () => {
+  it('a folha tem Sair (alvo h-12) e chama logout', () => {
+    renderNav('/map');
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menu' }));
+    const sair = within(screen.getByRole('dialog')).getByRole('button', { name: 'Sair' });
+    expect(sair.className).toMatch(/h-12/);
+    fireEvent.click(sair);
+    expect(logout).toHaveBeenCalled();
   });
 });

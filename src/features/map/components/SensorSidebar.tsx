@@ -1,6 +1,6 @@
 import React from 'react';
 import { getRiskVisual } from '@/components/risk/risk';
-import { RiskIcon } from '@/components/risk/RiskIcon';
+import { RiskBadge } from '@/components/risk/RiskBadge';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 import { Signal, Search, Filter, AlertTriangle, Waves, MapPin, X } from 'lucide-react';
@@ -250,12 +250,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                     </span>
                     <span className="text-2xs text-muted-foreground font-bold mt-0.5">{point.municipality || 'Localidade não informada'}</span>
                   </div>
-                  <div className="flex shrink-0 items-center gap-1.5" aria-label={`Risco: ${risk.label}`}>
-                    <span className={cn("text-2xs font-bold", risk.text)}>{risk.label}</span>
-                    <span className={cn("h-7 w-7 rounded border-2 flex items-center justify-center", risk.bg, riskLevel == null || riskLevel === 'UNKNOWN' ? "border-dashed bg-clip-padding" : "")}>
-                      <RiskIcon level={riskLevel} className="h-3.5 w-3.5" />
-                    </span>
-                  </div>
+                  <RiskBadge level={riskLevel} className="shrink-0" />
                 </div>
 
                 <div className="flex items-center gap-4 text-xs">
@@ -293,7 +288,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
               "h-1.5 w-1.5 rounded-full animate-pulse",
               activeTab === 'sensors' ? "bg-primary" : "bg-destructive"
             )} />
-            {activeTab === 'sensors' ? `${(sensors || []).length} Estações` : `${(floodPoints || []).length} Pontos de Risco`}
+            {activeTab === 'sensors' ? `${(sensors || []).length} estações` : `${(floodPoints || []).length} Pontos de risco`}
           </span>
         </div>
       </div>

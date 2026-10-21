@@ -78,7 +78,8 @@ test('acima de 1440 px tudo inline, sem Mais', async ({ page }, testInfo) => {
   await expect(nav.getByRole('link', { name: 'Pontos' })).toBeVisible();
 });
 
-test('popup do ponto não cobre o marcador', async ({ page }, testInfo) => {
+test('popup do ponto não cobre o marcador (desktop; no celular vale a folha, ver ponto.spec)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop');
   await prepara(page);
   await abreMapa(page);
   const marcador = page.getByRole('img', { name: 'Risco Alto' });

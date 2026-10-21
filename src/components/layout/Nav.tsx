@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { ChevronDown, Menu, Users, X } from 'lucide-react';
+import { ChevronDown, LogOut, Menu, Users, X } from 'lucide-react';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -33,6 +33,7 @@ const Clock: React.FC = () => {
 const MobileSheet: React.FC<{ items: readonly NavItem[]; showUsers: boolean; onClose: () => void }> = ({ items, showUsers, onClose }) => {
   const link = ({ isActive }: { isActive: boolean }) =>
     cn('flex h-12 items-center gap-3 rounded-lg px-3 text-body-strong', isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground');
+  const { logout } = useAuth();
   return (
     <ModalDialog label="Menu principal" onClose={onClose} className="fixed inset-x-0 bottom-0 top-[60px] z-50 flex flex-col bg-background/80">
       <div id="menu-principal" className="flex max-h-full flex-col overflow-y-auto border-b border-border bg-card p-2 shadow-elevation-overlay">
@@ -56,6 +57,12 @@ const MobileSheet: React.FC<{ items: readonly NavItem[]; showUsers: boolean; onC
               </NavLink>
             </li>
           )}
+          <li className="mt-1 border-t border-border pt-1">
+            <button type="button" onClick={() => { onClose(); void logout(); }} className="flex h-12 w-full items-center gap-3 rounded-lg px-3 text-body-strong text-muted-foreground hover:bg-muted hover:text-foreground">
+              <LogOut className="size-5" aria-hidden="true" />
+              Sair
+            </button>
+          </li>
         </ul>
       </div>
       <div aria-hidden="true" onClick={onClose} className="min-h-0 flex-1" />

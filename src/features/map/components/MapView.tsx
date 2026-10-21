@@ -26,6 +26,8 @@ import { getSensorConfig, getDataFreshness, formatApiTimestamp } from '../utils/
 import { getRiskVisual } from '@/components/risk/risk';
 import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
+import { useIsMobile } from '@/hooks/useMediaQuery';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { useTokenColor } from '@/lib/tokens';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { SensorSidebar } from './SensorSidebar';
@@ -112,14 +114,13 @@ const LocationInitializer: React.FC<{ onLocationUpdate: (loc: {lat: number, lng:
 export const MapView: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch } = useMapData();
   const apiStatus = deriveApiStatus({ isLoading, hasError });
   const { notices, notify, dismiss } = useNotices();
   const {
     selectedSensorId,
-    setSelectedSensorId,
     selectedFloodPointId,
-    setSelectedFloodPointId,
     selectedSensor,
     selectedFloodPoint,
     showDetailCard,
@@ -422,6 +423,25 @@ export const MapView: React.FC = () => {
   const selectedRisk =
     (selectedFloodPoint && (floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel)) || undefined;
   const riskFill = useRiskFill(selectedRisk);
+  // Celular: a folha inferior cobre até 70 vh; o mapa desloca o marcador para a área livre acima dela.
+  const focusLat = selectedFloodPoint?.latitude ?? selectedSensor?.latitude ?? null;
+  const focusLng = selectedFloodPoint?.longitude ?? selectedSensor?.longitude ?? null;
+  const hasSheet = isMobile && focusLat != null && focusLng != null;
+  useEffect(() => {
+    const m = mapRef.current;
+    if (!m) return;
+    if (hasSheet) {
+      m.easeTo({
+        center: [focusLng as number, focusLat as number],
+        zoom: Math.max(m.getZoom(), 13.5),
+        padding: { top: 0, left: 0, right: 0, bottom: Math.round(window.innerHeight * 0.7) },
+        duration: 600,
+      });
+    } else if ((m.getPadding()?.bottom ?? 0) > 0) {
+      m.easeTo({ padding: { top: 0, left: 0, right: 0, bottom: 0 }, duration: 400 });
+    }
+  }, [hasSheet, focusLat, focusLng]);
+
   const circleColor = clickedLocation || !selectedFloodPoint ? primaryColor : riskFill;
 
   const nearbySensorIds = useMemo(() => {
@@ -469,7 +489,7 @@ export const MapView: React.FC = () => {
       </div>
 
       {/* User controls floating island */}
-      <div className="absolute top-4 right-4 z-40 pointer-events-auto">
+      <div className="absolute top-4 right-4 z-40 pointer-events-auto max-[640px]:hidden">
         <div className="h-16 border border-border bg-card flex items-center gap-3 px-4 rounded-2xl shadow-elevation-overlay transition-all">
            <div className="flex flex-col items-end mr-1 hidden sm:flex">
               <span className="text-2xs font-bold text-foreground">{user?.username || 'Convidado'}</span>
@@ -742,43 +762,67 @@ export const MapView: React.FC = () => {
           })}
 
             {selectedSensor && selectedSensor.latitude != null && selectedSensor.longitude != null && (
-              <MapPopup
-                longitude={selectedSensor.longitude}
-                latitude={selectedSensor.latitude}
-                onClose={() => setSelectedSensorId(undefined)}
-                className="p-0 border-none shadow-none bg-transparent max-w-none"
-                offset={[0, -60]}
-                anchor="bottom"
-                autoPan
-                label={`Detalhes do sensor ${selectedSensor.stationName || selectedSensor.sensorId}`}
-              >
-                <SensorPopup 
-                  sensor={selectedSensor} 
-                  status={sensorStatus}
-                  isFetchingStatus={isFetchingStatus}
-                  onShowDetails={() => setShowDetailCard(true)} 
-                />
-              </MapPopup>
+              isMobile ? (
+                <BottomSheet title="Sensor" srTitle={selectedSensor.stationName || selectedSensor.sensorId} onClose={() => closePopups()}>
+                  <SensorPopup
+                    sensor={selectedSensor}
+                    status={sensorStatus}
+                    isFetchingStatus={isFetchingStatus}
+                    onShowDetails={() => setShowDetailCard(true)}
+                    variant="sheet"
+                  />
+                </BottomSheet>
+              ) : (
+                <MapPopup
+                  longitude={selectedSensor.longitude}
+                  latitude={selectedSensor.latitude}
+                  onClose={() => closePopups()}
+                  className="p-0 border-none shadow-none bg-transparent max-w-none"
+                  offset={[0, -60]}
+                  anchor="bottom"
+                  autoPan
+                  label={`Detalhes do sensor ${selectedSensor.stationName || selectedSensor.sensorId}`}
+                >
+                  <SensorPopup
+                    sensor={selectedSensor}
+                    status={sensorStatus}
+                    isFetchingStatus={isFetchingStatus}
+                    onShowDetails={() => setShowDetailCard(true)}
+                  />
+                </MapPopup>
+              )
             )}
 
             {selectedFloodPoint && (
-              <MapPopup
-                longitude={selectedFloodPoint.longitude}
-                latitude={selectedFloodPoint.latitude}
-                onClose={() => setSelectedFloodPointId(undefined)}
-                className="p-0 border-none shadow-none bg-transparent max-w-none"
-                offset={[0, -60]}
-                anchor="bottom"
-                autoPan
-                label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
-              >
-                <FloodPointPopup 
-                  point={selectedFloodPoint}
-                  onShowDetails={() => setShowDetailCard(true)}
-                  status={floodPointStatus}
-                  isFetchingStatus={isFetchingStatus}
-                />
-              </MapPopup>
+              isMobile ? (
+                <BottomSheet title="Ponto crítico" srTitle={selectedFloodPoint.name} onClose={() => closePopups()}>
+                  <FloodPointPopup
+                    point={selectedFloodPoint}
+                    onShowDetails={() => setShowDetailCard(true)}
+                    status={floodPointStatus}
+                    isFetchingStatus={isFetchingStatus}
+                    variant="sheet"
+                  />
+                </BottomSheet>
+              ) : (
+                <MapPopup
+                  longitude={selectedFloodPoint.longitude}
+                  latitude={selectedFloodPoint.latitude}
+                  onClose={() => closePopups()}
+                  className="p-0 border-none shadow-none bg-transparent max-w-none"
+                  offset={[0, -60]}
+                  anchor="bottom"
+                  autoPan
+                  label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
+                >
+                  <FloodPointPopup
+                    point={selectedFloodPoint}
+                    onShowDetails={() => setShowDetailCard(true)}
+                    status={floodPointStatus}
+                    isFetchingStatus={isFetchingStatus}
+                  />
+                </MapPopup>
+              )
             )}
 
             {clickedLocation && (
@@ -917,7 +961,7 @@ export const MapView: React.FC = () => {
             </Button>
           </div>
         </main>
-      <NoticeRegion notices={notices} onDismiss={dismiss} />
+      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[640px]:bottom-auto max-[640px]:top-[68px]" />
     </div>
   );
 };

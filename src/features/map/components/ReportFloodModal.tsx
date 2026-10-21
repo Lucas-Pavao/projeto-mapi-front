@@ -64,7 +64,7 @@ export const ReportFloodModal: React.FC<ReportFloodModalProps> = ({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="report-description" className="text-2xs font-bold text-muted-foreground">Descrição da Ocorrência</label>
+              <label htmlFor="report-description" className="text-2xs font-bold text-muted-foreground">Descrição da ocorrência</label>
               <textarea 
                 id="report-description"
                 className="w-full bg-muted border border-border rounded-xl p-4 text-sm text-foreground focus:ring-1 focus:ring-destructive focus:border-destructive/40 outline-none min-h-[120px] transition-all"

@@ -25,8 +25,8 @@ export const getWeatherCondition = (code: number): WeatherCondition => {
   if (code >= 61 && code <= 65) return { label: 'Chuva', icon: CloudRain, color: 'text-chart-1' };
   if (code >= 66 && code <= 67) return { label: 'Chuva congelante', icon: CloudSnow, color: 'text-chart-1' };
   if (code >= 71 && code <= 77) return { label: 'Neve', icon: CloudSnow, color: 'text-foreground' };
-  if (code >= 80 && code <= 82) return { label: 'Pancadas de Chuva', icon: CloudRainWind, color: 'text-chart-1' };
-  if (code >= 85 && code <= 86) return { label: 'Pancadas de Neve', icon: CloudSnow, color: 'text-foreground' };
+  if (code >= 80 && code <= 82) return { label: 'Pancadas de chuva', icon: CloudRainWind, color: 'text-chart-1' };
+  if (code >= 85 && code <= 86) return { label: 'Pancadas de neve', icon: CloudSnow, color: 'text-foreground' };
   if (code >= 95) return { label: 'Tempestade', icon: CloudLightning, color: 'text-warning' };
   
   return { label: 'Desconhecido', icon: Cloud, color: 'text-muted-foreground' };

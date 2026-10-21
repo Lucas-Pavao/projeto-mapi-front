@@ -20,13 +20,16 @@ interface SensorPopupProps {
   status?: PreciseDataResponse | null;
   isFetchingStatus?: boolean;
   onShowDetails: () => void;
+  /** "sheet": dentro da folha inferior do celular. */
+  variant?: 'popup' | 'sheet';
 }
 
 export const SensorPopup: React.FC<SensorPopupProps> = ({ 
   sensor, 
   status,
   isFetchingStatus,
-  onShowDetails 
+  onShowDetails,
+  variant = 'popup',
 }) => {
   const config = getSensorConfig(sensor);
   const freshness = getDataFreshness(sensor.timestamp);
@@ -40,7 +43,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   };
 
   return (
-    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-80 ring-1 ring-border animate-in fade-in zoom-in-95 duration-200">
+    <div className={variant === 'sheet' ? 'flex w-full flex-col bg-popover text-foreground' : 'flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-80 ring-1 ring-border animate-in fade-in zoom-in-95 duration-200'}>
       {/* Header with Gradient (fixo; só o corpo rola) */}
       <div className={cn("shrink-0 px-5 py-4 text-background relative overflow-hidden", config.color)}>
         <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -174,7 +177,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className={cn("h-2.5 w-2.5 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
-              <span className="text-2xs text-muted-foreground font-bold">Status da Coleta</span>
+              <span className="text-2xs text-muted-foreground font-bold">Status da coleta</span>
             </div>
             <span className={cn("text-2xs font-bold", freshness.text)}>
               {freshness.label}

@@ -24,7 +24,7 @@ export const getSensorConfig = (sensor: SensorResponseDTO) => {
       sidebarColor: "bg-chart-1/10 text-chart-1",
       ping: 'bg-chart-1',
       text: 'text-chart-1',
-      label: 'Alerta de Rio'
+      label: 'Alerta de rio'
     };
   }
 

@@ -102,7 +102,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
 
               <div className="bg-muted p-6 rounded-2xl border border-border flex flex-col justify-between">
                  <div className="flex justify-between items-start">
-                    <p className="text-xs text-muted-foreground font-bold">Status da Coleta</p>
+                    <p className="text-xs text-muted-foreground font-bold">Status da coleta</p>
                     <div className={cn(
                       "px-2 py-1 rounded-lg flex items-center gap-1.5 text-2xs font-bold border",
                       freshness.status === 'fresh' && "bg-success/10 text-success border-success/40",

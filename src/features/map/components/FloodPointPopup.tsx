@@ -6,7 +6,6 @@ import {
   Database,
   Activity,
   Loader2,
-  Circle,
   Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ import { cn } from '@/lib/utils';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { getSafeFormattedDate } from '../utils/sensor';
 import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/components/risk/risk';
+import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 
@@ -22,13 +22,16 @@ interface FloodPointPopupProps {
   status?: PreciseDataResponse | null;
   isFetchingStatus?: boolean;
   onShowDetails: () => void;
+  /** "sheet": dentro da folha inferior do celular (sem moldura, largura total). */
+  variant?: 'popup' | 'sheet';
 }
 
 export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({ 
   point, 
   status,
   isFetchingStatus,
-  onShowDetails 
+  onShowDetails,
+  variant = 'popup',
 }) => {
   const prediction = status?.floodPrediction;
   const precise = status?.preciseData;
@@ -39,7 +42,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
   const isUnknown = !visual.showsProbability;
 
   return (
-    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-[min(22.5rem,calc(100vw-2rem))] ring-1 ring-border animate-in fade-in zoom-in-95 duration-500">
+    <div className={variant === 'sheet' ? 'flex w-full flex-col bg-popover text-foreground' : 'flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-[min(22.5rem,calc(100vw-2rem))] ring-1 ring-border animate-in fade-in zoom-in-95 duration-500'}>
       {/* 1. Header with Risk identity (fixo; só o corpo rola) */}
       <div className={cn(
         "shrink-0 px-6 py-5 border-b border-border relative overflow-hidden transition-colors duration-700",
@@ -99,14 +102,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                  )}
               </div>
               <div className="flex flex-col items-end gap-2">
-                 <div className={cn(
-                   "px-3 py-2 rounded-xl text-2xs font-bold flex items-center gap-2 transition-all duration-700",
-                   risk.color,
-                   risk.shadow
-                 )}>
-                    <Circle className="h-2 w-2 fill-current" />
-                    {risk.label}
-                 </div>
+                 <RiskBadge level={prediction?.riskLevel} probability={prediction?.floodProbability} />
                  <p className="text-2xs font-bold text-muted-foreground">Análise preditiva</p>
               </div>
            </div>
@@ -118,7 +114,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
         {(precise?.latestReadings && precise.latestReadings.length > 0) || (point.nearbySensorIds && point.nearbySensorIds.length > 0) ? (
           <div className="space-y-3">
              <div className="flex items-center justify-between px-1">
-                <p className="text-2xs text-muted-foreground font-bold">Rede de Sensores (3km)</p>
+                <p className="text-2xs text-muted-foreground font-bold">Rede de sensores (3km)</p>
                 <div className="h-px flex-1 mx-4 bg-muted" />
                 <span className="text-2xs text-primary font-bold">
                   {precise?.latestReadings?.length || point.nearbySensorIds?.length || 0} Ativos

@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { getSafeFormattedDate } from '../utils/sensor';
 import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/components/risk/risk';
+import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
@@ -216,18 +217,11 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                   {showsExperimentalLabel(prediction) && <ExperimentalBadge className="text-xs" />}
 
                   <div className="flex flex-wrap gap-4">
-                    <div className={cn(
-                      "px-6 py-3 rounded-2xl border flex items-center gap-4 transition-all duration-700 shadow-elevation-raised",
-                      risk.border,
-                      risk.header
-                    )}>
-                      <AlertTriangle className="h-6 w-6" />
-                      <div>
-                         <p className="text-2xs opacity-80 font-bold leading-none mb-1">Nível de Risco</p>
-                         <p className="text-lg font-bold leading-none">{risk.label}</p>
-                      </div>
+                    <div className="flex flex-col items-start gap-1">
+                      <p className="text-2xs text-muted-foreground font-bold leading-none">Nível de risco</p>
+                      <RiskBadge level={prediction?.riskLevel} probability={prediction?.floodProbability} className="text-sm" />
                     </div>
-                    
+
                     {prediction?.estimatedTimeToEvent && (
                       <div className="px-6 py-3 rounded-2xl border border-border bg-muted flex items-center gap-4 shadow-elevation-raised">
                         <div className="bg-muted p-2 rounded-xl">
@@ -296,7 +290,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                  },
                  { 
                    kind: 'tide',
-                   label: 'Status da Maré', 
+                   label: 'Status da maré', 
                    value: precise?.tideHeight ?? status?.nearestSensor?.tideHeight ?? point.tideHeight, 
                    unit: TIDE_UNIT, icon: Waves, color: 'text-chart-1', bg: 'bg-chart-1/10' 
                  },
@@ -309,7 +303,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                  },
                  { 
                    kind: 'other',
-                   label: 'Dinâmica do Vento', 
+                   label: 'Dinâmica do vento', 
                    value: getMetricValue('windSpeed', status?.openMeteoData?.current?.wind_speed_10m),
                    unit: precise?.unitWindSpeed || 'km/h', icon: Wind, color: 'text-success', bg: 'bg-success/10' 
                  },
@@ -424,7 +418,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                       <div className="bg-success/10 p-2 rounded-xl">
                          <Layers className="h-4 w-4 text-success" />
                       </div>
-                      <h4 className="text-xs text-foreground font-bold">Infraestrutura de Rede (3km)</h4>
+                      <h4 className="text-xs text-foreground font-bold">Infraestrutura de rede (3km)</h4>
                    </div>
                    <span className="text-2xs font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">
                       {Math.max(precise?.latestReadings?.length || 0, point.nearbySensorIds?.length || 0)} dispositivos detectados
