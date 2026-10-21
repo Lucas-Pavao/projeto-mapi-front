@@ -1,104 +1,75 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, RefreshCw, CheckCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { ModalDialog } from '@/components/ui/modal-dialog';
-import type { FloodPointResponseDTO } from '../types';
+import { DialogPanel } from '@/components/ui/dialog-panel';
+import { Field, Select, Textarea } from '@/components/ui/form-field';
+import { WATER_DEPTH_LABEL } from '@/features/reports/utils/labels';
+import type { WaterDepth } from '@/features/reports/schemas/report.schema';
 
-interface ReportFloodModalProps {
-  point: FloodPointResponseDTO;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  description: string;
-  isSubmitting: boolean;
-  onSeverityChange: (severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL') => void;
-  onDescriptionChange: (description: string) => void;
-  onConfirm: () => void;
+export interface ReportTarget {
+  lat: number;
+  lng: number;
+  /** Nome do ponto crítico, "o local que você tocou" ou "sua posição". */
+  label: string;
+}
+
+export interface ReportFormValues {
+  waterDepth: WaterDepth | null;
+  description: string | null;
+}
+
+interface Props {
+  target: ReportTarget;
+  submitting: boolean;
+  error?: string | null;
+  onSubmit: (v: ReportFormValues) => void;
   onClose: () => void;
 }
 
-export const ReportFloodModal: React.FC<ReportFloodModalProps> = ({
-  point,
-  severity,
-  description,
-  isSubmitting,
-  onSeverityChange,
-  onDescriptionChange,
-  onConfirm,
-  onClose
-}) => {
+const DEPTHS = Object.keys(WATER_DEPTH_LABEL) as WaterDepth[];
+
+/**
+ * Relato de alagamento (POST /api/reports). Vai para a fila de um operador conferir; não vira alerta nem
+ * muda a previsão por si. Diálogo em folha no celular e centralizado no desktop (DialogPanel).
+ */
+export const ReportFloodModal: React.FC<Props> = ({ target, submitting, error, onSubmit, onClose }) => {
+  const [depth, setDepth] = useState<WaterDepth | ''>('');
+  const [description, setDescription] = useState('');
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (description.length > 1000) return setErr('A descrição passa de 1000 caracteres.');
+    setErr(null);
+    onSubmit({ waterDepth: depth || null, description: description.trim() || null });
+  };
+
   return (
-    <ModalDialog label={`Reportar ocorrência em ${point.name}`} onClose={onClose} className="absolute inset-0 z-70 bg-background/80 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg bg-card border-border shadow-elevation-overlay overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-        <CardHeader className="bg-destructive/10 border-b border-destructive/40 p-6">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-6 w-6 text-destructive" />
-            <div>
-              <CardTitle className="text-xl font-bold text-foreground">Reportar ocorrência</CardTitle>
-              <p className="text-2xs text-muted-foreground font-bold mt-1">{point.name}</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <span id="severity-label" className="text-2xs font-bold text-muted-foreground">Severidade observada</span>
-              <div className="grid grid-cols-4 gap-2" role="group" aria-labelledby="severity-label">
-                {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((sev) => (
-                  <button
-                    key={sev}
-                    type="button"
-                    aria-pressed={severity === sev}
-                    onClick={() => onSeverityChange(sev)}
-                    className={cn(
-                      "py-2 rounded-lg text-2xs font-bold border transition-all",
-                      severity === sev 
-                        ? "bg-destructive border-destructive/40 text-background shadow-elevation-raised" 
-                        : "bg-muted border-border text-muted-foreground hover:border-input"
-                    )}
-                  >
-                    {sev}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="report-description" className="text-2xs font-bold text-muted-foreground">Descrição da ocorrência</label>
-              <textarea 
-                id="report-description"
-                className="w-full bg-muted border border-border rounded-xl p-4 text-sm text-foreground focus:ring-1 focus:ring-destructive focus:border-destructive/40 outline-none min-h-[120px] transition-all"
-                placeholder="Descreva o que está sendo observado no local (ex: trânsito parado, água acima do meio-fio)..."
-                value={description}
-                onChange={(e) => onDescriptionChange(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-2">
-            <Button 
-              className="flex-1 bg-muted hover:bg-muted text-foreground font-bold text-2xs h-12"
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              className="flex-1 bg-destructive hover:bg-destructive/90 text-background font-bold text-2xs h-12 shadow-elevation-raised"
-              onClick={onConfirm}
-              disabled={isSubmitting || !description}
-            >
-              {isSubmitting ? (
-                <RefreshCw className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirmar registro
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </ModalDialog>
+    <DialogPanel title="Reportar alagamento" description="Seu relato vai para a fila de um operador conferir. Ele não vira alerta nem muda a previsão sozinho." onClose={() => { if (!submitting) onClose(); }}>
+      <form onSubmit={submit} noValidate className="flex flex-col gap-3">
+        <p className="flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2 text-body text-foreground">
+          <MapPin className="size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span>{target.label} <span className="text-code text-muted-foreground">({target.lat.toFixed(5)}, {target.lng.toFixed(5)})</span></span>
+        </p>
+        <Field label="Altura da água" hint="Como você vê agora. Pode deixar em branco.">
+          {(p) => (
+            <Select {...p} value={depth} onChange={(e) => setDepth(e.target.value as WaterDepth | '')}>
+              <option value="">Não sei dizer</option>
+              {DEPTHS.map((d) => <option key={d} value={d}>{WATER_DEPTH_LABEL[d]}</option>)}
+            </Select>
+          )}
+        </Field>
+        <Field label="O que você viu (opcional)" hint={`${description.length}/1000`} error={err}>
+          {(p) => <Textarea {...p} value={description} maxLength={1100} onChange={(e) => setDescription(e.target.value)} />}
+        </Field>
+        {error && <p role="alert" className="text-body text-destructive">{error}</p>}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" className="h-11 px-4 md:h-8" disabled={submitting} onClick={onClose}>Cancelar</Button>
+          <Button type="submit" className="h-11 px-4 md:h-8" disabled={submitting}>{submitting ? 'Enviando…' : 'Enviar relato'}</Button>
+        </div>
+      </form>
+    </DialogPanel>
   );
 };
+
+export default ReportFloodModal;

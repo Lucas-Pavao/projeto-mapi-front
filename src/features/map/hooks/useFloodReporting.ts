@@ -1,15 +1,12 @@
 import { useCallback, useState } from 'react';
 import { exportService } from '../services/export.service';
-import { floodService } from '../services/flood.service';
+import { reportsService } from '@/features/reports/services/reports.service';
+import { actionErrorMessage } from '@/lib/apiError';
 import type { NoticeKind } from '@/hooks/useNotices';
+import type { ReportFormValues, ReportTarget } from '../components/ReportFloodModal';
 import type { FloodPointResponseDTO } from '../types';
 
-type Severity = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-type Coords = { lat: number; lng: number };
-
 interface Options {
-  selectedFloodPoint: FloodPointResponseDTO | undefined;
-  username: string | undefined;
   notify: (kind: NoticeKind, message: string) => unknown;
 }
 
@@ -29,20 +26,50 @@ function geolocationMessage(error: GeolocationPositionError): string {
 }
 
 /**
- * Fluxos de relato do mapa: registrar evento de alagamento num ponto (modal de gravidade), relatar
- * o cenário de uma coordenada (modal sim/não), exportar CSV e obter a localização do usuário.
+ * Fluxos de relato do mapa. Os três caminhos (ponto crítico, local tocado, posição do aparelho) abrem o mesmo
+ * formulário e enviam POST /api/reports, que cai na fila do operador. Também exporta CSV e obtém a localização.
  */
-export function useFloodReporting({ selectedFloodPoint, username, notify }: Options) {
-  const [showReportModal, setShowReportModal] = useState(false);
-  const [reportSeverity, setReportSeverity] = useState<Severity>('MEDIUM');
-  const [reportDescription, setReportDescription] = useState('');
+export function useFloodReporting({ notify }: Options) {
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-
-  const [showScenarioModal, setShowScenarioModal] = useState(false);
-  const [scenarioCoords, setScenarioCoords] = useState<Coords | null>(null);
-  const [scenarioTitle, setScenarioTitle] = useState('');
-  const [isSubmittingScenario, setIsSubmittingScenario] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
+
+  const openReport = useCallback((target: ReportTarget) => {
+    setReportError(null);
+    setReportTarget(target);
+  }, []);
+  const closeReport = useCallback(() => setReportTarget(null), []);
+
+  /** Abre o relato para um ponto crítico. */
+  const openReportForPoint = useCallback((p: Pick<FloodPointResponseDTO, 'latitude' | 'longitude' | 'name'>) => openReport({ lat: p.latitude, lng: p.longitude, label: p.name }), [openReport]);
+  /** Abre o relato para um local tocado no mapa. */
+  const openReportAt = useCallback((c: { lat: number; lng: number }) => openReport({ lat: c.lat, lng: c.lng, label: 'O local que você tocou' }), [openReport]);
+
+  const submitReport = useCallback(
+    async (v: ReportFormValues) => {
+      if (!reportTarget) return;
+      setIsSubmittingReport(true);
+      setReportError(null);
+      try {
+        await reportsService.create({
+          latitude: reportTarget.lat,
+          longitude: reportTarget.lng,
+          observedAt: new Date().toISOString(),
+          waterDepth: v.waterDepth,
+          description: v.description,
+        });
+        notify('success', 'Relato enviado. Um operador vai conferir.');
+        setReportTarget(null);
+      } catch (error) {
+        console.error('Erro ao enviar relato:', error);
+        setReportError(actionErrorMessage(error, 'enviar o relato'));
+      } finally {
+        setIsSubmittingReport(false);
+      }
+    },
+    [reportTarget, notify],
+  );
 
   const handleExportCsv = useCallback(
     async (point: FloodPointResponseDTO) => {
@@ -64,29 +91,6 @@ export function useFloodReporting({ selectedFloodPoint, username, notify }: Opti
     [notify],
   );
 
-  const handleReportFlood = useCallback(async () => {
-    if (!selectedFloodPoint) return;
-    setIsSubmittingReport(true);
-    try {
-      await floodService.reportFlood({
-        floodPointSlug: selectedFloodPoint.slug,
-        severity: reportSeverity,
-        description: reportDescription,
-        startTime: new Date().toISOString(),
-        endTime: new Date(Date.now() + 3600000).toISOString(), // 1h default
-        confirmedBy: username || 'Operador',
-      });
-      notify('success', 'Evento de alagamento registrado com sucesso.');
-      setShowReportModal(false);
-      setReportDescription('');
-    } catch (error) {
-      console.error('Erro ao reportar alagamento:', error);
-      notify('error', 'Erro ao registrar evento.');
-    } finally {
-      setIsSubmittingReport(false);
-    }
-  }, [selectedFloodPoint, reportSeverity, reportDescription, username, notify]);
-
   const handleGetGeolocation = useCallback(() => {
     if (!navigator.geolocation) {
       notify('error', 'Geolocalização não é suportada ou disponível neste navegador (verifique se está acessando via HTTPS ou localhost).');
@@ -96,10 +100,8 @@ export function useFloodReporting({ selectedFloodPoint, username, notify }: Opti
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setScenarioCoords({ lat: latitude, lng: longitude });
-        setScenarioTitle('A região onde você está se encontra alagada agora?');
-        setShowScenarioModal(true);
         setIsGettingLocation(false);
+        openReport({ lat: latitude, lng: longitude, label: 'Sua posição' });
       },
       (error) => {
         console.warn('Erro de geolocalização:', error.message || 'Unknown error');
@@ -108,56 +110,18 @@ export function useFloodReporting({ selectedFloodPoint, username, notify }: Opti
       },
       { enableHighAccuracy: false, timeout: 15000 },
     );
-  }, [notify]);
-
-  /** Abre o modal de cenário para uma coordenada clicada no mapa. */
-  const askScenarioAt = useCallback((coords: Coords) => {
-    setScenarioCoords({ lat: coords.lat, lng: coords.lng });
-    setScenarioTitle('A região correspondente à coordenada clicada se encontra alagada agora?');
-    setShowScenarioModal(true);
-  }, []);
-
-  const handleConfirmScenario = useCallback(
-    async (isFlooded: boolean) => {
-      if (!scenarioCoords) return;
-      setIsSubmittingScenario(true);
-      try {
-        await floodService.reportScenario({
-          latitude: scenarioCoords.lat,
-          longitude: scenarioCoords.lng,
-          isFlooded,
-        });
-        notify('success', 'Situação da região reportada com sucesso.');
-        setShowScenarioModal(false);
-        setScenarioCoords(null);
-      } catch (error) {
-        console.error('Erro ao reportar cenário:', error);
-        notify('error', 'Erro ao enviar o relato do cenário.');
-      } finally {
-        setIsSubmittingScenario(false);
-      }
-    },
-    [scenarioCoords, notify],
-  );
+  }, [notify, openReport]);
 
   return {
-    showReportModal,
-    setShowReportModal,
-    reportSeverity,
-    setReportSeverity,
-    reportDescription,
-    setReportDescription,
+    reportTarget,
+    reportError,
     isSubmittingReport,
-    showScenarioModal,
-    setShowScenarioModal,
-    scenarioCoords,
-    scenarioTitle,
-    isSubmittingScenario,
     isGettingLocation,
+    openReportForPoint,
+    openReportAt,
+    closeReport,
+    submitReport,
     handleExportCsv,
-    handleReportFlood,
     handleGetGeolocation,
-    askScenarioAt,
-    handleConfirmScenario,
   };
 }

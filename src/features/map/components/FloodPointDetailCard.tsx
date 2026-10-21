@@ -502,7 +502,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                     onClick={onReportFlood}
                   >
                     <AlertTriangle className="h-5 w-5 mr-3" />
-                    Reportar incidente
+                    Reportar alagamento
                   </Button>
                   
                   <Button 

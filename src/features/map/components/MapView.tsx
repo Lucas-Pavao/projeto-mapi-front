@@ -11,7 +11,6 @@ import { SensorSidebar } from './SensorSidebar';
 import { SensorDetailCard } from './SensorDetailCard';
 import { FloodPointDetailCard } from './FloodPointDetailCard';
 import { ReportFloodModal } from './ReportFloodModal';
-import { ReportScenarioModal } from './ReportScenarioModal';
 import { useMapData } from '../hooks/useMapData';
 import { useMapInteractions } from '../hooks/useMapInteractions';
 import { useFloodPointStatus } from '../hooks/useFloodPointStatus';
@@ -97,11 +96,10 @@ export const MapView: React.FC = () => {
     mapRef.current?.flyTo(duration === undefined ? { center: [lng, lat], zoom } : { center: [lng, lat], zoom, duration });
   }, []);
 
-  const reporting = useFloodReporting({ selectedFloodPoint, username: user?.username, notify });
-  const { showReportModal, setShowReportModal, showScenarioModal, setShowScenarioModal } = reporting;
+  const reporting = useFloodReporting({ notify });
 
   useMapEscape({
-    blocked: showDetailCard || showReportModal || showScenarioModal,
+    blocked: showDetailCard || reporting.reportTarget !== null,
     showMobileList,
     closeMobileList: useCallback(() => setShowMobileList(false), []),
     openTool,
@@ -307,7 +305,7 @@ export const MapView: React.FC = () => {
               }
             }}
             onReport={() => {
-              if (clickedLocation) reporting.askScenarioAt(clickedLocation);
+              if (clickedLocation) reporting.openReportAt(clickedLocation);
             }}
           />
         )}
@@ -320,7 +318,7 @@ export const MapView: React.FC = () => {
             status={floodPointStatus}
             isFetchingStatus={isFetchingStatus}
             onClose={() => setShowDetailCard(false)}
-            onReportFlood={() => setShowReportModal(true)}
+            onReportFlood={() => reporting.openReportForPoint(selectedFloodPoint)}
             onExportCsv={() => reporting.handleExportCsv(selectedFloodPoint)}
             onFocusMap={() => {
               setShowDetailCard(false);
@@ -331,27 +329,13 @@ export const MapView: React.FC = () => {
 
         {isLoading && <MapLoadingOverlay />}
 
-        {showReportModal && selectedFloodPoint && (
+        {reporting.reportTarget && (
           <ReportFloodModal
-            point={selectedFloodPoint}
-            severity={reporting.reportSeverity}
-            description={reporting.reportDescription}
-            isSubmitting={reporting.isSubmittingReport}
-            onSeverityChange={reporting.setReportSeverity}
-            onDescriptionChange={reporting.setReportDescription}
-            onConfirm={reporting.handleReportFlood}
-            onClose={() => setShowReportModal(false)}
-          />
-        )}
-
-        {showScenarioModal && reporting.scenarioCoords && (
-          <ReportScenarioModal
-            latitude={reporting.scenarioCoords.lat}
-            longitude={reporting.scenarioCoords.lng}
-            isSubmitting={reporting.isSubmittingScenario}
-            title={reporting.scenarioTitle}
-            onConfirm={reporting.handleConfirmScenario}
-            onClose={() => setShowScenarioModal(false)}
+            target={reporting.reportTarget}
+            submitting={reporting.isSubmittingReport}
+            error={reporting.reportError}
+            onSubmit={reporting.submitReport}
+            onClose={reporting.closeReport}
           />
         )}
 

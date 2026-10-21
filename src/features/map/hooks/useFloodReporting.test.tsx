@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
+import { AxiosError } from 'axios';
 
-vi.mock('../services/flood.service', () => ({ floodService: { reportFlood: vi.fn(), reportScenario: vi.fn() } }));
+vi.mock('@/features/reports/services/reports.service', () => ({ reportsService: { create: vi.fn() } }));
 vi.mock('../services/export.service', () => ({ exportService: { getUnifiedIADataCsv: vi.fn() } }));
-import { floodService } from '../services/flood.service';
+vi.mock('../services/flood.service', () => ({ floodService: {} }));
+import { reportsService } from '@/features/reports/services/reports.service';
 import { exportService } from '../services/export.service';
 import { useFloodReporting } from './useFloodReporting';
 
-const point = { slug: 'p1' } as never;
+const create = vi.mocked(reportsService.create);
+const point = { slug: 'p1', name: 'Ponto 1', latitude: -8.05, longitude: -34.9 } as never;
 
 beforeEach(() => {
   vi.resetAllMocks();
@@ -16,67 +19,75 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe('useFloodReporting', () => {
-  it('registra evento com o usuário logado e fecha o modal', async () => {
-    vi.mocked(floodService.reportFlood).mockResolvedValue({} as never);
+describe('useFloodReporting (POST /api/reports)', () => {
+  it('ponto crítico: abre o relato no ponto e envia coordenadas, profundidade e descrição; fecha e avisa', async () => {
+    create.mockResolvedValue({} as never);
     const notify = vi.fn();
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: point, username: 'ana', notify }));
-    act(() => {
-      result.current.setShowReportModal(true);
-      result.current.setReportSeverity('HIGH');
-      result.current.setReportDescription('água na calçada');
-    });
-    await act(() => result.current.handleReportFlood());
-    expect(floodService.reportFlood).toHaveBeenCalledWith(expect.objectContaining({ floodPointSlug: 'p1', severity: 'HIGH', description: 'água na calçada', confirmedBy: 'ana' }));
-    expect(notify).toHaveBeenCalledWith('success', expect.any(String));
-    expect(result.current.showReportModal).toBe(false);
-    expect(result.current.reportDescription).toBe('');
+    const { result } = renderHook(() => useFloodReporting({ notify }));
+    act(() => result.current.openReportForPoint(point));
+    expect(result.current.reportTarget).toEqual({ lat: -8.05, lng: -34.9, label: 'Ponto 1' });
+    await act(() => result.current.submitReport({ waterDepth: 'KNEE', description: 'água na calçada' }));
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ latitude: -8.05, longitude: -34.9, waterDepth: 'KNEE', description: 'água na calçada' }));
+    expect(Date.parse(create.mock.calls[0][0].observedAt)).toBeGreaterThan(Date.now() - 5000);
+    expect(notify).toHaveBeenCalledWith('success', 'Relato enviado. Um operador vai conferir.');
+    expect(result.current.reportTarget).toBeNull();
   });
 
-  it('sem ponto selecionado não envia', async () => {
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: undefined, username: 'ana', notify: vi.fn() }));
-    await act(() => result.current.handleReportFlood());
-    expect(floodService.reportFlood).not.toHaveBeenCalled();
+  it('local tocado no mapa usa as coordenadas do toque', async () => {
+    create.mockResolvedValue({} as never);
+    const { result } = renderHook(() => useFloodReporting({ notify: vi.fn() }));
+    act(() => result.current.openReportAt({ lat: -8.1, lng: -34.95 }));
+    await act(() => result.current.submitReport({ waterDepth: null, description: null }));
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ latitude: -8.1, longitude: -34.95, waterDepth: null, description: null }));
   });
 
-  it('falha ao registrar avisa e mantém o modal', async () => {
-    vi.mocked(floodService.reportFlood).mockRejectedValue(new Error('x'));
+  it('sem alvo aberto não envia', async () => {
+    const { result } = renderHook(() => useFloodReporting({ notify: vi.fn() }));
+    await act(() => result.current.submitReport({ waterDepth: null, description: null }));
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('erro mantém o formulário aberto com mensagem (403 explica permissão/sessão)', async () => {
+    create.mockRejectedValue(new AxiosError('x', undefined, undefined, undefined, { status: 403, data: {}, statusText: '', headers: {}, config: {} as never }));
     const notify = vi.fn();
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: point, username: undefined, notify }));
-    act(() => result.current.setShowReportModal(true));
-    await act(() => result.current.handleReportFlood());
-    expect(notify).toHaveBeenCalledWith('error', 'Erro ao registrar evento.');
-    expect(result.current.showReportModal).toBe(true);
+    const { result } = renderHook(() => useFloodReporting({ notify }));
+    act(() => result.current.openReportForPoint(point));
+    await act(() => result.current.submitReport({ waterDepth: null, description: null }));
+    expect(result.current.reportTarget).not.toBeNull();
+    expect(result.current.reportError).toMatch(/Sem permissão para enviar o relato/);
+    expect(notify).not.toHaveBeenCalled();
     expect(result.current.isSubmittingReport).toBe(false);
   });
 
-  it('cenário: abre para a coordenada, envia e fecha', async () => {
-    vi.mocked(floodService.reportScenario).mockResolvedValue({} as never);
-    const notify = vi.fn();
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: undefined, username: 'a', notify }));
-    act(() => result.current.askScenarioAt({ lat: -8, lng: -34.9 }));
-    expect(result.current.showScenarioModal).toBe(true);
-    await act(() => result.current.handleConfirmScenario(true));
-    expect(floodService.reportScenario).toHaveBeenCalledWith({ latitude: -8, longitude: -34.9, isFlooded: true });
-    expect(result.current.showScenarioModal).toBe(false);
-    expect(result.current.scenarioCoords).toBeNull();
+  it('geolocalização do aparelho abre o relato na posição', () => {
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (ok: (p: { coords: { latitude: number; longitude: number } }) => void) => ok({ coords: { latitude: -8.06, longitude: -34.88 } }) } });
+    const { result } = renderHook(() => useFloodReporting({ notify: vi.fn() }));
+    act(() => result.current.handleGetGeolocation());
+    expect(result.current.reportTarget).toEqual({ lat: -8.06, lng: -34.88, label: 'Sua posição' });
+    expect(result.current.isGettingLocation).toBe(false);
   });
 
-  it('geolocalização negada vira aviso com a orientação de permissão', () => {
+  it('geolocalização negada vira aviso e não abre o relato', () => {
     const notify = vi.fn();
     const err = { code: 1, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3, message: 'denied' };
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: (_ok: unknown, fail: (e: unknown) => void) => fail(err) } });
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: undefined, username: 'a', notify }));
+    const { result } = renderHook(() => useFloodReporting({ notify }));
     act(() => result.current.handleGetGeolocation());
     expect(notify).toHaveBeenCalledWith('error', expect.stringContaining('Permissão negada'));
-    expect(result.current.isGettingLocation).toBe(false);
+    expect(result.current.reportTarget).toBeNull();
   });
 
   it('exportar CSV com falha avisa', async () => {
     vi.mocked(exportService.getUnifiedIADataCsv).mockRejectedValue(new Error('x'));
     const notify = vi.fn();
-    const { result } = renderHook(() => useFloodReporting({ selectedFloodPoint: point, username: 'a', notify }));
+    const { result } = renderHook(() => useFloodReporting({ notify }));
     await act(() => result.current.handleExportCsv(point));
     expect(notify).toHaveBeenCalledWith('error', 'Erro ao exportar dados para CSV.');
+  });
+
+  it('a UI não chama mais /api/pontos/scenarios nem /api/eventos-alagamento', async () => {
+    const { floodService } = await import('../services/flood.service');
+    expect(floodService).not.toHaveProperty('reportScenario');
+    expect(floodService).not.toHaveProperty('reportFlood');
   });
 });
