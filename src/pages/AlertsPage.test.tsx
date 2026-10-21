@@ -13,14 +13,16 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const lista = async () => within(await screen.findByRole('list', { name: 'Lista de alertas' }));
+
 describe('AlertsPage: alertas', () => {
   it('lista os abertos com severidade, risco com rótulo experimental e UNKNOWN sem %', async () => {
     renderPage(<AlertsPage />);
-    const alto = (await screen.findByText('Sintético: risco alto no ponto de teste')).closest('li')!;
+    const alto = (await (await lista()).findByText('Sintético: risco alto no ponto de teste')).closest('li')!;
     expect(within(alto).getByText('Crítico')).toBeInTheDocument();
     expect(within(alto).getByText('Alto')).toBeInTheDocument();
     expect(within(alto).getByText(/Previsão experimental/)).toBeInTheDocument();
-    const unk = screen.getByText('Sintético: previsão indisponível').closest('li')!;
+    const unk = (await lista()).getByText('Sintético: previsão indisponível').closest('li')!;
     expect(unk.querySelector('[data-risk="UNKNOWN"]')).toHaveTextContent('Previsão indisponível');
     expect(unk.textContent).not.toMatch(/%/);
     expect(within(unk).getByText(/o modelo demorou demais.*Isto não é queda de risco/)).toBeInTheDocument();
@@ -31,7 +33,7 @@ describe('AlertsPage: alertas', () => {
     let acked: string | null = null;
     server.use(http.post<{ id: string }>('/api/alerts/:id/ack', ({ params }) => { acked = params.id; return HttpResponse.json({ id: Number(params.id), kind: 'RISK_LEVEL', severity: 'CRITICAL', title: 'x', triggeredAt: '2026-10-21T12:00:00Z', acknowledgedAt: '2026-10-21T12:05:00Z' }); }));
     renderPage(<AlertsPage />);
-    await screen.findByText('Sintético: risco alto no ponto de teste');
+    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
     fireEvent.click(screen.getByRole('button', { name: /Reconhecer alerta: Sintético: risco alto/ }));
     await waitFor(() => expect(acked).toBe('1'));
     expect(await screen.findByText('Alerta reconhecido.')).toBeInTheDocument();
@@ -40,24 +42,34 @@ describe('AlertsPage: alertas', () => {
   it('403 no ack explica permissão/sessão', async () => {
     server.use(http.post('/api/alerts/:id/ack', () => HttpResponse.json({}, { status: 403 })));
     renderPage(<AlertsPage />);
-    await screen.findByText('Sintético: risco alto no ponto de teste');
+    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
     fireEvent.click(screen.getAllByRole('button', { name: /Reconhecer alerta/ })[0]);
     expect(await screen.findByText(/Sem permissão para reconhecer o alerta/)).toBeInTheDocument();
   });
 
-  it('filtro Reconhecidos mostra quem reconheceu e sem botão', async () => {
+  it('alerta reconhecido aparece lido, com quem reconheceu e sem botão', async () => {
     renderPage(<AlertsPage />);
-    await screen.findByText('Sintético: risco alto no ponto de teste');
-    fireEvent.click(screen.getByRole('button', { name: 'Reconhecidos' }));
-    const li = (await screen.findByText('Sintético: pluviômetro sem resposta')).closest('li')!;
+    const li = (await (await lista()).findByText('Sintético: pluviômetro sem resposta')).closest('li')!;
+    expect(li).toHaveAttribute('data-open', 'false');
     expect(within(li).getByText(/Reconhecido por sintetico.operador/)).toBeInTheDocument();
     expect(within(li).queryByRole('button')).toBeNull();
+    expect(screen.getByText(/não lidos de 3/)).toHaveTextContent('2 não lidos de 3');
+  });
+
+  it('filtros em pílula mostram a contagem e filtram a lista', async () => {
+    renderPage(<AlertsPage />);
+    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
+    expect(screen.getByRole('radio', { name: /Risco 2/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Sensores 1/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: /Sensores/ }));
+    expect((await lista()).queryByText('Sintético: risco alto no ponto de teste')).toBeNull();
+    expect((await lista()).getByText('Sintético: pluviômetro sem resposta')).toBeInTheDocument();
   });
 
   it('vazio, erro', async () => {
     server.use(http.get('/api/alerts', () => HttpResponse.json({ page: 0, size: 20, totalElements: 0, content: [] })));
     const { unmount } = renderPage(<AlertsPage />);
-    expect(await screen.findByText('Nenhum alerta aberto.')).toBeInTheDocument();
+    expect(await screen.findByText('Nada por aqui ainda.')).toBeInTheDocument();
     unmount();
     server.use(http.get('/api/alerts', () => HttpResponse.json({}, { status: 500 })));
     renderPage(<AlertsPage />);
@@ -67,8 +79,8 @@ describe('AlertsPage: alertas', () => {
   it('alerta pelo stream entra na lista e avisa', async () => {
     server.use(liveStreamHandler({ heartbeatMs: 1000, maxBeats: 1, extraDelayMs: 300, extra: [{ event: 'alert', data: { id: 50, kind: 'RAIN_RATE', severity: 'WARNING', title: 'Sintético: chuva forte ao vivo', triggeredAt: new Date().toISOString() } }] }));
     renderPage(<AlertsPage />);
-    await screen.findByText('Sintético: risco alto no ponto de teste');
-    expect(await screen.findByText('Sintético: chuva forte ao vivo', {}, { timeout: 3000 })).toBeInTheDocument();
+    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
+    expect(await (await lista()).findByText('Sintético: chuva forte ao vivo', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByText('Novo alerta: Sintético: chuva forte ao vivo')).toBeInTheDocument();
   });
 });
@@ -76,7 +88,7 @@ describe('AlertsPage: alertas', () => {
 describe('AlertsPage: regras', () => {
   const abre = async () => {
     renderPage(<AlertsPage />);
-    fireEvent.click(await screen.findByRole('tab', { name: 'Regras' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Todas as regras' }));
     await screen.findByText('Chuva em 1 h');
   };
 
@@ -107,7 +119,7 @@ describe('AlertsPage: regras', () => {
   it('TIDE_ABOVE mostra o aviso da ADR 0009', async () => {
     await abre();
     fireEvent.click(screen.getByRole('button', { name: 'Nova regra' }));
-    const dlg = await screen.findByRole('dialog');
+    const dlg = await screen.findByRole('dialog', { name: 'Nova regra de alerta' });
     fireEvent.change(within(dlg).getByLabelText('Tipo de regra'), { target: { value: 'TIDE_ABOVE' } });
     expect(within(dlg).getByTestId('tide-datum-notice')).toBeInTheDocument();
   });
@@ -137,8 +149,38 @@ describe('AlertsPage: regras', () => {
     server.use(http.put('/api/alert-rules/:id', () => HttpResponse.json({}, { status: 400 })));
     await abre();
     fireEvent.click(screen.getByRole('button', { name: 'Editar regra Chuva em 1 h' }));
-    const dlg = await screen.findByRole('dialog');
+    const dlg = await screen.findByRole('dialog', { name: 'Editar regra de alerta' });
     fireEvent.click(within(dlg).getByRole('button', { name: 'Salvar regra' }));
     expect(await within(dlg).findByText(/Dados inválidos ao salvar a regra/)).toBeInTheDocument();
+  });
+});
+
+describe('AlertsPage: painel de regras', () => {
+  it('nível mínimo grava a regra de risco; canais por vir ficam desabilitados', async () => {
+    let put: { id: string; body: unknown } | null = null;
+    server.use(http.put<{ id: string }>('/api/alert-rules/:id', async ({ params, request }) => { put = { id: params.id, body: await request.json() }; return HttpResponse.json({ ...(put.body as object), id: Number(params.id), createdBy: 'x', createdAt: '2026-10-21T12:00:00Z' }); }));
+    renderPage(<AlertsPage />);
+    const grupo = await screen.findByRole('radiogroup', { name: 'Nível mínimo' });
+    await waitFor(() => expect(within(grupo).getByRole('radio', { name: 'Só alto' })).toHaveAttribute('aria-checked', 'true'));
+    fireEvent.click(within(grupo).getByRole('radio', { name: 'Moderado ou alto' }));
+    await waitFor(() => expect(put?.id).toBe('1'));
+    expect(put!.body).toMatchObject({ kind: 'RISK_LEVEL', minRisk: 'MEDIUM' });
+    for (const nome of ['E-mail', 'WhatsApp', 'Telegram']) expect(screen.getByRole('checkbox', { name: new RegExp(nome) })).toBeDisabled();
+    expect(screen.getByRole('checkbox', { name: /Navegador/ })).not.toBeDisabled();
+    expect(screen.getAllByText('em breve')).toHaveLength(3);
+  });
+
+  it('limiar de chuva só grava ao soltar e registra o ajuste na fonte', async () => {
+    let body: Record<string, unknown> | null = null;
+    server.use(http.put('/api/alert-rules/:id', async ({ request }) => { body = (await request.json()) as Record<string, unknown>; return HttpResponse.json({ ...body, id: 2, createdBy: 'x', createdAt: '2026-10-21T12:00:00Z' }); }));
+    renderPage(<AlertsPage />);
+    const slider = await screen.findByLabelText(/Chuva forte a partir de/);
+    await waitFor(() => expect(slider).toHaveValue('55'));
+    fireEvent.change(slider, { target: { value: '40' } });
+    expect(body).toBeNull();
+    fireEvent.pointerUp(slider);
+    await waitFor(() => expect(body).toMatchObject({ kind: 'RAIN_RATE', threshold: 40 }));
+    expect(String(body!.thresholdSource)).toContain('Ajuste do operador');
+    expect(String(body!.thresholdSource)).toContain('antes: Sintético');
   });
 });

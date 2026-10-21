@@ -73,3 +73,30 @@ for (const tema of ['dark', 'light'] as const) {
     await page.screenshot({ path: `test-results/fidelidade/03-sensores-mare-${tema}.png` });
   });
 }
+
+// ---------- Alertas ----------
+const al = (id: number, kind: string, severity: string, title: string, detail: string, min: number, extra: Record<string, unknown> = {}) => ({ id, ruleId: 1, kind, severity, title, detail, triggeredAt: ago(min), acknowledgedAt: null, acknowledgedBy: null, ...extra });
+const ALERTAS_F = [
+  al(1, 'RISK_LEVEL', 'WARNING', 'Mascarenhas passou para moderado', 'Probabilidade 53% · terreno plano, drenagem lenta', 2, { floodPointSlug: 'mascarenhas', riskLevel: 'MEDIUM', modelValidationStatus: 'NOT_VALIDATED' }),
+  al(2, 'RIVER_STAGE', 'CRITICAL', 'Rio Duas Unas atingiu a cota de inundação', 'Engenho Velho · 2,82 m (cota 2,80 m)', 80),
+  al(3, 'RISK_LEVEL', 'WARNING', 'Jaboatão Centro passou para moderado', 'Probabilidade 53% · rio alto (duas unas)', 110, { riskLevel: 'MEDIUM', modelValidationStatus: 'NOT_VALIDATED' }),
+  al(4, 'RISK_LEVEL', 'WARNING', 'Agamenon (Derby) saiu do risco alto', 'Agora moderado · 78%', 170, { riskLevel: 'MEDIUM', modelValidationStatus: 'NOT_VALIDATED' }),
+  al(5, 'RAIN_RATE', 'INFO', 'Chuva forte em Torreão', '36,2 mm/h · pluviômetro 261160618A', 300),
+  al(6, 'RAIN_RATE', 'INFO', 'Chuva forte em Pina', '31,0 mm/h · pluviômetro 261160617A', 320),
+  al(7, 'TIDE_ABOVE', 'WARNING', 'Maré acima de 2,0 m', 'Preamar prevista 2,30 m', 340),
+  al(8, 'SENSOR_STALE', 'INFO', 'San Martin sem resposta', 'há 420 min', 400, { acknowledgedAt: ago(350), acknowledgedBy: 'operador' }),
+];
+const REGRAS_F = [
+  { id: 1, kind: 'RISK_LEVEL', floodPointSlug: null, stationId: null, threshold: null, thresholdSource: null, minRisk: 'MEDIUM', enabled: true, channels: ['BROWSER'], createdBy: 'sistema', createdAt: ago(5000) },
+  { id: 2, kind: 'RAIN_RATE', floodPointSlug: null, stationId: null, threshold: 30, thresholdSource: 'IDF TR 2 anos', minRisk: null, enabled: true, channels: ['BROWSER'], createdBy: 'sistema', createdAt: ago(5000) },
+  { id: 3, kind: 'TIDE_ABOVE', floodPointSlug: null, stationId: null, threshold: 2.0, thresholdSource: 'Tábua DHN', minRisk: null, enabled: true, channels: ['BROWSER'], createdBy: 'sistema', createdAt: ago(5000) },
+];
+for (const tema of ['dark', 'light'] as const) {
+  test(`fidelidade alertas ${tema}`, async ({ page }) => {
+    const fim = await capturar(page, '04-alertas', tema, { role: 'OPERADOR', routes: {
+      'GET /api/alerts': () => ({ page: 0, size: 100, totalElements: ALERTAS_F.length, content: ALERTAS_F }),
+      'GET /api/alert-rules': () => REGRAS_F,
+    } }, '/alertas');
+    await fim();
+  });
+}

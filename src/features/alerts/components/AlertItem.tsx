@@ -1,66 +1,78 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CircleCheck, Info, OctagonAlert, TriangleAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CloudRain, OctagonAlert, TriangleAlert, WifiOff, Waves, type LucideIcon } from 'lucide-react';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
-import { formatRecife } from '@/features/map/utils/datetime';
+import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { cn } from '@/lib/utils';
-import type { Alert, AlertSeverity } from '../schemas/alert.schema';
-import { ALERT_KIND_LABEL } from '../utils/ruleKinds';
+import type { Alert, AlertKind, AlertSeverity } from '../schemas/alert.schema';
 
-// Severidade do alerta (INFO/WARNING/CRITICAL) não é classe de risco: usa tokens de sistema e ícone próprio.
-const SEVERITY = {
-  INFO: { label: 'Informação', Icon: Info, tone: 'text-info border-info/40 bg-info/10' },
-  WARNING: { label: 'Atenção', Icon: TriangleAlert, tone: 'text-warning border-warning/40 bg-warning/10' },
-  CRITICAL: { label: 'Crítico', Icon: OctagonAlert, tone: 'text-destructive border-destructive/40 bg-destructive/10' },
-} satisfies Record<AlertSeverity, { label: string; Icon: React.ComponentType<{ className?: string }>; tone: string }>;
+// Severidade (INFO/WARNING/CRITICAL) não é classe de risco: tokens de sistema, ícone por tipo e texto para leitor de tela.
+const SEVERITY: Record<AlertSeverity, { label: string; tone: string; tint: string }> = {
+  INFO: { label: 'Informação', tone: 'text-chart-3', tint: 'bg-chart-3/20' },
+  WARNING: { label: 'Atenção', tone: 'text-risk-moderate', tint: 'bg-risk-moderate/20' },
+  CRITICAL: { label: 'Crítico', tone: 'text-risk-high-edge', tint: 'bg-risk-high/20' },
+};
+const ICON: Record<AlertKind, LucideIcon> = {
+  RISK_LEVEL: OctagonAlert,
+  PREDICTION_UNAVAILABLE: TriangleAlert,
+  RIVER_STAGE: Waves,
+  TIDE_ABOVE: Waves,
+  RAIN_RATE: CloudRain,
+  SENSOR_STALE: WifiOff,
+};
 
 interface Props {
   alert: Alert;
   canAck: boolean;
   acking: boolean;
+  isNew?: boolean;
   onAck: (id: number) => void;
 }
 
-export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, onAck }) => {
+/** Linha da Central de alertas: ícone por tipo, título, detalhe, hora e "Ciente". Lido fica sem destaque. */
+export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = false, onAck }) => {
   const sev = SEVERITY[a.severity];
+  const Icon = ICON[a.kind];
   const open = !a.acknowledgedAt;
+  const detail = [
+    a.detail,
+    a.riskLevel === 'UNKNOWN' ? `Motivo: ${degradationText(a.degradationReason)}. Isto não é queda de risco.` : null,
+    a.observedValue != null ? `valor observado ${a.observedValue.toLocaleString('pt-BR')}` : null,
+  ].filter(Boolean).join(' · ');
   return (
-    <li data-alert-id={a.id} data-open={open} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-1 text-2xs font-bold', sev.tone)}>
-          <sev.Icon className="size-3.5" /> {sev.label}
-        </span>
-        <span className="text-caption text-muted-foreground">{ALERT_KIND_LABEL(a.kind)}</span>
-        <span className="ml-auto text-caption text-muted-foreground">{formatRecife(a.triggeredAt) ?? '—'}</span>
-      </div>
-      <p className="text-title text-foreground">{a.title}</p>
-      {a.detail && <p className="text-body text-muted-foreground">{a.detail}</p>}
-      {(a.riskLevel || a.observedValue != null) && (
-        <div className="flex flex-wrap items-center gap-2">
+    <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3', open ? 'bg-muted' : 'bg-transparent')}>
+      <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-[10px]', sev.tint, sev.tone)}>
+        <Icon className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
+        <span className="sr-only">{sev.label}</span>
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className={cn('text-[14px] leading-5', open ? 'font-extrabold' : 'font-semibold')}>{a.title}</span>
+          {isNew && open && <span className="h-[18px] rounded-full bg-primary px-1.5 text-[10px] font-bold leading-[18px] text-primary-foreground">NOVO</span>}
           {a.riskLevel && <RiskBadge level={a.riskLevel} />}
           {a.riskLevel && showsExperimentalLabel({ riskLevel: a.riskLevel, modelValidationStatus: a.modelValidationStatus }) && <ExperimentalBadge />}
-          {a.riskLevel === 'UNKNOWN' && <span className="text-caption text-muted-foreground">Motivo: {degradationText(a.degradationReason)}. Isto não é queda de risco.</span>}
-          {a.observedValue != null && <span className="text-reading text-foreground">valor observado {a.observedValue.toLocaleString('pt-BR')}</span>}
         </div>
-      )}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-caption text-muted-foreground">
-        {a.floodPointSlug && <Link to={`/pontos/${a.floodPointSlug}`} className="font-semibold text-primary hover:underline">Ponto {a.floodPointSlug}</Link>}
-        {a.stationId && <span>Estação <span className="text-code">{a.stationId}</span></span>}
-        {open ? (
-          canAck && (
-            <Button type="button" className="ml-auto h-11 px-4 md:h-8" disabled={acking} onClick={() => onAck(a.id)} aria-label={`Reconhecer alerta: ${a.title}`}>
-              {acking ? 'Reconhecendo…' : 'Reconhecer'}
-            </Button>
-          )
-        ) : (
-          <span className="ml-auto flex items-center gap-1 text-success">
-            <CircleCheck className="size-4" aria-hidden="true" /> Reconhecido por {a.acknowledgedBy ?? 'operador'} em {formatRecife(a.acknowledgedAt) ?? '—'}
-          </span>
-        )}
+        <div className="text-[12px] leading-4 text-muted-foreground">
+          {detail}
+          {a.floodPointSlug && <>{detail ? ' · ' : ''}<Link to={`/pontos/${a.floodPointSlug}`} className="text-primary hover:underline">Ponto {a.floodPointSlug}</Link></>}
+          {a.stationId && <>{detail || a.floodPointSlug ? ' · ' : ''}Estação <span className="font-mono">{a.stationId}</span></>}
+          {!open && <>{' · '}Reconhecido por {a.acknowledgedBy ?? 'operador'} às {formatHoraCurta(a.acknowledgedAt) ?? '—'}</>}
+        </div>
       </div>
+      <span className="font-mono text-[12px] font-semibold leading-5 text-muted-foreground">{formatHoraCurta(a.triggeredAt) ?? '—'}</span>
+      {open && canAck && (
+        <button
+          type="button"
+          disabled={acking}
+          onClick={() => onAck(a.id)}
+          aria-label={`Reconhecer alerta: ${a.title}`}
+          className="h-11 cursor-pointer rounded-lg border border-input bg-transparent px-2.5 text-[12px] font-semibold leading-4 text-foreground hover:bg-card disabled:opacity-50 md:h-7"
+        >
+          {acking ? 'Enviando…' : 'Ciente'}
+        </button>
+      )}
     </li>
   );
 };
