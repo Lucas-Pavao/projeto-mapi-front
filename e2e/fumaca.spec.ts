@@ -37,6 +37,9 @@ for (const theme of ['dark', 'light'] as const) {
       await expect(page.getByText('Sintético: ponto de teste')).toBeVisible();
       // Risco sempre com ícone + rótulo, e rótulo experimental enquanto o modelo não é validado.
       await expect(page.getByText('Previsão experimental — modelo não validado')).toBeVisible();
+      // O botão sai do estado "buscando" com transição de opacidade; o axe mede o contraste só depois dela.
+      await expect(page.getByRole('button', { name: 'Atualizar minha localização' })).toBeEnabled();
+      await page.waitForTimeout(400);
       await semViolacoesGraves(page);
     });
   });
