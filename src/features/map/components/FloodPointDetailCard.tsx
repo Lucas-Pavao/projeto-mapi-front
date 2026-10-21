@@ -111,7 +111,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
               "w-16 h-16 rounded-[1.5rem] flex items-center justify-center shadow-2xl border border-white/10 ring-4 ring-black/20 transition-all duration-1000",
               risk.header
             )}>
-              <ShieldAlert className="h-9 w-9 text-white" />
+              <ShieldAlert className="h-9 w-9" />
             </div>
             <div>
               <div className="flex items-center gap-3">
@@ -221,10 +221,10 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                       risk.border,
                       risk.header
                     )}>
-                      <AlertTriangle className="h-6 w-6 text-white" />
+                      <AlertTriangle className="h-6 w-6" />
                       <div>
-                         <p className="text-2xs text-white/60 font-black uppercase tracking-widest leading-none mb-1">Nível de Risco</p>
-                         <p className="text-lg font-black text-white uppercase tracking-tighter leading-none">{risk.label}</p>
+                         <p className="text-2xs opacity-80 font-black uppercase tracking-widest leading-none mb-1">Nível de Risco</p>
+                         <p className="text-lg font-black uppercase tracking-tighter leading-none">{risk.label}</p>
                       </div>
                     </div>
                     

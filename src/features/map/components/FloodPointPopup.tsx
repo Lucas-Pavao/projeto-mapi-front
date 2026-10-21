@@ -43,13 +43,13 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
       {/* 1. Header with Risk Identity (fixo; só o corpo rola) */}
       <div className={cn(
         "shrink-0 px-6 py-5 border-b border-white/5 relative overflow-hidden transition-colors duration-700",
-        risk.color.replace('bg-', 'bg-').concat('/5')
+        visual.softBg
       )}>
         <div className="flex justify-between items-start relative z-10">
           <div className="flex gap-4">
              <div className={cn(
                "h-12 w-12 rounded-2xl flex items-center justify-center shadow-inner ring-1 ring-white/10 transition-all duration-700",
-               risk.color.replace('bg-', 'bg-').concat('/20'),
+               visual.tint,
                risk.iconColor
              )}>
                 <MapPin className="h-6 w-6" />

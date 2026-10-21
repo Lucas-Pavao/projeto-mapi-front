@@ -24,6 +24,7 @@ import { floodService } from '../services/flood.service';
 import { mapService } from '../services/map.service';
 import { getSensorConfig, getDataFreshness, formatApiTimestamp } from '../utils/sensor';
 import { getRiskVisual } from '../utils/risk';
+import { RiskBadge } from './RiskBadge';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
 import { FloodPointPopup } from './FloodPointPopup';
@@ -44,7 +45,6 @@ import { MapToolPopover } from './MapToolPopover';
 import { LocationAnalysisCard } from './LocationAnalysisCard';
 import { TerrainLayer } from './TerrainLayer';
 import type { TerrainStatus } from '../utils/terrain';
-import { RiskIcon } from './RiskIcon';
 import { cn } from '@/lib/utils';
 import type { SensorResponseDTO, FloodPointResponseDTO, PreciseDataResponse } from '../types';
 
@@ -414,7 +414,7 @@ export const MapView: React.FC = () => {
   }, [clickedLocation, selectedFloodPoint]);
 
   const circleColor = useMemo(() => {
-    if (clickedLocation) return "#6366f1"; // Primary color for clicked location
+    if (clickedLocation) return "#5cb8ff"; // Primary color for clicked location
     
     if (selectedFloodPoint) {
       // Prioritize the real-time status prediction, fallback to point prediction
@@ -422,7 +422,7 @@ export const MapView: React.FC = () => {
       return getRiskVisual(riskLevel).hex;
     }
     
-    return "#6366f1";
+    return "#5cb8ff";
   }, [clickedLocation, selectedFloodPoint, floodPointStatus]);
 
   const nearbySensorIds = useMemo(() => {
@@ -709,8 +709,7 @@ export const MapView: React.FC = () => {
             
             // Risk level color mapping
             const riskLevel = (isSelected && floodPointStatus?.floodPrediction?.riskLevel) || point.floodPrediction?.riskLevel;
-            const { bg: colorClass, ping: pingColorClass, label: riskLabel } = getRiskVisual(riskLevel);
-            const isUnknownRisk = !getRiskVisual(riskLevel).showsProbability;
+            const { label: riskLabel } = getRiskVisual(riskLevel);
 
             return (
               <MapMarker 
@@ -732,24 +731,14 @@ export const MapView: React.FC = () => {
                 label={`Ponto crítico ${point.name}: risco ${riskLabel}. Pressione Enter para abrir.`}
               >
                 <MarkerContent>
-                  <div className="relative group cursor-pointer flex flex-col items-center">
-                    <div className={cn(
-                      "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
-                      colorClass,
-                      isUnknownRisk && "border-dashed border-white/80",
-                      isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : ''
-                    )}>
-                      <div className="-rotate-45 flex items-center justify-center h-full w-full">
-                         <RiskIcon level={riskLevel} className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
-                    </div>
-
-                    {isSelected && (
-                      <div className="absolute -bottom-1 w-2 h-2 bg-white rounded-full blur-[2px] animate-pulse" />
-                    )}
-
-                    <div className={cn("absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none", pingColorClass)} />
+                  {/* Alvo de toque >= 44 px (marcador 32 px + 6 px de cada lado). */}
+                  <div className="group relative flex cursor-pointer flex-col items-center p-1.5">
+                    <RiskBadge
+                      level={riskLevel}
+                      variant="marker"
+                      pulse={riskLevel === 'HIGH'}
+                      className={cn('transition-transform duration-200 group-hover:scale-110', isSelected && 'scale-125 rounded-lg ring-2 ring-ring ring-offset-2 ring-offset-background')}
+                    />
                   </div>
                 </MarkerContent>
               </MapMarker>

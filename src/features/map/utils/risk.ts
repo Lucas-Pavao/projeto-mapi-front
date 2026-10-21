@@ -1,37 +1,41 @@
 import type { DegradationReason, ModelValidationStatus, RiskLevel } from '../schemas/floodPointResponse.schema';
 
-/** Visual de um nível de risco. UNKNOWN usa cinza neutro, fora da paleta de risco. */
+/**
+ * Visual de um nível de risco, em tokens do tema (theme.css). UNKNOWN usa cinza neutro, fora da
+ * paleta de risco. A escada vai do claro (baixo) ao escuro (alto): ícone e rótulo sempre juntos.
+ */
 export interface RiskVisual {
   label: string;
-  /** Cor hex (círculo do mapa). */
+  /** Preenchimento do nível (hex do tema; MapLibre não lê var()) e cor de ícone/texto sobre ele. */
   hex: string;
-  /** Marcador: fundo e anel de pulso. */
+  onHex: string;
+  /** Marcador/selo: preenchimento `risk-*`, ícone/texto `on-risk-*` e borda `risk-*-edge`. */
   bg: string;
+  /** Anel de pulso. */
   ping: string;
-  /** Texto/ícone, borda, fundo suave e cabeçalho (card de detalhe). */
+  /** Texto/ícone sobre superfície (`risk-*-text`), borda suave, fundos suaves e cabeçalho (card de detalhe). */
   text: string;
   border: string;
   softBg: string;
+  tint: string;
   header: string;
   shadow: string;
   /** false em UNKNOWN: nunca exibir porcentagem. */
   showsProbability: boolean;
 }
 
-const UNKNOWN_VISUAL: RiskVisual = { label: 'Previsão indisponível', hex: '#71717a', bg: 'bg-zinc-500', ping: 'bg-zinc-400', text: 'text-zinc-400', border: 'border-zinc-500/30', softBg: 'bg-zinc-500/5', header: 'bg-zinc-600/80', shadow: 'shadow-black/20', showsProbability: false };
+const UNKNOWN_VISUAL: RiskVisual = { label: 'Previsão indisponível', hex: '#8a9a9c', onHex: '#0a1419', bg: 'bg-risk-unknown text-on-risk-unknown border-risk-unknown-edge', ping: 'bg-risk-unknown-edge', text: 'text-risk-unknown-text', border: 'border-risk-unknown-edge/40', softBg: 'bg-risk-unknown/10', tint: 'bg-risk-unknown/20', header: 'bg-risk-unknown text-on-risk-unknown', shadow: 'shadow-elevation-raised', showsProbability: false };
 
 /** Único mapeamento risco→visual do app. `never` garante exaustividade em compilação. */
 export function getRiskVisual(level: RiskLevel | undefined | null): RiskVisual {
   const l: RiskLevel = level ?? 'UNKNOWN';
   switch (l) {
-    // Contraste (WCAG 1.4.11, F4-FRONT-01a): fundos de marcador escolhidos para ter >= 3:1 contra
-    // o ícone branco e contra o fundo #09090b; textos (text-*-500) já passam de 4,5:1.
     case 'HIGH':
-      return { label: 'Alto', hex: '#dc2626', bg: 'bg-red-600', ping: 'bg-red-400', text: 'text-red-500', border: 'border-red-500/30', softBg: 'bg-red-500/5', header: 'bg-red-600/80', shadow: 'shadow-red-500/20', showsProbability: true };
+      return { label: 'Alto', hex: '#d4373c', onHex: '#ffffff', bg: 'bg-risk-high text-on-risk-high border-risk-high-edge', ping: 'bg-risk-high-edge', text: 'text-risk-high-text', border: 'border-risk-high-edge/40', softBg: 'bg-risk-high/10', tint: 'bg-risk-high/20', header: 'bg-risk-high text-on-risk-high', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'MEDIUM':
-      return { label: 'Moderado', hex: '#d97706', bg: 'bg-amber-600', ping: 'bg-amber-400', text: 'text-amber-500', border: 'border-amber-500/30', softBg: 'bg-amber-500/5', header: 'bg-amber-600/80', shadow: 'shadow-amber-500/20', showsProbability: true };
+      return { label: 'Moderado', hex: '#f5a524', onHex: '#2a1a00', bg: 'bg-risk-moderate text-on-risk-moderate border-risk-moderate-edge', ping: 'bg-risk-moderate-edge', text: 'text-risk-moderate-text', border: 'border-risk-moderate-edge/40', softBg: 'bg-risk-moderate/10', tint: 'bg-risk-moderate/20', header: 'bg-risk-moderate text-on-risk-moderate', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'LOW':
-      return { label: 'Baixo', hex: '#059669', bg: 'bg-emerald-600', ping: 'bg-emerald-400', text: 'text-emerald-500', border: 'border-emerald-500/30', softBg: 'bg-emerald-500/5', header: 'bg-emerald-600/80', shadow: 'shadow-emerald-500/20', showsProbability: true };
+      return { label: 'Baixo', hex: '#9be7bd', onHex: '#0b2a1d', bg: 'bg-risk-low text-on-risk-low border-risk-low-edge', ping: 'bg-risk-low-edge', text: 'text-risk-low-text', border: 'border-risk-low-edge/40', softBg: 'bg-risk-low/10', tint: 'bg-risk-low/20', header: 'bg-risk-low text-on-risk-low', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'UNKNOWN':
       return UNKNOWN_VISUAL;
     default: {

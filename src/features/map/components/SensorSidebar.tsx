@@ -252,7 +252,7 @@ export const SensorSidebar: React.FC<SensorSidebarProps> = ({
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5" aria-label={`Risco: ${risk.label}`}>
                     <span className={cn("text-2xs font-black uppercase tracking-widest", risk.text)}>{risk.label}</span>
-                    <span className={cn("h-7 w-7 rounded flex items-center justify-center text-white", risk.bg, riskLevel == null || riskLevel === 'UNKNOWN' ? "border-2 border-dashed border-white/70" : "")}>
+                    <span className={cn("h-7 w-7 rounded border-2 flex items-center justify-center", risk.bg, riskLevel == null || riskLevel === 'UNKNOWN' ? "border-dashed" : "")}>
                       <RiskIcon level={riskLevel} className="h-3.5 w-3.5" />
                     </span>
                   </div>
