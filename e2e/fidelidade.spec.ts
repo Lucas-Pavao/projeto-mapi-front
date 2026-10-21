@@ -123,3 +123,25 @@ for (const tema of ['dark', 'light'] as const) {
     await fim();
   });
 }
+
+// ---------- Relatos ----------
+const rel = (id: number, slug: string | null, d: number | null, depth: string | null, desc: string, min: number) => ({ id, latitude: -8.0521, longitude: -34.8951, observedAt: ago(min), waterDepth: depth, description: desc, status: 'PENDING', nearestPointSlug: slug, nearestPointDistanceM: d, createdAt: ago(min - 2) });
+const RELATOS_F = [
+  rel(1042, 'agamenon-derby', 120, 'ANKLE', 'Água cobrindo a faixa da direita perto do Derby, carros passando devagar.', 30),
+  rel(1043, 'mascarenhas', 69, 'KNEE', 'Trecho em frente ao shopping alagado, desvio pela lateral.', 20),
+  rel(1044, 'cin-ufpe', 210, null, 'Choveu forte mas a rua do CIn está escoando normal.', 10),
+  rel(1045, 'av-recife-ibura', 95, 'ANKLE', 'Começando a acumular na entrada do Ibura.', 5),
+];
+for (const tema of ['dark', 'light'] as const) {
+  test(`fidelidade relatos ${tema}`, async ({ page }) => {
+    const fim = await capturar(page, '11-relatos', tema, { role: 'OPERADOR', routes: {
+      'GET /api/pontos': () => PONTOS,
+      'GET /api/pontos/:slug': ({ url }) => ({ ...DETALHE, slug: url.pathname.split('/').pop() }),
+      'GET /api/reports': () => ({ page: 0, size: 100, totalElements: 4, content: RELATOS_F }),
+    } }, '/relatos');
+    await fim();
+    await page.getByRole('button', { name: /Relato #1043/ }).click();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `test-results/fidelidade/11-relatos-sel-${tema}.png` });
+  });
+}

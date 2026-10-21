@@ -5,7 +5,7 @@ import type { ReportReview } from '../schemas/report.schema';
 export const REPORTS_KEY = ['reports'] as const;
 
 export const useReports = (status: ReportStatusFilter = 'PENDING', page = 0, size = 20) =>
-  useQuery({ queryKey: [...REPORTS_KEY, status, page, size], queryFn: () => reportsService.list(status, page, size), placeholderData: keepPreviousData });
+  useQuery({ queryKey: [...REPORTS_KEY, status, page, size], queryFn: () => reportsService.list(status, page, size), placeholderData: keepPreviousData, refetchInterval: 30_000 });
 
 /** Confirmar ou descartar. Mesmo com erro (ex.: 409, já revisado) a fila é revalidada. */
 export function useReviewReport() {
