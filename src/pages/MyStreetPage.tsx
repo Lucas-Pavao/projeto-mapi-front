@@ -3,7 +3,6 @@ import { Loader2, LocateFixed, MapPin } from 'lucide-react';
 import type { MapMouseEvent } from 'maplibre-gl';
 import { Map, MapMarker, MarkerContent, useMap } from '@/components/ui/map';
 import { useTheme } from '@/hooks/useTheme';
-import { PageShell } from '@/components/layout/PageShell';
 import { EmptyState } from '@/components/ui/query-state';
 import { Button } from '@/components/ui/button';
 import { usePublicRisk, type Coord } from '@/features/public-risk/hooks/usePublicRisk';
@@ -82,16 +81,44 @@ export const MyStreetPage: React.FC = () => {
   const busy = locating || (coord !== null && query.isFetching && !query.data);
 
   return (
-    <PageShell title="Minha rua" description="Veja o risco de alagamento perto de você. Não precisa de login e não guardamos a sua posição.">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" className="h-11 gap-2 px-4" onClick={locate} disabled={busy}>
-          {busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <LocateFixed className="size-4" aria-hidden="true" />}
-          {locating ? 'Buscando sua posição…' : coord ? 'Atualizar minha localização' : 'Usar minha localização'}
-        </Button>
-        <p className="text-caption text-muted-foreground">Enviamos só uma posição aproximada (cerca de 100 m).</p>
+    <div className="grid min-h-[calc(100dvh-60px)] w-full grid-cols-1 lg:grid-cols-[640px_minmax(0,1fr)]">
+      <div className="flex min-w-0 flex-col gap-[22px] border-border bg-background px-4 py-6 sm:px-8 lg:border-r lg:px-12 lg:py-10">
+        <div>
+          <h1 className="m-0 text-[32px] leading-9 font-extrabold tracking-[-0.02em] text-foreground lg:text-[40px] lg:leading-[44px]">Minha rua pode alagar?</h1>
+          <p className="mt-2.5 mb-0 text-base leading-6 text-muted-foreground">Escolha um local no mapa ou use a sua localização. Mostramos a chuva e a previsão do ponto monitorado mais perto. Não precisa de login e não guardamos a sua posição.</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button type="button" className="h-12 w-full gap-2 rounded-[10px] text-sm font-bold" onClick={locate} disabled={busy}>
+            {busy ? <Loader2 className="size-[18px] animate-spin" aria-hidden="true" /> : <LocateFixed className="size-[18px]" aria-hidden="true" />}
+            {locating ? 'Buscando sua posição…' : coord ? 'Atualizar minha localização' : 'Usar minha localização'}
+          </Button>
+          <p className="m-0 text-xs text-muted-foreground">Enviamos só uma posição aproximada (cerca de 100 m). Sem busca por endereço: toque no mapa para escolher o local.</p>
+        </div>
+        {outside && <p role="alert" className="m-0 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-body text-destructive">{OUTSIDE_TEXT}</p>}
+        {geoError && <p role="alert" className="m-0 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-body text-destructive">{geoFailureText(geoError)}</p>}
+
+        {coord === null ? (
+          <>
+            <EmptyState title="Informe onde você está." hint="Usamos sua posição só para buscar o ponto crítico mais próximo." />
+            <p role="note" className="m-0 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[13px] leading-[18px] text-warning">{PUBLIC_WARNING}</p>
+          </>
+        ) : query.isPending ? (
+          <div role="status" className="flex min-h-40 items-center justify-center gap-2 rounded-2xl border border-border bg-card text-body text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Consultando o risco perto de você…
+          </div>
+        ) : query.isError ? (
+          <div role="alert" className="flex flex-col items-start gap-2 rounded-2xl border border-border bg-card p-4">
+            <p className="m-0 text-body-strong text-foreground">{errorText(query.error)}</p>
+            {![422, 429].includes(httpStatus(query.error) ?? 0) && <Button type="button" variant="outline" className="h-11 px-4" onClick={() => void query.refetch()}>Tentar de novo</Button>}
+          </div>
+        ) : (
+          <PublicRiskResult risk={query.data} />
+        )}
+        <p className="mt-auto mb-0 text-xs leading-[18px] text-muted-foreground">Dados: APAC, Cemaden, ANA, Open-Meteo e Marinha. O MAPi é um projeto de pesquisa do CIn/UFPE e não substitui os avisos oficiais da Defesa Civil.</p>
       </div>
-      <section aria-label="Mapa para escolher o local" className="flex flex-col gap-1">
-        <div className="relative h-72 overflow-hidden rounded-xl border border-border sm:h-96">
+
+      <section aria-label="Mapa para escolher o local" className="relative min-h-[360px]">
+        <div className="absolute inset-0">
           <Map theme={theme} center={[-34.877, -8.057]} zoom={11} onClick={onMapClick}>
             <FlyToChoice target={flyTo} />
             {coord && (
@@ -105,29 +132,9 @@ export const MyStreetPage: React.FC = () => {
             )}
           </Map>
         </div>
-        <p className="text-caption text-muted-foreground">Toque no mapa para escolher o local, ou use a sua localização. Sem busca por endereço.</p>
+        <p className="pointer-events-none absolute bottom-3 left-3 m-0 rounded-md bg-popover px-2.5 py-1 text-xs text-foreground shadow-elevation-raised">Toque no mapa para escolher o local.</p>
       </section>
-      {outside && <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-body text-destructive">{OUTSIDE_TEXT}</p>}
-      {geoError && <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-body text-destructive">{geoFailureText(geoError)}</p>}
-
-      {coord === null ? (
-        <>
-          <EmptyState title="Informe onde você está." hint="Usamos sua posição só para buscar o ponto crítico mais próximo." />
-          <p role="note" className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-body text-warning">{PUBLIC_WARNING}</p>
-        </>
-      ) : query.isPending ? (
-        <div role="status" className="flex min-h-40 items-center justify-center gap-2 rounded-xl border border-border bg-card text-body text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" aria-hidden="true" /> Consultando o risco perto de você…
-        </div>
-      ) : query.isError ? (
-        <div role="alert" className="flex flex-col items-start gap-2 rounded-xl border border-border bg-card p-4">
-          <p className="text-body-strong text-foreground">{errorText(query.error)}</p>
-          {![422, 429].includes(httpStatus(query.error) ?? 0) && <Button type="button" variant="outline" className="h-11 px-4" onClick={() => void query.refetch()}>Tentar de novo</Button>}
-        </div>
-      ) : (
-        <PublicRiskResult risk={query.data} />
-      )}
-    </PageShell>
+    </div>
   );
 };
 export default MyStreetPage;

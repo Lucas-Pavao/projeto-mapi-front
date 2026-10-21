@@ -79,6 +79,16 @@ const USUARIOS_PROTO = [
 ];
 
 const TELAS: Tela[] = [
+  {
+    id: '14-minha-rua', path: '/minha-rua', espera: 2500,
+    api: { role: null, routes: { 'GET /api/public/risk': () => ({ nearestPoint: { slug: 'sintetico-alto', name: 'Sintético: ponto alto', distanceM: 300, riskLevel: 'HIGH', issuedAt: new Date().toISOString(), validUntil: null, degradationReason: null }, rainLastHourMm: 4.7, rainStationId: 'SINTETICO-PLUV-01', modelValidationStatus: 'NOT_VALIDATED', meaning: 'Alta probabilidade. Evite passar pelo local e acompanhe os avisos da Defesa Civil.' }) } },
+    antes: async (page) => {
+      await page.context().grantPermissions(['geolocation']);
+      await page.context().setGeolocation({ latitude: -8.057384, longitude: -34.877199 });
+      await page.getByRole('button', { name: 'Usar minha localização' }).click();
+      await page.getByRole('region', { name: 'Risco perto de você' }).waitFor();
+    },
+  },
   { id: '13-usuarios', path: '/admin/usuarios', api: { routes: { 'GET /api/admin/users': () => ({ page: 0, size: 20, totalElements: 6, content: USUARIOS_PROTO }) } } },
   { id: '10-pontos', espera: 2500, path: '/admin/pontos', api: { routes: { 'GET /api/pontos': () => PONTOS_PROTO } } },
   {
