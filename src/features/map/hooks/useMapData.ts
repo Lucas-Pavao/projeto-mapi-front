@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sensorService } from '../services/sensor.service';
 import { floodService } from '../services/flood.service';
+import { applyPredictionToPoint } from '@/features/points/utils/livePrediction';
+import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
 export const useMapData = (pollingInterval = 30000) => {
@@ -34,6 +36,14 @@ export const useMapData = (pollingInterval = 30000) => {
     }
   }, []);
 
+  /** Previsão chegada pelo stream (ADR 0012): atualiza o ponto se for mais nova que a da lista. */
+  const applyPrediction = useCallback((p: PredictionSummary) => {
+    setFloodPoints((prev) => {
+      const next = prev.map((pt) => applyPredictionToPoint(pt, p));
+      return next.some((pt, i) => pt !== prev[i]) ? next : prev;
+    });
+  }, []);
+
   useEffect(() => {
     // Initial fetch
     const initFetch = async () => {
@@ -46,5 +56,5 @@ export const useMapData = (pollingInterval = 30000) => {
     return () => clearInterval(interval);
   }, [pollingInterval, fetchData]);
 
-  return { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch: fetchData };
+  return { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch: fetchData, applyPrediction };
 };

@@ -18,6 +18,9 @@ import { useFloodPointStatus } from '../hooks/useFloodPointStatus';
 import { useFloodReporting } from '../hooks/useFloodReporting';
 import { useMapEscape } from '../hooks/useMapEscape';
 import { useMapSheetFocus } from '../hooks/useMapSheetFocus';
+import { useMapLive } from '../hooks/useMapLive';
+import { hasRole, parseRole } from '@/lib/roles';
+import { RiskSummaryBar } from '@/components/risk/RiskSummaryBar';
 import { useNotices } from '@/hooks/useNotices';
 import { NoticeRegion } from '@/components/ui/notice-region';
 import { deriveApiStatus } from '../utils/apiStatus';
@@ -52,7 +55,7 @@ export const MapView: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-  const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch } = useMapData();
+  const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch, applyPrediction } = useMapData();
   const apiStatus = deriveApiStatus({ isLoading, hasError });
   const { notices, notify, dismiss } = useNotices();
   const {
@@ -142,11 +145,11 @@ export const MapView: React.FC = () => {
     [locationInfo, floodPointStatus, selectedFloodPoint, sensorStatus],
   );
 
-  // Pulso: hoje só HIGH; a F3 troca por "ponto com alerta ativo" (ADR 0011).
-  const alertSlugs = useMemo(
-    () => new Set(floodPoints.filter((p) => p.floodPrediction?.riskLevel === 'HIGH').map((p) => p.slug)),
-    [floodPoints],
-  );
+  // Ao vivo (ADR 0012): contagem por risco e previsões novas; o pulso do marcador segue o alerta ativo (ADR 0011).
+  const { riskSummary, riskSummaryFailed, liveStatus, alertSlugs } = useMapLive({
+    applyPrediction,
+    canSeeAlerts: hasRole(parseRole(user?.role), 'OPERADOR'),
+  });
 
   const selectSensor = useCallback(
     (sensor: SensorResponseDTO) => {
@@ -165,11 +168,12 @@ export const MapView: React.FC = () => {
 
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
-      {/* Estado da conexão com os dados (marca e relógio ficam na Nav) */}
-      <div className="absolute top-4 left-4 z-40 pointer-events-auto">
-        <div className="flex h-8 items-center rounded-full border border-border bg-card px-3 shadow-elevation-raised">
+      {/* Estado da conexão com os dados e contagem por risco (marca e relógio ficam na Nav) */}
+      <div className="absolute top-4 left-4 right-4 z-40 flex flex-wrap items-center gap-2 pointer-events-none md:right-[21rem]">
+        <div className="pointer-events-auto flex h-8 items-center rounded-full border border-border bg-card px-3 shadow-elevation-raised">
           <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
         </div>
+        <RiskSummaryBar summary={riskSummary} failed={riskSummaryFailed} liveStatus={liveStatus} className="pointer-events-auto" />
       </div>
 
       <MapUserIsland username={user?.username} onLogout={logout} />

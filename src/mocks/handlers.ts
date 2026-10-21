@@ -12,8 +12,8 @@ const sse = (event: string, data: unknown, id: number) => `id: ${id}\nevent: ${e
  * Stream SSE sintético: risk-summary na abertura e heartbeat a cada `heartbeatMs`. `maxBeats`
  * limita os heartbeats (testes); sem limite o fluxo fica aberto até o cliente fechar.
  */
-export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: number } = {}) {
-  const { heartbeatMs = 25_000, maxBeats = Infinity } = opts;
+export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: number; extra?: Array<{ event: string; data: unknown }>; extraDelayMs?: number } = {}) {
+  const { heartbeatMs = 25_000, maxBeats = Infinity, extra = [], extraDelayMs = 0 } = opts;
   return http.get('/api/stream', () => {
     const enc = new TextEncoder();
     let timer: ReturnType<typeof setInterval> | undefined;
@@ -21,6 +21,12 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
       start(ctrl) {
         let id = 1;
         ctrl.enqueue(enc.encode(sse('risk-summary', d.riskSummary(), id++)));
+        // `extra`: eventos de teste; com extraDelayMs saem depois da abertura (tela já carregada).
+        const sendExtra = () => {
+          for (const e of extra) ctrl.enqueue(enc.encode(sse(e.event, e.data, id++)));
+        };
+        if (extraDelayMs > 0) setTimeout(() => { try { sendExtra(); } catch { /* stream já fechado */ } }, extraDelayMs);
+        else sendExtra();
         ctrl.enqueue(enc.encode(sse('heartbeat', { at: new Date().toISOString() }, id++)));
         let beats = 1;
         timer = setInterval(() => {

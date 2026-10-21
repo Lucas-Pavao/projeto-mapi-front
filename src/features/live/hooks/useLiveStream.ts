@@ -11,9 +11,13 @@ interface Options {
 
 class FatalStreamError extends Error {}
 
+const BACKOFF_START_MS = 1000;
+const BACKOFF_MAX_MS = 30_000;
+
 /**
  * Conecta ao /api/stream (SSE, ADR 0012) com cookie de sessão. Reconecta sozinho (a biblioteca
- * reenvia Last-Event-ID); 401/403/429 encerram sem insistir. Ainda não é usado pelas telas (F3).
+ * reenvia Last-Event-ID) com espera crescente (1 s até 30 s); 401/403/429 encerram sem insistir.
+ * Usado pelo Mapa (risk-summary, prediction) e por Alertas (alert).
  */
 export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
   const [status, setStatus] = useState<LiveStatus>('closed');
@@ -26,6 +30,7 @@ export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
   useEffect(() => {
     if (!enabled) return;
     const ctrl = new AbortController();
+    let retryMs = BACKOFF_START_MS;
     queueMicrotask(() => {
       if (!ctrl.signal.aborted) setStatus('connecting');
     });
@@ -36,6 +41,7 @@ export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
       async onopen(res) {
         if (res.ok && res.headers.get('content-type')?.startsWith('text/event-stream')) {
           setStatus('open');
+          retryMs = BACKOFF_START_MS;
           return;
         }
         if ([401, 403, 429].includes(res.status)) throw new FatalStreamError(`stream ${res.status}`);
@@ -53,6 +59,10 @@ export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
       onerror(err) {
         setStatus('error');
         if (err instanceof FatalStreamError) throw err;
+        // Devolver um número troca o intervalo de nova tentativa da biblioteca.
+        const wait = retryMs;
+        retryMs = Math.min(retryMs * 2, BACKOFF_MAX_MS);
+        return wait;
       },
     }).catch(() => {
       if (!ctrl.signal.aborted) setStatus('error');

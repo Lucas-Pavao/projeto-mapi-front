@@ -31,18 +31,12 @@ describe('FloodPointMarkers', () => {
     expect(container.querySelectorAll('.animate-ping')).toHaveLength(1);
   });
 
-  it('ao vivo e seleção têm prioridade sobre a lista', () => {
+  it('o risco do status em tempo real do ponto selecionado vence o da lista', () => {
     render(
-      <FloodPointMarkers
-        points={[pt(1, 'a', 'LOW'), pt(2, 'b', 'LOW')]}
-        selectedFloodPointId={2}
-        selectedRisk="HIGH"
-        liveRiskBySlug={new Map([['a', 'UNKNOWN' as const]])}
-        onSelect={() => {}}
-      />,
+      <FloodPointMarkers points={[pt(1, 'a', 'LOW'), pt(2, 'b', 'LOW')]} selectedFloodPointId={2} selectedRisk="HIGH" onSelect={() => {}} />,
     );
-    expect(screen.getByRole('img', { name: 'Risco Previsão indisponível' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Risco Alto' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Risco Baixo' })).toBeInTheDocument();
   });
 
   it('clique seleciona o ponto', () => {

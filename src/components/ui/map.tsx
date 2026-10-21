@@ -492,6 +492,12 @@ function MapMarker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marker]);
 
+  // O rótulo muda com o dado (ex.: risco do ponto via stream): mantém o nome acessível em dia.
+  useEffect(() => {
+    const element = marker.getElement();
+    if (element && label && element.getAttribute("role") === "button") element.setAttribute("aria-label", label);
+  }, [marker, label]);
+
   useEffect(() => {
     if (!map) return;
 

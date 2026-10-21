@@ -11,19 +11,17 @@ interface Props {
   selectedFloodPointId: number | undefined;
   /** Risco do ponto selecionado vindo do status em tempo real (tem prioridade sobre a lista). */
   selectedRisk: RiskLevel | undefined;
-  /** Risco mais recente por slug (stream ao vivo); tem prioridade sobre o da lista. */
-  liveRiskBySlug?: ReadonlyMap<string, RiskLevel>;
   /** Slugs com alerta ativo: só esses pulsam (ADR 0011). */
   alertSlugs?: ReadonlySet<string>;
   onSelect: (point: FloodPointResponseDTO) => void;
 }
 
 /** Marcadores dos pontos críticos: RiskBadge (ícone + rótulo) e pulso só com alerta ativo. */
-export const FloodPointMarkers: React.FC<Props> = ({ points, selectedFloodPointId, selectedRisk, liveRiskBySlug, alertSlugs, onSelect }) => (
+export const FloodPointMarkers: React.FC<Props> = ({ points, selectedFloodPointId, selectedRisk, alertSlugs, onSelect }) => (
   <>
     {points.map((point) => {
       const isSelected = selectedFloodPointId === point.id;
-      const riskLevel = (isSelected && selectedRisk) || liveRiskBySlug?.get(point.slug) || point.floodPrediction?.riskLevel;
+      const riskLevel = (isSelected && selectedRisk) || point.floodPrediction?.riskLevel;
       const { label: riskLabel } = getRiskVisual(riskLevel);
       const hasAlert = alertSlugs?.has(point.slug) ?? false;
 
