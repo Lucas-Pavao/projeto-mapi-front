@@ -51,7 +51,6 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
 export const handlers = [
   liveStreamHandler(),
   http.get('/api/pontos', () => HttpResponse.json(d.points)),
-  http.get('/api/auth/me', () => HttpResponse.json({ username: 'sintetico.admin', role: 'ADMIN' })),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),
 
   http.get('/api/pontos/station-suggestions', () =>
