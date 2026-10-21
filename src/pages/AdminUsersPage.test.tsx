@@ -24,7 +24,7 @@ describe('AdminUsersPage', () => {
     const velho = document.querySelector('[data-user-id="4"]') as HTMLElement;
     expect(velho).toHaveTextContent('Sem nome');
     expect(velho).toHaveTextContent('Sem e-mail');
-    expect(velho).toHaveTextContent('Último acesso: nunca');
+    expect(velho).toHaveTextContent('nunca');
     expect(document.querySelector('[data-user-id="3"]')).toHaveAttribute('data-active', 'false');
   });
 

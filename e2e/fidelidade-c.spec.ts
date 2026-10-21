@@ -69,7 +69,17 @@ const PONTOS_PROTO = ['AGAMENON_DERBY|Av. Agamenon Magalhães (Derby)|Recife|-8.
   return { id: i + 1, slug, name, municipality, description: 'Maré bloqueando a saída da galeria', latitude: Number(la), longitude: Number(lo), altitudeM: 2.9, distanceToChannelM: 60, basinName: null, sensorConfig: { pluviometerStationIds: i < 3 ? ['A'] : [], riverLevelStationIds: i === 4 ? ['R'] : [] }, active: true, tideHeight: null, tideUnit: null };
 });
 
+const USUARIOS_PROTO = [
+  { id: 1, name: 'Operador local', email: 'admin@bootstrap.local', role: 'ADMIN', active: true, lastLoginAt: agoMin(0) },
+  { id: 2, name: 'Plantão Defesa Civil 1', email: 'plantao1@defesacivil.recife.pe.gov.br', role: 'OPERADOR', active: true, lastLoginAt: agoMin(2) },
+  { id: 3, name: 'Plantão Defesa Civil 2', email: 'plantao2@defesacivil.recife.pe.gov.br', role: 'OPERADOR', active: false, lastLoginAt: agoMin(340) },
+  { id: 4, name: 'COMDEC Jaboatão', email: 'comdec@jaboatao.pe.gov.br', role: 'USER', active: false, lastLoginAt: agoMin(1500) },
+  { id: 5, name: 'Orientador', email: 'orientador@cin.ufpe.br', role: 'USER', active: false, lastLoginAt: agoMin(4300) },
+  { id: 6, name: 'Pesquisa MAPi', email: 'pesquisa@cin.ufpe.br', role: 'USER', active: true, lastLoginAt: agoMin(12) },
+];
+
 const TELAS: Tela[] = [
+  { id: '13-usuarios', path: '/admin/usuarios', api: { routes: { 'GET /api/admin/users': () => ({ page: 0, size: 20, totalElements: 6, content: USUARIOS_PROTO }) } } },
   { id: '10-pontos', espera: 2500, path: '/admin/pontos', api: { routes: { 'GET /api/pontos': () => PONTOS_PROTO } } },
   {
     id: '09-dados', path: '/admin/dados',
