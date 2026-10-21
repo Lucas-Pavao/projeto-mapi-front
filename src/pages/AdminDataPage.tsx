@@ -16,10 +16,10 @@ export const AdminDataPage: React.FC = () => {
           <ul className="grid gap-2 sm:grid-cols-2">
             {items.map((s) => (
               <li key={s.source} className="rounded-xl border border-border bg-card p-4">
-                <p className="font-mono text-sm font-bold text-foreground">{s.source}</p>
-                <p className="text-sm text-foreground">{STATUS_LABEL[s.status]}</p>
-                <p className="text-xs text-muted-foreground">Último sucesso: {formatRecife(s.lastSuccessAt) ?? 'nunca'}</p>
-                {s.lastError && <p className="text-xs text-destructive">{s.lastError}</p>}
+                <p className="text-reading text-foreground">{s.source}</p>
+                <p className="text-body text-foreground">{STATUS_LABEL[s.status]}</p>
+                <p className="text-caption text-muted-foreground">Último sucesso: {formatRecife(s.lastSuccessAt) ?? 'nunca'}</p>
+                {s.lastError && <p className="text-caption text-destructive">{s.lastError}</p>}
               </li>
             ))}
           </ul>

@@ -14,8 +14,8 @@ export const AdminPointsPage: React.FC = () => {
             {points.map((p) => (
               <li key={p.id}>
                 <Link to={`/pontos/${p.slug}`} className="flex min-h-11 flex-col justify-center rounded-xl border border-border bg-card p-4 hover:bg-muted">
-                  <span className="font-bold text-foreground">{p.name}</span>
-                  <span className="text-xs text-muted-foreground">{p.municipality ?? 'Município não informado'} · {p.active ? 'ativo' : 'inativo'}</span>
+                  <span className="text-body-strong text-foreground">{p.name}</span>
+                  <span className="text-caption text-muted-foreground">{p.municipality ?? 'Município não informado'} · {p.active ? 'ativo' : 'inativo'}</span>
                 </Link>
               </li>
             ))}

@@ -18,7 +18,7 @@ export const PointPage: React.FC = () => {
           <ul className="space-y-2">
             {d.items.map((p) => (
               <li key={p.issuedAt} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3">
-                <span className="font-mono text-sm text-foreground">{formatRecife(p.issuedAt)}</span>
+                <span className="text-reading text-foreground">{formatRecife(p.issuedAt)}</span>
                 <RiskBadge level={p.riskLevel} probability={p.probability} />
                 {showsExperimentalLabel(p) && <ExperimentalBadge />}
               </li>

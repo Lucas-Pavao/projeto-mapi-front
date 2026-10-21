@@ -15,8 +15,8 @@ export const LoginPage: React.FC = () => {
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-elevation-overlay">
           <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-foreground">Entrar na plataforma</h2>
-            <p className="text-sm text-muted-foreground mt-2">
+            <h2 className="text-xl text-body-strong text-foreground">Entrar na plataforma</h2>
+            <p className="text-body text-muted-foreground mt-2">
               Insira suas credenciais para acessar o mapa
             </p>
           </div>
@@ -24,7 +24,7 @@ export const LoginPage: React.FC = () => {
           <LoginForm />
         </div>
         
-        <p className="text-center text-xs text-muted-foreground pt-4">
+        <p className="text-center text-caption text-muted-foreground pt-4">
           &copy; {new Date().getFullYear()} MAPi. Todos os direitos reservados.
         </p>
       </div>

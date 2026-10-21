@@ -27,17 +27,17 @@ export const MyStreetPage: React.FC = () => {
   return (
     <PageShell title="Minha rua" description="Veja o risco de alagamento perto de você. Não precisa de login.">
       <Button type="button" className="h-11 w-fit px-4" onClick={locate}>Usar minha localização</Button>
-      {geoError && <p role="alert" className="text-sm text-destructive">{geoError}</p>}
+      {geoError && <p role="alert" className="text-body text-destructive">{geoError}</p>}
       {coord === null ? (
         <EmptyState title="Informe onde você está." hint="Usamos sua posição só para buscar o ponto crítico mais próximo." />
       ) : (
         <QueryState query={query} what="o risco perto de você" isEmpty={(d) => d.nearestPoint === null} emptyTitle="Nenhum ponto monitorado a menos de 1 km." emptyHint="Isto não significa risco baixo: sem ponto por perto, o MAPi não tem previsão para este local.">
           {(r) => (
             <section className="space-y-3 rounded-xl border border-border bg-card p-4" aria-label="Risco perto de você">
-              <p className="text-base font-bold text-foreground">{r.nearestPoint?.name} · a cerca de {r.nearestPoint?.distanceM} m</p>
+              <p className="text-title text-foreground">{r.nearestPoint?.name} · a cerca de {r.nearestPoint?.distanceM} m</p>
               <RiskBadge level={r.nearestPoint?.riskLevel} />
               {showsExperimentalLabel({ riskLevel: r.nearestPoint?.riskLevel, modelValidationStatus: r.modelValidationStatus }) && <ExperimentalBadge />}
-              <p className="text-sm text-muted-foreground">{r.meaning}</p>
+              <p className="text-body text-muted-foreground">{r.meaning}</p>
             </section>
           )}
         </QueryState>

@@ -22,8 +22,8 @@ export const EventsPage: React.FC = () => {
               ['Eventos de alagamento', t.floodEvents?.length ?? 0],
             ].map(([label, n]) => (
               <div key={label} className="rounded-xl border border-border bg-card p-4">
-                <dt className="text-xs text-muted-foreground">{label}</dt>
-                <dd className="font-mono text-2xl font-semibold text-foreground">{n}</dd>
+                <dt className="text-caption text-muted-foreground">{label}</dt>
+                <dd className="text-reading-lg text-foreground">{n}</dd>
               </div>
             ))}
           </dl>

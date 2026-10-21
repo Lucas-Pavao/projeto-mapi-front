@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AppLayout } from '@/components/layout/AppLayout';
+import { RequireRole } from '@/components/layout/RequireRole';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 
 // Code-splitting: MapPage puxa maplibre-gl/react-map-gl (biblioteca pesada) e não deveria
@@ -72,16 +73,20 @@ function App() {
                   />
                   <Route path="/pontos/:slug" element={<PointPage />} />
                   <Route path="/sensores" element={<SensorsPage />} />
-                  <Route path="/alertas" element={<AlertsPage />} />
                   <Route path="/eventos" element={<EventsPage />} />
                   <Route path="/modelo" element={<ModelPage />} />
                   <Route path="/modelo/simulador" element={<SimulatorPage />} />
                   <Route path="/mare" element={<TidePage />} />
-                  <Route path="/admin/dados" element={<AdminDataPage />} />
-                  <Route path="/admin/pontos" element={<AdminPointsPage />} />
-                  <Route path="/relatos" element={<ReportsPage />} />
                   <Route path="/relatorio" element={<ReportPage />} />
-                  <Route path="/admin/usuarios" element={<AdminUsersPage />} />
+                  <Route element={<RequireRole min="OPERADOR" />}>
+                    <Route path="/alertas" element={<AlertsPage />} />
+                    <Route path="/relatos" element={<ReportsPage />} />
+                  </Route>
+                  <Route element={<RequireRole min="ADMIN" />}>
+                    <Route path="/admin/dados" element={<AdminDataPage />} />
+                    <Route path="/admin/pontos" element={<AdminPointsPage />} />
+                    <Route path="/admin/usuarios" element={<AdminUsersPage />} />
+                  </Route>
                 </Route>
                 <Route path="/" element={<Navigate to="/map" />} />
                 <Route path="*" element={<Navigate to="/map" />} />

@@ -14,8 +14,8 @@ export const PageShell: React.FC<PageShellProps> = ({ title, description, action
   <div className={cn('mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-6', className)}>
     <header className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold leading-[30px] tracking-tight text-foreground">{title}</h1>
-        {description && <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>}
+        <h1 className="text-title-lg text-foreground">{title}</h1>
+        {description && <p className="mt-1 max-w-prose text-body text-muted-foreground">{description}</p>}
       </div>
       {actions}
     </header>

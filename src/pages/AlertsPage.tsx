@@ -17,9 +17,9 @@ export const AlertsPage: React.FC = () => {
             {page.content.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4">
                 <div className="min-w-0 flex-1">
-                  <p className="text-base font-bold text-foreground">{a.title}</p>
-                  {a.detail && <p className="text-sm text-muted-foreground">{a.detail}</p>}
-                  <p className="mt-1 text-xs text-muted-foreground">Disparado às {formatRecife(a.triggeredAt) ?? '—'}</p>
+                  <p className="text-title text-foreground">{a.title}</p>
+                  {a.detail && <p className="text-body text-muted-foreground">{a.detail}</p>}
+                  <p className="mt-1 text-caption text-muted-foreground">Disparado às {formatRecife(a.triggeredAt) ?? '—'}</p>
                 </div>
                 {a.riskLevel && (
                   <div className="flex flex-col items-start gap-1">

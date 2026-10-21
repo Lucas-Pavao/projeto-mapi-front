@@ -11,12 +11,12 @@ export const AdminUsersPage: React.FC = () => {
         {(page) => (
           <ul className="space-y-2">
             {page.content.map((u) => (
-              <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-4 text-sm">
+              <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-4 text-body">
                 <span className="min-w-0">
-                  <span className="block font-bold text-foreground">{u.name ?? u.email}</span>
-                  <span className="block text-xs text-muted-foreground">{u.email}</span>
+                  <span className="block text-body-strong text-foreground">{u.name ?? u.email}</span>
+                  <span className="block text-caption text-muted-foreground">{u.email}</span>
                 </span>
-                <span className="font-mono text-xs text-foreground">{u.role}{u.active ? '' : ' · inativo'}</span>
+                <span className="text-code text-foreground">{u.role}{u.active ? '' : ' · inativo'}</span>
               </li>
             ))}
           </ul>

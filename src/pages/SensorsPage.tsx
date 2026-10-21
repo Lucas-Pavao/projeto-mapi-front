@@ -15,10 +15,10 @@ export const SensorsPage: React.FC = () => {
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {items.map((s) => (
               <li key={s.sensorId} className="rounded-xl border border-border bg-card p-4">
-                <p className="font-mono text-xs text-muted-foreground">{s.sensorId}</p>
-                <p className="text-sm font-semibold text-foreground">{TYPE_LABEL[s.type]}</p>
-                <p className="font-mono text-2xl font-semibold text-foreground">{s.value != null ? s.value.toLocaleString('pt-BR') : '—'}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-code text-muted-foreground">{s.sensorId}</p>
+                <p className="text-body-strong text-foreground">{TYPE_LABEL[s.type]}</p>
+                <p className="text-reading-lg text-foreground">{s.value != null ? s.value.toLocaleString('pt-BR') : '—'}</p>
+                <p className="text-caption text-muted-foreground">
                   Atualizado às {formatRecife(s.observedAt) ?? '—'}
                   {s.stale && <span className="ml-2 font-bold text-warning">Sem leitura recente</span>}
                 </p>

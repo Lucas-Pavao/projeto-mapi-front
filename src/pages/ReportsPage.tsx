@@ -12,8 +12,8 @@ export const ReportsPage: React.FC = () => {
         {(page) => (
           <ul className="space-y-2">
             {page.content.map((r) => (
-              <li key={r.id} className="rounded-xl border border-border bg-card p-4 text-sm">
-                <p className="font-bold text-foreground">Relato #{r.id} · {formatRecife(r.observedAt)}</p>
+              <li key={r.id} className="rounded-xl border border-border bg-card p-4 text-body">
+                <p className="text-body-strong text-foreground">Relato #{r.id} · {formatRecife(r.observedAt)}</p>
                 <p className="text-muted-foreground">
                   {r.nearestPointSlug ? `Ponto mais próximo: ${r.nearestPointSlug} (${r.nearestPointDistanceM ?? '—'} m)` : 'Sem ponto próximo'}
                 </p>

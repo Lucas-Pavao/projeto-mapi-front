@@ -28,7 +28,7 @@ export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, chi
     return (
       <div role="status" className={box}>
         <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm text-muted-foreground">Carregando {what}…</p>
+        <p className="text-body text-muted-foreground">Carregando {what}…</p>
       </div>
     );
   }
@@ -36,8 +36,8 @@ export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, chi
     return (
       <div role="alert" className={box}>
         <CircleAlert className="size-5 text-destructive" aria-hidden="true" />
-        <p className="text-sm font-semibold text-foreground">Não foi possível carregar {what}.</p>
-        <p className="text-xs text-muted-foreground">Confira a conexão e tente de novo.</p>
+        <p className="text-body-strong text-foreground">Não foi possível carregar {what}.</p>
+        <p className="text-caption text-muted-foreground">Confira a conexão e tente de novo.</p>
         <Button type="button" variant="outline" className="h-11 px-4 md:h-8" onClick={() => void query.refetch()}>
           Tentar de novo
         </Button>
@@ -49,8 +49,8 @@ export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, chi
     return (
       <div className={box}>
         <Inbox className="size-5 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-semibold text-foreground">{emptyTitle ?? `Nenhum item em ${what}.`}</p>
-        {emptyHint && <p className="text-xs text-muted-foreground">{emptyHint}</p>}
+        <p className="text-body-strong text-foreground">{emptyTitle ?? `Nenhum item em ${what}.`}</p>
+        {emptyHint && <p className="text-caption text-muted-foreground">{emptyHint}</p>}
       </div>
     );
   }
@@ -61,7 +61,7 @@ export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, chi
 export const EmptyState: React.FC<{ title: string; hint?: string }> = ({ title, hint }) => (
   <div className={box}>
     <Inbox className="size-5 text-muted-foreground" aria-hidden="true" />
-    <p className="text-sm font-semibold text-foreground">{title}</p>
-    {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+    <p className="text-body-strong text-foreground">{title}</p>
+    {hint && <p className="text-caption text-muted-foreground">{hint}</p>}
   </div>
 );

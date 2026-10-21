@@ -32,6 +32,7 @@ code {
 }
 
 @import "./styles/theme.css";
+@import "./styles/typography.css";
 
 @layer base {
   /* Foco visível em qualquer controle nativo, também sobre fundos translúcidos. */
