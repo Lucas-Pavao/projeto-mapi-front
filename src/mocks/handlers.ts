@@ -6,8 +6,44 @@ import * as d from './data';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
+const sse = (event: string, data: unknown, id: number) => `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+
+/**
+ * Stream SSE sintético: risk-summary na abertura e heartbeat a cada `heartbeatMs`. `maxBeats`
+ * limita os heartbeats (testes); sem limite o fluxo fica aberto até o cliente fechar.
+ */
+export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: number } = {}) {
+  const { heartbeatMs = 25_000, maxBeats = Infinity } = opts;
+  return http.get('/api/stream', () => {
+    const enc = new TextEncoder();
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const stream = new ReadableStream<Uint8Array>({
+      start(ctrl) {
+        let id = 1;
+        ctrl.enqueue(enc.encode(sse('risk-summary', d.riskSummary(), id++)));
+        ctrl.enqueue(enc.encode(sse('heartbeat', { at: new Date().toISOString() }, id++)));
+        let beats = 1;
+        timer = setInterval(() => {
+          if (beats >= maxBeats) {
+            clearInterval(timer);
+            ctrl.close();
+            return;
+          }
+          beats++;
+          ctrl.enqueue(enc.encode(sse('heartbeat', { at: new Date().toISOString() }, id++)));
+        }, heartbeatMs);
+      },
+      cancel() {
+        clearInterval(timer);
+      },
+    });
+    return new HttpResponse(stream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } });
+  });
+}
+
 /** Handlers só dos endpoints novos do redesign (redesign-telas.yaml). Os existentes ficam com a API real. */
 export const handlers = [
+  liveStreamHandler(),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),
 
   http.get('/api/pontos/station-suggestions', () =>
