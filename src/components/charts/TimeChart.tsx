@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 import { formatRecifeDayMs, formatRecifeHourMs } from '@/features/map/utils/datetime';
 import { HOUR_MS, hourBar, scaleLinear, segments, timeTicks, yDomain, type TimePt } from './chartMath';
 import { useElementWidth } from './useElementWidth';
@@ -41,6 +41,7 @@ const M = { top: 10, right: 12, bottom: 24, left: 40 };
  */
 export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, height = 180, markers = [], zero = false, decimals = 1, emptyText = 'Sem dados na janela.' }) => {
   const { ref, width } = useElementWidth<HTMLDivElement>();
+  const clipId = useId();
   const innerW = Math.max(60, width - M.left - M.right);
   const innerH = height - M.top - M.bottom;
   const hasData = series.some((s) => s.points.some((p) => p.v != null));
@@ -84,6 +85,7 @@ export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, heig
       <div ref={ref} className="w-full">
         {hasData ? (
           <svg width={width} height={height} role="img" aria-label={`${title}. ${summary}.`} className="block overflow-visible">
+            <defs><clipPath id={clipId}><rect x={0} y={-2} width={innerW} height={innerH + 4} /></clipPath></defs>
             <g transform={`translate(${M.left},${M.top})`}>
               {model.y.ticks.map((v) => (
                 <g key={v}>
@@ -97,6 +99,7 @@ export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, heig
                   <text x={model.x(t)} y={innerH + 16} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>{tickLabel(t)}</text>
                 </g>
               ))}
+              <g clipPath={`url(#${clipId})`}>
               {series.map((s) =>
                 s.kind === 'bars' ? (
                   <g key={s.id} className={s.colorClass} data-series={s.id}>
@@ -123,6 +126,7 @@ export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, heig
                   </g>
                 ),
               )}
+              </g>
               {markers.filter((m) => m.t >= from && m.t <= to).map((m) => (
                 <g key={`${m.t}-${m.label}`}>
                   <line x1={model.x(m.t)} x2={model.x(m.t)} y1={0} y2={innerH} className="stroke-foreground" strokeDasharray="4 3" opacity={0.7} />

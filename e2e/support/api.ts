@@ -70,16 +70,22 @@ export const USUARIOS = [
   { id: 3, name: null, email: null, role: 'USER', active: false, lastLoginAt: null }, // criado antes da V19
 ];
 
-export function timeline(hours = 24) {
-  const rain = Array.from({ length: hours }, (_, i) => ({ t: hourEnd(hours - 1 - i), v: [0, 0, 0.4, 1.2, 4.8, 9.6, 3.2, 0.8, 0, 0][i % 10] }));
-  const step = 10;
-  const n = (hours * 60) / step;
-  const at = (i: number) => new Date(Date.now() - (n - i) * step * MIN).toISOString();
+/** Série sintética para a janela pedida: chuva horária (t = fim da hora), maré e rio a cada 10 min. */
+export function timeline(fromMs: number, toMs: number) {
+  const HOUR = 3_600_000;
+  const rain: Array<{ t: string; v: number }> = [];
+  for (let end = Math.ceil((fromMs + 1) / HOUR) * HOUR; end <= toMs; end += HOUR) rain.push({ t: new Date(end).toISOString(), v: [0, 0, 0.4, 1.2, 4.8, 9.6, 3.2, 0.8, 0, 0][Math.floor(end / HOUR) % 10] });
+  const tide: Array<{ t: string; v: number }> = [];
+  const river: Array<{ t: string; v: number }> = [];
+  for (let x = fromMs; x <= toMs; x += 600_000) {
+    tide.push({ t: new Date(x).toISOString(), v: Number((1.2 + 1.1 * Math.sin((x / HOUR / 12.4) * Math.PI * 2)).toFixed(2)) });
+    river.push({ t: new Date(x).toISOString(), v: Number((1.5 + 0.6 * Math.sin(x / HOUR / 6)).toFixed(2)) });
+  }
   return {
-    from: ago(hours * 60), to: new Date().toISOString(), stepMinutes: step,
+    from: new Date(fromMs).toISOString(), to: new Date(toMs).toISOString(), stepMinutes: 10,
     rain: [{ stationId: 'SINTETICO-PLUV-01', points: rain }],
-    tide: { harbor: 'pe02', points: Array.from({ length: n + 1 }, (_, i) => ({ t: at(i), v: Number((1.2 + 1.1 * Math.sin((i / 74) * Math.PI * 2)).toFixed(2)) })) },
-    river: [{ stationId: 'SINTETICO-RIO-01', points: Array.from({ length: n + 1 }, (_, i) => ({ t: at(i), v: Number((1.5 + 0.6 * Math.sin(i / 40)).toFixed(2)) })) }],
+    tide: { harbor: 'pe02', points: tide },
+    river: [{ stationId: 'SINTETICO-RIO-01', points: river }],
     risk: [
       { slug: 'sintetico-alto', items: predictionsFor('sintetico-alto') },
       { slug: 'sintetico-baixo', items: [prediction('sintetico-baixo', 'LOW', 240), prediction('sintetico-baixo', 'LOW', 60)] },
@@ -153,8 +159,8 @@ export async function installApi(page: Page, opts: ApiOptions = {}) {
     'GET /api/events/timeline': ({ url }) => {
       const from = Date.parse(url.searchParams.get('from') ?? '');
       const to = Date.parse(url.searchParams.get('to') ?? '');
-      const h = Number.isFinite(from) && Number.isFinite(to) ? Math.max(1, Math.round((to - from) / 3_600_000)) : 24;
-      return timeline(Math.min(h, 72));
+      const t = Number.isFinite(to) ? to : Date.now();
+      return timeline(Number.isFinite(from) ? from : t - 24 * 3_600_000, t);
     },
     'GET /api/model/evaluation': () => AVALIACAO,
     'POST /api/model/simulate/bucket': ({ body }) => SIMULACAO(((body as { rainfallMmH?: number[] })?.rainfallMmH ?? [0]).length),

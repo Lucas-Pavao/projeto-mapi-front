@@ -55,14 +55,29 @@ export const alertRules: AlertRule[] = [
   { id: 3, kind: 'SENSOR_STALE', floodPointSlug: null, stationId: null, threshold: 30, thresholdSource: null, minRisk: null, enabled: false, channels: ['BROWSER'], createdBy: 'sintetico.operador', createdAt: ago(4000), updatedAt: ago(100) },
 ];
 
-export const timeline = (from: string, to: string): Timeline => ({
-  from, to, stepMinutes: 10,
-  rain: [{ stationId: 'SINTETICO-PLUV-01', points: [{ t: from, v: 0 }, { t: to, v: 2.4 }] }],
-  tide: { harbor: 'pe02', points: [{ t: from, v: 0.8 }, { t: to, v: 2.1 }] },
-  river: [{ stationId: 'SINTETICO-RIO-01', points: [{ t: from, v: 1.5 }, { t: to, v: 1.82 }] }],
-  risk: [{ slug: SYNTHETIC_SLUG, items: predictions(SYNTHETIC_SLUG) }],
-  floodEvents: [{ id: 1, slug: SYNTHETIC_SLUG, startTime: ago(90), severity: 'MEDIUM' }],
-});
+/** Série sintética: chuva horária (t = fim da hora), maré e rio a cada 10 min. Só para desenhar telas. */
+export const timeline = (from: string, to: string): Timeline => {
+  const f = Date.parse(from);
+  const t = Date.parse(to);
+  const HOUR = 3_600_000;
+  const rain: Array<{ t: string; v: number | null }> = [];
+  for (let end = Math.ceil((f + 1) / HOUR) * HOUR; end <= t; end += HOUR) rain.push({ t: new Date(end).toISOString(), v: [0, 0, 0.4, 1.2, 4.8, 9.6, 3.2, 0.8][Math.floor(end / HOUR) % 8] });
+  const tide: Array<{ t: string; v: number | null }> = [];
+  const river: Array<{ t: string; v: number | null }> = [];
+  for (let x = f; x <= t; x += 600_000) {
+    tide.push({ t: new Date(x).toISOString(), v: Number((1.2 + 1.1 * Math.sin((x / HOUR / 12.4) * Math.PI * 2)).toFixed(2)) });
+    river.push({ t: new Date(x).toISOString(), v: Number((1.5 + 0.6 * Math.sin(x / HOUR / 6)).toFixed(2)) });
+  }
+  return {
+    from, to, stepMinutes: 10,
+    rain: [{ stationId: 'SINTETICO-PLUV-01', points: rain }],
+    tide: { harbor: 'pe02', points: tide },
+    river: [{ stationId: 'SINTETICO-RIO-01', points: river }],
+    risk: [{ slug: SYNTHETIC_SLUG, items: predictions(SYNTHETIC_SLUG) }],
+    floodEvents: [{ id: 1, slug: SYNTHETIC_SLUG, startTime: ago(90), severity: 'MEDIUM' }],
+  };
+};
+
 
 /** Estrutura real de resultado_etapa2.json com números SINTÉTICOS (nenhum é resultado do modelo). */
 export const evaluation: ModelEvaluation = {
