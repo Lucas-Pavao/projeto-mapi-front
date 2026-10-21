@@ -30,7 +30,25 @@ const AVAL = {
   },
 };
 
+/** Tábua sintética do mês atual: 4 pontos por dia (2 preamares, 2 baixa-mares), amplitude variando com o dia. */
+const tabuaMes = () => {
+  const now = new Date();
+  const dias = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const f = (n: number) => `${String(Math.floor(n / 60) % 24).padStart(2, '0')}:${String(Math.round(n % 60)).padStart(2, '0')}`;
+  return {
+    id: 1, year: now.getFullYear(), harborName: 'Recife', state: 'PE', timezone: 'America/Recife', card: 'pe02', dataCollectionInstitution: 'DHN', meanLevel: 1.3, geoLocations: [], currentTideHeight: 1.1,
+    months: [{ monthName: new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(now), month: now.getMonth() + 1, days: Array.from({ length: dias }, (_, i) => {
+      const amp = 0.4 + 0.5 * Math.abs(Math.sin((i / 14.8) * Math.PI));
+      const t0 = (i * 50) % 745;
+      const hi = 1.3 + amp;
+      const lo = 1.3 - amp - 0.2;
+      return { weekdayName: '', day: i + 1, hours: [{ hour: f(t0), level: Number(lo.toFixed(2)) }, { hour: f(t0 + 372), level: Number(hi.toFixed(2)) }, { hour: f(t0 + 745), level: Number(lo.toFixed(2)) }, { hour: f(t0 + 1117), level: Number(hi.toFixed(2)) }] };
+    }) }],
+  };
+};
+
 const TELAS: Tela[] = [
+  { id: '08-mare', path: '/mare', api: { routes: { 'GET /api/tide/pe02': () => tabuaMes() } } },
   { id: '07-modelo', path: '/modelo', api: { routes: { 'GET /api/model/evaluation': () => AVAL } } },
   {
     id: '06-simulador', path: '/modelo/simulador',
