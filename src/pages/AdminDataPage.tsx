@@ -4,7 +4,8 @@ import { QueryState } from '@/components/ui/query-state';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/form-field';
 import { useIngestionRuns, useIngestionSources, useIntegrityCheck } from '@/features/admin/hooks/useAdminData';
-import { SourceCard, isProblem } from '@/features/admin/components/SourceCard';
+import { SourceCard } from '@/features/admin/components/SourceCard';
+import { isProblem } from '@/features/admin/utils/ingestion';
 import { formatRecife } from '@/features/map/utils/datetime';
 import { actionErrorMessage } from '@/lib/apiError';
 

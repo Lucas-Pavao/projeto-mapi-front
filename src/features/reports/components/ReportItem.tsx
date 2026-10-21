@@ -4,14 +4,9 @@ import { CircleCheck, CircleX, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatRecife } from '@/features/map/utils/datetime';
 import { cn } from '@/lib/utils';
-import type { FloodReport, ReportStatus, WaterDepth } from '../schemas/report.schema';
+import type { FloodReport, ReportStatus } from '../schemas/report.schema';
+import { WATER_DEPTH_LABEL } from '../utils/labels';
 
-export const WATER_DEPTH_LABEL: Record<WaterDepth, string> = {
-  ANKLE: 'Até o tornozelo',
-  KNEE: 'Até o joelho',
-  WAIST: 'Até a cintura',
-  ABOVE_WAIST: 'Acima da cintura',
-};
 
 const STATUS = {
   PENDING: { label: 'Pendente', Icon: Clock, tone: 'text-warning border-warning/40 bg-warning/10' },

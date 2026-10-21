@@ -7,11 +7,6 @@ import { expect, type Page, type Route, type TestInfo } from '@playwright/test';
 const MIN = 60_000;
 export const ago = (m: number) => new Date(Date.now() - m * MIN).toISOString();
 export const ahead = (m: number) => new Date(Date.now() + m * MIN).toISOString();
-const hourEnd = (hoursAgo: number) => {
-  const d = new Date();
-  d.setMinutes(0, 0, 0);
-  return new Date(d.getTime() - hoursAgo * 3_600_000).toISOString();
-};
 
 export type Role = 'USER' | 'OPERADOR' | 'ADMIN';
 

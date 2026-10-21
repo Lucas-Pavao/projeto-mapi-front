@@ -4,11 +4,9 @@ import { DialogPanel } from '@/components/ui/dialog-panel';
 import { Field, Select, Textarea } from '@/components/ui/form-field';
 import type { Severity } from '@/lib/apiSchemas';
 import type { FloodReport, ReportReview } from '../schemas/report.schema';
+import { SEVERITY_LABEL } from '../utils/labels';
 
 interface PointOption { slug: string; name: string }
-
-/** Gravidade observada do alagamento (FloodEvent.Severity). Não é a classe de risco do modelo. */
-export const SEVERITY_LABEL: Record<Severity, string> = { LOW: 'Baixa', MEDIUM: 'Média', HIGH: 'Alta', CRITICAL: 'Crítica' };
 
 interface DialogProps {
   report: FloodReport;
