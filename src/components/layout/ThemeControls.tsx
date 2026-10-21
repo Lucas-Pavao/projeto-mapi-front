@@ -12,7 +12,7 @@ export const ThemeControls: React.FC = () => {
   const themeLabel = theme === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro';
   return (
     <>
-      <button type="button" onClick={cycleAccent} aria-label={`Trocar cor de destaque (agora: ${ACCENT_LABEL[accent]})`} title={`Cor de destaque: ${ACCENT_LABEL[accent]}`} className={`${btn} px-2.5`}>
+      <button type="button" onClick={cycleAccent} aria-label={`${ACCENT_LABEL[accent]}: trocar cor de destaque`} title={`Cor de destaque: ${ACCENT_LABEL[accent]}`} className={`${btn} px-2.5`}>
         <span aria-hidden="true" className="size-3.5 rounded-full bg-primary ring-2 ring-card outline outline-1 outline-border" />
         <span className="hidden lg:inline">{ACCENT_LABEL[accent]}</span>
       </button>

@@ -795,7 +795,7 @@ export const MapView: React.FC = () => {
                   <div className="relative flex items-center justify-center">
                     <div className="absolute -inset-4 rounded-full bg-primary/20 animate-ping opacity-30" />
                     <div className="h-6 w-6 rounded-full border-2 border-border bg-primary flex items-center justify-center relative z-10">
-                      <MapPin className="h-3 w-3 text-foreground" />
+                      <MapPin className="h-3 w-3 text-primary-foreground" />
                     </div>
                   </div>
                 </MarkerContent>

@@ -120,7 +120,7 @@ export const LoginForm: React.FC = () => {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-foreground transition-all active:scale-[0.98]"
+          className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-[0.98]"
         >
           {isLoading ? (
             <>

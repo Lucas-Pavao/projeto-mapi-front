@@ -12,10 +12,13 @@ const api = axios.create({
 // ser inspecionado pelo JS, então só descobrimos isso pela resposta da API), a sessão local não
 // serve mais pra nada — desloga e manda pro login. Um 403 é diferente (usuário autenticado mas
 // sem permissão pra aquele recurso específico) e não deve derrubar uma sessão válida.
+// Telas que funcionam sem sessão: um 401 do /api/auth/me nelas não deve redirecionar.
+const PUBLIC_PATHS = ['/login', '/minha-rua'];
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401 && window.location.pathname !== '/login') {
+    if (error.response && error.response.status === 401 && !PUBLIC_PATHS.includes(window.location.pathname)) {
       console.warn('Sessão expirada ou inválida. Encerrando sessão local...');
       window.location.href = '/login';
     }

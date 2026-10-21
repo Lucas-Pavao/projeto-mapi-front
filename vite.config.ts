@@ -35,6 +35,8 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
+      // e2e/ é do Playwright (npm run test:e2e).
+      exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     },
   }
 })

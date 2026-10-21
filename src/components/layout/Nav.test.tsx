@@ -32,7 +32,7 @@ describe('Nav', () => {
     renderNav();
     fireEvent.click(screen.getByRole('button', { name: 'Mudar para o tema claro' }));
     expect(document.documentElement).toHaveAttribute('data-theme', 'light');
-    fireEvent.click(screen.getByRole('button', { name: /Trocar cor de destaque \(agora: Capibaribe\)/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Capibaribe: trocar cor de destaque/ }));
     expect(document.documentElement).toHaveAttribute('data-accent', 'atlantico');
   });
   it('alvos de toque >= 44 px no celular (h-11)', () => {

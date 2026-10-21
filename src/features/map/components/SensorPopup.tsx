@@ -194,7 +194,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
 
         <Button 
           onClick={onShowDetails}
-          className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-foreground text-muted-foreground border border-border hover:border-primary transition-all duration-300 rounded-xl group shadow-elevation-raised"
+          className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-muted-foreground border border-border hover:border-primary transition-all duration-300 rounded-xl group shadow-elevation-raised"
         >
           <span>Analisar Dados Completos</span>
           <ExternalLink className="h-3 w-3 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
