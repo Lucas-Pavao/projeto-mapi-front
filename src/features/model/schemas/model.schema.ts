@@ -69,3 +69,14 @@ export function parseEvaluationResult(result: Record<string, unknown>): Evaluati
   const r = evaluationResultSchema.safeParse(result);
   return r.success ? r.data : null;
 }
+
+export const BUCKET_F_VALUES = [0, 0.2, 0.4, 0.6, 0.8, 1] as const;
+
+/** Corpo de POST /api/model/simulate/bucket (faixas do ADR 0014; fora delas o backend responde 422). */
+export const bucketInputSchema = z.object({
+  slug: z.string().min(1, 'Escolha um ponto.'),
+  rainfallMmH: z.array(z.number().min(0, 'Chuva negativa não existe.').max(300, 'Máximo de 300 mm/h por hora.')).min(1, 'Informe ao menos 1 hora de chuva.').max(72, 'Máximo de 72 horas.'),
+  f: z.union([z.literal(0), z.literal(0.2), z.literal(0.4), z.literal(0.6), z.literal(0.8), z.literal(1)]).optional(),
+  curveScale: z.number().min(0.7, 'Escala da curva entre 0,7 e 1,3.').max(1.3, 'Escala da curva entre 0,7 e 1,3.').optional(),
+});
+export type BucketInput = z.infer<typeof bucketInputSchema>;

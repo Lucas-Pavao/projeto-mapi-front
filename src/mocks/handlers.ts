@@ -105,17 +105,20 @@ export const handlers = [
 
   http.get('/api/model/evaluation', () => HttpResponse.json(d.evaluation, { headers: { 'X-Content-SHA256': d.evaluation.sha256 } })),
 
-  http.post<never, { rainfallMmH: number[]; f?: number; curveScale?: number }>('/api/model/simulate/bucket', async ({ request }) => {
+  http.post<never, { slug: string; rainfallMmH: number[]; f?: number; curveScale?: number }>('/api/model/simulate/bucket', async ({ request }) => {
     const body = await request.json();
+    // Sem terreno (ex.: Jaboatão): 422, como o backend (ADR 0014).
+    if (body.slug === 'sintetico-2') return HttpResponse.json({ message: 'ponto sem terreno' }, { status: 422 });
     let h = 0;
+    // Acúmulo SINTÉTICO (não é o M1a): só para desenhar a tela.
     const hMm = body.rainfallMmH.map((r) => (h = Math.max(0, h + r * 0.5 - 1)));
+    const cross = hMm.findIndex((v) => v >= 150);
     const sim: BucketSimulation = {
-      model: 'M1a', illustrative: true, hMm, hmaxMm: Math.max(...hMm), tCrossH: null, nOutsideCurve: 0,
-      paramsUsed: { C: 0.5, iT_mm_h: 2, f: body.f ?? 1, hcrit_mm: 50, snap_m: 100, curve_scale: body.curveScale ?? 1 },
+      model: 'M1a', illustrative: true, hMm, hmaxMm: Math.max(...hMm), tCrossH: cross >= 0 ? cross : null, nOutsideCurve: 0,
+      paramsUsed: { C: 0.86, iT_mm_h: 60.1, f: body.f ?? 1, hcrit_mm: 150, snap_m: 10, curve_scale: body.curveScale ?? 1 },
     };
     return HttpResponse.json(sim);
   }),
-
   http.get('/api/reports', ({ request }) => {
     const status = new URL(request.url).searchParams.get('status');
     return HttpResponse.json(page(status ? d.reports.filter((r) => r.status === status) : d.reports));

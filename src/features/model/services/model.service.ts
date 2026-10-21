@@ -1,12 +1,7 @@
 import api from '@/lib/api';
-import { bucketSimulationSchema, modelEvaluationSchema, type BucketSimulation, type ModelEvaluation } from '../schemas/model.schema';
+import { bucketSimulationSchema, modelEvaluationSchema, type BucketInput, type BucketSimulation, type ModelEvaluation } from '../schemas/model.schema';
 
-export interface BucketSimulationInput {
-  slug: string;
-  rainfallMmH: number[];
-  f?: 0 | 0.2 | 0.4 | 0.6 | 0.8 | 1;
-  curveScale?: number;
-}
+export type BucketSimulationInput = BucketInput;
 
 export const modelService = {
   /**
