@@ -14,20 +14,18 @@ test('/relatos: fila, confirmar com ponto e gravidade, descartar com motivo', as
   await page.goto('/relatos');
   const li = page.locator('li[data-report-id="1"]');
   await expect(li).toContainText('Até o joelho');
-  await expect(li).toContainText('a 250 m');
+  const det = page.getByRole('region', { name: 'Relato selecionado' });
+  await expect(det).toContainText('a 250 m');
   await semRolagemHorizontal(page);
   await shot(page, testInfo, 'relatos');
 
-  await li.getByRole('button', { name: 'Confirmar relato 1' }).click();
-  const dlg = page.getByRole('dialog', { name: 'Confirmar relato #1' });
-  await expect(dlg.getByLabel('Ponto crítico')).toHaveValue('sintetico-alto');
-  await dlg.getByLabel('Gravidade observada').selectOption('HIGH');
+  await det.getByRole('radio', { name: 'Alta' }).click();
   await shot(page, testInfo, 'relatos-confirmar');
-  await dlg.getByRole('button', { name: 'Confirmar relato' }).click();
+  await det.getByRole('button', { name: 'Confirmar relato 1' }).click();
   await expect.poll(() => api.calls.find((c) => c.method === 'PATCH')?.body).toEqual({ status: 'CONFIRMED', floodPointSlug: 'sintetico-alto', severity: 'HIGH' });
   await expect(page.getByText(/Relato confirmado/)).toBeVisible();
 
-  await li.getByRole('button', { name: 'Descartar relato 1' }).click();
+  await det.getByRole('button', { name: 'Descartar relato 1' }).click();
   const d2 = page.getByRole('dialog', { name: 'Descartar relato #1' });
   await d2.getByRole('button', { name: 'Descartar relato' }).click();
   await expect(d2.getByText(/Diga por que/)).toBeVisible();

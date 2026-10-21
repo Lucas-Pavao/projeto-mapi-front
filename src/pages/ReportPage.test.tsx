@@ -17,58 +17,56 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('ReportPage', () => {
-  it('monta a folha com resumo, pontos por risco, chuva, sensores e alertas', async () => {
+  it('monta a folha com resumo, pontos por probabilidade, gráficos e alertas', async () => {
     renderPage(<ReportPage />);
     const sheet = await screen.findByRole('article', { name: 'Relatório de situação' });
     expect(sheet).toHaveTextContent('Previsão experimental — modelo não validado');
     expect(sheet.closest('[data-theme="light"]')).not.toBeNull(); // folha sempre no tema claro
-    const summary = await screen.findByRole('region', { name: 'Resumo de risco' });
-    await within(summary).findByText('Previsão indisponível');
-    expect(summary.querySelector('[data-risk-count="HIGH"]')).toHaveTextContent('1');
-    const pts = await screen.findByRole('region', { name: 'Pontos críticos' });
+    const resumo = await within(sheet).findByRole('region', { name: 'Resumo' });
+    expect(resumo).toHaveTextContent(/O ponto com maior probabilidade na janela foi Sintético: ponto de teste, com 78%/);
+    const pts = await within(sheet).findByRole('region', { name: 'Pontos críticos' });
     const rows = await within(pts).findAllByRole('row');
-    expect(rows[1]).toHaveTextContent('Sintético: ponto de teste'); // Alto primeiro; o inativo não entra
-    expect(within(pts).queryByText('Sintético: ponto sem previsão')).toBeNull();
-    expect(within(pts).getByText(/Previsão experimental/)).toBeInTheDocument();
-    const rain = await screen.findByRole('region', { name: /Chuva nas últimas 24 h/ });
-    expect(await within(rain).findByText('SINTETICO-PLUV-01', { selector: 'td' })).toBeInTheDocument();
-    expect(await screen.findByText(/1 sem resposta recente/)).toBeInTheDocument();
-    expect(await screen.findByText('Sintético: risco alto no ponto de teste')).toBeInTheDocument();
+    expect(rows[1]).toHaveTextContent('Sintético: ponto de teste');
+    expect(within(pts).queryByText('Sintético: ponto sem previsão')).toBeNull(); // só pontos com previsão na janela
+    expect(within(sheet).getByRole('img', { name: 'Chuva, maré e rio no período' })).toBeInTheDocument();
+    expect(await within(sheet).findByText('Sintético: risco alto no ponto de teste')).toBeInTheDocument();
+    expect(sheet).toHaveTextContent(/1 sem resposta recente/);
   });
 
-  it('USER não recebe a parte de alertas e a página não consulta /api/alerts', async () => {
+  it('USER não recebe alertas nem relatos e a página não consulta essas rotas', async () => {
     role = 'USER';
     let called = 0;
-    server.use(http.get('/api/alerts', () => { called++; return HttpResponse.json({}); }));
+    server.use(http.get('/api/alerts', () => { called++; return HttpResponse.json({}); }), http.get('/api/reports', () => { called++; return HttpResponse.json({}); }));
     renderPage(<ReportPage />);
     expect(await screen.findByText(/Seu perfil não lista alertas/)).toBeInTheDocument();
-    await screen.findByRole('region', { name: 'Resumo de risco' });
+    expect(screen.getByRole('checkbox', { name: /Alertas disparados/ })).toBeDisabled();
+    await screen.findByRole('region', { name: 'Resumo' });
     expect(called).toBe(0);
   });
 
   it('uma parte que falha não derruba o relatório', async () => {
-    server.use(http.get('/api/sensors/latest', () => HttpResponse.json({}, { status: 500 })));
+    server.use(http.get('/api/events/timeline', () => HttpResponse.json({}, { status: 500 })));
     renderPage(<ReportPage />);
-    expect(await screen.findByText(/Não foi possível carregar os sensores/, {}, { timeout: 3000 })).toBeInTheDocument();
-    expect(await screen.findByRole('region', { name: 'Resumo de risco' })).toBeInTheDocument();
-    expect(await screen.findByText('Sintético: ponto de teste')).toBeInTheDocument();
+    const resumo = await screen.findByRole('region', { name: 'Resumo' });
+    expect(await within(resumo).findByText(/Não foi possível carregar a linha do tempo/, {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(await screen.findByRole('region', { name: 'Principais alertas' })).toBeInTheDocument();
   });
 
-  it('chuva: total é a soma das barras horárias e hora sem leitura é dita', async () => {
-    server.use(http.get('/api/events/timeline', ({ request }) => {
-      const u = new URL(request.url);
-      return HttpResponse.json({ from: u.searchParams.get('from'), to: u.searchParams.get('to'), stepMinutes: 10, rain: [{ stationId: 'P1', points: [{ t: '2026-10-21T13:00:00Z', v: 1.5 }, { t: '2026-10-21T14:00:00Z', v: null }, { t: '2026-10-21T15:00:00Z', v: 4.25 }] }], tide: { harbor: 'pe02', points: [] }, river: [], risk: [] });
-    }));
+  it('desligar uma seção a tira da folha; relatos confirmados começa desligado', async () => {
     renderPage(<ReportPage />);
-    const cell = await screen.findByText(/5,75 \(1 h sem leitura\)/);
-    expect(cell).toBeInTheDocument();
+    await screen.findByRole('region', { name: 'Gráficos' });
+    expect(screen.queryByRole('region', { name: 'Relatos confirmados' })).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: /Gráficos de chuva/ }));
+    expect(screen.queryByRole('region', { name: 'Gráficos' })).toBeNull();
+    fireEvent.click(screen.getByRole('checkbox', { name: /Relatos confirmados/ }));
+    expect(await screen.findByRole('region', { name: 'Relatos confirmados' })).toBeInTheDocument();
   });
 
-  it('botão Imprimir chama window.print', async () => {
+  it('Gerar PDF chama window.print', async () => {
     const print = vi.fn();
     vi.stubGlobal('print', print);
     renderPage(<ReportPage />);
-    fireEvent.click(await screen.findByRole('button', { name: /Imprimir ou salvar PDF/ }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Gerar PDF' }));
     expect(print).toHaveBeenCalled();
     vi.unstubAllGlobals();
   });

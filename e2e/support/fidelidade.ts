@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { ago, installApi, timeline, type ApiOptions } from './api';
+import { ago, ahead, installApi, timeline, type ApiOptions } from './api';
 
 /** Dados de fixture da comparação visual com o protótipo (sintéticos; nada aqui é medição). */
 const base = { municipality: 'Recife', description: 'Maré bloqueando a saída da galeria', altitudeM: 3, distanceToChannelM: 100, basinName: null, sensorConfig: null, active: true, tideHeight: null, tideUnit: null };
@@ -74,3 +74,19 @@ export async function prepara(page: Page, theme: 'dark' | 'light', opts: ApiOpti
     },
   });
 }
+
+/** Captura 1440×900 nos dois temas em test-results/fidelidade/ (comparação com o protótipo). */
+export async function capturar(page: Page, nome: string, tema: 'dark' | 'light', opts: ApiOptions = {}, caminho = '/') {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.addInitScript((t) => {
+    localStorage.setItem('mapi.theme', t);
+    localStorage.setItem('mapi.accent', 'capibaribe');
+  }, tema);
+  await installApi(page, { role: 'ADMIN', ...opts });
+  await page.goto(caminho);
+  return async () => {
+    await page.waitForTimeout(1500);
+    await page.screenshot({ path: `test-results/fidelidade/${nome}-${tema}.png` });
+  };
+}
+export { ago, ahead };

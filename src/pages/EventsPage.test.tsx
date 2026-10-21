@@ -13,34 +13,36 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('EventsPage', () => {
-  it('chuva em barras que terminam no fim da hora; maré e rio em linha', async () => {
-    const { container } = renderPage(<EventsPage />);
-    await screen.findByRole('region', { name: 'Chuva' });
-    const bars = Array.from(container.querySelectorAll('[data-series="SINTETICO-PLUV-01"] rect[data-bar-end]'));
-    expect(bars.length).toBeGreaterThan(10);
-    expect(bars.every((b) => Number(b.getAttribute('data-bar-end')) % 3_600_000 === 0)).toBe(true); // t = fim da hora cheia
-    expect(container.querySelector('[data-series="tide"] path')).not.toBeNull();
-    expect(container.querySelector('[data-series="tide"] rect')).toBeNull();
-    expect(container.querySelector('[data-series="SINTETICO-RIO-01"] path')).not.toBeNull();
-    expect(container.querySelector('[data-series="SINTETICO-RIO-01"] rect')).toBeNull();
+  it('faixas de chuva, maré e rio na mesma escala de tempo, com resumo à direita', async () => {
+    renderPage(<EventsPage />);
+    expect(await screen.findByRole('img', { name: 'Chuva média ao longo do evento' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Maré ao longo do evento' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Nível do rio ao longo do evento' })).toBeInTheDocument();
+    const resumo = screen.getByRole('complementary', { name: 'Resumo do evento' });
+    expect(within(resumo).getByText('alagamentos confirmados').previousElementSibling).toHaveTextContent('1');
+    expect(within(resumo).getByRole('link', { name: 'Gerar relatório do evento' })).toHaveAttribute('href', '/relatorio');
   });
 
-  it('risco por ponto: UNKNOWN sem %, experimental ao lado das classes, nome do ponto vem da lista', async () => {
+  it('faixa por ponto: UNKNOWN sem %, rótulo experimental na legenda, nome do ponto vem da lista', async () => {
     renderPage(<EventsPage />);
-    const risk = await screen.findByRole('region', { name: 'Risco por ponto' });
-    const li = await within(risk).findByText('Sintético: ponto de teste');
-    const item = li.closest('li')!;
-    expect(within(item).getByText(/Previsão experimental/)).toBeInTheDocument();
-    const unknown = item.querySelector('li[data-risk="UNKNOWN"]')!;
-    expect(unknown.textContent).not.toMatch(/%/);
-    expect(unknown.querySelector('svg')).not.toBeNull();
+    const strip = await screen.findByRole('group', { name: 'Risco de Sintético: ponto de teste' });
+    const unk = Array.from(strip.querySelectorAll('button[data-risk="UNKNOWN"]'));
+    expect(unk.length).toBeGreaterThan(0);
+    expect(unk.every((b) => !/%/.test(b.getAttribute('aria-label') ?? ''))).toBe(true);
+    expect(unk[0].getAttribute('aria-label')).toMatch(/Previsão indisponível/);
+    const alto = strip.querySelector('button[data-risk="HIGH"]');
+    expect(alto?.getAttribute('aria-label')).toMatch(/Alto \d+%/);
+    expect(screen.getByText(/Previsão experimental/)).toBeInTheDocument();
   });
 
-  it('aviso da ADR 0009 junto da maré e alagamentos confirmados listados', async () => {
+  it('clicar numa coluna leva o resumo àquele momento; o teclado usa o controle de momento', async () => {
     renderPage(<EventsPage />);
-    expect(await screen.findByTestId('tide-datum-notice')).toBeInTheDocument();
-    const ev = await screen.findByRole('region', { name: 'Eventos de alagamento' });
-    expect(ev).toHaveTextContent('gravidade observada: Média');
+    const strip = await screen.findByRole('group', { name: 'Risco de Sintético: ponto de teste' });
+    expect(screen.getByRole('complementary', { name: 'Resumo do evento' })).toHaveTextContent(/\(agora\)/);
+    const cols = strip.querySelectorAll('button');
+    fireEvent.click(cols[10]);
+    await waitFor(() => expect(screen.getByRole('complementary', { name: 'Resumo do evento' })).not.toHaveTextContent(/\(agora\)/));
+    expect(screen.getByLabelText('Momento do evento')).toBeInTheDocument();
   });
 
   it('trocar a janela refaz a consulta com 48 h', async () => {
@@ -54,7 +56,7 @@ describe('EventsPage', () => {
     await waitFor(() => expect(spans).toEqual([24]));
     fireEvent.click(screen.getByRole('button', { name: 'Últimas 48 h' }));
     await waitFor(() => expect(spans).toEqual([24, 48]));
-    expect(await screen.findByText('Nenhum pluviômetro com dado nesta janela.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Últimas 48 h' })).toHaveAttribute('aria-pressed', 'true'));
   });
 
   it('vazio total e erro', async () => {

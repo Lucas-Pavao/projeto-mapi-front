@@ -9,14 +9,15 @@ test('/sensores: leitura, sem resposta destacada e filtro por tipo', async ({ pa
   await page.goto('/sensores');
   await expect(page.getByRole('heading', { name: 'Sensores' })).toBeVisible();
   const velho = page.getByText('Sintético: pluviômetro 2').locator('xpath=ancestor::li');
-  await expect(velho).toContainText('Sem resposta recente');
+  await expect(velho).toContainText('sem resposta');
   await expect(velho).toContainText('—');
-  await expect(page.getByText(/3 sensores, 1 sem resposta recente/)).toBeVisible();
+  await expect(page.getByText('2 de 3 respondendo')).toBeVisible();
   await semRolagemHorizontal(page);
   await shot(page, testInfo, 'sensores');
-  await page.getByRole('button', { name: 'Nível do rio' }).click();
-  await expect(page.getByText('Sintético: pluviômetro 1')).toBeHidden();
-  await expect(page.getByText('Sintético: rio 1')).toBeVisible();
+  await page.getByRole('radio', { name: 'Rio' }).click();
+  const lista = page.getByRole('complementary', { name: 'Sensores' });
+  await expect(lista.getByText('Sintético: pluviômetro 1')).toBeHidden();
+  await expect(lista.getByText('Sintético: rio 1')).toBeVisible();
 });
 
 test('/sensores com erro da API', async ({ page }, testInfo) => {

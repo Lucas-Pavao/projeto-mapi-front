@@ -30,10 +30,11 @@ test('/alertas: reconhecer, alerta ao vivo e regras', async ({ page }, testInfo)
   await alto.getByRole('button', { name: /Reconhecer/ }).click();
   await expect.poll(() => api.calls.some((c) => c.method === 'POST' && c.path === '/api/alerts/1/ack')).toBe(true);
 
-  await page.getByRole('tab', { name: 'Regras' }).click();
-  await expect(page.getByText('Chuva em 1 h')).toBeVisible();
-  await semRolagemHorizontal(page);
+  await expect(page.getByRole('radiogroup', { name: 'Nível mínimo' })).toBeVisible();
+  await expect(page.getByRole('checkbox', { name: /WhatsApp/ })).toBeDisabled();
   await shot(page, testInfo, 'alertas-regras');
+  await page.getByRole('button', { name: 'Todas as regras' }).click();
+  await expect(page.getByText('Chuva em 1 h')).toBeVisible();
   await page.getByRole('button', { name: 'Nova regra' }).click();
   await expect(page.getByRole('dialog', { name: 'Nova regra de alerta' })).toBeVisible();
   await shot(page, testInfo, 'alertas-regra-nova');

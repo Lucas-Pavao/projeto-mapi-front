@@ -17,5 +17,11 @@ export function applyLiveAlert(qc: QueryClient, alert: Alert): void {
     if (exists) return { ...old, content: old.content.map((a) => (a.id === alert.id ? alert : a)) };
     return { ...old, totalElements: old.totalElements + 1, content: [alert, ...old.content] };
   });
-  void qc.invalidateQueries({ queryKey: ALERTS_KEY, predicate: (q) => q.queryKey[1] !== 'OPEN' });
+  // Lista "Todos" (a da Central de alertas): troca ou entra no topo, sem esperar nova consulta.
+  qc.setQueriesData<AlertPage>({ queryKey: [...ALERTS_KEY, 'ALL'] }, (old) => {
+    if (!old) return old;
+    if (old.content.some((a) => a.id === alert.id)) return { ...old, content: old.content.map((a) => (a.id === alert.id ? alert : a)) };
+    return { ...old, totalElements: old.totalElements + 1, content: [alert, ...old.content] };
+  });
+  void qc.invalidateQueries({ queryKey: ALERTS_KEY, predicate: (q) => q.queryKey[1] !== 'OPEN' && q.queryKey[1] !== 'ALL' });
 }
