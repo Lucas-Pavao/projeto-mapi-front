@@ -14,7 +14,7 @@ for (const tema of ['light', 'dark'] as const) {
     const folha = page.getByRole('article', { name: 'Relatório de situação' });
     await expect(folha).toContainText('Previsão experimental — modelo não validado');
     await expect(page.getByRole('region', { name: 'Pontos críticos' }).locator('tr[data-slug="sintetico-alto"]')).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Alertas abertos' })).toContainText('Sintético');
+    await expect(page.getByRole('region', { name: 'Principais alertas' })).toContainText('Sintético');
     // a folha é clara mesmo com o app escuro
     const fundo = await folha.evaluate((el) => getComputedStyle(el).backgroundColor);
     expect(fundo).toBe('rgb(255, 255, 255)');
@@ -24,7 +24,7 @@ for (const tema of ['light', 'dark'] as const) {
     // Impressão: sem navegação, sem botão e conteúdo em fluxo (altura da página > uma janela).
     await page.emulateMedia({ media: 'print' });
     await expect(page.getByRole('navigation', { name: 'Principal' })).toBeHidden();
-    await expect(page.getByRole('button', { name: /Imprimir/ })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Gerar PDF' })).toBeHidden();
     const body = await page.evaluate(() => ({ h: document.documentElement.scrollHeight, c: document.querySelector('#conteudo')!.scrollHeight, ch: document.querySelector('#conteudo')!.clientHeight }));
     expect(body.c).toBeLessThanOrEqual(body.ch + 1); // #conteudo não rola: cresce com o conteúdo
     if (testInfo.project.name === 'desktop') {

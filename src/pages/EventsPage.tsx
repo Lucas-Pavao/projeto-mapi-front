@@ -11,6 +11,7 @@ import { EventCharts } from '@/features/events/components/EventCharts';
 import { EventStrip } from '@/features/events/components/EventStrips';
 import { buildCells } from '@/features/events/utils/strips';
 import { buildStory, type StoryItem } from '@/features/events/utils/story';
+import { averageRain } from '@/features/reports/utils/eventReport';
 import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { formatHoraCheia, formatHoraCurta, num } from '@/features/operacao/utils/format';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
@@ -20,13 +21,6 @@ const WINDOWS = [24, 48, 72] as const;
 const HOUR = 3_600_000;
 const DOT: Record<StoryItem['tone'], string> = { low: 'bg-risk-low', moderate: 'bg-risk-moderate', high: 'bg-risk-high', unknown: 'bg-risk-unknown', info: 'bg-chart-3' };
 const TONE_LABEL: Record<StoryItem['tone'], string> = { low: 'risco baixo', moderate: 'atenção', high: 'risco alto', unknown: 'sem previsão', info: 'informação' };
-
-/** Média da chuva horária entre os pluviômetros (cada ponto: soma da hora, t = fim da hora). */
-function averageRain(t: Timeline): TimePt[] {
-  const by = new Map<number, number[]>();
-  for (const s of t.rain) for (const p of toTimePts(s.points)) if (p.v != null) by.set(p.t, [...(by.get(p.t) ?? []), p.v]);
-  return [...by.entries()].sort((a, b) => a[0] - b[0]).map(([tt, vs]) => ({ t: tt, v: vs.reduce((a, b) => a + b, 0) / vs.length }));
-}
 
 const Legend: React.FC<{ experimental: boolean }> = ({ experimental }) => (
   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">

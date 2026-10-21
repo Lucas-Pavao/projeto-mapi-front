@@ -145,3 +145,17 @@ for (const tema of ['dark', 'light'] as const) {
     await page.screenshot({ path: `test-results/fidelidade/11-relatos-sel-${tema}.png` });
   });
 }
+
+// ---------- Relatório ----------
+for (const tema of ['dark', 'light'] as const) {
+  test(`fidelidade relatorio ${tema}`, async ({ page }) => {
+    const fim = await capturar(page, '12-relatorio', tema, { role: 'OPERADOR', routes: {
+      'GET /api/pontos': () => PONTOS,
+      'GET /api/sensors/latest': () => SENSORES,
+      'GET /api/events/timeline': ({ url }) => tlEvento(Date.parse(url.searchParams.get('from') ?? ''), Date.parse(url.searchParams.get('to') ?? '')),
+      'GET /api/alerts': () => ({ page: 0, size: 100, totalElements: ALERTAS_F.length, content: ALERTAS_F }),
+      'GET /api/reports': () => ({ page: 0, size: 50, totalElements: 0, content: [] }),
+    } }, '/relatorio');
+    await fim();
+  });
+}
