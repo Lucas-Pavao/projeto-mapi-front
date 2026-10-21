@@ -6,7 +6,7 @@ import type {
   Alert, FloodReport, IngestionSource, ModelEvaluation, PredictionSummary, PublicRisk,
   RiskSummary, SensorFreshness, Timeline, UserSummary,
 } from '@/types/api';
-import { RISK_MEANING } from '@/features/map/utils/risk';
+import { RISK_MEANING } from '@/components/risk/risk';
 
 const MIN = 60_000;
 const ago = (minutes: number) => new Date(Date.now() - minutes * MIN).toISOString();

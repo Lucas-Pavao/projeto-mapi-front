@@ -1,6 +1,6 @@
 import React from 'react';
 import { ShieldCheck, TriangleAlert, OctagonAlert, CircleHelp } from 'lucide-react';
-import type { RiskLevel } from '../schemas/floodPointResponse.schema';
+import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 
 const ICONS: Record<RiskLevel, React.ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
   LOW: ShieldCheck,

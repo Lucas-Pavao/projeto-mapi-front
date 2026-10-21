@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { render, screen, cleanup } from '@testing-library/react';
-import { FloodPointPopup } from './FloodPointPopup';
+import { FloodPointPopup } from '@/features/map/components/FloodPointPopup';
 import { RiskLegend } from './RiskLegend';
-import { EXPERIMENTAL_LABEL, showsExperimentalLabel } from '../utils/risk';
-import type { FloodPointResponseDTO } from '../types';
+import { EXPERIMENTAL_LABEL, showsExperimentalLabel } from './risk';
+import type { FloodPointResponseDTO } from '@/features/map/types';
 
 afterEach(cleanup);
 

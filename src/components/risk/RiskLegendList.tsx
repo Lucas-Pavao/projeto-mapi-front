@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { getRiskVisual, RISK_LEGEND_ORDER, RISK_MEANING, EXPERIMENTAL_LEGEND_TEXT } from '../utils/risk';
+import { getRiskVisual, RISK_LEGEND_ORDER, RISK_MEANING, EXPERIMENTAL_LEGEND_TEXT } from './risk';
 import { RiskIcon } from './RiskIcon';
 
 /** Legenda dos quatro estados de risco, inline (sem o popover da barra do mapa). */

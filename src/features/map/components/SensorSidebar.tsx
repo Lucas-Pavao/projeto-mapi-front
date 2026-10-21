@@ -1,6 +1,6 @@
 import React from 'react';
-import { getRiskVisual } from '../utils/risk';
-import { RiskIcon } from './RiskIcon';
+import { getRiskVisual } from '@/components/risk/risk';
+import { RiskIcon } from '@/components/risk/RiskIcon';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 import { getSensorConfig, getDataFreshness, getSafeFormattedDate } from '../utils/sensor';
 import { Signal, Search, Filter, AlertTriangle, Waves, MapPin, X } from 'lucide-react';

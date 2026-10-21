@@ -24,8 +24,8 @@ import {
 import { cn } from '@/lib/utils';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { getSafeFormattedDate } from '../utils/sensor';
-import { getRiskVisual, formatProbability, showsExperimentalLabel } from '../utils/risk';
-import { ExperimentalBadge } from './ExperimentalBadge';
+import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/components/risk/risk';
+import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { InfoHint } from './InfoHint';

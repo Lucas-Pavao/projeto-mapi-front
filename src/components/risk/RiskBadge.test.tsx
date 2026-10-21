@@ -3,7 +3,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { RiskBadge } from './RiskBadge';
 import { RiskLegendList } from './RiskLegendList';
 import { ExperimentalBadge } from './ExperimentalBadge';
-import { EXPERIMENTAL_LABEL, RISK_MEANING } from '../utils/risk';
+import { EXPERIMENTAL_LABEL, RISK_MEANING } from './risk';
 
 afterEach(cleanup);
 

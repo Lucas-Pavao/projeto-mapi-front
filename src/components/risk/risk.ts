@@ -1,4 +1,4 @@
-import type { DegradationReason, ModelValidationStatus, RiskLevel } from '../schemas/floodPointResponse.schema';
+import type { DegradationReason, ModelValidationStatus, RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 
 /**
  * Visual de um nível de risco, em tokens do tema (theme.css). UNKNOWN usa cinza neutro, fora da

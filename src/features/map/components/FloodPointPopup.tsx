@@ -13,8 +13,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { getSafeFormattedDate } from '../utils/sensor';
-import { getRiskVisual, formatProbability, showsExperimentalLabel } from '../utils/risk';
-import { ExperimentalBadge } from './ExperimentalBadge';
+import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/components/risk/risk';
+import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 
 interface FloodPointPopupProps {

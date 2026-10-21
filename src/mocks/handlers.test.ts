@@ -5,7 +5,7 @@ import { sensorsService } from '@/features/sensors/services/sensors.service';
 import { predictionsService } from '@/features/points/services/predictions.service';
 import { publicRiskService } from '@/features/public-risk/services/public-risk.service';
 import { modelService } from '@/features/model/services/model.service';
-import { RISK_MEANING, formatProbability } from '@/features/map/utils/risk';
+import { RISK_MEANING, formatProbability } from '@/components/risk/risk';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());

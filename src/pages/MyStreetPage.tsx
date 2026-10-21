@@ -3,9 +3,9 @@ import { PageShell } from '@/components/layout/PageShell';
 import { EmptyState, QueryState } from '@/components/ui/query-state';
 import { Button } from '@/components/ui/button';
 import { usePublicRisk, type Coord } from '@/features/public-risk/hooks/usePublicRisk';
-import { RiskBadge } from '@/features/map/components/RiskBadge';
-import { ExperimentalBadge } from '@/features/map/components/ExperimentalBadge';
-import { showsExperimentalLabel } from '@/features/map/utils/risk';
+import { RiskBadge } from '@/components/risk/RiskBadge';
+import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
+import { showsExperimentalLabel } from '@/components/risk/risk';
 
 export const MyStreetPage: React.FC = () => {
   const [coord, setCoord] = useState<Coord | null>(null);

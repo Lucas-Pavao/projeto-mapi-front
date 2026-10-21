@@ -1,6 +1,6 @@
 import React from 'react';
 import type { FloodPredictionResponseDTO } from '../types';
-import { degradationText } from '../utils/risk';
+import { degradationText } from '@/components/risk/risk';
 import { formatRecife } from '../utils/datetime';
 
 /** Estado neutro de UNKNOWN (ADR 0007 §6): sem cor de risco e sem porcentagem. */

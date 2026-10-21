@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getRiskVisual } from './risk';
-import { RISK_LEVELS } from '../schemas/floodPointResponse.schema';
+import { RISK_LEVELS } from '@/features/map/schemas/floodPointResponse.schema';
 
 function lin(c: number) {
   const v = c / 255;

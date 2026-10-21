@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { RISK_LEVELS } from '../schemas/floodPointResponse.schema';
+import { RISK_LEVELS } from '@/features/map/schemas/floodPointResponse.schema';
 import { getRiskVisual, formatProbability, degradationText } from './risk';
-import { formatRecife } from './datetime';
+import { formatRecife } from '@/features/map/utils/datetime';
 
 describe('getRiskVisual', () => {
   it('cobre todos os níveis do enum, com rótulo e cor próprios', () => {

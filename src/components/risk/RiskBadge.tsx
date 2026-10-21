@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import type { RiskLevel } from '../schemas/floodPointResponse.schema';
-import { formatProbability, getRiskVisual } from '../utils/risk';
+import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
+import { formatProbability, getRiskVisual } from './risk';
 import { RiskIcon } from './RiskIcon';
 
 export interface RiskBadgeProps {

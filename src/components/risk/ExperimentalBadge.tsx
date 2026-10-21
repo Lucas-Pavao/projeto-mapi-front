@@ -1,7 +1,7 @@
 import React from 'react';
 import { FlaskConical } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EXPERIMENTAL_LABEL } from '../utils/risk';
+import { EXPERIMENTAL_LABEL } from './risk';
 
 /**
  * Rótulo "Previsão experimental — modelo não validado" (ADR 0007, emenda 1), em `warning`.

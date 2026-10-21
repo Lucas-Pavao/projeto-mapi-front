@@ -1,7 +1,7 @@
 import React from 'react';
 import { ShieldAlert } from 'lucide-react';
 import { RiskLegendList } from './RiskLegendList';
-import { MapToolPopover } from './MapToolPopover';
+import { MapToolPopover } from '@/features/map/components/MapToolPopover';
 
 interface RiskLegendProps {
   open?: boolean;
