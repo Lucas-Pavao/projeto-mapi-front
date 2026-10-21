@@ -1,8 +1,10 @@
 import { delay, http, HttpResponse } from 'msw';
-import type { BucketSimulation, FloodReport, PageMeta, SensorFreshness, SensorType } from '@/types/api';
+import type { BucketSimulation } from '@/features/model/schemas/model.schema';
+import type { FloodReport } from '@/features/reports/schemas/report.schema';
+import type { SensorFreshness, SensorType } from '@/features/sensors/schemas/sensor.schema';
 import * as d from './data';
 
-const page = <T,>(content: T[]): PageMeta<T> => ({ page: 0, size: 20, totalElements: content.length, content });
+const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
 /** Handlers só dos endpoints novos do redesign (redesign-telas.yaml). Os existentes ficam com a API real. */
 export const handlers = [

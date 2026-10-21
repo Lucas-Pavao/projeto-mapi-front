@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { http, HttpResponse } from 'msw';
 import { server } from './server';
 import { alertsService } from '@/features/alerts/services/alerts.service';
 import { sensorsService } from '@/features/sensors/services/sensors.service';
@@ -39,5 +40,9 @@ describe('handlers MSW (dados sintéticos)', () => {
     const sim = await modelService.simulateBucket({ slug: 'sintetico-1', rainfallMmH: [5, 10, 20] });
     expect(sim.illustrative).toBe(true);
     expect(sim.hMm).toHaveLength(3);
+  });
+  it('parse na borda: payload fora do contrato é rejeitado', async () => {
+    server.use(http.get('/api/sensors/latest', () => HttpResponse.json([{ sensorId: 'x', type: 'OUTRO' }])));
+    await expect(sensorsService.latest()).rejects.toThrow();
   });
 });

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { SensorType } from '@/types/api';
+import type { SensorType } from '../schemas/sensor.schema';
 import { sensorsService } from '../services/sensors.service';
 
 export const useSensorsLatest = (type?: SensorType) =>

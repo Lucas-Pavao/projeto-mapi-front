@@ -2,10 +2,14 @@
  * DADOS SINTÉTICOS. Nada aqui é medição, previsão ou ocorrência real: servem só para desenhar
  * e testar telas. Todo nome começa com "Sintético" para ninguém confundir com o ponto real.
  */
-import type {
-  Alert, FloodReport, IngestionSource, ModelEvaluation, PredictionSummary, PublicRisk,
-  RiskSummary, SensorFreshness, Timeline, UserSummary,
-} from '@/types/api';
+import type { PredictionSummary, RiskSummary } from '@/features/points/schemas/prediction.schema';
+import type { SensorFreshness } from '@/features/sensors/schemas/sensor.schema';
+import type { Alert } from '@/features/alerts/schemas/alert.schema';
+import type { Timeline } from '@/features/events/schemas/timeline.schema';
+import type { ModelEvaluation } from '@/features/model/schemas/model.schema';
+import type { FloodReport } from '@/features/reports/schemas/report.schema';
+import type { IngestionSource, UserSummary } from '@/features/admin/schemas/admin.schema';
+import type { PublicRisk } from '@/features/public-risk/schemas/public-risk.schema';
 import { RISK_MEANING } from '@/components/risk/risk';
 
 const MIN = 60_000;

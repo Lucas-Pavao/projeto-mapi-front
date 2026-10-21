@@ -1,5 +1,5 @@
 import api from '@/lib/api';
-import type { BucketSimulation, ModelEvaluation } from '@/types/api';
+import { bucketSimulationSchema, modelEvaluationSchema, type BucketSimulation, type ModelEvaluation } from '../schemas/model.schema';
 
 export interface BucketSimulationInput {
   slug: string;
@@ -10,11 +10,11 @@ export interface BucketSimulationInput {
 
 export const modelService = {
   async evaluation(): Promise<ModelEvaluation> {
-    const { data } = await api.get<ModelEvaluation>('/api/model/evaluation');
-    return data;
+    const { data } = await api.get<unknown>('/api/model/evaluation');
+    return modelEvaluationSchema.parse(data);
   },
   async simulateBucket(input: BucketSimulationInput): Promise<BucketSimulation> {
-    const { data } = await api.post<BucketSimulation>('/api/model/simulate/bucket', input);
-    return data;
+    const { data } = await api.post<unknown>('/api/model/simulate/bucket', input);
+    return bucketSimulationSchema.parse(data);
   },
 };

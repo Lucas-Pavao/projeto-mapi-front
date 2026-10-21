@@ -3,7 +3,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { QueryState } from '@/components/ui/query-state';
 import { useIngestionSources } from '@/features/admin/hooks/useAdminData';
 import { formatRecife } from '@/features/map/utils/datetime';
-import type { IngestionStatus } from '@/types/api';
+import type { IngestionStatus } from '@/features/admin/schemas/admin.schema';
 
 const STATUS_LABEL: Record<IngestionStatus, string> = { OK: 'Em dia', DELAYED: 'Atrasada', FAILING: 'Com falha', QUARANTINED: 'Em quarentena', IDLE: 'Parada' };
 
