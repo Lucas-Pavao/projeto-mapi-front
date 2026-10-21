@@ -60,14 +60,14 @@ export const FONTES = [
   { source: 'TABUA_MARE', status: 'IDLE', expectedEveryMinutes: null, lastSuccessAt: null, lastRunId: null, lastError: null, rowsLast24h: 0 },
 ];
 export const EXECUCOES = [
-  { id: '7c9e6679-7425-40de-944b-e07fc1f90ae7', source: 'CEMADEN', status: 'SUCCESS', startedAt: ago(4), finishedAt: ago(3), rows: 120 },
-  { id: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', source: 'APAC', status: 'FAILED', startedAt: ago(55), finishedAt: ago(54), rows: 0 },
+  { id: '7c9e6679-7425-40de-944b-e07fc1f90ae7', source: 'CEMADEN', kind: 'LIVE', mode: 'REFETCH', status: 'SUCCEEDED', startedAt: ago(4), finishedAt: ago(3), fetched: 120, valid: 118, quarantined: 2, errorSummary: null },
+  { id: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', source: 'APAC', kind: 'LIVE', mode: 'REFETCH', status: 'FAILED', startedAt: ago(55), finishedAt: ago(54), fetched: 0, valid: 0, quarantined: 0, errorSummary: 'Sintético: tempo esgotado' },
 ];
 
 export const USUARIOS = [
   { id: 1, name: 'Sintético Admin', email: 'admin@example.org', role: 'ADMIN', active: true, lastLoginAt: ago(30) },
   { id: 2, name: 'Sintético Operador', email: 'operador@example.org', role: 'OPERADOR', active: true, lastLoginAt: ago(600) },
-  { id: 3, name: null, email: null, role: 'USER', active: false, lastLoginAt: null },
+  { id: 3, name: null, email: null, role: 'USER', active: false, lastLoginAt: null }, // criado antes da V19
 ];
 
 export function timeline(hours = 24) {
@@ -159,7 +159,12 @@ export async function installApi(page: Page, opts: ApiOptions = {}) {
     'GET /api/model/evaluation': () => AVALIACAO,
     'POST /api/model/simulate/bucket': ({ body }) => SIMULACAO(((body as { rainfallMmH?: number[] })?.rainfallMmH ?? [0]).length),
     'GET /api/admin/ingestion/sources': () => FONTES,
-    'GET /api/admin/ingestion/runs': () => ({ page: 0, size: 20, totalElements: EXECUCOES.length, content: EXECUCOES }),
+    'GET /api/admin/ingestion/runs': ({ url }) => {
+      const src = url.searchParams.get('source');
+      const list = EXECUCOES.filter((r) => !src || r.source === src);
+      return { page: 0, size: 20, totalElements: list.length, content: list };
+    },
+    'GET /api/admin/ingestion/check-integrity': () => [{ slug: 'sintetico-alto', totalWeatherRecords: 1200, totalSensorRecords: 3400, totalFloodEvents: 3, status: 'OK' }],
     'GET /api/admin/users': () => ({ page: 0, size: 20, totalElements: USUARIOS.length, content: USUARIOS }),
     'GET /api/pontos/station-suggestions': () => [{ stationId: 'SINTETICO-PLUV-01', name: 'Sintético: pluviômetro 1', type: 'PRECIPITATION', source: 'CEMADEN', distanceM: 900, lastReadingAt: ago(8) }],
     'GET /api/public/risk': ({ url }) => {

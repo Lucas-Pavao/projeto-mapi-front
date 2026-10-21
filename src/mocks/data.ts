@@ -78,15 +78,16 @@ export const reports: FloodReport[] = [
 ];
 
 export const ingestionSources: IngestionSource[] = [
-  { source: 'CEMADEN', status: 'OK', expectedEveryMinutes: 10, lastSuccessAt: ago(4), lastRunId: 101, lastError: null, rowsLast24h: 1440 },
-  { source: 'APAC', status: 'DELAYED', expectedEveryMinutes: 10, lastSuccessAt: ago(55), lastRunId: 99, lastError: null, rowsLast24h: 900 },
-  { source: 'OPEN_METEO', status: 'FAILING', expectedEveryMinutes: 60, lastSuccessAt: ago(600), lastRunId: 90, lastError: 'Sintético: tempo esgotado', rowsLast24h: 3 },
+  { source: 'CEMADEN', status: 'OK', expectedEveryMinutes: 10, lastSuccessAt: ago(4), lastRunId: '7c9e6679-7425-40de-944b-e07fc1f90ae7', lastError: null, rowsLast24h: 1440 },
+  { source: 'APAC', status: 'DELAYED', expectedEveryMinutes: 10, lastSuccessAt: ago(55), lastRunId: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', lastError: null, rowsLast24h: 900 },
+  { source: 'OPEN_METEO', status: 'FAILING', expectedEveryMinutes: 60, lastSuccessAt: ago(600), lastRunId: null, lastError: 'Sintético: tempo esgotado', rowsLast24h: 3 },
 ];
 
 export const users: UserSummary[] = [
   { id: 1, name: 'Sintético Admin', email: 'admin@example.org', role: 'ADMIN', active: true, lastLoginAt: ago(30) },
   { id: 2, name: 'Sintético Operador', email: 'operador@example.org', role: 'OPERADOR', active: true, lastLoginAt: ago(600) },
   { id: 3, name: null, email: 'morador@example.org', role: 'USER', active: false, lastLoginAt: null },
+  { id: 4, name: null, email: null, role: 'USER', active: true, lastLoginAt: null }, // criado antes da V19: sem e-mail nem nome
 ];
 
 export const publicRisk = (): PublicRisk => ({
@@ -96,3 +97,9 @@ export const publicRisk = (): PublicRisk => ({
   modelValidationStatus: 'NOT_VALIDATED',
   meaning: RISK_MEANING.MEDIUM,
 });
+
+export const ingestionRuns = [
+  { id: '7c9e6679-7425-40de-944b-e07fc1f90ae7', source: 'CEMADEN', kind: 'LIVE', mode: 'REFETCH', status: 'SUCCEEDED', startedAt: ago(4), finishedAt: ago(3), fetched: 120, valid: 118, quarantined: 2, errorSummary: null },
+  { id: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', source: 'APAC', kind: 'LIVE', mode: 'REFETCH', status: 'FAILED', startedAt: ago(55), finishedAt: ago(54), fetched: 0, valid: 0, quarantined: 0, errorSummary: 'Sintético: tempo esgotado' },
+];
+export const integrity = [{ slug: SYNTHETIC_SLUG, totalWeatherRecords: 1200, totalSensorRecords: 3400, totalFloodEvents: 3, status: 'OK' }];

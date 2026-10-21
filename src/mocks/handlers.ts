@@ -133,7 +133,13 @@ export const handlers = [
   }),
 
   http.get('/api/admin/ingestion/sources', () => HttpResponse.json(d.ingestionSources)),
-  http.get('/api/admin/ingestion/runs', () => HttpResponse.json(page([]))),
+  http.get('/api/admin/ingestion/runs', ({ request }) => {
+    const u = new URL(request.url);
+    const src = u.searchParams.get('source');
+    const st = u.searchParams.get('status');
+    return HttpResponse.json(page(d.ingestionRuns.filter((r) => (!src || r.source === src) && (!st || r.status === st))));
+  }),
+  http.get('/api/admin/ingestion/check-integrity', () => HttpResponse.json(d.integrity)),
   http.get('/api/admin/users', () => HttpResponse.json(page(d.users))),
   http.post('/api/admin/invites', () =>
     HttpResponse.json({ token: 'sintetico-token', role: 'USER', expiresAt: new Date(Date.now() + 72 * 3_600_000).toISOString() }, { status: 201 }),
