@@ -38,9 +38,9 @@ export const terrain = (slug: string) => ({
 export const riskSummary = (): RiskSummary => ({ LOW: 5, MEDIUM: 2, HIGH: 1, UNKNOWN: 1, computedAt: ago(1) });
 
 export const sensors: SensorFreshness[] = [
-  { sensorId: 'SINTETICO-PLUV-01', type: 'PRECIPITATION', value: 2.4, observedAt: ago(8), ageSeconds: 480, stale: false },
-  { sensorId: 'SINTETICO-RIO-01', type: 'RIVER_LEVEL', value: 1.82, observedAt: ago(9), ageSeconds: 540, stale: false },
-  { sensorId: 'SINTETICO-PLUV-02', type: 'PRECIPITATION', value: null, observedAt: ago(300), ageSeconds: 18000, stale: true },
+  { sensorId: 'SINTETICO-PLUV-01', type: 'PRECIPITATION', value: 2.4, unit: 'mm', stationName: 'Sintético: pluviômetro 1', municipality: 'Recife', source: 'CEMADEN', observedAt: ago(8), ageSeconds: 480, stale: false },
+  { sensorId: 'SINTETICO-RIO-01', type: 'RIVER_LEVEL', value: 1.82, unit: 'm', stationName: 'Sintético: rio 1', municipality: 'Recife', source: 'APAC', observedAt: ago(9), ageSeconds: 540, stale: false },
+  { sensorId: 'SINTETICO-PLUV-02', type: 'PRECIPITATION', value: null, unit: 'mm', stationName: 'Sintético: pluviômetro 2', municipality: 'Olinda', source: 'CEMADEN', observedAt: ago(300), ageSeconds: 18000, stale: true },
 ];
 
 export const alerts: Alert[] = [
