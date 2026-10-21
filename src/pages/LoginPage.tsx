@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import logoDark from '@/assets/mapi-logo-on-dark.svg';
@@ -9,6 +9,7 @@ import { LoginForm } from '@/features/authentication/components/LoginForm';
 export const LoginPage: React.FC = () => {
   const { theme } = useTheme();
   const { isAuthenticated, isLoading } = useAuth();
+  const expired = (useLocation().state as { expired?: boolean } | null)?.expired === true;
   // Quem já tem sessão vai direto ao mapa (menos no meio da checagem inicial).
   if (!isLoading && isAuthenticated) return <Navigate to="/map" replace />;
   return (
@@ -26,6 +27,11 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
           
+          {expired && (
+            <p role="status" className="mb-4 rounded-lg border border-info/40 bg-info/10 p-3 text-xs font-medium text-info">
+              Sua sessão expirou. Entre de novo para continuar.
+            </p>
+          )}
           <LoginForm />
         </div>
         

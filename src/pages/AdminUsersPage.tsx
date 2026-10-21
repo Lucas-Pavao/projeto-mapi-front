@@ -6,6 +6,7 @@ import { NoticeRegion } from '@/components/ui/notice-region';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/form-field';
 import { useNotices } from '@/hooks/useNotices';
+import { useAuth } from '@/hooks/useAuth';
 import { useAdminUsers, useCreateInvite, usePatchUser } from '@/features/admin/hooks/useAdminData';
 import { InviteDialog, UserEditDialog } from '@/features/admin/components/UserDialogs';
 import { ROLE_LABEL, USER_CONFLICT_TEXT } from '@/features/admin/utils/users';
@@ -16,6 +17,8 @@ import type { Role } from '@/lib/apiSchemas';
 import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 20;
+/** O token só é checado na próxima requisição da pessoa afetada (TOKEN_REVOKED). */
+const TAKES_EFFECT = 'A mudança vale na próxima ação desse usuário.';
 const ROLES: Role[] = ['USER', 'OPERADOR', 'ADMIN'];
 
 export const AdminUsersPage: React.FC = () => {
@@ -24,6 +27,7 @@ export const AdminUsersPage: React.FC = () => {
   const patch = usePatchUser();
   const invite = useCreateInvite();
   const { notices, notify, dismiss } = useNotices();
+  const { user: me } = useAuth();
   const [editing, setEditing] = useState<UserSummary | null>(null);
   const [inviting, setInviting] = useState(false);
   const [created, setCreated] = useState<Invite | null>(null);
@@ -53,20 +57,21 @@ export const AdminUsersPage: React.FC = () => {
           <>
             <ul className="flex flex-col gap-2" aria-label="Usuários">
               {data.content.map((u) => (
-                <li key={u.id} data-user-id={u.id} data-active={u.active} className={cn('flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3', u.active ? 'border-border' : 'border-dashed border-border opacity-80')}>
+                <li key={u.id} data-user-id={u.id} data-self={me?.id === u.id} data-active={u.active} className={cn('flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3', u.active ? 'border-border' : 'border-dashed border-border opacity-80')}>
                   <div className="min-w-0 flex-1 basis-56">
                     <p className="text-body-strong text-foreground">{u.name ?? <span className="font-normal text-muted-foreground">Sem nome</span>}</p>
                     <p className="break-all text-caption text-muted-foreground">{u.email ?? 'Sem e-mail (conta criada antes do cadastro de e-mail)'}</p>
                     <p className="text-caption text-muted-foreground">Último acesso: {formatRecife(u.lastLoginAt) ?? 'nunca'}</p>
+                    {me?.id === u.id && <p className="text-caption font-semibold text-foreground">Esta é a sua conta: você não pode mudar o próprio perfil nem desativar a si mesmo.</p>}
                   </div>
                   <label className="flex flex-col gap-1 text-caption text-muted-foreground">
                     Perfil
-                    <Select value={u.role} disabled={busyId === u.id} aria-label={`Perfil de ${u.name ?? u.email ?? `usuário ${u.id}`}`} onChange={(e) => apply(u, { role: e.target.value as Role }, 'Perfil alterado.')} className="w-40">
+                    <Select value={u.role} disabled={busyId === u.id || me?.id === u.id} aria-label={`Perfil de ${u.name ?? u.email ?? `usuário ${u.id}`}`} onChange={(e) => apply(u, { role: e.target.value as Role }, `Perfil alterado. ${TAKES_EFFECT}`)} className="w-40">
                       {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
                     </Select>
                   </label>
                   <label className="flex min-h-11 items-center gap-2 text-body text-foreground">
-                    <input type="checkbox" role="switch" checked={u.active} disabled={busyId === u.id} onChange={() => apply(u, { active: !u.active }, u.active ? 'Usuário desativado.' : 'Usuário ativado.')} className="size-4" aria-label={`${u.name ?? u.email ?? `Usuário ${u.id}`}: conta ativa`} />
+                    <input type="checkbox" role="switch" checked={u.active} disabled={busyId === u.id || me?.id === u.id} onChange={() => apply(u, { active: !u.active }, `${u.active ? 'Usuário desativado.' : 'Usuário ativado.'} ${TAKES_EFFECT}`)} className="size-4" aria-label={`${u.name ?? u.email ?? `Usuário ${u.id}`}: conta ativa`} />
                     {u.active ? 'Ativo' : 'Inativo'}
                   </label>
                   <Button type="button" variant="outline" className="h-11 gap-1.5 px-3 md:h-8" onClick={() => { setFormError(null); setEditing(u); }} aria-label={`Editar ${u.name ?? u.email ?? `usuário ${u.id}`}`}><Pencil className="size-4" aria-hidden="true" /> Editar</Button>

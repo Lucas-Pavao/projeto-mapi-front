@@ -1,6 +1,11 @@
 export interface User {
   username: string;
+  /** USER | OPERADOR | ADMIN (vem de GET /api/auth/me, que lê o perfil do token). */
   role?: string;
+  /** De GET /api/auth/me. Ausente logo após o login, até o primeiro /me. */
+  id?: number;
+  email?: string | null;
+  name?: string | null;
 }
 
 export interface AuthResponse {

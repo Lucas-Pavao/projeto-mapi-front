@@ -132,7 +132,7 @@ export async function installApi(page: Page, opts: ApiOptions = {}) {
   const { role = 'ADMIN', routes = {}, stream = '' } = opts;
   const calls: Array<{ method: string; path: string; body: unknown }> = [];
   const defaults: Record<string, Handler> = {
-    'GET /api/auth/me': () => (role ? { json: { username: 'sintetico.operador', role } } : { status: 403, json: { message: 'forbidden' } }),
+    'GET /api/auth/me': () => (role ? { json: { id: 1, username: 'sintetico.operador', email: 'operador@example.org', name: 'Sintético Operador', role } } : { status: 403, json: { message: 'forbidden' } }),
     'POST /api/auth/logout': () => ({ status: 204 }),
     'GET /api/pontos': () => PONTOS,
     'GET /api/pontos/risk-summary': () => ({ LOW: 1, MEDIUM: 0, HIGH: 1, UNKNOWN: 1, computedAt: ago(1) }),

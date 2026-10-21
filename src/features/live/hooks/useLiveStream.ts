@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
+import { refreshSession } from '@/lib/session';
 import { parseLiveEvent, type LiveEvent } from '../schemas/live-event.schema';
 
 export type LiveStatus = 'connecting' | 'open' | 'error' | 'closed';
@@ -44,7 +45,16 @@ export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
           retryMs = BACKOFF_START_MS;
           return;
         }
-        if ([401, 403, 429].includes(res.status)) throw new FatalStreamError(`stream ${res.status}`);
+        if (res.status === 401) {
+          // Token revogado (perfil mudou): renova e deixa a biblioteca reconectar. Sem renovação, encerra.
+          try {
+            await refreshSession();
+          } catch {
+            throw new FatalStreamError('stream 401');
+          }
+          throw new Error('stream 401: sessão renovada, reconectando');
+        }
+        if ([403, 429].includes(res.status)) throw new FatalStreamError(`stream ${res.status}`);
         throw new Error(`stream ${res.status}`);
       },
       onmessage(msg) {

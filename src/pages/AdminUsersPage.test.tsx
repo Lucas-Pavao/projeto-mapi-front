@@ -3,6 +3,8 @@ import { screen, cleanup, within, fireEvent, waitFor } from '@testing-library/re
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
+let meId: number | undefined = 1;
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico.admin', role: 'ADMIN', id: meId } }) }));
 import { AdminUsersPage } from './AdminUsersPage';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -10,6 +12,7 @@ afterEach(() => {
   server.resetHandlers();
   cleanup();
   vi.unstubAllGlobals();
+  meId = 1;
 });
 afterAll(() => server.close());
 
@@ -31,10 +34,29 @@ describe('AdminUsersPage', () => {
     renderPage(<AdminUsersPage />);
     fireEvent.change(await screen.findByLabelText(/Perfil de Sintético Operador/), { target: { value: 'ADMIN' } });
     await waitFor(() => expect(sent).toEqual({ id: '2', body: { role: 'ADMIN' } }));
-    expect(await screen.findByText('Perfil alterado.')).toBeInTheDocument();
+    expect(await screen.findByText(/Perfil alterado\. A mudança vale na próxima ação desse usuário\./)).toBeInTheDocument();
+  });
+
+  it('a própria conta (me.id) não tem perfil nem ativação editáveis; as outras têm', async () => {
+    renderPage(<AdminUsersPage />);
+    const eu = (await screen.findByText('Sintético Admin')).closest('li')!;
+    expect(eu).toHaveAttribute('data-self', 'true');
+    expect(within(eu).getByLabelText(/Perfil de Sintético Admin/)).toBeDisabled();
+    expect(within(eu).getByRole('switch')).toBeDisabled();
+    expect(within(eu).getByText(/você não pode mudar o próprio perfil/)).toBeInTheDocument();
+    const outro = screen.getByText('Sintético Operador').closest('li')!;
+    expect(within(outro).getByLabelText(/Perfil de Sintético Operador/)).toBeEnabled();
+    expect(within(outro).getByRole('switch')).toBeEnabled();
+  });
+
+  it('desativar outro usuário avisa que vale na próxima ação dele', async () => {
+    renderPage(<AdminUsersPage />);
+    fireEvent.click(await screen.findByRole('switch', { name: 'Sintético Operador: conta ativa' }));
+    expect(await screen.findByText(/Usuário desativado\. A mudança vale na próxima ação desse usuário\./)).toBeInTheDocument();
   });
 
   it('desativar manda {active:false}; 409 explica as regras', async () => {
+    meId = 99; // outra pessoa: o admin da lista fica editável para exercitar o 409 do servidor
     let body: unknown = null;
     server.use(http.patch('/api/admin/users/:id', async ({ request }) => { body = await request.json(); return HttpResponse.json({}, { status: 409 }); }));
     renderPage(<AdminUsersPage />);

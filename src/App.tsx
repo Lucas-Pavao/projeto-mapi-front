@@ -36,12 +36,12 @@ const RouteFallback = () => (
 );
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, sessionExpired } = useAuth();
   // Enquanto a checagem inicial de sessão (/api/auth/me) ainda está em voo, não redireciona —
   // senão todo F5 na página do mapa manda o usuário de volta pro login por uma fração de
   // segundo, mesmo com uma sessão válida.
   if (isLoading) return <RouteFallback />;
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace state={sessionExpired ? { expired: true } : undefined} />;
 };
 
 function App() {
