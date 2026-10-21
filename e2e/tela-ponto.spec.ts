@@ -14,7 +14,7 @@ test('/pontos/:slug: risco atual UNKNOWN com motivo, histórico, terreno e aviso
   await expect(agora.locator('[data-risk="UNKNOWN"]')).not.toContainText('%');
   const hist = page.getByRole('region', { name: 'Histórico de risco' });
   await expect(hist.locator('li[data-risk="HIGH"]').first()).toBeVisible();
-  await expect(page.getByTestId('terrain-facts')).toContainText('Cota da rua');
+  await expect(page.getByTestId('terrain-facts')).toContainText('cota da rua');
   await expect(page.getByTestId('tide-datum-notice')).toBeVisible();
   await semRolagemHorizontal(page);
   await shot(page, testInfo, 'ponto');

@@ -31,7 +31,7 @@ describe('PointPage', () => {
 
   it('terreno e maré trazem o aviso da ADR 0009', async () => {
     open();
-    expect(await screen.findByTestId('tide-datum-notice')).toHaveTextContent('não são comparáveis');
+    expect(await screen.findByTestId('tide-datum-notice')).toHaveTextContent('não é comparável');
     expect(await screen.findByTestId('terrain-facts')).toBeInTheDocument();
   });
 

@@ -3,31 +3,46 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
 import { EmptyState, QueryState } from '@/components/ui/query-state';
-import { TideDatumNotice } from '@/components/TideDatumNotice';
+import { RiskBadge } from '@/components/risk/RiskBadge';
+import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
+import { RISK_MEANING, degradationText, formatProbability, getRiskVisual, showsExperimentalLabel } from '@/components/risk/risk';
+import { formatRecife } from '@/features/map/utils/datetime';
 import { usePredictionSeries } from '@/features/points/hooks/usePredictionSeries';
+import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 import { usePoint } from '@/features/points/hooks/usePoint';
-import { RiskNowCard } from '@/features/points/components/RiskNowCard';
-import { RiskHistory } from '@/features/points/components/RiskHistory';
-import { TerrainFacts } from '@/features/map/components/TerrainFacts';
+import { PointHeader } from '@/features/points/components/PointHeader';
+import { PointList } from '@/features/points/components/PointList';
+import { ProbabilityChart } from '@/features/points/components/ProbabilityChart';
+import { ContributorsPanel, TerrainPanel, WaterWeatherPanel } from '@/features/points/components/PointPanels';
+import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { httpStatus } from '@/lib/apiError';
+import { cn } from '@/lib/utils';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
+import type { FloodPointResponseDTO } from '@/features/map/types';
 
-const MapLink: React.FC<{ className?: string }> = ({ className }) => (
-  <Link to="/map" className={`inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-body-strong text-foreground hover:bg-muted md:h-8 ${className ?? ''}`}>
+const MapLink: React.FC = () => (
+  <Link to="/map" className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-body-strong text-foreground hover:bg-muted md:h-8">
     <ArrowLeft className="size-4" aria-hidden="true" /> Voltar ao mapa
   </Link>
 );
 
+/** Previsão mais recente: a da série; sem série, a que o ponto já traz. */
+function fromPoint(p: FloodPointResponseDTO): PredictionSummary | null {
+  const f = p.floodPrediction;
+  if (!f?.issuedAt) return null;
+  return { slug: p.slug, riskLevel: f.riskLevel, probability: f.floodProbability, issuedAt: f.issuedAt, validUntil: f.validUntil, horizonHours: f.horizonHours, modelVersion: f.modelVersion, degradationReason: f.degradationReason, lastValidIssuedAt: f.lastValidIssuedAt, modelValidationStatus: f.modelValidationStatus };
+}
+
 export const PointPage: React.FC = () => {
   const { slug = '' } = useParams();
   const point = usePoint(slug);
+  const all = useFloodPoints();
   const series = usePredictionSeries(slug);
+  const now = useMemo(() => Date.now(), []);
 
-  const latest = useMemo<PredictionSummary | null>(() => {
-    const items = series.data?.items ?? [];
-    if (items.length === 0) return null;
-    return items.reduce((a, b) => (Date.parse(b.issuedAt) > Date.parse(a.issuedAt) ? b : a));
-  }, [series.data]);
+  const items = useMemo(() => [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt)), [series.data]);
+  const p = point.data;
+  const latest = useMemo<PredictionSummary | null>(() => items[items.length - 1] ?? (p ? fromPoint(p) : null), [items, p]);
 
   if (point.isError && httpStatus(point.error) === 404) {
     return (
@@ -37,56 +52,62 @@ export const PointPage: React.FC = () => {
     );
   }
 
-  const p = point.data;
+  const unknown = latest?.riskLevel === 'UNKNOWN';
+  const pct = latest ? formatProbability(latest.riskLevel, latest.probability) : null;
   return (
-    <PageShell
-      title={p?.name ?? `Ponto ${slug}`}
-      description={p ? [p.municipality, p.description].filter(Boolean).join(' · ') || undefined : undefined}
-      actions={<MapLink />}
-    >
-      <QueryState query={point} what="o ponto">
-        {(pt) => (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="flex min-w-0 flex-col gap-4">
-              {!pt.active && <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-body text-warning">Ponto desativado: sem previsões novas.</p>}
-              <QueryState
-                query={series}
-                what="as previsões"
-                isEmpty={(d) => d.items.length === 0}
-                emptyTitle="Sem previsões nas últimas 24 h."
-                emptyHint="Quando o modelo emitir uma previsão para este ponto, ela aparece aqui."
-              >
-                {() => <RiskNowCard prediction={latest} />}
-              </QueryState>
-              <dl className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-card p-4 text-body" aria-label="Dados do ponto">
-                <div><dt className="text-caption text-muted-foreground">Coordenadas</dt><dd className="text-reading text-foreground">{pt.latitude.toFixed(5)}, {pt.longitude.toFixed(5)}</dd></div>
-                <div><dt className="text-caption text-muted-foreground">Bacia</dt><dd className="text-foreground">{pt.basinName ?? '—'}</dd></div>
-                <div><dt className="text-caption text-muted-foreground">Altitude</dt><dd className="text-reading text-foreground">{pt.altitudeM != null ? `${pt.altitudeM} m` : '—'}</dd></div>
-                <div><dt className="text-caption text-muted-foreground">Distância ao canal</dt><dd className="text-reading text-foreground">{pt.distanceToChannelM != null ? `${pt.distanceToChannelM} m` : '—'}</dd></div>
-                <div className="col-span-2">
-                  <dt className="text-caption text-muted-foreground">Estações ligadas ao ponto</dt>
-                  <dd className="text-code text-foreground">
-                    {[...(pt.sensorConfig?.pluviometerStationIds ?? []), ...(pt.sensorConfig?.riverLevelStationIds ?? [])].join(', ') || 'nenhuma configurada'}
-                  </dd>
-                </div>
-              </dl>
-            </div>
-            <div className="flex min-w-0 flex-col gap-4">
-              <TerrainFacts slug={pt.slug} />
-              {pt.tideHeight != null && (
-                <p className="rounded-xl border border-border bg-card p-4 text-body text-foreground">
-                  Maré agora: <span className="text-reading">{pt.tideHeight.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} {pt.tideUnit ?? 'm (NR da DHN)'}</span>
-                </p>
-              )}
-              <TideDatumNotice />
-            </div>
-            {series.data && series.data.items.length > 0 && (
-              <div className="min-w-0 lg:col-span-2"><RiskHistory items={series.data.items} /></div>
+    <PageFrame className="lg:flex-row">
+      <PointList points={all.data} current={slug} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr_1fr] lg:overflow-y-auto">
+        <div className="lg:col-span-12">
+          <QueryState query={point} what="o ponto">
+            {(pt) => (
+              <>
+                {!pt.active && <p role="status" className="mb-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-body text-warning">Ponto desativado: sem previsões novas.</p>}
+                <PointHeader point={pt} prediction={latest} />
+              </>
             )}
-          </div>
+          </QueryState>
+        </div>
+        {p && (
+          <>
+            <Panel aria-label="Probabilidade ao longo do dia" className="min-h-[300px] lg:col-span-7">
+              <div className="flex items-baseline justify-between">
+                <PanelTitle>Probabilidade de alagamento (próximas 3 h)</PanelTitle>
+                <span className={cn('font-mono text-[28px] font-extrabold leading-8', latest ? getRiskVisual(latest.riskLevel).text : 'text-muted-foreground')}>{pct ?? '—'}</span>
+              </div>
+              {series.isError ? (
+                <p role="alert" className="m-0 flex-1 text-[13px] text-warning">Não foi possível carregar as previsões. Confira a conexão e recarregue.</p>
+              ) : (
+                <ProbabilityChart items={items} now={now} latest={latest} />
+              )}
+              <p className="m-0 text-[13px] leading-[18px]">
+                {latest ? RISK_MEANING[latest.riskLevel] : 'Sem previsões nas últimas 24 h.'}
+              </p>
+            </Panel>
+            <div className="flex min-h-0 flex-col lg:col-span-5"><ContributorsPanel contributors={p.floodPrediction?.contributors} unknown={unknown} /></div>
+            <div className="flex flex-col lg:col-span-7"><WaterWeatherPanel point={p} /></div>
+            <div className="flex flex-col lg:col-span-5"><TerrainPanel slug={p.slug} distanceToChannelM={p.distanceToChannelM} /></div>
+            {items.length > 0 && <HistoricoAcessivel items={items} />}
+          </>
         )}
-      </QueryState>
-    </PageShell>
+      </div>
+    </PageFrame>
   );
 };
+
+/** Histórico em texto para leitor de tela: mesmos dados da curva, uma linha por previsão. */
+const HistoricoAcessivel: React.FC<{ items: PredictionSummary[] }> = ({ items }) => (
+  <section aria-label="Histórico de risco" className="sr-only">
+    <h2>Risco nas últimas 24 h</h2>
+    <ul>
+      {items.map((it) => (
+        <li key={it.issuedAt} data-risk={it.riskLevel}>
+          {formatRecife(it.issuedAt)}: <RiskBadge level={it.riskLevel} probability={it.probability} />
+          {showsExperimentalLabel(it) && <ExperimentalBadge />}
+          {it.riskLevel === 'UNKNOWN' && ` ${degradationText(it.degradationReason)}`}
+        </li>
+      ))}
+    </ul>
+  </section>
+);
 export default PointPage;
