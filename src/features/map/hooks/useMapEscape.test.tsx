@@ -3,7 +3,8 @@ import { renderHook } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
 import { useMapEscape } from './useMapEscape';
 
-const base = (): Parameters<typeof useMapEscape>[0] => ({
+type Props = Parameters<typeof useMapEscape>[0];
+const base = (): Props => ({
   blocked: false,
   showMobileList: false,
   closeMobileList: vi.fn(),
@@ -15,7 +16,8 @@ const base = (): Parameters<typeof useMapEscape>[0] => ({
 describe('useMapEscape', () => {
   it('fecha na ordem: lista, ferramenta, popups', () => {
     const a = base();
-    const { rerender } = renderHook((p) => useMapEscape(p), { initialProps: { ...a, showMobileList: true, openTool: 'layers' } });
+    const first: Props = { ...a, showMobileList: true, openTool: 'layers' };
+    const { rerender } = renderHook((p: Props) => useMapEscape(p), { initialProps: first });
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(a.closeMobileList).toHaveBeenCalledTimes(1);
     expect(a.closeTool).not.toHaveBeenCalled();
