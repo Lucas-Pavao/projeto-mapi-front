@@ -77,7 +77,21 @@ export const handlers = [
     return HttpResponse.json(items);
   }),
 
-  http.get('/api/alerts', () => HttpResponse.json(page(d.alerts))),
+  http.get('/api/alerts', ({ request }) => {
+    const status = new URL(request.url).searchParams.get('status') ?? 'OPEN';
+    const all = [...d.alerts, d.acknowledgedAlert];
+    return HttpResponse.json(page(all.filter((a) => (status === 'ALL' ? true : status === 'OPEN' ? !a.acknowledgedAt : !!a.acknowledgedAt))));
+  }),
+  http.get('/api/alert-rules', () => HttpResponse.json(d.alertRules)),
+  http.post('/api/alert-rules', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ ...body, id: 99, createdBy: 'sintetico.operador', createdAt: new Date().toISOString(), updatedAt: null }, { status: 201 });
+  }),
+  http.put<{ id: string }>('/api/alert-rules/:id', async ({ params, request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ ...body, id: Number(params.id), createdBy: 'sintetico.operador', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  }),
+  http.delete('/api/alert-rules/:id', () => new HttpResponse(null, { status: 204 })),
   http.post<{ id: string }>('/api/alerts/:id/ack', ({ params }) => {
     const found = d.alerts.find((a) => a.id === Number(params.id));
     if (!found) return new HttpResponse(null, { status: 404 });

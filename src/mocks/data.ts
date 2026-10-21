@@ -4,7 +4,7 @@
  */
 import type { PredictionSummary, RiskSummary } from '@/features/points/schemas/prediction.schema';
 import type { SensorFreshness } from '@/features/sensors/schemas/sensor.schema';
-import type { Alert } from '@/features/alerts/schemas/alert.schema';
+import type { Alert, AlertRule } from '@/features/alerts/schemas/alert.schema';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
 import type { ModelEvaluation } from '@/features/model/schemas/model.schema';
 import type { FloodReport } from '@/features/reports/schemas/report.schema';
@@ -46,6 +46,13 @@ export const sensors: SensorFreshness[] = [
 export const alerts: Alert[] = [
   { id: 1, ruleId: 1, kind: 'RISK_LEVEL', severity: 'CRITICAL', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: risco alto no ponto de teste', detail: 'Dado sintético para desenho de tela.', riskLevel: 'HIGH', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(20), acknowledgedAt: null, acknowledgedBy: null },
   { id: 2, ruleId: 2, kind: 'PREDICTION_UNAVAILABLE', severity: 'WARNING', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: previsão indisponível', detail: 'O modelo não respondeu.', riskLevel: 'UNKNOWN', degradationReason: 'AI_TIMEOUT', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(45), acknowledgedAt: null, acknowledgedBy: null },
+];
+
+export const acknowledgedAlert: Alert = { id: 3, ruleId: 3, kind: 'SENSOR_STALE', severity: 'INFO', stationId: 'SINTETICO-PLUV-02', title: 'Sintético: pluviômetro sem resposta', detail: null, triggeredAt: ago(200), acknowledgedAt: ago(150), acknowledgedBy: 'sintetico.operador' };
+export const alertRules: AlertRule[] = [
+  { id: 1, kind: 'RISK_LEVEL', floodPointSlug: null, stationId: null, threshold: null, thresholdSource: null, minRisk: 'HIGH', enabled: true, channels: ['BROWSER'], createdBy: 'sistema', createdAt: ago(5000), updatedAt: null },
+  { id: 2, kind: 'RAIN_RATE', floodPointSlug: null, stationId: null, threshold: 55, thresholdSource: 'Sintético: fonte do limiar', minRisk: null, enabled: true, channels: ['BROWSER'], createdBy: 'sistema', createdAt: ago(5000), updatedAt: null },
+  { id: 3, kind: 'SENSOR_STALE', floodPointSlug: null, stationId: null, threshold: 30, thresholdSource: null, minRisk: null, enabled: false, channels: ['BROWSER'], createdBy: 'sintetico.operador', createdAt: ago(4000), updatedAt: ago(100) },
 ];
 
 export const timeline = (from: string, to: string): Timeline => ({

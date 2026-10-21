@@ -24,3 +24,30 @@ export type Alert = z.infer<typeof alertSchema>;
 
 export const alertPageSchema = pageOf(alertSchema);
 export type AlertPage = z.infer<typeof alertPageSchema>;
+
+export const alertSeveritySchema = z.enum(['INFO', 'WARNING', 'CRITICAL']);
+export type AlertSeverity = z.infer<typeof alertSeveritySchema>;
+export type AlertKind = z.infer<typeof alertKindSchema>;
+
+/** Corpo de POST /api/alert-rules e PUT /api/alert-rules/{id} (AlertRuleInput). */
+export const alertRuleInputSchema = z
+  .object({
+    kind: alertKindSchema,
+    floodPointSlug: z.string().nullable().optional(),
+    stationId: z.string().nullable().optional(),
+    threshold: z.number().nullable().optional(),
+    thresholdSource: z.string().nullable().optional(),
+    minRisk: z.enum(['MEDIUM', 'HIGH']).nullable().optional(),
+    enabled: z.boolean(),
+    channels: z.array(z.literal('BROWSER')).optional(),
+  });
+export type AlertRuleInput = z.infer<typeof alertRuleInputSchema>;
+
+/** AlertRule = AlertRuleInput + id, createdBy, createdAt, updatedAt. */
+export const alertRuleSchema = alertRuleInputSchema.extend({
+  id: z.number(),
+  createdBy: z.string(),
+  createdAt: isoSchema,
+  updatedAt: isoSchema.nullable().optional(),
+});
+export type AlertRule = z.infer<typeof alertRuleSchema>;
