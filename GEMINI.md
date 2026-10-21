@@ -9,7 +9,8 @@ Este repositório contém o frontend da plataforma MAPI, focada no monitoramento
 - **Framework:** React 19 (Uso intensivo de hooks e novas APIs de transição).
 - **Build Tool:** Vite 8.
 - **Linguagem:** TypeScript (Tipagem estrita obrigatória).
-- **Estilização:** Tailwind CSS 4 & Shadcn UI.
+- **Estilização:** Tailwind CSS 4 & Shadcn UI (primitivos `@base-ui/react`), tokens em `src/styles/theme.css`.
+- **Cache de servidor:** TanStack Query.
 - **Maps:** MapLibre GL com CartoDB Basemaps.
 - **Roteamento:** React Router 7.
 
@@ -28,6 +29,8 @@ O projeto utiliza uma **Arquitetura Baseada em Funcionalidades**. Toda lógica d
 
 ### Funcionalidades Atuais:
 - **authentication:** Gerenciamento de sessão e JWT.
+- **sensors, alerts, events, model, reports, admin, points, public-risk:** uma feature por tela de domínio (hooks `useQuery`, services e schemas zod).
+- **live:** stream SSE (`useLiveStream`), ainda não consumido pelas telas.
 - **map:** Visualização principal, camadas de sensores e alertas de inundação.
 
 ---

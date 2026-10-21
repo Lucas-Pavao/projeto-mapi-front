@@ -8,8 +8,9 @@ Este documento estabelece as diretrizes arquiteturais, restrições de performan
 
 Adotamos a **Arquitetura Baseada em Funcionalidades**. Agentes não devem criar componentes genéricos na raiz se eles pertencerem a um domínio específico.
 
+- **Uma feature por tela de domínio:** `authentication`, `map`, `sensors`, `alerts`, `events`, `model`, `reports`, `admin`, `points`, `public-risk` e `live` (stream SSE). Páginas finas ficam em `src/pages/`; componentes compartilhados em `src/components/` (risco em `src/components/risk`).
 - **Regra de Ouro:** Se a alteração ou novo recurso for exclusivo da tela de monitoramento, painéis ou interações espaciais, o código **DEVE** ser isolado dentro de `src/features/map/`.
-- **Estrutura de uma Feature:** Cada pasta dentro de `features/` deve conter seus próprios subdiretórios `components/`, `hooks/`, `services/`, e `types/`. Não misture lógica de infraestrutura global com regras de domínio.
+- **Estrutura de uma Feature:** Cada pasta dentro de `features/` deve conter seus próprios subdiretórios `components/`, `hooks/`, `services/`, `schemas/` (zod) e `types/`. Não misture lógica de infraestrutura global com regras de domínio.
 
 ---
 
@@ -38,14 +39,15 @@ O ecossistema MAPI lida com dados em tempo real vindos do backend. Ao manipular 
 O frontend consome dados de forma reativa a partir do barramento REST protegido por JWT exposto pelo Backend.
 - **Isolamento de Requisições:** Toda chamada HTTP deve passar estritamente pela camada de `services/` da respectiva funcionalidade. Nunca instancie clientes HTTP ou chame o `fetch`/`axios` diretamente de dentro de componentes visuais.
 - **Uso de Variáveis de Ambiente:** Todas as requisições devem consumir a URL base injetada por `import.meta.env.VITE_API_URL`. Nunca chumbe IPs ou `localhost` no código.
-- **Tratamento de Tipos:** Lembre-se de que o backend devolve probabilidades de risco de inundação estruturadas como Strings de enum (`LOW`, `MEDIUM`, `HIGH`). O frontend deve mapear esses enums estritamente para as variantes visuais corretas do Shadcn UI.
+- **Tratamento de Tipos:** O backend devolve o risco de inundação como String de enum (`LOW`, `MEDIUM`, `HIGH`, `UNKNOWN`). O frontend mapeia esses enums para os tokens `risk-*` (`risk-*`, `on-risk-*`, `risk-*-edge`, `risk-*-text`) por meio dos componentes de `src/components/risk` (`RiskBadge`, `RiskIcon`, `RiskLegend`, `ExperimentalBadge`) e de `getRiskVisual`. Não use variantes shadcn nem cores soltas para risco. Risco sempre com ícone e rótulo; `UNKNOWN` é cinza tracejado, sem porcentagem.
+- **Cache de servidor:** TanStack Query é o cliente de cache. Cada tela consome um hook da sua feature (`useQuery`) que chama o `service`; a resposta passa por schema zod (`schemas/`) e o tipo vem de `z.infer`.
 
 ---
 
 ## 🛠️ 5. Estilização e UI (Tailwind CSS 4 & Shadcn)
 
 - **Utilitários Puros:** Utilize as classes nativas do Tailwind CSS 4 para layouts responsivos e transições suaves de tema (Dark/Light).
-- **Primitivos do Shadcn:** Para novos modais, sidebars analíticas e tabelas, use os componentes atômicos expostos em `src/components/ui/`. Se o componente precisar de comportamento customizado, estenda-o sem quebrar a acessibilidade nativa (Radix Primitives).
+- **Primitivos do Shadcn:** Para novos modais, sidebars analíticas e tabelas, use os componentes atômicos expostos em `src/components/ui/`. Se o componente precisar de comportamento customizado, estenda-o sem quebrar a acessibilidade nativa (primitivos `@base-ui/react`, não Radix).
 
 ---
 
