@@ -55,7 +55,9 @@
   --elevation-overlay: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
-:root[data-theme="light"] {
+/* Também vale em qualquer elemento com data-theme="light" (ex.: a folha do Relatório dentro do app escuro). */
+:root[data-theme="light"],
+[data-theme="light"] {
   color-scheme: light;
   --background: #f4f7f8;
   --card: #ffffff;
