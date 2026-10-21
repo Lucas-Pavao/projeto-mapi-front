@@ -34,6 +34,15 @@ const go = () => fireEvent.click(screen.getByRole('button', { name: 'Usar minha 
 const risk = (nearestPoint: unknown, extra: Record<string, unknown> = {}) => http.get('/api/public/risk', () => HttpResponse.json({ nearestPoint, rainLastHourMm: 3.2, rainStationId: 'P1', modelValidationStatus: 'NOT_VALIDATED', meaning: RISK_MEANING.MEDIUM, ...extra }));
 const pt = (over: Record<string, unknown>) => ({ slug: 's', name: 'Sintético: ponto', distanceM: 300, riskLevel: 'MEDIUM', issuedAt: '2026-10-21T15:00:00Z', validUntil: null, degradationReason: null, ...over });
 
+describe('aviso público (pergunta 52)', () => {
+  it('sem telefone enquanto o número oficial não for informado (TODO F3-PUBLICO-TELEFONE)', async () => {
+    const { PUBLIC_WARNING } = await import('@/features/public-risk/components/PublicRiskResult');
+    expect(PUBLIC_WARNING).not.toMatch(/\d{3,}/);
+    expect(PUBLIC_WARNING).not.toMatch(/\(\d{2}\)|0800|tel/i);
+    expect(PUBLIC_WARNING).toContain('Defesa Civil');
+  });
+});
+
 describe('MyStreetPage', () => {
   it('estado inicial traz o aviso fixo e não consulta nada', () => {
     renderPage(<MyStreetPage />);

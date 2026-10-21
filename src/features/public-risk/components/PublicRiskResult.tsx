@@ -6,7 +6,11 @@ import { degradationText, showsExperimentalLabel } from '@/components/risk/risk'
 import { formatRecife } from '@/features/map/utils/datetime';
 import type { PublicRisk } from '../schemas/public-risk.schema';
 
-/** Texto fixo de aviso (ADR 0013): o modelo não está validado e a classe não é garantia. */
+/**
+ * Texto fixo de aviso (ADR 0013): o modelo não está validado e a classe não é garantia.
+ * TODO(F3-PUBLICO-TELEFONE): acrescentar o telefone oficial da Defesa Civil quando for informado (pergunta 52).
+ * Até lá o texto não traz número nenhum, de propósito.
+ */
 export const PUBLIC_WARNING =
   'Esta é uma estimativa experimental de um modelo que ainda não foi validado. A classe de risco não confirma nem descarta alagamento no local. Em caso de chuva forte, siga as orientações da Defesa Civil.';
 
