@@ -42,7 +42,7 @@ export const EventCharts: React.FC<ChartsProps> = ({ rain, tide, river, harbor, 
   const rMin = Number.isFinite(rLo) ? Math.floor((rLo - 0.2) * 10) / 10 : 0;
   const rMax = Number.isFinite(rHi) && rHi > rMin ? Math.ceil((rHi + 0.2) * 10) / 10 : rMin + 1;
   const nowX = xf(w.sel, w);
-  const Now = ({ h }: { h: number }) => <line x1={nowX} x2={nowX} y1="0" y2={h} stroke="var(--foreground)" strokeWidth="1.5" />;
+  const now = (h: number) => <line x1={nowX} x2={nowX} y1="0" y2={h} stroke="var(--foreground)" strokeWidth="1.5" />;
   const svg = 'block w-full';
   return (
     <>
@@ -50,14 +50,14 @@ export const EventCharts: React.FC<ChartsProps> = ({ rain, tide, river, harbor, 
       <svg viewBox={`0 0 ${CW} 90`} preserveAspectRatio="none" role="img" aria-label="Chuva média ao longo do evento" className={`${svg} h-[90px]`}>
         <polygon points={areaPts(rain, w, 90, 0, rainMax)} fill="var(--chart-3)" opacity="0.15" />
         <polygon points={areaPts(rain, w, 90, 0, rainMax, w.sel)} fill="var(--chart-3)" opacity="0.55" />
-        <Now h={90} />
+        {now(90)}
       </svg>
       <Label title="MARÉ" sub={`m · Porto ${harbor}`} />
       <svg viewBox={`0 0 ${CW} 70`} preserveAspectRatio="none" role="img" aria-label="Maré ao longo do evento" className={`${svg} h-[70px]`}>
         <line x1="0" x2={CW} y1={yf(2.0, 70, 0, tideMax)} y2={yf(2.0, 70, 0, tideMax)} stroke="var(--warning)" strokeDasharray="4 4" strokeWidth="1" />
         <polyline points={linePts(tide, w, 70, 0, tideMax)} fill="none" stroke="var(--sand)" strokeWidth="2" opacity="0.3" />
         <polyline points={linePts(tide, w, 70, 0, tideMax, w.sel)} fill="none" stroke="var(--sand)" strokeWidth="3" />
-        <Now h={70} />
+        {now(70)}
       </svg>
       <Label title={riverName.toUpperCase()} sub="m · cotas APAC" />
       <svg viewBox={`0 0 ${CW} 70`} preserveAspectRatio="none" role="img" aria-label="Nível do rio ao longo do evento" className={`${svg} h-[70px]`}>
@@ -65,7 +65,7 @@ export const EventCharts: React.FC<ChartsProps> = ({ rain, tide, river, harbor, 
         {riverAlert != null && <line x1="0" x2={CW} y1={yf(riverAlert, 70, rMin, rMax)} y2={yf(riverAlert, 70, rMin, rMax)} stroke="var(--risk-moderate)" strokeDasharray="4 4" strokeWidth="1" />}
         <polyline points={linePts(river, w, 70, rMin, rMax)} fill="none" stroke="var(--primary)" strokeWidth="2" opacity="0.3" />
         <polyline points={linePts(river, w, 70, rMin, rMax, w.sel)} fill="none" stroke="var(--primary)" strokeWidth="3" />
-        <Now h={70} />
+        {now(70)}
       </svg>
     </>
   );
