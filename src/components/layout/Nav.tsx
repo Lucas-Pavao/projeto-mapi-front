@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { Menu, Users, X } from 'lucide-react';
+import { ChevronDown, Menu, Users, X } from 'lucide-react';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
@@ -63,6 +63,75 @@ const MobileSheet: React.FC<{ items: readonly NavItem[]; showUsers: boolean; onC
   );
 };
 
+/** Menu "Mais" (641-1440 px): itens não prioritários. Esc fecha e devolve o foco ao botão. */
+const MoreMenu: React.FC<{ items: readonly NavItem[] }> = ({ items }) => {
+  const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const { pathname } = useLocation();
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+  useEffect(() => {
+    if (!open) return;
+    wrapRef.current?.querySelector<HTMLElement>('a')?.focus();
+    const onDown = (e: MouseEvent) => {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+  if (items.length === 0) return null;
+  return (
+    <div
+      ref={wrapRef}
+      className="relative shrink-0 max-[640px]:hidden min-[1441px]:hidden"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          e.stopPropagation();
+          setOpen(false);
+          btnRef.current?.focus();
+        }
+      }}
+      onBlur={(e) => {
+        if (open && !e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
+      <button
+        ref={btnRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="menu-mais"
+        className={cn('flex h-11 items-center gap-1 rounded-lg px-2.5 text-body-strong hover:bg-muted', open ? 'bg-secondary text-foreground' : 'text-muted-foreground')}
+      >
+        Mais
+        <ChevronDown className="size-4" aria-hidden="true" />
+      </button>
+      {open && (
+        <ul id="menu-mais" className="absolute right-0 top-full z-50 mt-1 min-w-48 rounded-xl border border-border bg-popover p-1 shadow-elevation-overlay">
+          {items.map(({ label, to, icon: Icon }) => (
+            <li key={to}>
+              <NavLink
+                to={to}
+                end={to === '/modelo'}
+                className={({ isActive }) =>
+                  cn('flex h-11 items-center gap-2 rounded-lg px-3 text-body-strong', isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')
+                }
+              >
+                <Icon className="size-4" aria-hidden="true" />
+                {label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 /** Barra de navegação principal (Nav.dc.html). Rola na horizontal em telas estreitas. */
 export const Nav: React.FC = () => {
   const { user } = useAuth();
@@ -82,23 +151,25 @@ export const Nav: React.FC = () => {
       <Link to="/map" aria-label="MAPi — mapa ao vivo" className="flex h-11 shrink-0 items-center rounded-lg pr-1">
         <img src={theme === 'light' ? logoLight : logoDark} alt="MAPi" className="h-[26px] w-auto" />
       </Link>
-      <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto [scrollbar-width:none] max-[640px]:hidden">
-        {items.map(({ label, to, icon: Icon }) => (
+      <div className="flex min-w-0 flex-1 items-center gap-0.5 max-[640px]:hidden">
+        {items.map(({ label, to, icon: Icon, priority }) => (
           <NavLink
             key={to}
             to={to}
             end={to === '/modelo'}
             className={({ isActive }) =>
               cn(
-                'flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-body-strong md:h-9',
+                'h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-body-strong md:h-9',
+                priority ? 'flex' : 'hidden min-[1441px]:flex',
                 isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )
             }
           >
             <Icon className="size-4" aria-hidden="true" />
-            {label}
+            <span className="max-lg:sr-only">{label}</span>
           </NavLink>
         ))}
+        <MoreMenu items={items.filter((i) => !i.priority)} />
       </div>
       <div className="flex-1 min-[641px]:hidden" />
       <Clock />

@@ -99,3 +99,30 @@ describe('Nav no celular: menu', () => {
     expect(document.activeElement).toBe(first);
   });
 });
+
+describe('Nav: menu Mais (641-1440 px)', () => {
+  it('itens não prioritários ficam no Mais; aria-expanded, Esc fecha e devolve o foco', () => {
+    role = 'ADMIN';
+    renderNav('/map');
+    const mais = screen.getByRole('button', { name: /Mais/ });
+    expect(mais).toHaveAttribute('aria-expanded', 'false');
+    expect(mais.className).toMatch(/h-11/);
+    fireEvent.click(mais);
+    expect(mais).toHaveAttribute('aria-expanded', 'true');
+    const menu = document.getElementById('menu-mais')!;
+    for (const n of ['Simulador', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatório']) expect(within(menu).getByRole('link', { name: n })).toBeInTheDocument();
+    for (const n of ['Mapa', 'Alertas', 'Sensores', 'Eventos', 'Relatos']) expect(within(menu).queryByRole('link', { name: n })).toBeNull();
+    fireEvent.keyDown(within(menu).getAllByRole('link')[0], { key: 'Escape' });
+    expect(document.getElementById('menu-mais')).toBeNull();
+    expect(mais).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).toBe(mais);
+  });
+  it('respeita o perfil: USER não vê Dados nem Pontos no Mais', () => {
+    role = 'USER';
+    renderNav('/map');
+    fireEvent.click(screen.getByRole('button', { name: /Mais/ }));
+    const menu = document.getElementById('menu-mais')!;
+    expect(within(menu).queryByRole('link', { name: 'Dados' })).toBeNull();
+    expect(within(menu).getByRole('link', { name: 'Maré' })).toBeInTheDocument();
+  });
+});
