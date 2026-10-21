@@ -47,7 +47,36 @@ const tabuaMes = () => {
   };
 };
 
+const agoMin = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+const FONTES_PROTO = [
+  { source: 'CEMADEN', status: 'OK', expectedEveryMinutes: 3, lastSuccessAt: agoMin(2), lastRunId: '7c2e0000-0000-0000-0000-000000000000', lastError: null, rowsLast24h: 1184 },
+  { source: 'APAC', status: 'OK', expectedEveryMinutes: 5, lastSuccessAt: agoMin(4), lastRunId: 'a91f0000-0000-0000-0000-000000000000', lastError: null, rowsLast24h: 312 },
+  { source: 'ANA', status: 'DELAYED', expectedEveryMinutes: 15, lastSuccessAt: agoMin(40), lastRunId: null, lastError: 'timeout', rowsLast24h: 0 },
+  { source: 'OPEN_METEO', status: 'OK', expectedEveryMinutes: 60, lastSuccessAt: agoMin(27), lastRunId: null, lastError: null, rowsLast24h: 24 },
+  { source: 'TABUA_MARE', status: 'OK', expectedEveryMinutes: 1440, lastSuccessAt: agoMin(307), lastRunId: null, lastError: null, rowsLast24h: 12 },
+  { source: 'CKAN_RECIFE', status: 'IDLE', expectedEveryMinutes: null, lastSuccessAt: null, lastRunId: null, lastError: null, rowsLast24h: 0 },
+];
+const RUNS_PROTO = [
+  { id: 'a91f0000', source: 'APAC', kind: 'LIVE', status: 'SUCCEEDED', fetched: 312, valid: 309, quarantined: 3, gaps: 0 },
+  { id: '7c2e0000', source: 'CEMADEN', kind: 'LIVE', status: 'SUCCEEDED', fetched: 1184, valid: 1180, quarantined: 4, gaps: 1 },
+  { id: '5d100000', source: 'ANA', kind: 'LIVE', status: 'FAILED', fetched: 0, valid: 0, quarantined: 0, gaps: 0, errorSummary: 'timeout' },
+  { id: '33b80000', source: 'OPEN_METEO_ARCHIVE', kind: 'HISTORICAL', status: 'SUCCEEDED', fetched: 43824, valid: 43790, quarantined: 34, gaps: 12 },
+  { id: '0e4a0000', source: 'CKAN_RECIFE', kind: 'REVALIDATE', status: 'SUCCEEDED', fetched: 619, valid: 619, quarantined: 0, gaps: 0 },
+];
+
 const TELAS: Tela[] = [
+  {
+    id: '09-dados', path: '/admin/dados',
+    api: { routes: {
+      'GET /api/admin/ingestion/sources': () => FONTES_PROTO,
+      'GET /api/admin/ingestion/runs': () => ({ page: 0, size: 20, totalElements: 5, content: RUNS_PROTO }),
+      'GET /api/admin/ingestion/check-integrity': () => [
+        { slug: 'sintetico-alto', totalWeatherRecords: 50808, totalSensorRecords: 3400, totalFloodEvents: 3, status: 'OK' },
+        { slug: 'sintetico-baixo', totalWeatherRecords: 42924, totalSensorRecords: 900, totalFloodEvents: 0, status: 'INCOMPLETE' },
+      ],
+    } },
+    antes: async (page) => { await page.getByRole('button', { name: 'Checar integridade' }).click(); await page.locator('[data-health]').first().waitFor(); },
+  },
   { id: '08-mare', path: '/mare', api: { routes: { 'GET /api/tide/pe02': () => tabuaMes() } } },
   { id: '07-modelo', path: '/modelo', api: { routes: { 'GET /api/model/evaluation': () => AVAL } } },
   {
