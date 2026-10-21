@@ -33,6 +33,7 @@ code {
 
 @import "./styles/theme.css";
 @import "./styles/typography.css";
+@import "./styles/mapi.css";
 @import "./styles/print.css";
 
 @layer base {

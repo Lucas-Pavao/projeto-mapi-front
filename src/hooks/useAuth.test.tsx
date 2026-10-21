@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
@@ -8,6 +8,9 @@ import api from '@/lib/api';
 import { AuthProvider, useAuth } from './useAuth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequireRole } from '@/components/layout/RequireRole';
+
+// A barra consulta alertas, relatos e contagem por conta própria; aqui só interessa o perfil.
+vi.mock('@/components/layout/useNavStatus', () => ({ useNavStatus: () => ({ counts: { alerts: 0, reports: 0 }, apiDown: false }) }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
@@ -82,7 +85,7 @@ describe('sessão e perfil (TOKEN_REVOKED)', () => {
       </MemoryRouter>,
     );
     fireEvent.click(await screen.findByRole('button', { name: 'carregar' }));
-    await waitFor(() => expect(screen.getAllByRole('link', { name: /Usuários e perfis/ }).length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByRole('link', { name: /Dados/ }).length).toBeGreaterThan(0));
     expect(screen.getByText('tela do mapa')).toBeInTheDocument();
     expect(screen.queryByText('Seu perfil mudou.')).toBeNull();
   });

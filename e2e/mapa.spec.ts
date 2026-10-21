@@ -57,6 +57,13 @@ for (const [w, h] of [[1280, 800], [1440, 900]] as const) {
     );
     expect(cortados).toBe(0);
     const mais = nav.getByRole('button', { name: /Mais/ });
+    if (w >= 1440) {
+      // Protótipo: a partir de 1440 px os dez itens cabem na barra, sem Mais.
+      await expect(mais).toBeHidden();
+      await expect(nav.getByRole('link', { name: 'Pontos' })).toBeVisible();
+      await anexa(page, testInfo, `mapa-${w}x${h}`);
+      return;
+    }
     await expect(mais).toBeVisible();
     await mais.click();
     await expect(mais).toHaveAttribute('aria-expanded', 'true');
@@ -68,7 +75,7 @@ for (const [w, h] of [[1280, 800], [1440, 900]] as const) {
   });
 }
 
-test('acima de 1440 px tudo inline, sem Mais', async ({ page }, testInfo) => {
+test('de 1440 px em diante tudo inline, sem Mais', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop');
   await page.setViewportSize({ width: 1920, height: 1080 });
   await prepara(page);

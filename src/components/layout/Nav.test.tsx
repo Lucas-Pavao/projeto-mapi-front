@@ -1,11 +1,13 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Nav } from './Nav';
 import { initTheme } from '@/lib/theme';
 
 let role: string | undefined = 'ADMIN';
 const logout = vi.fn(async () => {});
+vi.mock('./useNavStatus', () => ({ useNavStatus: () => ({ counts: { alerts: 19, reports: 3 }, apiDown: false }) }));
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'op', role }, logout }) }));
 
 afterEach(() => {
@@ -16,9 +18,11 @@ afterEach(() => {
 
 const renderNav = (path = '/alertas') =>
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Nav />
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient()}>
+      <MemoryRouter initialEntries={[path]}>
+        <Nav />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 describe('Nav', () => {
@@ -61,10 +65,25 @@ describe('Nav', () => {
     renderNav();
     expect(screen.queryByRole('link', { name: /Alertas/ })).toBeNull();
   });
-  it('ADMIN vê tudo e o avatar leva a Usuários', () => {
+  it('ADMIN vê tudo e o menu do avatar leva a Usuários e tem Sair', () => {
     renderNav();
     expect(screen.getByRole('link', { name: /Dados/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Conta e perfis/ }));
     expect(screen.getByRole('link', { name: /Usuários e perfis/ })).toHaveAttribute('href', '/admin/usuarios');
+    fireEvent.click(within(document.getElementById('menu-conta')!).getByRole('button', { name: 'Sair' }));
+    expect(logout).toHaveBeenCalled();
+  });
+  it('selos do protótipo: alertas abertos e relatos pendentes, só para OPERADOR em diante', () => {
+    role = 'OPERADOR';
+    renderNav();
+    expect(screen.getByRole('link', { name: /Alertas/ })).toHaveTextContent('19 abertos');
+    expect(screen.getByRole('link', { name: /Relatos/ })).toHaveTextContent('3 pendentes');
+  });
+  it('a barra tem os itens do protótipo na ordem, sem Sensores', () => {
+    renderNav('/map');
+    const bar = screen.getByRole('navigation', { name: 'Principal' });
+    const nomes = within(bar).getAllByRole('link').map((l) => l.textContent?.replace(/\d+ (abertos|pendentes)/, '').trim()).filter(Boolean);
+    expect(nomes).toEqual(['Mapa', 'Alertas', 'Evento', 'Simulador', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatos', 'Relatório']);
   });
 });
 
@@ -101,7 +120,7 @@ describe('Nav no celular: menu', () => {
   });
 });
 
-describe('Nav: menu Mais (641-1440 px)', () => {
+describe('Nav: menu Mais (641-1439 px)', () => {
   it('itens não prioritários ficam no Mais; aria-expanded, Esc fecha e devolve o foco', () => {
     role = 'ADMIN';
     renderNav('/map');
@@ -111,8 +130,8 @@ describe('Nav: menu Mais (641-1440 px)', () => {
     fireEvent.click(mais);
     expect(mais).toHaveAttribute('aria-expanded', 'true');
     const menu = document.getElementById('menu-mais')!;
-    for (const n of ['Simulador', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatório']) expect(within(menu).getByRole('link', { name: n })).toBeInTheDocument();
-    for (const n of ['Mapa', 'Alertas', 'Sensores', 'Eventos', 'Relatos']) expect(within(menu).queryByRole('link', { name: n })).toBeNull();
+    for (const n of ['Sensores', 'Simulador', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatório']) expect(within(menu).getByRole('link', { name: n })).toBeInTheDocument();
+    for (const n of ['Mapa', 'Alertas', 'Evento', 'Relatos']) expect(within(menu).queryByRole('link', { name: n })).toBeNull();
     fireEvent.keyDown(within(menu).getAllByRole('link')[0], { key: 'Escape' });
     expect(document.getElementById('menu-mais')).toBeNull();
     expect(mais).toHaveAttribute('aria-expanded', 'false');

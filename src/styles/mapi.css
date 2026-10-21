@@ -1,0 +1,11 @@
+/* Estados do protótipo (design-ref/app.css) que o Tailwind não cobre. */
+@keyframes mapi-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.live-dot { animation: mapi-blink 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+/* Rolagem fina das listas dos painéis. */
+.scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
