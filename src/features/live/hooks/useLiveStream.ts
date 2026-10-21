@@ -26,7 +26,9 @@ export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
   useEffect(() => {
     if (!enabled) return;
     const ctrl = new AbortController();
-    setStatus('connecting');
+    queueMicrotask(() => {
+      if (!ctrl.signal.aborted) setStatus('connecting');
+    });
     fetchEventSource('/api/stream', {
       signal: ctrl.signal,
       credentials: 'include',
