@@ -1,5 +1,6 @@
+/// <reference types="node" />
 import { describe, it, expect, afterEach } from 'vitest';
-import css from '@/styles/theme.css?raw';
+import { readFileSync } from 'node:fs';
 import { render, screen, cleanup } from '@testing-library/react';
 import { RiskBadge, UNKNOWN_BORDER_MARKER, UNKNOWN_BORDER_PILL } from './RiskBadge';
 import { RiskLegendList } from './RiskLegendList';
@@ -60,6 +61,7 @@ describe('RiskBadge UNKNOWN: borda tracejada visível', () => {
     expect(container.firstElementChild).not.toHaveClass('border-dashed');
   });
   it.each(['dark', 'light'])('tema %s: risk-unknown-edge tem >= 3:1 contra o fundo e difere do preenchimento', (theme) => {
+    const css = readFileSync('src/styles/theme.css', 'utf8');
     const block = theme === 'dark' ? css.slice(0, css.indexOf(':root[data-theme="light"]')) : css.slice(css.indexOf(':root[data-theme="light"]'), css.indexOf('/* Cor de destaque'));
     const tok = (n: string) => block.match(new RegExp(`--${n}: (#[0-9a-fA-F]{6})`))![1];
     expect(ratio(tok('risk-unknown-edge'), tok('background'))).toBeGreaterThanOrEqual(3);

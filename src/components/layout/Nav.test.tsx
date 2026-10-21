@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Nav } from './Nav';
 import { initTheme } from '@/lib/theme';
@@ -64,5 +64,38 @@ describe('Nav', () => {
     renderNav();
     expect(screen.getByRole('link', { name: /Dados/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Usuários e perfis/ })).toHaveAttribute('href', '/admin/usuarios');
+  });
+});
+
+describe('Nav no celular: menu', () => {
+  it('botão de menu abre a folha com todos os itens do perfil, Esc fecha e devolve o foco', () => {
+    role = 'OPERADOR';
+    renderNav('/map');
+    const btn = screen.getByRole('button', { name: 'Abrir menu' });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    expect(btn.className).toMatch(/size-11/);
+    btn.focus();
+    fireEvent.click(btn);
+    const dialog = screen.getByRole('dialog', { name: 'Menu principal' });
+    expect(btn).toHaveAttribute('aria-expanded', 'true');
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    for (const n of ['Mapa', 'Alertas', 'Relatos']) expect(within(dialog).getByRole('link', { name: n })).toBeInTheDocument();
+    expect(within(dialog).queryByRole('link', { name: 'Dados' })).toBeNull();
+    for (const l of within(dialog).getAllByRole('link')) expect(l.className).toMatch(/h-12/);
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false');
+  });
+  it('foco preso: Tab no último item volta ao primeiro', () => {
+    role = 'USER';
+    renderNav('/map');
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir menu' }));
+    const dialog = screen.getByRole('dialog');
+    const focusables = dialog.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+    const first = focusables[0];
+    const last = Array.from(focusables).filter((e) => e.tabIndex !== -1).pop()!;
+    last.focus();
+    fireEvent.keyDown(last, { key: 'Tab' });
+    expect(document.activeElement).toBe(first);
   });
 });
