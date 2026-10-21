@@ -6,7 +6,7 @@ import { useTimeline } from '@/features/events/hooks/useTimeline';
 export const EventsPage: React.FC = () => {
   const query = useTimeline(24);
   return (
-    <PageShell title="Eventos" description="Linha do tempo das últimas 24 h: chuva, maré, rio e risco por ponto. Gráficos chegam na F2.">
+    <PageShell title="Eventos" description="Linha do tempo das últimas 24 h: chuva, maré, rio e risco por ponto. Gráficos disponíveis em breve.">
       <QueryState
         query={query}
         what="a linha do tempo"

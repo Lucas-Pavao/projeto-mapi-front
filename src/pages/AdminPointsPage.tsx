@@ -7,7 +7,7 @@ import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 export const AdminPointsPage: React.FC = () => {
   const query = useFloodPoints();
   return (
-    <PageShell title="Pontos" description="Pontos críticos cadastrados. Edição e cadastro chegam na F2.">
+    <PageShell title="Pontos" description="Pontos críticos cadastrados. Edição e cadastro disponíveis em breve.">
       <QueryState query={query} what="os pontos" emptyTitle="Nenhum ponto cadastrado.">
         {(points) => (
           <ul className="grid gap-2 sm:grid-cols-2">

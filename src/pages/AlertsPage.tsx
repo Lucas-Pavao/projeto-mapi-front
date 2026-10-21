@@ -10,7 +10,7 @@ import { formatRecife } from '@/features/map/utils/datetime';
 export const AlertsPage: React.FC = () => {
   const query = useAlerts('OPEN');
   return (
-    <PageShell title="Alertas" description="Alertas abertos disparados pelas regras. Reconhecer e editar regras chega na F2.">
+    <PageShell title="Alertas" description="Alertas abertos disparados pelas regras. Reconhecer alertas e editar regras: disponível em breve.">
       <QueryState query={query} what="alertas" isEmpty={(d) => d.content.length === 0} emptyTitle="Nenhum alerta aberto." emptyHint="Quando uma regra disparar, o alerta aparece aqui.">
         {(page) => (
           <ul className="space-y-2">

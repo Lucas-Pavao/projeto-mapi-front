@@ -72,10 +72,10 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
       </div>
       
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 space-y-5">
-        {/* Main Reading Section */}
+        {/* Main reading section */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-             <p className="text-2xs text-muted-foreground font-bold">Leitura Atual</p>
+             <p className="text-2xs text-muted-foreground font-bold">Leitura atual</p>
              <div className="flex items-baseline gap-1.5">
                <span className="text-4xl font-bold text-foreground">
                 {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(1) : (sensor.value ?? '--')}
@@ -91,7 +91,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           </div>
         </div>
 
-        {/* Secondary Metrics Grid */}
+        {/* Secondary metrics grid */}
         {hasRiverAlert ? (
           <div className="space-y-2.5">
             {sensor.riverName && (
@@ -169,7 +169,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           </div>
         )}
 
-        {/* Status Bar */}
+        {/* Status bar */}
         <div className="pt-4 border-t border-border space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-2xs text-muted-foreground font-bold">Última Leitura</span>
+              <span className="text-2xs text-muted-foreground font-bold">Última leitura</span>
             </div>
             <span className="text-2xs font-bold text-foreground">
               {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
@@ -196,7 +196,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           onClick={onShowDetails}
           className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-muted-foreground border border-border hover:border-primary transition-all duration-300 rounded-xl group shadow-elevation-raised"
         >
-          <span>Analisar Dados Completos</span>
+          <span>Analisar dados completos</span>
           <ExternalLink className="h-3 w-3 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </Button>
       </div>

@@ -30,7 +30,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold text-foreground">Reportar Cenário</CardTitle>
+              <CardTitle className="text-lg font-bold text-foreground">Reportar cenário</CardTitle>
               <p className="text-2xs text-muted-foreground font-bold mt-1">
                 Coord: {latitude.toFixed(5)}, {longitude.toFixed(5)}
               </p>

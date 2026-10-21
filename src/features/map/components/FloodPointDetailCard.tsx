@@ -101,7 +101,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
     <ModalDialog label={`Detalhes do ponto crítico ${point.name}`} onClose={onClose} className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-500">
       <Card className="w-full max-w-6xl max-h-[95vh] shadow-elevation-overlay border-border bg-card overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col ring-1 ring-border rounded-2xl">
         
-        {/* Immersive Header */}
+        {/* Immersive header */}
         <CardHeader className={cn(
           "pb-6 pt-8 px-8 flex flex-row items-center justify-between border-b border-border relative overflow-hidden shrink-0 transition-colors duration-1000",
           risk.bg
@@ -119,7 +119,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                   {point.name}
                 </CardTitle>
                 <div className="bg-secondary px-3 py-1 rounded-full border border-border">
-                  <span className="text-2xs text-foreground font-bold">Live node</span>
+                  <span className="text-2xs text-foreground font-bold">Ao vivo</span>
                 </div>
               </div>
               <div className="flex items-center gap-4 mt-2">
@@ -155,16 +155,16 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
              </Button>
           </div>
 
-          {/* Decorative Header background */}
+          {/* Decorative header background */}
           <div className="absolute right-0 top-0 w-1/3 h-full from-primary/5 opacity-50" />
         </CardHeader>
 
         <CardContent className="p-0 overflow-hidden flex flex-col">
           <div className="overflow-y-auto p-8 space-y-10 custom-scrollbar">
             
-            {/* 1. Main Analytical Row */}
+            {/* 1. Main analytical row */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* IA Hero Card */}
+              {/* IA Hero card */}
               <div className={cn(
                 "lg:col-span-8 p-10 rounded-2xl border shadow-elevation-overlay flex flex-col md:flex-row items-center justify-between group relative overflow-hidden transition-all duration-1000",
                 risk.border,
@@ -177,7 +177,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                          <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
                          <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                       </div>
-                      <span className="text-2xs font-bold text-primary animate-pulse">Deep Analysis...</span>
+                      <span className="text-2xs font-bold text-primary animate-pulse">Analisando…</span>
                     </div>
                   </div>
                 )}
@@ -187,7 +187,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                      <div className="bg-primary/20 p-2 rounded-xl">
                         <Cpu className="h-4 w-4 text-primary" />
                      </div>
-                     <p className="text-2xs text-muted-foreground font-bold">Predição Estocástica (MAPI-IA)</p>
+                     <p className="text-2xs text-muted-foreground font-bold">Predição estocástica (MAPi-IA)</p>
                   </div>
 
                   <div className="flex items-baseline gap-6">
@@ -234,7 +234,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                            <History className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <div>
-                           <p className="text-2xs text-muted-foreground font-bold leading-none mb-1">Impacto Previsto</p>
+                           <p className="text-2xs text-muted-foreground font-bold leading-none mb-1">Impacto previsto</p>
                            <p className="text-base font-bold text-foreground leading-none">{prediction.estimatedTimeToEvent}</p>
                         </div>
                       </div>
@@ -253,7 +253,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                 </div>
               </div>
 
-              {/* Recommendation Side Card */}
+              {/* Recommendation side card */}
               <div className="lg:col-span-4 bg-muted p-10 rounded-2xl border border-border flex flex-col justify-between relative overflow-hidden shadow-elevation-overlay">
                  <div className="absolute top-0 right-0 p-6 opacity-[0.03] transition-transform duration-1000 group-hover:scale-125">
                     <Database className="h-40 w-40" />
@@ -272,7 +272,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                  <div className="pt-10 border-t border-border flex justify-between items-center relative z-10">
                     <div>
                        <p className="text-2xs font-bold text-muted-foreground leading-none mb-1">Fonte</p>
-                       <p className="text-2xs font-bold text-muted-foreground">Processamento Edge</p>
+                       <p className="text-2xs font-bold text-muted-foreground">Processamento local</p>
                     </div>
                     <div className="flex items-center gap-3 px-4 py-2 bg-muted rounded-xl border border-border">
                        <div className={cn(
@@ -285,12 +285,12 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
               </div>
             </div>
 
-            {/* 2. Environmental Grid - High Density */}
+            {/* 2. Environmental grid - High density */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                {[
                  { 
                    kind: 'other',
-                   label: 'Telemetria Térmica', 
+                   label: 'Telemetria térmica', 
                    value: getMetricValue('temperature', status?.openMeteoData?.current?.temperature_2m), 
                    unit: precise?.unitTemperature || '°C', icon: Thermometer, color: 'text-warning', bg: 'bg-warning/10' 
                  },
@@ -358,7 +358,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
 
             <TerrainFacts slug={point.slug} />
 
-            {/* 3. Detailed Infrastructure & Marine Row */}
+            {/* 3. Detailed infrastructure & Marine row */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
               {/* Marine & Tides (Left) */}
@@ -367,13 +367,13 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                    <div className="bg-chart-1/10 p-2 rounded-xl">
                       <Navigation className="h-4 w-4 text-chart-1" />
                    </div>
-                   <h4 className="text-xs text-foreground font-bold">Dados Marítimos & Tábuas</h4>
+                   <h4 className="text-xs text-foreground font-bold">Dados marítimos & Tábuas</h4>
                 </div>
                 
                 <div className="bg-muted p-8 rounded-2xl border border-border space-y-8 relative overflow-hidden group">
                   <div className="flex justify-between items-start relative z-10">
                     <div className="space-y-2">
-                      <p className="text-2xs text-muted-foreground font-bold">Previsto p/ Porto Local</p>
+                      <p className="text-2xs text-muted-foreground font-bold">Previsto p/ Porto local</p>
                       <div className="flex items-baseline gap-3">
                          <p className="text-5xl font-bold text-foreground">
                            {formatValue(getMetricValue('tideHeightTabuaMare'), 2)}
@@ -405,7 +405,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                      <div className="bg-muted p-6 rounded-2xl border border-border hover:border-primary/20 transition-colors">
                         <div className="flex items-center gap-3 mb-3">
                            <Gauge className="h-3.5 w-3.5 text-chart-1" />
-                           <p className="text-2xs text-muted-foreground font-bold">Vazão Estimada</p>
+                           <p className="text-2xs text-muted-foreground font-bold">Vazão estimada</p>
                         </div>
                         <p className="text-xl font-bold text-chart-1">
                           {formatValue(getMetricValue('flowRate'), 2)} 
@@ -417,7 +417,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                 </div>
               </div>
 
-              {/* Dynamic Sensor Infrastructure (Right) */}
+              {/* Dynamic sensor infrastructure (Right) */}
               <div className="lg:col-span-7 space-y-6">
                 <div className="flex items-center justify-between px-2">
                    <div className="flex items-center gap-4">
@@ -480,7 +480,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
               </div>
             </div>
 
-            {/* 4. Action Footer - Redesigned */}
+            {/* 4. Action footer - Redesigned */}
             <div className="bg-muted p-10 rounded-2xl border border-border flex flex-col lg:flex-row justify-between items-center gap-10 relative overflow-hidden">
                <div className="absolute inset-0 from-primary/10 pointer-events-none opacity-50" />
                
@@ -508,7 +508,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                     onClick={onReportFlood}
                   >
                     <AlertTriangle className="h-5 w-5 mr-3" />
-                    Reportar Incidente
+                    Reportar incidente
                   </Button>
                   
                   <Button 
@@ -516,7 +516,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                     onClick={onExportCsv}
                   >
                     <FileDown className="h-5 w-5 mr-3 text-primary" />
-                    Extract Dataset
+                    Exportar dados
                   </Button>
 
                   <Button 
@@ -525,7 +525,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                     onClick={onFocusMap}
                   >
                     <Navigation className="h-5 w-5 mr-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                    Focus Grid
+                    Centralizar no ponto
                   </Button>
                </div>
             </div>

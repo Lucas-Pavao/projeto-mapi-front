@@ -12,7 +12,7 @@ export const PointPage: React.FC = () => {
   const { slug = '' } = useParams();
   const query = usePredictionSeries(slug);
   return (
-    <PageShell title={`Ponto ${slug}`} description="Previsões das últimas 24 h. Detalhe completo chega na F2.">
+    <PageShell title={`Ponto ${slug}`} description="Previsões das últimas 24 h. Detalhe completo disponível em breve.">
       <QueryState query={query} what="as previsões" isEmpty={(d) => d.items.length === 0} emptyTitle="Sem previsões nas últimas 24 h.">
         {(d) => (
           <ul className="space-y-2">

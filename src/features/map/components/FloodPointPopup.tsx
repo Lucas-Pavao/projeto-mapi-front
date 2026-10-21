@@ -40,7 +40,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
 
   return (
     <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-[min(22.5rem,calc(100vw-2rem))] ring-1 ring-border animate-in fade-in zoom-in-95 duration-500">
-      {/* 1. Header with Risk Identity (fixo; só o corpo rola) */}
+      {/* 1. Header with Risk identity (fixo; só o corpo rola) */}
       <div className={cn(
         "shrink-0 px-6 py-5 border-b border-border relative overflow-hidden transition-colors duration-700",
         visual.softBg
@@ -80,7 +80,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
       </div>
 
       <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 space-y-6">
-        {/* 2. Probability Hero Section */}
+        {/* 2. Probability hero section */}
         <div className="bg-muted rounded-2xl p-6 border border-border relative overflow-hidden group">
            <div className="relative z-10 flex items-center justify-between">
               <div className="space-y-1">
@@ -107,14 +107,14 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
                     <Circle className="h-2 w-2 fill-current" />
                     {risk.label}
                  </div>
-                 <p className="text-2xs font-bold text-muted-foreground">Análise Preditiva</p>
+                 <p className="text-2xs font-bold text-muted-foreground">Análise preditiva</p>
               </div>
            </div>
            {showsExperimentalLabel(prediction) && <ExperimentalBadge className="relative z-10 mt-4" />}
            <div className="absolute inset-0 pointer-events-none" />
         </div>
 
-        {/* 3. Nearby Sensors Context */}
+        {/* 3. Nearby sensors context */}
         {(precise?.latestReadings && precise.latestReadings.length > 0) || (point.nearbySensorIds && point.nearbySensorIds.length > 0) ? (
           <div className="space-y-3">
              <div className="flex items-center justify-between px-1">
@@ -165,7 +165,7 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
           </div>
         )}
 
-        {/* 4. Insight Context */}
+        {/* 4. Insight context */}
         {precise?.message && (
           <div className="p-4 bg-muted rounded-2xl border border-border flex gap-4 items-start relative group overflow-hidden">
              <div className="p-2 bg-primary/10 rounded-lg">
@@ -177,14 +177,14 @@ export const FloodPointPopup: React.FC<FloodPointPopupProps> = ({
           </div>
         )}
 
-        {/* 5. Refined Action Button */}
+        {/* 5. Refined action button */}
         <div className="pt-2">
            <Button 
              onClick={onShowDetails}
-             className="w-full h-12 text-2xs font-bold bg-primary text-foreground hover:bg-primary/90 shadow-elevation-overlay shadow-primary/20 transition-all duration-500 rounded-2xl group relative overflow-hidden"
+             className="w-full h-12 text-2xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-elevation-overlay transition-all duration-500 rounded-2xl group relative overflow-hidden"
            >
              <span className="relative z-10 flex items-center justify-center gap-3">
-                Painel Analítico Completo
+                Painel analítico completo
                 <Maximize2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
              </span>
              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" />

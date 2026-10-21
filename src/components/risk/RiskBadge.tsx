@@ -15,6 +15,10 @@ export interface RiskBadgeProps {
   className?: string;
 }
 
+/** Tracejado visível (>= 1,5 px) na cor risk-unknown-edge; bg-clip-padding deixa o vão mostrar o fundo da página. */
+export const UNKNOWN_BORDER_PILL = 'border-2 border-dashed bg-clip-padding';
+export const UNKNOWN_BORDER_MARKER = 'border-[3px] border-dashed bg-clip-padding';
+
 /**
  * Selo do nível de risco. Cor, ícone e rótulo andam juntos: o risco nunca depende só de cor.
  * UNKNOWN = cinza tracejado, sem porcentagem.
@@ -35,9 +39,10 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, variant = 'pill', p
         {pulse && <span aria-hidden="true" className={cn('absolute inset-0 animate-ping rounded-lg opacity-40', v.ping)} />}
         <span
           className={cn(
-            'relative inline-flex size-8 items-center justify-center rounded-lg border-2 shadow-elevation-overlay',
+            'relative inline-flex size-8 items-center justify-center rounded-lg shadow-elevation-overlay',
             v.bg,
-            unknown && 'border-dashed',
+            // UNKNOWN: borda tracejada espessa e com o fundo recortado na borda, para os vãos aparecerem.
+            unknown ? UNKNOWN_BORDER_MARKER : 'border-2',
           )}
         >
           <RiskIcon level={level} className="size-5" />
@@ -50,9 +55,9 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, variant = 'pill', p
     <span
       data-risk={level ?? 'UNKNOWN'}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-bold leading-4',
+        'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold leading-4',
         v.bg,
-        unknown && 'border-dashed',
+        unknown ? UNKNOWN_BORDER_PILL : 'border',
         className,
       )}
     >

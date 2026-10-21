@@ -34,7 +34,7 @@ export const ReportFloodModal: React.FC<ReportFloodModalProps> = ({
           <div className="flex items-center gap-3">
             <AlertTriangle className="h-6 w-6 text-destructive" />
             <div>
-              <CardTitle className="text-xl font-bold text-foreground">Reportar Ocorrência</CardTitle>
+              <CardTitle className="text-xl font-bold text-foreground">Reportar ocorrência</CardTitle>
               <p className="text-2xs text-muted-foreground font-bold mt-1">{point.name}</p>
             </div>
           </div>
@@ -42,7 +42,7 @@ export const ReportFloodModal: React.FC<ReportFloodModalProps> = ({
         <CardContent className="p-6 space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <span id="severity-label" className="text-2xs font-bold text-muted-foreground">Severidade Observada</span>
+              <span id="severity-label" className="text-2xs font-bold text-muted-foreground">Severidade observada</span>
               <div className="grid grid-cols-4 gap-2" role="group" aria-labelledby="severity-label">
                 {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((sev) => (
                   <button
@@ -92,7 +92,7 @@ export const ReportFloodModal: React.FC<ReportFloodModalProps> = ({
               ) : (
                 <>
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  Confirmar Registro
+                  Confirmar registro
                 </>
               )}
             </Button>

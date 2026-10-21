@@ -24,6 +24,9 @@ import { floodService } from '../services/flood.service';
 import { mapService } from '../services/map.service';
 import { getSensorConfig, getDataFreshness, formatApiTimestamp } from '../utils/sensor';
 import { getRiskVisual } from '@/components/risk/risk';
+import { useRiskFill } from '@/components/risk/useRiskFill';
+import { useTheme } from '@/hooks/useTheme';
+import { useTokenColor } from '@/lib/tokens';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { SensorSidebar } from './SensorSidebar';
 import { SensorPopup } from './SensorPopup';
@@ -108,6 +111,7 @@ const LocationInitializer: React.FC<{ onLocationUpdate: (loc: {lat: number, lng:
  */
 export const MapView: React.FC = () => {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch } = useMapData();
   const apiStatus = deriveApiStatus({ isLoading, hasError });
   const { notices, notify, dismiss } = useNotices();
@@ -135,7 +139,7 @@ export const MapView: React.FC = () => {
     closePopups
   } = useMapInteractions(sensors, floodPoints);
 
-  const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos Críticos', 'Meteo', 'Vento', 'Sensor']);
+  const [activeLayers, setActiveLayers] = useState<string[]>(['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos críticos', 'Meteo', 'Vento', 'Sensor']);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
   // Barra direita do mapa: um painel aberto por vez (camadas, terreno ou legenda).
@@ -214,7 +218,7 @@ export const MapView: React.FC = () => {
               if (validSensors.length > 0) {
                 if (!data.preciseData) {
                   data.preciseData = {
-                    source: 'Individual Sensors',
+                    source: 'Individual sensors',
                     timestamp: new Date().toISOString(),
                     latestReadings: [],
                     precipitation: null,
@@ -397,7 +401,7 @@ export const MapView: React.FC = () => {
   }, [sensors, activeLayers]);
 
   const filteredFloodPointsForMap = useMemo(() => {
-    if (!Array.isArray(floodPoints) || !activeLayers.includes('Pontos Críticos')) return [];
+    if (!Array.isArray(floodPoints) || !activeLayers.includes('Pontos críticos')) return [];
     return floodPoints.filter(point => 
       point.latitude != null && point.longitude != null && 
       point.latitude !== 0 && point.longitude !== 0
@@ -413,17 +417,12 @@ export const MapView: React.FC = () => {
     return null;
   }, [clickedLocation, selectedFloodPoint]);
 
-  const circleColor = useMemo(() => {
-    if (clickedLocation) return "#5cb8ff"; // Primary color for clicked location
-    
-    if (selectedFloodPoint) {
-      // Prioritize the real-time status prediction, fallback to point prediction
-      const riskLevel = floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel;
-      return getRiskVisual(riskLevel).hex;
-    }
-    
-    return "#5cb8ff";
-  }, [clickedLocation, selectedFloodPoint, floodPointStatus]);
+  // Cores do paint do MapLibre vêm dos tokens em runtime e seguem tema e destaque.
+  const primaryColor = useTokenColor('--primary', '#5cb8ff');
+  const selectedRisk =
+    (selectedFloodPoint && (floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel)) || undefined;
+  const riskFill = useRiskFill(selectedRisk);
+  const circleColor = clickedLocation || !selectedFloodPoint ? primaryColor : riskFill;
 
   const nearbySensorIds = useMemo(() => {
     const ids = new Set<string>();
@@ -462,17 +461,14 @@ export const MapView: React.FC = () => {
 
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
-      {/* Brand Floating Island */}
+      {/* Estado da conexão com os dados (marca e relógio ficam na Nav) */}
       <div className="absolute top-4 left-4 z-40 pointer-events-auto">
-        <div className="h-16 border border-border bg-card flex items-center px-3 sm:px-6 rounded-2xl shadow-elevation-overlay transition-all duration-500">
-          <div className="flex flex-col">
-            <h1 className="text-sm font-bold text-foreground">MAPI Portal</h1>
-            <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
-          </div>
+        <div className="flex h-8 items-center rounded-full border border-border bg-card px-3 shadow-elevation-raised">
+          <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
         </div>
       </div>
 
-      {/* User Controls Floating Island */}
+      {/* User controls floating island */}
       <div className="absolute top-4 right-4 z-40 pointer-events-auto">
         <div className="h-16 border border-border bg-card flex items-center gap-3 px-4 rounded-2xl shadow-elevation-overlay transition-all">
            <div className="flex flex-col items-end mr-1 hidden sm:flex">
@@ -494,7 +490,7 @@ export const MapView: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Sidebar Overlay */}
+      {/* Floating sidebar overlay */}
       <button
         type="button"
         onClick={() => setShowMobileList(true)}
@@ -508,7 +504,7 @@ export const MapView: React.FC = () => {
       <div
         id="sensor-sheet"
         className={cn(
-          'absolute z-40 pointer-events-none md:z-20 md:flex md:inset-x-auto md:top-24 md:left-4 md:bottom-4 md:h-auto',
+          'absolute z-40 pointer-events-none md:z-20 md:flex md:inset-x-auto md:top-16 md:left-4 md:bottom-4 md:h-auto',
           showMobileList ? 'flex inset-x-2 bottom-2 h-[70vh]' : 'hidden'
         )}
       >
@@ -559,7 +555,7 @@ export const MapView: React.FC = () => {
       <main className="h-full w-full relative">
         <Map
           ref={mapRef}
-          theme="dark"
+          theme={theme}
           onClick={handleMapClick}
           center={[-34.877, -8.057]}
           zoom={12}
@@ -600,7 +596,7 @@ export const MapView: React.FC = () => {
             />
           )}
 
-          {/* Floating Controls Overlay (Right) */}
+          {/* Floating controls overlay (Right) */}
           <div className="pointer-events-none absolute right-4 top-48 bottom-[17rem] md:top-24 md:bottom-[12rem] z-20 flex flex-col items-end gap-3">
             <MapToolPopover id="layer-panel" label="Camadas do mapa" icon={<Layers className="h-5 w-5" aria-hidden="true" />} panelClassName="w-56 p-1.5" {...toolProps('layers')}>
               <div role="group" aria-label="Camadas" className="flex flex-col gap-1 pt-1">
@@ -612,7 +608,7 @@ export const MapView: React.FC = () => {
                      { id: 'Meteo', icon: Thermometer, color: 'text-warning' },
                      { id: 'Vento', icon: Wind, color: 'text-muted-foreground' },
                      { id: 'Sensor', icon: Activity, color: 'text-muted-foreground' },
-                     { id: 'Pontos Críticos', icon: AlertTriangle, color: 'text-destructive' }
+                     { id: 'Pontos críticos', icon: AlertTriangle, color: 'text-destructive' }
                    ].map((layer) => (
                      <button
                        key={layer.id}
@@ -663,7 +659,7 @@ export const MapView: React.FC = () => {
                   }
                 }}
                 offset={[0, -20]}
-                label={`Sensor ${sensor.stationName || sensor.sensorId}, ${config.label}${isStale ? ', sem resposta recente' : ''}. Pressione Enter para abrir.`}
+                label={`Sensor ${sensor.stationName || sensor.sensorId}, ${config.label}${isStale ? ', sem resposta recente' : ''}. Pressione enter para abrir.`}
               >
                 <MarkerContent>
                   <div className="relative group cursor-pointer flex flex-col items-center">
@@ -727,7 +723,7 @@ export const MapView: React.FC = () => {
                   }
                 }}
                 offset={[0, -20]}
-                label={`Ponto crítico ${point.name}: risco ${riskLabel}. Pressione Enter para abrir.`}
+                label={`Ponto crítico ${point.name}: risco ${riskLabel}. Pressione enter para abrir.`}
               >
                 <MarkerContent>
                   {/* Alvo de toque >= 44 px (marcador 32 px + 6 px de cada lado). */}
@@ -751,7 +747,7 @@ export const MapView: React.FC = () => {
                 latitude={selectedSensor.latitude}
                 onClose={() => setSelectedSensorId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
-                offset={[0, -45]}
+                offset={[0, -60]}
                 anchor="bottom"
                 autoPan
                 label={`Detalhes do sensor ${selectedSensor.stationName || selectedSensor.sensorId}`}
@@ -771,7 +767,7 @@ export const MapView: React.FC = () => {
                 latitude={selectedFloodPoint.latitude}
                 onClose={() => setSelectedFloodPointId(undefined)}
                 className="p-0 border-none shadow-none bg-transparent max-w-none"
-                offset={[0, -45]}
+                offset={[0, -60]}
                 anchor="bottom"
                 autoPan
                 label={`Detalhes do ponto crítico ${selectedFloodPoint.name}`}
@@ -864,8 +860,8 @@ export const MapView: React.FC = () => {
                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                    <Activity className="h-8 w-8 text-primary animate-pulse" />
                 </div>
-                <h2 className="text-sm font-bold text-foreground animate-pulse">Carregando Sistema</h2>
-                <p className="text-2xs text-muted-foreground mt-2 font-medium">MAPI • Monitoramento Ambiental</p>
+                <h2 className="text-sm font-bold text-foreground animate-pulse">Carregando sistema</h2>
+                <p className="text-2xs text-muted-foreground mt-2 font-medium">MAPi · monitoramento ambiental</p>
               </div>
             </div>
           )}
@@ -894,7 +890,7 @@ export const MapView: React.FC = () => {
             />
           )}
 
-          {/* Botão Flutuante de Geolocalização */}
+          {/* Botão flutuante de Geolocalização */}
           {/* No celular o card de análise de local ocupa a base da tela e já tem "Reportar alagamento aqui": o botão some. */}
           <div className={cn("absolute bottom-6 right-16 sm:right-20 z-40 pointer-events-auto", (clickedLocation || isFetchingLocation) && "hidden lg:block")}>
             <Button
@@ -910,12 +906,12 @@ export const MapView: React.FC = () => {
               {isGettingLocation ? (
                 <>
                   <RefreshCw className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-                  <span className="hidden sm:inline text-sm font-semibold text-primary">Obtendo Localização...</span>
+                  <span className="hidden sm:inline text-sm font-semibold text-primary">Obtendo localização...</span>
                 </>
               ) : (
                 <>
                   <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
-                  <span className="hidden sm:inline text-sm font-semibold text-foreground group-hover:text-foreground">Reportar Alagamento Local</span>
+                  <span className="hidden sm:inline text-sm font-semibold text-foreground group-hover:text-foreground">Reportar alagamento local</span>
                 </>
               )}
             </Button>

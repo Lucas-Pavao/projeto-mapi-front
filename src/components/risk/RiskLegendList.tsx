@@ -12,7 +12,7 @@ export const RiskLegendList: React.FC<{ className?: string; showExperimentalNote
         return (
           <li key={level} className="flex gap-2.5" data-risk={level}>
             <span
-              className={cn('mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border-2', v.bg, level === 'UNKNOWN' && 'border-dashed')}
+              className={cn('mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md border-2', v.bg, level === 'UNKNOWN' && 'border-dashed bg-clip-padding')}
               aria-hidden="true"
             >
               <RiskIcon level={level} className="size-4" />
