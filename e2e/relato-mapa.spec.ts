@@ -3,9 +3,20 @@ import { installApi, lightTheme, shot } from './support/api';
 
 test.use({ serviceWorkers: 'block' });
 
-test.beforeEach(async ({ context }) => {
-  await context.grantPermissions(['geolocation']);
-  await context.setGeolocation({ latitude: -8.0521, longitude: -34.9012 });
+// Geolocalização determinística: a emulação do Chromium responde devagar (ou não responde) a pedidos
+// simultâneos do mapa e do botão. O stub responde na hora, com a posição do teste.
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    const pos = { coords: { latitude: -8.0521, longitude: -34.9012, accuracy: 10, altitude: null, altitudeAccuracy: null, heading: null, speed: null }, timestamp: Date.now() };
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition: (ok: (p: unknown) => void) => setTimeout(() => ok(pos), 0),
+        watchPosition: (ok: (p: unknown) => void) => { setTimeout(() => ok(pos), 0); return 1; },
+        clearWatch: () => {},
+      },
+    });
+  });
 });
 
 test('relato pela posição do aparelho: folha, POST /api/reports e nada de /pontos/scenarios', async ({ page }, testInfo) => {
@@ -39,7 +50,8 @@ test('relato a partir do ponto crítico (painel analítico) e erro 403 no diálo
   await page.goto('/map');
   await page.getByRole('img', { name: 'Risco Alto' }).click();
   await page.getByRole('button', { name: /Painel analítico completo/ }).click();
-  await page.getByRole('button', { name: 'Reportar alagamento', exact: true }).click();
+  // O painel analítico tem animação contínua no celular (o botão nunca fica "estável" para o Playwright): clique direto.
+  await page.getByRole('button', { name: 'Reportar alagamento', exact: true }).evaluate((el) => (el as HTMLElement).click());
   const dlg = page.getByRole('dialog', { name: 'Reportar alagamento' });
   await expect(dlg).toContainText('Sintético: ponto alto');
   await dlg.getByRole('button', { name: 'Enviar relato' }).click();
