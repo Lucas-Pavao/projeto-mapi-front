@@ -1,34 +1,31 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { authService } from '../services/auth.service';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, User, Lock } from 'lucide-react';
+import { Loader2, User, Lock, Mail, Ticket } from 'lucide-react';
+import { authErrorMessage, type AuthMode } from '../utils/authErrors';
 
-type Mode = 'login' | 'register';
-
-const extractErrorMessage = (err: unknown, fallback: string): string => {
-  if (axios.isAxiosError(err) && err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  if (err instanceof Error) {
-    return err.message;
-  }
-  return fallback;
-};
+type Mode = AuthMode;
 
 export const LoginForm: React.FC = () => {
-  const [mode, setMode] = useState<Mode>('login');
+  // Convite: /login?convite=TOKEN abre o cadastro. O token fica só em memória; sai da URL (histórico) na hora.
+  const [params] = useSearchParams();
+  const [inviteToken] = useState<string | null>(() => params.get('convite')?.trim() || null);
+  const [mode, setMode] = useState<Mode>(inviteToken ? 'register' : 'login');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (inviteToken) navigate('/login', { replace: true });
+  }, [inviteToken, navigate]);
 
   const doLogin = async () => {
     const response = await authService.login(username, password);
@@ -43,17 +40,14 @@ export const LoginForm: React.FC = () => {
 
     try {
       if (mode === 'register') {
-        await authService.register({ username, password });
+        await authService.register({ username, password, ...(email.trim() ? { email: email.trim() } : {}), ...(inviteToken ? { inviteToken } : {}) });
         // Conta criada com sucesso: já loga direto, sem obrigar a digitar tudo de novo.
         await doLogin();
       } else {
         await doLogin();
       }
     } catch (err: unknown) {
-      const fallback = mode === 'register'
-        ? 'Não foi possível criar a conta. Tente outro usuário.'
-        : 'Falha ao fazer login. Verifique suas credenciais.';
-      setError(extractErrorMessage(err, fallback));
+      setError(authErrorMessage(err, mode, inviteToken !== null));
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +60,13 @@ export const LoginForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" aria-label={mode === 'register' ? 'Criar conta' : 'Entrar'}>
+        {inviteToken && mode === 'register' && (
+          <p role="status" className="flex items-start gap-2 rounded-lg border border-info/40 bg-info/10 p-3 text-xs font-medium text-info">
+            <Ticket className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            Você chegou por um convite. Crie sua conta: o perfil já vem definido pelo convite, que vale uma vez só.
+          </p>
+        )}
         <div className="space-y-2">
           <Label
             htmlFor="username"
@@ -79,6 +79,7 @@ export const LoginForm: React.FC = () => {
             <Input
               id="username"
               type="text"
+              autoComplete="username"
               placeholder="Seu usuário"
               className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/20"
               value={username}
@@ -102,6 +103,7 @@ export const LoginForm: React.FC = () => {
             <Input
               id="password"
               type="password"
+              autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
               placeholder="••••••••"
               className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/20"
               value={password}
@@ -111,8 +113,26 @@ export const LoginForm: React.FC = () => {
           </div>
         </div>
 
+        {mode === 'register' && (
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-xs font-semibold text-muted-foreground">E-mail (opcional)</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="voce@exemplo.org"
+                className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-primary/20"
+                value={email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+              />
+            </div>
+          </div>
+        )}
+
         {error && (
-          <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
+          <div role="alert" className="p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium border border-destructive/20">
             {error}
           </div>
         )}

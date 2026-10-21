@@ -1,4 +1,6 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import logoDark from '@/assets/mapi-logo-on-dark.svg';
 import logoLight from '@/assets/mapi-logo-on-light.svg';
@@ -6,6 +8,9 @@ import { LoginForm } from '@/features/authentication/components/LoginForm';
 
 export const LoginPage: React.FC = () => {
   const { theme } = useTheme();
+  const { isAuthenticated, isLoading } = useAuth();
+  // Quem já tem sessão vai direto ao mapa (menos no meio da checagem inicial).
+  if (!isLoading && isAuthenticated) return <Navigate to="/map" replace />;
   return (
     <div className="min-h-screen w-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-[400px] space-y-8">
