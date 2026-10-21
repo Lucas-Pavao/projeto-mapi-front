@@ -100,3 +100,26 @@ for (const tema of ['dark', 'light'] as const) {
     await fim();
   });
 }
+
+// ---------- Evento ----------
+function tlEvento(from: number, to: number) {
+  const base = tl(from, to);
+  const slugs = ['agamenon-derby', 'mascarenhas', 'av-recife-ibura', 'cin-ufpe', 'jaboatao-centro'];
+  const risk = slugs.map((slug, j) => ({ slug, items: Array.from({ length: Math.floor((to - from) / 1_800_000) }, (_, i) => {
+    const t = from + i * 1_800_000;
+    const x = (t - from) / (to - from);
+    const p = Math.max(0, Math.min(0.99, 0.35 + 0.5 * Math.sin((x * 6 + j) * 1.3)));
+    return { slug, riskLevel: p >= 0.8 ? 'HIGH' : p >= 0.5 ? 'MEDIUM' : 'LOW', probability: +p.toFixed(2), issuedAt: new Date(t).toISOString(), validUntil: null, horizonHours: 3, modelVersion: 'unversioned', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' };
+  }) }));
+  return { ...base, risk, floodEvents: [{ id: 1, slug: 'agamenon-derby', startTime: new Date(from + (to - from) * 0.6).toISOString(), severity: 'MEDIUM' }] };
+}
+for (const tema of ['dark', 'light'] as const) {
+  test(`fidelidade evento ${tema}`, async ({ page }) => {
+    const fim = await capturar(page, '05-evento', tema, { role: 'OPERADOR', routes: {
+      'GET /api/pontos': () => PONTOS,
+      'GET /api/sensors/latest': () => SENSORES,
+      'GET /api/events/timeline': ({ url }) => tlEvento(Date.parse(url.searchParams.get('from') ?? ''), Date.parse(url.searchParams.get('to') ?? '')),
+    } }, '/eventos');
+    await fim();
+  });
+}
