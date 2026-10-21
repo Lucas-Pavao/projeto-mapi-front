@@ -7,7 +7,7 @@ import { installApi, type ApiOptions } from './support/api';
  */
 test.use({ serviceWorkers: 'block', viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 
-interface Tela { id: string; path: string; api?: ApiOptions; antes?: (page: Page) => Promise<void> }
+interface Tela { espera?: number; id: string; path: string; api?: ApiOptions; antes?: (page: Page) => Promise<void> }
 
 const SIM = (body: unknown) => {
   const b = body as { rainfallMmH: number[]; f: number };
@@ -64,7 +64,13 @@ const RUNS_PROTO = [
   { id: '0e4a0000', source: 'CKAN_RECIFE', kind: 'REVALIDATE', status: 'SUCCEEDED', fetched: 619, valid: 619, quarantined: 0, gaps: 0 },
 ];
 
+const PONTOS_PROTO = ['AGAMENON_DERBY|Av. Agamenon Magalhães (Derby)|Recife|-8.052554|-34.894371', 'MASCARENHAS_IMBIRIBEIRA|Av. Mascarenhas de Morais|Recife|-8.1181|-34.9049', 'AV_RECIFE_IBURA|Av. Recife - Entrada do Ibura|Recife|-8.1079|-34.9271', 'CIN_UFPE|CIn - UFPE|Recife|-8.0553|-34.9512', 'JABOATAO_CENTRO|Jaboatão Centro (Rio Duas Unas)|Jaboatão dos Guararapes|-8.1065|-35.0132'].map((l, i) => {
+  const [slug, name, municipality, la, lo] = l.split('|');
+  return { id: i + 1, slug, name, municipality, description: 'Maré bloqueando a saída da galeria', latitude: Number(la), longitude: Number(lo), altitudeM: 2.9, distanceToChannelM: 60, basinName: null, sensorConfig: { pluviometerStationIds: i < 3 ? ['A'] : [], riverLevelStationIds: i === 4 ? ['R'] : [] }, active: true, tideHeight: null, tideUnit: null };
+});
+
 const TELAS: Tela[] = [
+  { id: '10-pontos', espera: 2500, path: '/admin/pontos', api: { routes: { 'GET /api/pontos': () => PONTOS_PROTO } } },
   {
     id: '09-dados', path: '/admin/dados',
     api: { routes: {
@@ -100,7 +106,7 @@ for (const t of TELAS.filter((x) => !so || x.id.includes(so))) {
       await page.goto(t.path);
       await page.waitForLoadState('networkidle');
       await t.antes?.(page);
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(t.espera ?? 300);
       await page.screenshot({ path: `test-results/fidelidade/${t.id}-${tema}.png` });
     });
   }

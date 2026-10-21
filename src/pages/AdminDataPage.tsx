@@ -35,7 +35,7 @@ export const AdminDataPage: React.FC = () => {
       </div>
       <QueryState query={sources} what="as fontes" emptyTitle="Nenhuma fonte cadastrada.">
         {(items) => {
-          const now = sources.dataUpdatedAt || Date.now();
+          const now = sources.dataUpdatedAt;
           return (
             <>
               <ul aria-label="Fontes de dados" className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:[grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
