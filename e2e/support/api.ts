@@ -230,14 +230,44 @@ export async function lightTheme(page: Page) {
   });
 }
 
-/** Salva o screenshot em test-results/ (outputPath) e anexa ao relatório. Nome inclui o projeto (desktop/celular). */
+/** Salva o screenshot em test-results/ (outputPath e telas/) e anexa ao relatório. Nome inclui o projeto (desktop/celular). */
 export async function shot(page: Page, testInfo: TestInfo, nome: string) {
+  // Uma cópia com nome curto em test-results/telas/ (os diretórios por teste têm nomes longos).
+  // O conteúdo rola dentro de <main>; para ver a tela inteira a janela cresce até a altura do conteúdo (máx. 3200 px).
+  const vp = page.viewportSize();
+  const alto = await page.evaluate(() => document.querySelector('#conteudo')?.scrollHeight ?? 0);
+  if (vp && alto > vp.height - 60) {
+    await page.setViewportSize({ width: vp.width, height: Math.min(alto + 70, 3200) });
+    await page.waitForTimeout(150);
+  }
+  await page.screenshot({ path: `test-results/telas/${nome}-${testInfo.project.name}.png` });
+  if (vp) await page.setViewportSize(vp);
   const buf = await page.screenshot({ path: testInfo.outputPath(`${nome}-${testInfo.project.name}.png`), fullPage: false });
   await testInfo.attach(`${nome}-${testInfo.project.name}`, { body: buf, contentType: 'image/png' });
 }
 
-/** Sem rolagem horizontal da página (cabe em 390 px). */
+/**
+ * Cabe na largura da janela: nada passa da borda direita, a não ser dentro de um contêiner com rolagem
+ * própria (tabelas largas). Pega também o estouro que o layout esconde com overflow no corpo.
+ */
 export async function semRolagemHorizontal(page: Page) {
-  const sobra = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  expect(sobra).toBeLessThanOrEqual(0);
+  const sobra = await page.evaluate(() => {
+    const w = window.innerWidth;
+    const rola = (el: Element | null): boolean => {
+      for (let e = el; e && e !== document.body; e = e.parentElement) {
+        const o = getComputedStyle(e).overflowX;
+        if ((o === 'auto' || o === 'scroll') && e.scrollWidth > e.clientWidth) return true;
+        if (o === 'auto' || o === 'scroll') return true;
+      }
+      return false;
+    };
+    return Array.from(document.querySelectorAll('main *, [role=main] *'))
+      .filter((el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.right > w + 1 && !rola(el.parentElement) && getComputedStyle(el).position !== 'fixed';
+      })
+      .slice(0, 5)
+      .map((el) => `${el.tagName}.${(el as HTMLElement).className?.toString().slice(0, 60)} right=${Math.round(el.getBoundingClientRect().right)} > ${w}`);
+  });
+  expect(sobra).toEqual([]);
 }

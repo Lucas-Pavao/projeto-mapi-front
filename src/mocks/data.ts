@@ -25,6 +25,16 @@ export const predictions = (slug: string): PredictionSummary[] => [
   { slug, riskLevel: 'UNKNOWN', probability: null, issuedAt: ago(5), validUntil: null, horizonHours: null, modelVersion: null, degradationReason: 'AI_UNAVAILABLE', lastValidIssuedAt: ago(60), modelValidationStatus: 'NOT_VALIDATED' },
 ];
 
+export const points = [
+  { id: 1, slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', municipality: 'Recife', description: 'Ponto sintético para desenho de tela.', latitude: -8.05, longitude: -34.9, altitudeM: 3, distanceToChannelM: 100, basinName: 'Sintético', sensorConfig: { pluviometerStationIds: ['SINTETICO-PLUV-01'], riverLevelStationIds: ['SINTETICO-RIO-01'] }, active: true, tideHeight: 1.4, tideUnit: 'm (NR da DHN)', floodPrediction: { riskLevel: 'HIGH', floodProbability: 0.78, modelValidationStatus: 'NOT_VALIDATED', issuedAt: ago(10) } },
+  { id: 2, slug: 'sintetico-2', name: 'Sintético: ponto sem previsão', municipality: 'Jaboatão', description: null, latitude: -8.1, longitude: -34.95, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, active: false, tideHeight: null, tideUnit: null, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_UNAVAILABLE', modelValidationStatus: 'NOT_VALIDATED' } },
+];
+export const terrain = (slug: string) => ({
+  floodPointSlug: slug, status: 'OK', streetElevationM: 2.31, contributingAreaM2: 18450,
+  diagnostics: { contributingAreaBySnapM2: { '0m': 17000, '5m': 18450, '10m': 19000, '20m': 21000 }, basinTouchesWindowEdge: false },
+  provenance: { flightYear: 2016, verticalReference: 'datum do MDT' },
+});
+
 export const riskSummary = (): RiskSummary => ({ LOW: 5, MEDIUM: 2, HIGH: 1, UNKNOWN: 1, computedAt: ago(1) });
 
 export const sensors: SensorFreshness[] = [

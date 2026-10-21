@@ -50,6 +50,8 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
 /** Handlers só dos endpoints novos do redesign (redesign-telas.yaml). Os existentes ficam com a API real. */
 export const handlers = [
   liveStreamHandler(),
+  http.get('/api/pontos', () => HttpResponse.json(d.points)),
+  http.get('/api/auth/me', () => HttpResponse.json({ username: 'sintetico.admin', role: 'ADMIN' })),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),
 
   http.get('/api/pontos/station-suggestions', () =>
@@ -68,6 +70,7 @@ export const handlers = [
     });
   }),
 
+  http.get<{ slug: string }>('/api/pontos/:slug/terrain', ({ params }) => HttpResponse.json(d.terrain(params.slug))),
   http.get('/api/sensors/latest', ({ request }) => {
     const type = new URL(request.url).searchParams.get('type') as SensorType | null;
     const items: SensorFreshness[] = type ? d.sensors.filter((s) => s.type === type) : d.sensors;
@@ -121,5 +124,9 @@ export const handlers = [
       return HttpResponse.json({ message: 'Coordenada fora da RMR' }, { status: 422 });
     }
     return HttpResponse.json(d.publicRisk());
+  }),
+  http.get<{ slug: string }>('/api/pontos/:slug', ({ params }) => {
+    const p = d.points.find((x) => x.slug === params.slug);
+    return p ? HttpResponse.json(p) : HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
   }),
 ];
