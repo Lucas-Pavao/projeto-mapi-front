@@ -70,7 +70,7 @@ export const LoginForm: React.FC = () => {
         <div className="space-y-2">
           <Label
             htmlFor="username"
-            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            className="text-xs font-semibold text-muted-foreground"
           >
             Usuário
           </Label>
@@ -92,7 +92,7 @@ export const LoginForm: React.FC = () => {
           <div className="flex items-center justify-between">
             <Label
               htmlFor="password"
-              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              className="text-xs font-semibold text-muted-foreground"
             >
               Senha
             </Label>
@@ -120,7 +120,7 @@ export const LoginForm: React.FC = () => {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-white transition-all active:scale-[0.98]"
+          className="w-full h-11 text-sm font-bold bg-primary hover:bg-primary/90 text-foreground transition-all active:scale-[0.98]"
         >
           {isLoading ? (
             <>

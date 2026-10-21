@@ -42,12 +42,12 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
         title={label}
         onClick={() => setOpen(!isOpen)}
         className={cn(
-          'relative flex h-12 w-12 items-center justify-center rounded-2xl border bg-black/40 shadow-2xl shadow-black/50 backdrop-blur-xl transition-all hover:bg-white/10',
-          isOpen || active ? 'border-primary/40 bg-white/10 text-primary' : 'border-white/10 text-zinc-400',
+          'relative flex h-12 w-12 items-center justify-center rounded-2xl border bg-popover shadow-elevation-overlay transition-all hover:bg-secondary',
+          isOpen || active ? 'border-primary/40 bg-secondary text-primary' : 'border-border text-muted-foreground',
         )}
       >
         {icon}
-        {badge && <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-emerald-500" />}
+        {badge && <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-success" />}
       </button>
 
       {isOpen && (
@@ -55,12 +55,12 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
           id={id}
           aria-label={label}
           className={cn(
-            'custom-scrollbar absolute right-14 top-0 z-30 flex max-h-[60vh] w-72 flex-col overflow-y-auto overscroll-contain rounded-2xl border border-white/10 bg-black/85 shadow-2xl shadow-black/60 backdrop-blur-xl animate-in slide-in-from-right-2 duration-200',
+            'custom-scrollbar absolute right-14 top-0 z-30 flex max-h-[60vh] w-72 flex-col overflow-y-auto overscroll-contain rounded-2xl border border-border bg-popover shadow-elevation-overlay animate-in slide-in-from-right-2 duration-200',
             panelClassName,
           )}
         >
-          <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-white/5 bg-black/90 px-3 py-2">
-            <h2 className="m-0 flex items-center gap-2 text-2xs font-black uppercase tracking-[0.2em] text-zinc-300">
+          <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-popover px-3 py-2">
+            <h2 className="m-0 flex items-center gap-2 text-2xs font-bold text-foreground">
               <span aria-hidden="true" className="[&>svg]:h-3.5 [&>svg]:w-3.5">{icon}</span>
               {label}
             </h2>
@@ -68,7 +68,7 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
               type="button"
               aria-label={`Fechar ${label.toLowerCase()}`}
               onClick={() => setOpen(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-white/10 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>

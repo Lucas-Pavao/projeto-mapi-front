@@ -461,12 +461,12 @@ export const MapView: React.FC = () => {
   }, [locationInfo, floodPointStatus, selectedFloodPoint, sensorStatus]);
 
   return (
-    <div className="h-full min-h-0 w-full bg-zinc-950 overflow-hidden font-sans selection:bg-primary/30 text-zinc-300 relative">
+    <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
       {/* Brand Floating Island */}
       <div className="absolute top-4 left-4 z-40 pointer-events-auto">
-        <div className="h-16 border border-white/10 bg-black/60 backdrop-blur-xl flex items-center px-3 sm:px-6 rounded-2xl shadow-2xl shadow-black/50 transition-all duration-500 hover:bg-black/60">
+        <div className="h-16 border border-border bg-card flex items-center px-3 sm:px-6 rounded-2xl shadow-elevation-overlay transition-all duration-500">
           <div className="flex flex-col">
-            <h1 className="text-sm font-black text-white uppercase tracking-[0.2em] sm:tracking-[0.3em]">MAPI Portal</h1>
+            <h1 className="text-sm font-bold text-foreground">MAPI Portal</h1>
             <ApiStatusIndicator status={apiStatus} lastSuccessAt={lastSuccessAt} />
           </div>
         </div>
@@ -474,11 +474,11 @@ export const MapView: React.FC = () => {
 
       {/* User Controls Floating Island */}
       <div className="absolute top-4 right-4 z-40 pointer-events-auto">
-        <div className="h-16 border border-white/10 bg-black/60 backdrop-blur-xl flex items-center gap-3 px-4 rounded-2xl shadow-2xl shadow-black/50 hover:bg-black/60 transition-all">
+        <div className="h-16 border border-border bg-card flex items-center gap-3 px-4 rounded-2xl shadow-elevation-overlay transition-all">
            <div className="flex flex-col items-end mr-1 hidden sm:flex">
-              <span className="text-2xs font-black text-white uppercase tracking-tighter">{user?.username || 'Convidado'}</span>
+              <span className="text-2xs font-bold text-foreground">{user?.username || 'Convidado'}</span>
            </div>
-           <div aria-hidden="true" className="h-10 w-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-400 group">
+           <div aria-hidden="true" className="h-10 w-10 rounded-xl bg-muted border border-border flex items-center justify-center text-muted-foreground group">
               <User className="h-5 w-5 group-hover:scale-110 transition-transform" />
            </div>
            <Button 
@@ -487,7 +487,7 @@ export const MapView: React.FC = () => {
              onClick={logout}
              aria-label="Sair da conta"
              title="Sair da conta"
-             className="h-10 w-10 rounded-xl hover:bg-red-500/10 hover:text-red-500 text-zinc-400 transition-all border border-transparent hover:border-red-500/20"
+             className="h-10 w-10 rounded-xl hover:bg-destructive/10 hover:text-destructive text-muted-foreground transition-all border border-transparent hover:border-destructive/40"
            >
              <LogOut className="h-5 w-5" aria-hidden="true" />
            </Button>
@@ -500,7 +500,7 @@ export const MapView: React.FC = () => {
         onClick={() => setShowMobileList(true)}
         aria-expanded={showMobileList}
         aria-controls="sensor-sheet"
-        className="md:hidden absolute bottom-6 left-4 z-30 flex h-12 items-center gap-2 rounded-full border border-white/20 bg-black/80 px-4 text-sm font-semibold text-white shadow-2xl backdrop-blur-xl"
+        className="md:hidden absolute bottom-6 left-4 z-30 flex h-12 items-center gap-2 rounded-full border border-border bg-popover px-4 text-sm font-semibold text-foreground shadow-elevation-overlay"
       >
         <List className="h-5 w-5" aria-hidden="true" />
         Sensores e pontos
@@ -512,7 +512,7 @@ export const MapView: React.FC = () => {
           showMobileList ? 'flex inset-x-2 bottom-2 h-[70vh]' : 'hidden'
         )}
       >
-        <div className="pointer-events-auto h-full w-full md:w-auto shadow-2xl shadow-black/60 rounded-2xl overflow-hidden border border-white/10 ring-1 ring-white/5">
+        <div className="pointer-events-auto h-full w-full md:w-auto shadow-elevation-overlay rounded-2xl overflow-hidden border border-border ring-1 ring-border">
           <SensorSidebar 
             sensors={sensors} 
             floodPoints={floodPoints}
@@ -581,8 +581,8 @@ export const MapView: React.FC = () => {
             >
               <MarkerContent>
                 <div className="relative flex items-center justify-center">
-                  <div className="absolute w-8 h-8 bg-blue-500/30 rounded-full animate-ping" />
-                  <div className="relative w-4 h-4 bg-blue-500 border-2 border-white rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                  <div className="absolute w-8 h-8 bg-chart-1 rounded-full animate-ping" />
+                  <div className="relative w-4 h-4 bg-chart-1 border-2 border-border rounded-full" />
                 </div>
               </MarkerContent>
             </MapMarker>
@@ -605,14 +605,14 @@ export const MapView: React.FC = () => {
             <MapToolPopover id="layer-panel" label="Camadas do mapa" icon={<Layers className="h-5 w-5" aria-hidden="true" />} panelClassName="w-56 p-1.5" {...toolProps('layers')}>
               <div role="group" aria-label="Camadas" className="flex flex-col gap-1 pt-1">
                    {[
-                     { id: 'Mista / Meteo', icon: Activity, color: 'text-emerald-500' },
-                     { id: 'Geotécnica', icon: Shield, color: 'text-amber-500' },
-                     { id: 'Rio / Hidro', icon: Waves, color: 'text-blue-500' },
-                     { id: 'Chuva', icon: CloudRain, color: 'text-sky-500' },
-                     { id: 'Meteo', icon: Thermometer, color: 'text-orange-500' },
-                     { id: 'Vento', icon: Wind, color: 'text-slate-400' },
-                     { id: 'Sensor', icon: Activity, color: 'text-zinc-400' },
-                     { id: 'Pontos Críticos', icon: AlertTriangle, color: 'text-red-500' }
+                     { id: 'Mista / Meteo', icon: Activity, color: 'text-success' },
+                     { id: 'Geotécnica', icon: Shield, color: 'text-warning' },
+                     { id: 'Rio / Hidro', icon: Waves, color: 'text-chart-1' },
+                     { id: 'Chuva', icon: CloudRain, color: 'text-chart-1' },
+                     { id: 'Meteo', icon: Thermometer, color: 'text-warning' },
+                     { id: 'Vento', icon: Wind, color: 'text-muted-foreground' },
+                     { id: 'Sensor', icon: Activity, color: 'text-muted-foreground' },
+                     { id: 'Pontos Críticos', icon: AlertTriangle, color: 'text-destructive' }
                    ].map((layer) => (
                      <button
                        key={layer.id}
@@ -622,15 +622,15 @@ export const MapView: React.FC = () => {
                          prev.includes(layer.id) ? prev.filter(l => l !== layer.id) : [...prev, layer.id]
                        )}
                        className={cn(
-                         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-2xs font-bold uppercase tracking-widest transition-all group",
+                         "flex items-center gap-3 px-3 py-2.5 rounded-xl text-2xs font-bold transition-all group",
                          activeLayers.includes(layer.id) 
-                          ? "bg-white/10 text-white shadow-inner" 
-                          : "text-zinc-400 hover:text-zinc-300 hover:bg-white/5"
+                          ? "bg-secondary text-foreground shadow-inner" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
                        )}
                      >
                        <layer.icon className={cn("h-3.5 w-3.5", activeLayers.includes(layer.id) ? layer.color : "opacity-30")} />
                        <span className="truncate">{layer.id}</span>
-                       {activeLayers.includes(layer.id) && <div className="ml-auto h-1 w-1 rounded-full bg-primary shadow-[0_0_5px_rgba(99,102,241,0.5)]" />}
+                       {activeLayers.includes(layer.id) && <div className="ml-auto h-1 w-1 rounded-full bg-primary" />}
                      </button>
                    ))}
               </div>
@@ -668,34 +668,33 @@ export const MapView: React.FC = () => {
                 <MarkerContent>
                   <div className="relative group cursor-pointer flex flex-col items-center">
                     <div className={cn(
-                      "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-zinc-950 shadow-[0_10px_20px_rgba(0,0,0,0.4)] flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
+                      "h-10 w-10 rounded-2xl rounded-bl-none rotate-45 border-2 border-border shadow-elevation-overlay flex items-center justify-center transition-all duration-300 group-hover:scale-110 z-10 relative overflow-hidden",
                       config.color,
                       isStale && "opacity-50 grayscale",
-                      isSelected ? 'ring-2 ring-white scale-110 shadow-[0_0_20px_rgba(255,255,255,0.3)]' : '',
+                      isSelected ? 'ring-2 ring-ring scale-110' : '',
                       isNearby && !isSelected ? 'ring-2 ring-primary/60 scale-105' : ''
                     )}>
                       <div className="-rotate-45 flex items-center justify-center h-full w-full">
-                         {React.createElement(config.icon, { className: "h-5 w-5 text-white" })}
+                         {React.createElement(config.icon, { className: "h-5 w-5 text-background" })}
                       </div>
-                      <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
                     </div>
 
                     {isStale && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-red-500 border-2 border-zinc-950 z-20" title="Sensor sem resposta recente" aria-hidden="true" />
+                      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-destructive border-2 border-border z-20" title="Sensor sem resposta recente" aria-hidden="true" />
                     )}
 
                     {isSelected && (
-                      <div className="absolute -bottom-1 w-2 h-2 bg-white rounded-full blur-[2px] animate-pulse" />
+                      <div className="absolute -bottom-1 w-2 h-2 bg-foreground rounded-full animate-pulse" />
                     )}
 
                     {isNearby && !isSelected && (
-                      <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary/60 rounded-full blur-[1px]" />
+                      <div className="absolute -bottom-1 w-1.5 h-1.5 bg-primary/60 rounded-full" />
                     )}
 
                     {(isSelected || isNearby) && (
                       <div className={cn(
                         "absolute inset-0 rounded-2xl rotate-45 animate-ping opacity-20 pointer-events-none",
-                        isSelected ? "bg-white" : "bg-primary"
+                        isSelected ? "bg-foreground" : "bg-primary"
                       )} />
                     )}
                   </div>
@@ -736,6 +735,7 @@ export const MapView: React.FC = () => {
                     <RiskBadge
                       level={riskLevel}
                       variant="marker"
+                      // TODO(F3-FRONT-ALERTAS): hoje o pulso vale só para HIGH; na F3 passa a ser "ponto com alerta ativo".
                       pulse={riskLevel === 'HIGH'}
                       className={cn('transition-transform duration-200 group-hover:scale-110', isSelected && 'scale-125 rounded-lg ring-2 ring-ring ring-offset-2 ring-offset-background')}
                     />
@@ -794,8 +794,8 @@ export const MapView: React.FC = () => {
                 <MarkerContent>
                   <div className="relative flex items-center justify-center">
                     <div className="absolute -inset-4 rounded-full bg-primary/20 animate-ping opacity-30" />
-                    <div className="h-6 w-6 rounded-full border-2 border-zinc-950 bg-primary shadow-[0_0_15px_rgba(99,102,241,0.5)] flex items-center justify-center relative z-10">
-                      <MapPin className="h-3 w-3 text-white" />
+                    <div className="h-6 w-6 rounded-full border-2 border-border bg-primary flex items-center justify-center relative z-10">
+                      <MapPin className="h-3 w-3 text-foreground" />
                     </div>
                   </div>
                 </MarkerContent>
@@ -857,15 +857,15 @@ export const MapView: React.FC = () => {
           )}
 
           {isLoading && (
-            <div role="status" aria-live="polite" className="absolute inset-0 bg-slate-950 flex items-center justify-center z-50">
-              <div className="flex flex-col items-center p-8 rounded-xl bg-zinc-900 border border-zinc-800 shadow-2xl">
+            <div role="status" aria-live="polite" className="absolute inset-0 bg-background flex items-center justify-center z-50">
+              <div className="flex flex-col items-center p-8 rounded-xl bg-popover border border-border shadow-elevation-overlay">
                 <div className="relative h-16 w-16 mb-6 flex items-center justify-center">
                    <div className="absolute inset-0 rounded-full border-4 border-primary/10" />
                    <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin" />
                    <Activity className="h-8 w-8 text-primary animate-pulse" />
                 </div>
-                <h2 className="text-sm font-bold tracking-[0.2em] text-white uppercase animate-pulse">Carregando Sistema</h2>
-                <p className="text-2xs text-zinc-400 mt-2 uppercase font-medium tracking-tighter">MAPI • Monitoramento Ambiental</p>
+                <h2 className="text-sm font-bold text-foreground animate-pulse">Carregando Sistema</h2>
+                <p className="text-2xs text-muted-foreground mt-2 font-medium">MAPI • Monitoramento Ambiental</p>
               </div>
             </div>
           )}
@@ -901,7 +901,7 @@ export const MapView: React.FC = () => {
               onClick={handleGetGeolocation}
               disabled={isGettingLocation}
               className={cn(
-                "h-12 px-3 sm:px-5 rounded-full bg-black/80 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/50 hover:bg-white/15 hover:border-primary/50 text-white transition-all flex items-center gap-2 group",
+                "h-12 px-3 sm:px-5 rounded-full bg-popover border border-border shadow-elevation-overlay hover:bg-secondary hover:border-primary/50 text-foreground transition-all flex items-center gap-2 group",
                 isGettingLocation ? "text-primary border-primary/40 animate-pulse" : ""
               )}
               title="Obter minha localização atual e reportar se a área está alagada"
@@ -915,7 +915,7 @@ export const MapView: React.FC = () => {
               ) : (
                 <>
                   <MapPin className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
-                  <span className="hidden sm:inline text-sm font-semibold text-white/90 group-hover:text-white">Reportar Alagamento Local</span>
+                  <span className="hidden sm:inline text-sm font-semibold text-foreground group-hover:text-foreground">Reportar Alagamento Local</span>
                 </>
               )}
             </Button>

@@ -22,16 +22,16 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
   onClose
 }) => {
   return (
-    <ModalDialog label="Reportar cenário no local" onClose={() => { if (!isSubmitting) onClose(); }} className="absolute inset-0 z-[80] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 shadow-2xl overflow-hidden animate-in scale-in-95 duration-200">
+    <ModalDialog label="Reportar cenário no local" onClose={() => { if (!isSubmitting) onClose(); }} className="absolute inset-0 z-80 bg-background/80 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md bg-card border-border shadow-elevation-overlay overflow-hidden animate-in scale-in-95 duration-200">
         <CardHeader className="bg-primary/10 border-b border-primary/20 p-6 relative">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30">
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <CardTitle className="text-lg font-black text-white uppercase tracking-tight">Reportar Cenário</CardTitle>
-              <p className="text-2xs text-zinc-400 font-bold uppercase tracking-widest mt-1">
+              <CardTitle className="text-lg font-bold text-foreground">Reportar Cenário</CardTitle>
+              <p className="text-2xs text-muted-foreground font-bold mt-1">
                 Coord: {latitude.toFixed(5)}, {longitude.toFixed(5)}
               </p>
             </div>
@@ -40,7 +40,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
             type="button"
             aria-label="Fechar"
             onClick={onClose} 
-            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 h-8 w-8 rounded-full bg-muted hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors"
             disabled={isSubmitting}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -48,14 +48,14 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
         </CardHeader>
         <CardContent className="p-6 space-y-6">
           <div className="text-center py-2">
-            <p className="text-sm font-medium text-zinc-300 leading-relaxed">
+            <p className="text-sm font-medium text-foreground leading-relaxed">
               {title}
             </p>
           </div>
 
           <div className="flex flex-col gap-3">
             <Button 
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-black uppercase text-2xs tracking-widest h-14 shadow-lg shadow-red-900/20 flex items-center justify-center gap-2"
+              className="w-full bg-destructive hover:bg-destructive/90 text-background font-bold text-2xs h-14 shadow-elevation-raised flex items-center justify-center gap-2"
               onClick={() => onConfirm(true)}
               disabled={isSubmitting}
             >
@@ -70,7 +70,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
             </Button>
             
             <Button 
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-2xs tracking-widest h-14 shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2"
+              className="w-full bg-success hover:bg-success/90 text-background font-bold text-2xs h-14 shadow-elevation-raised flex items-center justify-center gap-2"
               onClick={() => onConfirm(false)}
               disabled={isSubmitting}
             >
@@ -87,7 +87,7 @@ export const ReportScenarioModal: React.FC<ReportScenarioModalProps> = ({
 
           <div className="text-center">
             <button 
-              className="text-2xs text-zinc-400 hover:text-zinc-400 font-bold uppercase tracking-widest transition-colors"
+              className="text-2xs text-muted-foreground hover:text-muted-foreground font-bold transition-colors"
               onClick={onClose}
               disabled={isSubmitting}
             >

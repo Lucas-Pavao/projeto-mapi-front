@@ -20,10 +20,10 @@ export const getSensorConfig = (sensor: SensorResponseDTO) => {
   if (hasRiverAlert || type.includes('fluviom')) {
     return {
       icon: ShieldAlert,
-      color: 'bg-rose-600',
-      sidebarColor: "bg-rose-500/10 text-rose-400",
-      ping: 'bg-rose-400',
-      text: 'text-rose-400',
+      color: 'bg-chart-1',
+      sidebarColor: "bg-chart-1/10 text-chart-1",
+      ping: 'bg-chart-1',
+      text: 'text-chart-1',
       label: 'Alerta de Rio'
     };
   }
@@ -32,10 +32,10 @@ export const getSensorConfig = (sensor: SensorResponseDTO) => {
   if (source.includes('ANA')) {
     return { 
       icon: Waves, 
-      color: 'bg-blue-600', 
-      sidebarColor: "bg-blue-500/10 text-blue-400",
-      ping: 'bg-blue-400', 
-      text: 'text-blue-400',
+      color: 'bg-chart-1', 
+      sidebarColor: "bg-chart-1/10 text-chart-1",
+      ping: 'bg-chart-1', 
+      text: 'text-chart-1',
       label: 'Rio / Hidro'
     };
   }
@@ -45,48 +45,48 @@ export const getSensorConfig = (sensor: SensorResponseDTO) => {
     if (type.includes('geotécnica') || type.includes('geotecnica')) {
       return { 
         icon: Activity, 
-        color: 'bg-amber-600', 
-        sidebarColor: "bg-amber-500/10 text-amber-400",
-        ping: 'bg-amber-400', 
-        text: 'text-amber-400',
+        color: 'bg-chart-5', 
+        sidebarColor: "bg-chart-5/10 text-chart-5",
+        ping: 'bg-chart-5', 
+        text: 'text-chart-5',
         label: 'Geotécnica'
       };
     }
     if (type.includes('mista')) {
       return { 
         icon: Gauge, 
-        color: 'bg-emerald-600', 
-        sidebarColor: "bg-emerald-500/10 text-emerald-400",
-        ping: 'bg-emerald-400', 
-        text: 'text-emerald-400',
+        color: 'bg-chart-4', 
+        sidebarColor: "bg-chart-4/10 text-chart-4",
+        ping: 'bg-chart-4', 
+        text: 'text-chart-4',
         label: 'Mista / Meteo'
       };
     }
     return { 
       icon: CloudRain, 
-      color: 'bg-sky-600', 
-      sidebarColor: "bg-sky-500/10 text-sky-400",
-      ping: 'bg-sky-400', 
-      text: 'text-sky-400',
+      color: 'bg-chart-3', 
+      sidebarColor: "bg-chart-3/10 text-chart-3",
+      ping: 'bg-chart-3', 
+      text: 'text-chart-3',
       label: 'Chuva'
     };
   }
 
   // Default / Other
   if (sensor.temperature !== null) return { 
-    icon: Thermometer, color: 'bg-orange-600', sidebarColor: "bg-orange-500/10 text-orange-400", ping: 'bg-orange-400', text: 'text-orange-400', label: 'Meteo'
+    icon: Thermometer, color: 'bg-chart-2', sidebarColor: "bg-chart-2/10 text-chart-2", ping: 'bg-chart-2', text: 'text-chart-2', label: 'Meteo'
   };
   
   if (sensor.windSpeed !== null) return { 
-    icon: Wind, color: 'bg-slate-600', sidebarColor: "bg-slate-500/10 text-slate-400", ping: 'bg-slate-400', text: 'text-slate-400', label: 'Vento'
+    icon: Wind, color: 'bg-muted-foreground', sidebarColor: "bg-muted text-muted-foreground", ping: 'bg-muted-foreground', text: 'text-muted-foreground', label: 'Vento'
   };
 
   return { 
     icon: Activity, 
-    color: 'bg-zinc-600', 
-    sidebarColor: "bg-zinc-500/10 text-zinc-400",
-    ping: 'bg-zinc-400', 
-    text: 'text-zinc-400',
+    color: 'bg-muted-foreground', 
+    sidebarColor: "bg-muted text-muted-foreground",
+    ping: 'bg-muted-foreground', 
+    text: 'text-muted-foreground',
     label: sensor.type || 'Sensor'
   };
 };
@@ -142,17 +142,17 @@ export interface DataFreshness {
 export const getDataFreshness = (timestamp: unknown): DataFreshness => {
   const date = getSafeFormattedDate(timestamp);
   if (!date) {
-    return { status: 'stale', minutesAgo: null, label: 'Sem dados', color: 'bg-zinc-600', text: 'text-zinc-400', dot: 'bg-zinc-500' };
+    return { status: 'stale', minutesAgo: null, label: 'Sem dados', color: 'bg-muted-foreground', text: 'text-muted-foreground', dot: 'bg-muted-foreground' };
   }
 
   const minutesAgo = Math.max(0, Math.round((Date.now() - date.getTime()) / 60000));
 
   if (minutesAgo <= 20) {
-    return { status: 'fresh', minutesAgo, label: 'Atualizado', color: 'bg-emerald-600', text: 'text-emerald-500', dot: 'bg-emerald-400' };
+    return { status: 'fresh', minutesAgo, label: 'Atualizado', color: 'bg-success', text: 'text-success', dot: 'bg-success' };
   }
   if (minutesAgo <= 120) {
-    return { status: 'aging', minutesAgo, label: 'Atrasando', color: 'bg-amber-600', text: 'text-amber-500', dot: 'bg-amber-400' };
+    return { status: 'aging', minutesAgo, label: 'Atrasando', color: 'bg-warning', text: 'text-warning', dot: 'bg-warning' };
   }
-  return { status: 'stale', minutesAgo, label: 'Sem resposta', color: 'bg-red-600', text: 'text-red-500', dot: 'bg-red-400' };
+  return { status: 'stale', minutesAgo, label: 'Sem resposta', color: 'bg-destructive', text: 'text-destructive', dot: 'bg-destructive' };
 };
 

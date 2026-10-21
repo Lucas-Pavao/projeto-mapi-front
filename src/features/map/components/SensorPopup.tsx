@@ -40,9 +40,9 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   };
 
   return (
-    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-zinc-900/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden w-80 ring-1 ring-white/5 animate-in fade-in zoom-in-95 duration-200">
+    <div className="flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-80 ring-1 ring-border animate-in fade-in zoom-in-95 duration-200">
       {/* Header with Gradient (fixo; só o corpo rola) */}
-      <div className={cn("shrink-0 px-5 py-4 text-white relative overflow-hidden", config.color + "/90")}>
+      <div className={cn("shrink-0 px-5 py-4 text-background relative overflow-hidden", config.color)}>
         <div className="absolute top-0 right-0 p-4 opacity-10">
            {React.createElement(config.icon, { className: "h-16 w-16 -mr-4 -mt-4 rotate-12" })}
         </div>
@@ -50,24 +50,24 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         <div className="flex justify-between items-start relative z-10">
           <div>
             <div className="flex items-center gap-1.5 mb-1">
-              <span className="text-2xs font-black uppercase tracking-[0.2em] opacity-80">{config.label}</span>
-              <div className="h-1 w-1 rounded-full bg-white/50" />
-              <span className="text-2xs font-black uppercase tracking-[0.2em] opacity-60">{sensor.source}</span>
+              <span className="text-2xs font-bold opacity-80">{config.label}</span>
+              <div className="h-1 w-1 rounded-full bg-muted-foreground" />
+              <span className="text-2xs font-bold opacity-60">{sensor.source}</span>
             </div>
-            <h3 className="text-sm font-black leading-tight tracking-tight drop-shadow-sm">{sensor.stationName || 'Estação sem nome'}</h3>
+            <h3 className="text-sm font-bold leading-tight drop-shadow-sm">{sensor.stationName || 'Estação sem nome'}</h3>
           </div>
           <div className="flex items-center gap-2">
             {isFetchingStatus ? (
-              <Loader2 className="h-4 w-4 text-white animate-spin opacity-50" />
+              <Loader2 className="h-4 w-4 text-foreground animate-spin opacity-50" />
             ) : (
-              <div className="h-2 w-2 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+              <div className="h-2 w-2 rounded-full bg-foreground animate-pulse" />
             )}
           </div>
         </div>
         
         <div className="flex items-center gap-1.5 mt-2 opacity-80 relative z-10">
           <MapPin className="h-3 w-3" />
-          <p className="text-2xs font-bold truncate tracking-tight">{sensor.municipality || 'Localidade não informada'}</p>
+          <p className="text-2xs font-bold truncate">{sensor.municipality || 'Localidade não informada'}</p>
         </div>
       </div>
       
@@ -75,16 +75,16 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         {/* Main Reading Section */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-             <p className="text-2xs text-zinc-400 uppercase font-black tracking-widest">Leitura Atual</p>
+             <p className="text-2xs text-muted-foreground font-bold">Leitura Atual</p>
              <div className="flex items-baseline gap-1.5">
-               <span className="text-4xl font-black text-white tracking-tighter italic">
+               <span className="text-4xl font-bold text-foreground">
                 {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(1) : (sensor.value ?? '--')}
                </span>
-               <span className="text-sm font-bold text-zinc-400 uppercase">{sensor.unit || ''}</span>
+               <span className="text-sm font-bold text-muted-foreground">{sensor.unit || ''}</span>
              </div>
           </div>
           <div className={cn(
-            "h-14 w-14 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 shadow-inner group transition-transform hover:scale-105 duration-300",
+            "h-14 w-14 rounded-2xl flex items-center justify-center bg-muted border border-border shadow-inner group transition-transform hover:scale-105 duration-300",
             config.text
           )}>
             {React.createElement(config.icon, { className: "h-7 w-7" })}
@@ -95,72 +95,72 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         {hasRiverAlert ? (
           <div className="space-y-2.5">
             {sensor.riverName && (
-              <div className="flex items-center gap-1.5 text-rose-400">
+              <div className="flex items-center gap-1.5 text-destructive">
                 <Waves className="h-3 w-3" />
-                <span className="text-2xs font-black uppercase tracking-widest">{sensor.riverName}</span>
+                <span className="text-2xs font-bold">{sensor.riverName}</span>
               </div>
             )}
             <div className="grid grid-cols-3 gap-2.5">
-              <div className="bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/10 flex flex-col items-center text-center">
-                <span className="text-2xs text-amber-400/70 font-black uppercase tracking-tighter">Pré-Alerta</span>
-                <span className="text-xs font-black text-amber-400">{getMetric(sensor.riverPreAlertLevel, null)}</span>
+              <div className="bg-warning/10 p-2.5 rounded-xl border border-warning/40 flex flex-col items-center text-center">
+                <span className="text-2xs text-warning font-bold">Pré-Alerta</span>
+                <span className="text-xs font-bold text-warning">{getMetric(sensor.riverPreAlertLevel, null)}</span>
               </div>
-              <div className="bg-orange-500/10 p-2.5 rounded-xl border border-orange-500/10 flex flex-col items-center text-center">
-                <span className="text-2xs text-orange-400/70 font-black uppercase tracking-tighter">Alerta</span>
-                <span className="text-xs font-black text-orange-400">{getMetric(sensor.riverAlertLevel, null)}</span>
+              <div className="bg-warning/10 p-2.5 rounded-xl border border-warning/40 flex flex-col items-center text-center">
+                <span className="text-2xs text-warning font-bold">Alerta</span>
+                <span className="text-xs font-bold text-warning">{getMetric(sensor.riverAlertLevel, null)}</span>
               </div>
-              <div className="bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/10 flex flex-col items-center text-center">
-                <span className="text-2xs text-rose-400/70 font-black uppercase tracking-tighter">Inundação</span>
-                <span className="text-xs font-black text-rose-400">{getMetric(sensor.riverFloodLevel, null)}</span>
+              <div className="bg-destructive/10 p-2.5 rounded-xl border border-border flex flex-col items-center text-center">
+                <span className="text-2xs text-destructive font-bold">Inundação</span>
+                <span className="text-xs font-bold text-destructive">{getMetric(sensor.riverFloodLevel, null)}</span>
               </div>
             </div>
-            <p className="text-2xs text-zinc-400 font-medium italic px-0.5">Limiares oficiais da APAC para este ponto do rio.</p>
+            <p className="text-2xs text-muted-foreground font-medium px-0.5">Limiares oficiais da APAC para este ponto do rio.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2.5">
-            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-              <div className="p-1.5 bg-orange-500/10 rounded-lg">
-                <Thermometer className="h-3.5 w-3.5 text-orange-400" />
+            <div className="bg-muted p-2.5 rounded-xl border border-border flex items-center gap-3 group hover:bg-secondary transition-colors">
+              <div className="p-1.5 bg-warning/10 rounded-lg">
+                <Thermometer className="h-3.5 w-3.5 text-warning" />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Temp</span>
-                <span className="text-xs font-black text-white">
+                <span className="text-2xs text-muted-foreground font-bold">Temp</span>
+                <span className="text-xs font-bold text-foreground">
                   {getMetric(sensor.temperature, precise?.temperature)}
                   <small className="ml-0.5 opacity-50">{precise?.unitTemperature || '°C'}</small>
                 </span>
               </div>
             </div>
 
-            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-              <div className="p-1.5 bg-blue-500/10 rounded-lg">
-                <Droplets className="h-3.5 w-3.5 text-blue-400" />
+            <div className="bg-muted p-2.5 rounded-xl border border-border flex items-center gap-3 group hover:bg-secondary transition-colors">
+              <div className="p-1.5 bg-chart-1/10 rounded-lg">
+                <Droplets className="h-3.5 w-3.5 text-chart-1" />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Humid</span>
-                <span className="text-xs font-black text-white">{getMetric(sensor.humidity, precise?.humidity)}%</span>
+                <span className="text-2xs text-muted-foreground font-bold">Humid</span>
+                <span className="text-xs font-bold text-foreground">{getMetric(sensor.humidity, precise?.humidity)}%</span>
               </div>
             </div>
 
-            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-              <div className="p-1.5 bg-sky-500/10 rounded-lg">
-                <CloudRain className="h-3.5 w-3.5 text-sky-400" />
+            <div className="bg-muted p-2.5 rounded-xl border border-border flex items-center gap-3 group hover:bg-secondary transition-colors">
+              <div className="p-1.5 bg-chart-1/10 rounded-lg">
+                <CloudRain className="h-3.5 w-3.5 text-chart-1" />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Chuva</span>
-                <span className="text-xs font-black text-white">
+                <span className="text-2xs text-muted-foreground font-bold">Chuva</span>
+                <span className="text-xs font-bold text-foreground">
                   {getMetric(sensor.accumulatedPrecipitation, precise?.precipitation)}
                   <small className="ml-0.5 opacity-50">{precise?.unitPrecipitation || 'mm'}</small>
                 </span>
               </div>
             </div>
 
-            <div className="bg-white/5 p-2.5 rounded-xl border border-white/5 flex items-center gap-3 group hover:bg-white/10 transition-colors">
-              <div className="p-1.5 bg-slate-500/10 rounded-lg">
-                <Wind className="h-3.5 w-3.5 text-slate-400" />
+            <div className="bg-muted p-2.5 rounded-xl border border-border flex items-center gap-3 group hover:bg-secondary transition-colors">
+              <div className="p-1.5 bg-muted rounded-lg">
+                <Wind className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
               <div className="flex flex-col">
-                <span className="text-2xs text-zinc-400 font-black uppercase tracking-tighter">Vento</span>
-                <span className="text-xs font-black text-white">
+                <span className="text-2xs text-muted-foreground font-bold">Vento</span>
+                <span className="text-xs font-bold text-foreground">
                   {getMetric(sensor.windSpeed, precise?.windSpeed)}
                   <small className="ml-0.5 opacity-50">{precise?.unitWindSpeed || 'km/h'}</small>
                 </span>
@@ -170,23 +170,23 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
         )}
 
         {/* Status Bar */}
-        <div className="pt-4 border-t border-white/5 space-y-3">
+        <div className="pt-4 border-t border-border space-y-3">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className={cn("h-2.5 w-2.5 rounded-full", freshness.dot, freshness.status === 'fresh' && "animate-pulse")} />
-              <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tight">Status da Coleta</span>
+              <span className="text-2xs text-muted-foreground font-bold">Status da Coleta</span>
             </div>
-            <span className={cn("text-2xs font-black uppercase tracking-widest", freshness.text)}>
+            <span className={cn("text-2xs font-bold", freshness.text)}>
               {freshness.label}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2">
-              <Clock className="h-3.5 w-3.5 text-zinc-400" />
-              <span className="text-2xs text-zinc-400 font-bold uppercase tracking-tight">Última Leitura</span>
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-2xs text-muted-foreground font-bold">Última Leitura</span>
             </div>
-            <span className="text-2xs font-black text-zinc-300 uppercase">
+            <span className="text-2xs font-bold text-foreground">
               {sensor.timestamp ? getSafeFormattedDate(sensor.timestamp)?.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) || '--:--' : '--:--'}
             </span>
           </div>
@@ -194,7 +194,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
 
         <Button 
           onClick={onShowDetails}
-          className="w-full h-10 text-2xs font-black uppercase tracking-[0.2em] bg-white/5 hover:bg-primary hover:text-white text-zinc-400 border border-white/5 hover:border-primary transition-all duration-300 rounded-xl group shadow-lg shadow-black/20"
+          className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-foreground text-muted-foreground border border-border hover:border-primary transition-all duration-300 rounded-xl group shadow-elevation-raised"
         >
           <span>Analisar Dados Completos</span>
           <ExternalLink className="h-3 w-3 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
