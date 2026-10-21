@@ -122,7 +122,7 @@ export interface ApiOptions {
   stream?: string;
 }
 
-const isReply = (v: unknown): v is ApiReply => typeof v === 'object' && v !== null && !Array.isArray(v) && ('status' in v || 'body' in v || 'json' in v);
+const isReply = (v: unknown): v is ApiReply => typeof v === 'object' && v !== null && !Array.isArray(v) && ((typeof (v as ApiReply).status === 'number') || 'body' in v || 'json' in v);
 
 export const sse = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 

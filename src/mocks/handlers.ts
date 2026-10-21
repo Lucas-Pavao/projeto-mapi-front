@@ -116,7 +116,17 @@ export const handlers = [
     return HttpResponse.json(sim);
   }),
 
-  http.get('/api/reports', () => HttpResponse.json(page(d.reports.filter((r) => r.status === 'PENDING')))),
+  http.get('/api/reports', ({ request }) => {
+    const status = new URL(request.url).searchParams.get('status');
+    return HttpResponse.json(page(status ? d.reports.filter((r) => r.status === status) : d.reports));
+  }),
+  http.patch<{ id: string }>('/api/reports/:id', async ({ params, request }) => {
+    const body = (await request.json()) as { status: 'CONFIRMED' | 'DISCARDED'; reason?: string };
+    const found = d.reports.find((r) => r.id === Number(params.id));
+    if (!found) return new HttpResponse(null, { status: 404 });
+    if (found.status !== 'PENDING') return new HttpResponse(null, { status: 409 });
+    return HttpResponse.json({ ...found, status: body.status, reviewedAt: new Date().toISOString(), reviewedBy: 'sintetico@example.org', discardReason: body.reason ?? null, floodEventId: body.status === 'CONFIRMED' ? 8 : null });
+  }),
   http.post<never, Pick<FloodReport, 'latitude' | 'longitude' | 'observedAt' | 'waterDepth'>>('/api/reports', async ({ request }) => {
     const body = await request.json();
     return HttpResponse.json({ ...body, id: 99, status: 'PENDING', createdAt: new Date().toISOString() }, { status: 201 });

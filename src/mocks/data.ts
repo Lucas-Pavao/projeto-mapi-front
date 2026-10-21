@@ -72,7 +72,8 @@ export const evaluation: ModelEvaluation = {
 };
 
 export const reports: FloodReport[] = [
-  { id: 1, latitude: -8.05, longitude: -34.9, observedAt: ago(15), waterDepth: 'KNEE', status: 'PENDING', nearestPointSlug: SYNTHETIC_SLUG, nearestPointDistanceM: 250, createdAt: ago(12) },
+  { id: 1, latitude: -8.05, longitude: -34.9, observedAt: ago(15), waterDepth: 'KNEE', description: 'Sintético: água na altura do joelho', status: 'PENDING', nearestPointSlug: SYNTHETIC_SLUG, nearestPointDistanceM: 250, createdAt: ago(12) },
+  { id: 3, latitude: -8.05, longitude: -34.905, observedAt: ago(500), waterDepth: 'WAIST', status: 'CONFIRMED', nearestPointSlug: SYNTHETIC_SLUG, nearestPointDistanceM: 80, createdAt: ago(480), reviewedAt: ago(400), reviewedBy: 'sintetico@example.org', floodEventId: 7 },
   { id: 2, latitude: -8.06, longitude: -34.95, observedAt: ago(200), waterDepth: null, status: 'DISCARDED', nearestPointSlug: null, nearestPointDistanceM: null, createdAt: ago(190), reviewedAt: ago(150), reviewedBy: 'sintetico@example.org', discardReason: 'Sintético: duplicado' },
 ];
 
