@@ -43,6 +43,8 @@ const W = 560, HT = 120;
 const sx = (t: number, a: number, b: number) => ((t - a) / (b - a)) * W;
 const sy = (v: number, max: number) => HT - (Math.min(max, v) / max) * HT;
 
+const Warn: React.FC<{ what: string }> = ({ what }) => <p role="alert" className="m-0 text-[11px] text-destructive">Não foi possível carregar {what}. Esta parte do relatório está incompleta.</p>;
+
 const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className="mb-1 text-[10px] font-extrabold tracking-[0.06em] text-muted-foreground">{children}</div>;
 
 /** Folha do relatório (sempre no tema claro). Cada parte só mostra o que a API entregou; o que faltou é dito. */
@@ -55,7 +57,6 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
     return v.length ? `${sx(v[0].t, from, to).toFixed(1)},${HT} ${v.map((p) => `${sx(p.t, from, to).toFixed(1)},${sy(p.v as number, rainMax).toFixed(1)}`).join(' ')} ${sx(v[v.length - 1].t, from, to).toFixed(1)},${HT}` : '';
   })();
   const byslug = new Map(points.map((p) => [p.slug, p]));
-  const Warn: React.FC<{ what: string }> = ({ what }) => <p role="alert" className="m-0 text-[11px] text-destructive">Não foi possível carregar {what}. Esta parte do relatório está incompleta.</p>;
   return (
     <article
       data-theme="light" data-accent="capibaribe" aria-label="Relatório de situação"

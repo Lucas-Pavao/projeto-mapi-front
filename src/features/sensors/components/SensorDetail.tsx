@@ -150,7 +150,7 @@ export const SensorDetail: React.FC<Props> = (props) => {
         <span>Fonte <strong className="text-foreground">{v.source}</strong></span>
         <span>Gravado em UTC, exibido em America/Recife</span>
         <span>Identificador <span className="font-mono text-foreground">{v.id || '—'}</span></span>
-        <span className="ml-auto"><Button type="button" variant="outline" size="sm" onClick={exportar}>Exportar 24 h (CSV)</Button></span>
+        <span className="ml-auto"><Button type="button" variant="outline" size="sm" className="text-foreground" onClick={exportar}>Exportar 24 h (CSV)</Button></span>
       </section>
     </>
   );

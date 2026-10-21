@@ -116,7 +116,7 @@ export const ReportPage: React.FC = () => {
           <span role="status" className="text-[12px] text-muted-foreground">Pronto para gerar · {nSections} seç{nSections === 1 ? 'ão' : 'ões'}</span>
           <div className="flex gap-2">
             <Button type="button" size="lg" className="h-11 flex-1 md:h-9" onClick={() => window.print()}>Gerar PDF</Button>
-            <Button type="button" variant="outline" size="lg" className="h-11 md:h-9" disabled={rows.length === 0} onClick={csv}>CSV dos dados</Button>
+            <Button type="button" variant="outline" size="lg" className="h-11 text-foreground md:h-9" disabled={rows.length === 0} onClick={csv}>CSV dos dados</Button>
           </div>
           <Link to="/eventos" className="text-[12px] text-primary hover:underline">Voltar à linha do tempo do evento</Link>
         </div>

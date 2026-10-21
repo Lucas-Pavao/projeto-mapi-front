@@ -4,6 +4,7 @@ import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema
 export const CELLS = 72;
 /** Uma previsão vale para as células até 3 h depois de emitida; depois disso a célula fica "sem previsão". */
 const MAX_AGE_MS = 3 * 3_600_000;
+const LAST_GRACE_MS = 10 * 60_000;
 
 export interface Cell { i: number; start: number; end: number; level: RiskLevel | null; probability: number | null }
 
@@ -15,8 +16,10 @@ export function buildCells(items: readonly PredictionSummary[], t0: number, t1: 
   let k = -1;
   for (let i = 0; i < n; i++) {
     const end = t0 + (i + 1) * step;
-    while (k + 1 < sorted.length && sorted[k + 1].t <= end) k++;
-    const cur = k >= 0 && end - sorted[k].t <= MAX_AGE_MS ? sorted[k].p : null;
+    // A janela termina num instante arredondado (10 min); uma previsão emitida logo depois ainda é a do último instante.
+    const reach = i === n - 1 ? end + LAST_GRACE_MS : end;
+    while (k + 1 < sorted.length && sorted[k + 1].t <= reach) k++;
+    const cur = k >= 0 && reach - sorted[k].t <= MAX_AGE_MS ? sorted[k].p : null;
     out.push({ i, start: t0 + i * step, end, level: cur?.riskLevel ?? null, probability: cur && cur.riskLevel !== 'UNKNOWN' ? (cur.probability ?? null) : null });
   }
   return out;

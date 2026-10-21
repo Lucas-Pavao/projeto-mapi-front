@@ -9,6 +9,7 @@ import { useNotices } from '@/hooks/useNotices';
 import { useLiveStream } from '@/features/live/hooks/useLiveStream';
 import type { LiveEvent } from '@/features/live/schemas/live-event.schema';
 import { useAlerts } from '@/features/alerts/hooks/useAlerts';
+import type { Alert } from '@/features/alerts/schemas/alert.schema';
 import { useAckAlert } from '@/features/alerts/hooks/useAlertRules';
 import { applyLiveAlert } from '@/features/alerts/utils/liveAlerts';
 import { GROUPS, countByGroup, inGroup, type AlertGroup } from '@/features/alerts/utils/alertGroups';
@@ -35,11 +36,14 @@ export const AlertsPage: React.FC = () => {
   const [now] = useState(() => Date.now());
 
   // Reentrega após reconexão não deve avisar duas vezes do mesmo alerta.
+  // Alertas do stream ficam também aqui: se chegarem antes da primeira consulta, não se perdem.
+  const [liveAlerts, setLiveAlerts] = useState<Alert[]>([]);
   const announced = useRef(new Set<number>());
   const onEvent = useCallback(
     (ev: LiveEvent) => {
       if (ev.type !== 'alert') return;
       applyLiveAlert(qc, ev.data);
+      setLiveAlerts((l) => [ev.data, ...l.filter((a) => a.id !== ev.data.id)]);
       if (!ev.data.acknowledgedAt && !announced.current.has(ev.data.id)) {
         announced.current.add(ev.data.id);
         notify('info', `Novo alerta: ${ev.data.title}`);
@@ -49,7 +53,13 @@ export const AlertsPage: React.FC = () => {
   );
   const { status: liveStatus } = useLiveStream({ onEvent });
 
-  const content = useMemo(() => query.data?.content ?? [], [query.data]);
+  const content = useMemo(() => {
+    const base = query.data?.content ?? [];
+    if (!query.data) return [];
+    const ids = new Set(base.map((a) => a.id));
+    const newer = new Map(liveAlerts.map((a) => [a.id, a]));
+    return [...liveAlerts.filter((a) => !ids.has(a.id)), ...base.map((a) => newer.get(a.id) ?? a)];
+  }, [query.data, liveAlerts]);
   const unread = content.filter((a) => !a.acknowledgedAt);
 
   const doAck = (id: number, quiet = false) =>
@@ -76,8 +86,8 @@ export const AlertsPage: React.FC = () => {
         <div className="flex flex-col gap-3 border-b border-border px-[18px] py-4">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="m-0 flex-1 text-[24px] font-extrabold leading-[30px]">Central de alertas</h1>
-            <span className="text-[13px] text-muted-foreground" aria-live="polite"><strong className="font-mono text-foreground">{unread.length}</strong> não lidos de {query.data?.totalElements ?? content.length}</span>
-            <Button type="button" variant="outline" className="h-11 text-[14px] md:h-8" disabled={unread.length === 0 || acking.size > 0} onClick={() => void ackAll()}>Marcar todos como lidos</Button>
+            <span className="text-[13px] text-muted-foreground" aria-live="polite"><strong className="font-mono text-foreground">{unread.length}</strong> não lidos de {Math.max(query.data?.totalElements ?? 0, content.length)}</span>
+            <Button type="button" variant="outline" className="h-11 text-[14px] text-foreground md:h-8" disabled={unread.length === 0 || acking.size > 0} onClick={() => void ackAll()}>Marcar todos como lidos</Button>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <div role="radiogroup" aria-label="Filtrar" className="flex flex-wrap gap-1.5">
@@ -99,7 +109,7 @@ export const AlertsPage: React.FC = () => {
           </div>
         </div>
         <div className="flex min-h-0 flex-1 flex-col">
-          <QueryState query={query} what="os alertas" isEmpty={(d) => d.content.length === 0} emptyTitle="Nada por aqui ainda." emptyHint="Quando a chuva, o rio ou a maré passarem das regras, os alertas aparecem aqui.">
+          <QueryState query={query} what="os alertas" isEmpty={() => content.length === 0} emptyTitle="Nada por aqui ainda." emptyHint="Quando a chuva, o rio ou a maré passarem das regras, os alertas aparecem aqui.">
             {(data) => (
               <>
                 {items.length === 0 && <p className="m-0 p-6 text-center text-[14px] text-muted-foreground">Nenhum alerta neste filtro.</p>}

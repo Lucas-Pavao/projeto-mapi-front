@@ -101,7 +101,7 @@ export const ReportsPage: React.FC = () => {
                 <p className="m-0 text-[14px] text-muted-foreground">{tab === 'PENDING' ? 'Nenhum relato aguardando. Relatos novos aparecem aqui.' : 'Nenhum relato nesta lista.'}</p>
               )}
               <p className="m-0 mt-auto text-[12px] leading-[17px] text-muted-foreground">
-                Relato confirmado vira evento de alagamento com hora e local, mas não entra nos rótulos da avaliação do modelo.
+                Ao confirmar, o relato vira um evento de alagamento com hora e local, mas não entra nos rótulos da avaliação do modelo.
                 {data.totalElements > SIZE && ` Mostrando os ${SIZE} relatos mais recentes de ${data.totalElements}.`}
               </p>
             </section>

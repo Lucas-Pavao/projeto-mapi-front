@@ -79,7 +79,7 @@ export const ReportDetail: React.FC<Props> = ({ report: r, pointName, saving, ha
           </div>
           <div className="mt-1 flex flex-wrap gap-2">
             <Button type="button" size="lg" className="h-11 md:h-9" disabled={saving} onClick={() => onConfirm(r, severity)} aria-label={`Confirmar relato ${r.id}`}>Confirmar e registrar evento</Button>
-            <Button type="button" variant="outline" size="lg" className="h-11 md:h-9" disabled={saving} onClick={() => onDiscard(r)} aria-label={`Descartar relato ${r.id}`}>Descartar</Button>
+            <Button type="button" variant="outline" size="lg" className="h-11 text-foreground md:h-9" disabled={saving} onClick={() => onDiscard(r)} aria-label={`Descartar relato ${r.id}`}>Descartar</Button>
             <Button type="button" variant="ghost" size="lg" className="h-11 md:h-9" disabled={!hasNext} onClick={onSkip}>Pular</Button>
           </div>
         </div>

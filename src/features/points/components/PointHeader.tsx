@@ -68,7 +68,7 @@ export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: P
         <Link to="/relatos" className="flex h-[38px] items-center justify-center rounded-lg bg-primary px-4 text-[13px] font-bold leading-4 text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">
           Reportar cenário no local
         </Link>
-        <Button type="button" variant="outline" disabled={csv === 'busy'} onClick={() => void exportar()} className="h-8 text-[14px]">
+        <Button type="button" variant="outline" className="h-8 text-[14px] text-foreground" disabled={csv === 'busy'} onClick={() => void exportar()}>
           {csv === 'ok' ? 'CSV gerado ✓' : csv === 'busy' ? 'Gerando CSV…' : 'Exportar dataset (CSV)'}
         </Button>
         {csv === 'erro' && <span role="alert" className="text-[12px] text-destructive">Não foi possível gerar o CSV.</span>}
