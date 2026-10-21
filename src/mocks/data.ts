@@ -64,11 +64,23 @@ export const timeline = (from: string, to: string): Timeline => ({
   floodEvents: [{ id: 1, slug: SYNTHETIC_SLUG, startTime: ago(90), severity: 'MEDIUM' }],
 });
 
+/** Estrutura real de resultado_etapa2.json com números SINTÉTICOS (nenhum é resultado do modelo). */
 export const evaluation: ModelEvaluation = {
   sha256: '0'.repeat(64),
   source: 'sintetico/resultado-fake.json',
-  frozenAt: ago(60 * 24 * 30),
-  result: { observacao: 'Resultado sintético. Não é a avaliação real do modelo.' },
+  frozenAt: null,
+  result: {
+    n_pos_principal: 11, n_pos_extra: 3, n_neg_bruto: 101, n_neg: 99, episodios_principal: 9, episodios_18: 12, dias_incompletos_avaliacao: [],
+    auc_B2: [0.611, [0.402, 0.803]], auc_B3: [0.722, [0.511, 0.912]],
+    m1: {
+      central: { auc: 0.733, auc_ic: [0.52, 0.93], d_h1: 0.111, d_h1_ic: [-0.04, 0.26], cat_h1: 'inconclusivo', d_h2: 0, d_h2_ic: [0, 0], cat_h2: 'inconclusivo' },
+      f0: { auc: 0.744, auc_ic: [0.53, 0.94], d_h1: 0.122, d_h1_ic: [-0.03, 0.27], cat_h1: 'inconclusivo', d_h2: 0, d_h2_ic: [0, 0], cat_h2: 'inconclusivo' },
+    },
+    class_h1: ['inconclusivo', []], class_h2: ['inconclusivo', []],
+    degenerado: { alerta_M1a_em_N: 0, S_zero_em_todos_positivos: true, S_max_N: 0 },
+    auc_todos: { 'B3/B3': { auc: 0.722, ic: [0.511, 0.912], exclui_05: true, auc18: 0.7, ic18: [0.5, 0.9] } },
+    binarias: { 'M1a/central': { k14: 0, ic14: [0, 0.23], k18: 0, ic18: [0, 0.18], k4: 0, kn: 0, icn: [0, 0.005] } },
+  },
 };
 
 export const reports: FloodReport[] = [
