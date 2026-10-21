@@ -32,10 +32,37 @@ describe('TidePage', () => {
     }));
     renderPage(<TidePage />);
     await waitFor(() => expect(seen.length).toBe(1));
-    fireEvent.click(screen.getByRole('button', { name: '72 h' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Próximas 72 h' }));
     await waitFor(() => expect(seen.length).toBe(2));
     for (const [f, t] of seen) expect((Date.parse(t) - Date.parse(f)) / 3_600_000).toBeLessThanOrEqual(72);
+    // "Próximas 72 h": começa em agora e termina em agora + 72 h (limite do contrato)
+    const [f2, t2] = seen[1];
+    expect(Math.abs(Date.parse(f2) - Date.now())).toBeLessThan(15 * 60_000);
+    expect((Date.parse(t2) - Date.now()) / 3_600_000).toBeGreaterThan(71.5);
+    expect((Date.parse(t2) - Date.now()) / 3_600_000).toBeLessThanOrEqual(72.01);
     expect(await screen.findByText('Sem dados de maré nesta janela.')).toBeInTheDocument();
+  });
+
+  it('previsão futura em tracejado, passado contínuo, fundo e legenda; marca "agora"', async () => {
+    const { container } = renderPage(<TidePage />);
+    await screen.findByTestId('tide-now');
+    const solid = container.querySelectorAll('[data-series="tide"] path[data-dashed="false"]');
+    const dashed = container.querySelectorAll('[data-series="tide"] path[data-dashed="true"]');
+    expect(solid).toHaveLength(1);
+    expect(dashed).toHaveLength(1);
+    expect(dashed[0].getAttribute('stroke-dasharray')).toBeTruthy();
+    expect(solid[0].getAttribute('stroke-dasharray')).toBeNull();
+    expect(container.querySelector('[data-future-band]')).not.toBeNull();
+    expect(container.textContent).toContain('agora');
+    expect(screen.getByTestId('future-legend')).toHaveTextContent('tracejada');
+  });
+
+  it('"Próximas 72 h" não tem trecho passado: tudo tracejado', async () => {
+    const { container } = renderPage(<TidePage />);
+    await screen.findByTestId('tide-now');
+    fireEvent.click(screen.getByRole('button', { name: 'Próximas 72 h' }));
+    await waitFor(() => expect(container.querySelectorAll('[data-series="tide"] path[data-dashed="true"]').length).toBe(1));
+    await waitFor(() => expect(container.querySelectorAll('[data-series="tide"] path[data-dashed="false"]').length).toBe(0));
   });
 
   it('maré com valores nulos não vira zero: aparece buraco', async () => {

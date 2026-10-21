@@ -38,4 +38,15 @@ describe('TimeChart', () => {
     expect(screen.getByText('Sem leituras.')).toBeInTheDocument();
     expect(container.querySelector('svg')).toBeNull();
   });
+
+  it('futureFrom: parte depois de agora é tracejada, ligada ao último ponto passado', () => {
+    const points = [0, 1, 2, 3, 4, 5].map((i) => ({ t: from + i * HOUR_MS, v: i }));
+    const { container } = render(<TimeChart title="Maré" unit="m" from={from} to={to} futureFrom={from + 2 * HOUR_MS} series={[{ id: 'm', label: 'pe02', kind: 'line', points, colorClass: 'text-chart-2' }]} />);
+    const solid = container.querySelector('path[data-dashed="false"]')!.getAttribute('d')!;
+    const dashed = container.querySelector('path[data-dashed="true"]')!.getAttribute('d')!;
+    expect(solid.split('L')).toHaveLength(3); // pontos 0, 1, 2
+    expect(dashed.split('L')).toHaveLength(4); // 2 (emenda), 3, 4, 5
+    expect(dashed.split('L')[0].replace('M', '')).toBe(solid.split('L')[2]); // sem lacuna entre os trechos
+    expect(container.querySelector('[data-future-band]')).not.toBeNull();
+  });
 });

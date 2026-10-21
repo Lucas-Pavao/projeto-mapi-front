@@ -28,6 +28,8 @@ interface Props {
   markers?: ChartMarker[];
   /** Base em 0 (chuva). */
   zero?: boolean;
+  /** Instante a partir do qual o dado é previsão: linhas ficam tracejadas e a área recebe fundo e a legenda "previsão". */
+  futureFrom?: number;
   decimals?: number;
   emptyText?: string;
 }
@@ -39,7 +41,7 @@ const M = { top: 10, right: 12, bottom: 24, left: 40 };
  * linhas (maré, rio) quebram em valor nulo, sem interpolar. Horas em America/Recife.
  * Fornece resumo textual (role="img") e tabela acessível com os mesmos dados.
  */
-export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, height = 180, markers = [], zero = false, decimals = 1, emptyText = 'Sem dados na janela.' }) => {
+export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, height = 180, markers = [], zero = false, futureFrom, decimals = 1, emptyText = 'Sem dados na janela.' }) => {
   const { ref, width } = useElementWidth<HTMLDivElement>();
   const clipId = useId();
   const innerW = Math.max(60, width - M.left - M.right);
@@ -99,6 +101,12 @@ export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, heig
                   <text x={model.x(t)} y={innerH + 16} textAnchor="middle" className="fill-muted-foreground" fontSize={10}>{tickLabel(t)}</text>
                 </g>
               ))}
+              {futureFrom != null && futureFrom > from && futureFrom < to && (
+                <g data-future-band>
+                  <rect x={model.x(futureFrom)} y={0} width={innerW - model.x(futureFrom)} height={innerH} className="fill-muted" opacity={0.55} />
+                  <text x={innerW - 4} y={innerH - 6} textAnchor="end" fontSize={10} className="fill-muted-foreground">previsão</text>
+                </g>
+              )}
               <g clipPath={`url(#${clipId})`}>
               {series.map((s) =>
                 s.kind === 'bars' ? (
@@ -116,13 +124,32 @@ export const TimeChart: React.FC<Props> = ({ title, unit, from, to, series, heig
                   </g>
                 ) : (
                   <g key={s.id} className={s.colorClass} data-series={s.id}>
-                    {segments(s.points).map((seg, i) =>
-                      seg.length === 1 ? (
-                        <circle key={i} cx={model.x(seg[0].t)} cy={model.yy(seg[0].v)} r={2} className="fill-current" />
-                      ) : (
-                        <path key={i} d={seg.map((p, j) => `${j ? 'L' : 'M'}${model.x(p.t).toFixed(1)},${model.yy(p.v).toFixed(1)}`).join('')} fill="none" className="stroke-current" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-                      ),
-                    )}
+                    {segments(s.points).flatMap((seg, i) => {
+                      // Trecho passado (contínuo) e trecho futuro (tracejado). O futuro começa no último ponto passado, sem lacuna.
+                      const cut = futureFrom ?? Infinity;
+                      const past = seg.filter((p) => p.t <= cut);
+                      const fut = seg.filter((p) => p.t > cut);
+                      const parts: Array<{ pts: typeof seg; dashed: boolean }> = [];
+                      if (past.length) parts.push({ pts: past, dashed: false });
+                      if (fut.length) parts.push({ pts: past.length ? [past[past.length - 1], ...fut] : fut, dashed: true });
+                      return parts.map((part, j) =>
+                        part.pts.length === 1 ? (
+                          <circle key={`${i}-${j}`} cx={model.x(part.pts[0].t)} cy={model.yy(part.pts[0].v)} r={2} className="fill-current" />
+                        ) : (
+                          <path
+                            key={`${i}-${j}`}
+                            data-dashed={part.dashed}
+                            d={part.pts.map((p, k) => `${k ? 'L' : 'M'}${model.x(p.t).toFixed(1)},${model.yy(p.v).toFixed(1)}`).join('')}
+                            fill="none"
+                            className="stroke-current"
+                            strokeWidth={2}
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            strokeDasharray={part.dashed ? '6 5' : undefined}
+                          />
+                        ),
+                      );
+                    })}
                   </g>
                 ),
               )}

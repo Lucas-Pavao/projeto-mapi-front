@@ -9,10 +9,11 @@ import { nearestPoint, tideExtremes } from '@/features/events/utils/tide';
 import { formatRecifeDayMs, formatRecifeHourMs } from '@/features/map/utils/datetime';
 import { cn } from '@/lib/utils';
 
+// A API aceita `to` até agora + 72 h (janela total de até 72 h): a parte à frente de "agora" é previsão da tábua.
 const WINDOWS = [
   { id: '24', label: '24 h', past: 12, future: 12 },
   { id: '48', label: '48 h', past: 24, future: 24 },
-  { id: '72', label: '72 h', past: 36, future: 36 },
+  { id: '72', label: 'Próximas 72 h', past: 0, future: 72 },
 ] as const;
 
 const m = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -60,7 +61,9 @@ const TideContent: React.FC<{ timeline: NonNullable<ReturnType<typeof useTimelin
           height={240}
           series={[{ id: 'tide', label: `Maré prevista (${timeline.tide.harbor})`, kind: 'line', points: pts, colorClass: 'text-chart-1' }]}
           markers={[{ t: now, label: 'agora' }]}
+          futureFrom={now}
         />
+        <p className="mt-2 text-caption text-muted-foreground" data-testid="future-legend">Linha contínua: até agora. Linha tracejada sobre fundo cinza: previsão da tábua, daqui para frente.</p>
       </section>
       <section aria-label="Preamares e baixa-mares" className="rounded-xl border border-border bg-card p-4">
         <h2 className="text-title text-foreground">Máximos e mínimos da série</h2>
