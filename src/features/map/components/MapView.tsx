@@ -461,7 +461,7 @@ export const MapView: React.FC = () => {
   }, [locationInfo, floodPointStatus, selectedFloodPoint, sensorStatus]);
 
   return (
-    <div className="h-screen w-full bg-zinc-950 overflow-hidden font-sans selection:bg-primary/30 text-zinc-300 relative">
+    <div className="h-full min-h-0 w-full bg-zinc-950 overflow-hidden font-sans selection:bg-primary/30 text-zinc-300 relative">
       {/* Brand Floating Island */}
       <div className="absolute top-4 left-4 z-40 pointer-events-auto">
         <div className="h-16 border border-white/10 bg-black/60 backdrop-blur-xl flex items-center px-3 sm:px-6 rounded-2xl shadow-2xl shadow-black/50 transition-all duration-500 hover:bg-black/60">
