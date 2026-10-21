@@ -53,13 +53,15 @@ interface InviteProps {
   creating: boolean;
   error?: string | null;
   origin: string;
+  /** E-mail já digitado na barra de convite da tela. */
+  initialEmail?: string;
   onCreate: (role: Role, email: string | null) => void;
   onClose: () => void;
 }
 
-export const InviteDialog: React.FC<InviteProps> = ({ invite, creating, error, origin, onCreate, onClose }) => {
+export const InviteDialog: React.FC<InviteProps> = ({ invite, creating, error, origin, initialEmail = '', onCreate, onClose }) => {
   const [role, setRole] = useState<Role>('USER');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [emailErr, setEmailErr] = useState<string | null>(null);
   const [copied, setCopied] = useState<'link' | 'msg' | 'fail' | null>(null);
 

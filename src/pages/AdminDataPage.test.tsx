@@ -20,7 +20,8 @@ describe('AdminDataPage', () => {
     const om = document.querySelector('[data-source="OPEN_METEO"]') as HTMLElement;
     expect(within(om).getByText('Com falha')).toBeInTheDocument();
     expect(within(om).getByText(/Último erro: Sintético: tempo esgotado/)).toBeInTheDocument();
-    expect(screen.getByText(/3 fontes, 2 com atraso, falha ou quarentena/)).toBeInTheDocument();
+    expect(screen.getByText(/de 3 fontes em dia/)).toBeInTheDocument();
+    expect(screen.getByText(/2 com atraso, falha ou quarentena/)).toBeInTheDocument();
   });
 
   it('lastRunId é UUID (texto), não número', async () => {
@@ -30,29 +31,30 @@ describe('AdminDataPage', () => {
 
   it('lista execuções e filtra por fonte', async () => {
     renderPage(<AdminDataPage />);
-    await screen.findByText('Execuções');
+    await screen.findByRole('region', { name: 'Execuções de ingestão' });
     await waitFor(() => expect(document.querySelectorAll('tr[data-run-id]')).toHaveLength(2));
     fireEvent.click(screen.getByRole('button', { name: 'Ver execuções de APAC' }));
     await waitFor(() => expect(document.querySelectorAll('tr[data-run-id]')).toHaveLength(1));
-    expect(screen.getByText('Sintético: tempo esgotado', { selector: 'td' })).toBeInTheDocument();
+    expect(screen.getByText(/· Sintético: tempo esgotado/)).toBeInTheDocument();
   });
 
   it('verificação de integridade só roda no clique', async () => {
     let called = 0;
     server.use(http.get('/api/admin/ingestion/check-integrity', () => { called++; return HttpResponse.json([{ slug: 'sintetico-1', totalWeatherRecords: 1, totalSensorRecords: 2, totalFloodEvents: 3, status: 'OK' }]); }));
     renderPage(<AdminDataPage />);
-    await screen.findByText('Execuções');
+    await screen.findByRole('region', { name: 'Execuções de ingestão' });
     expect(called).toBe(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Verificar agora' }));
-    expect(await screen.findByText('sintetico-1', { selector: 'td' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Checar integridade' }));
+    expect(await screen.findByText('Sintético: ponto de teste')).toBeInTheDocument();
+    expect(screen.getByText(/1 de clima · 2 de sensores · 3 alagamentos/)).toBeInTheDocument();
     expect(called).toBe(1);
   });
 
   it('falha na verificação mostra erro de ação', async () => {
     server.use(http.get('/api/admin/ingestion/check-integrity', () => HttpResponse.json({}, { status: 503 })));
     renderPage(<AdminDataPage />);
-    await screen.findByText('Execuções');
-    fireEvent.click(screen.getByRole('button', { name: 'Verificar agora' }));
+    await screen.findByRole('region', { name: 'Execuções de ingestão' });
+    fireEvent.click(screen.getByRole('button', { name: 'Checar integridade' }));
     expect(await screen.findByText(/Serviço indisponível ao verificar a integridade/)).toBeInTheDocument();
   });
 

@@ -1,88 +1,86 @@
 import React, { useMemo, useState } from 'react';
-import { PageShell } from '@/components/layout/PageShell';
-import { QueryState } from '@/components/ui/query-state';
-import { TimeChart } from '@/components/charts/TimeChart';
+import { Button } from '@/components/ui/button';
 import { toTimePts } from '@/components/charts/chartMath';
-import { TideDatumNotice } from '@/components/TideDatumNotice';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
-import { nearestPoint, tideExtremes } from '@/features/events/utils/tide';
-import { formatRecifeDayMs, formatRecifeHourMs } from '@/features/map/utils/datetime';
+import { nearestPoint } from '@/features/events/utils/tide';
+import { useTideTable } from '@/features/tide/hooks/useTideTable';
+import { TideCalendar } from '@/features/tide/components/TideCalendar';
+import { TideDay } from '@/features/tide/components/TideDay';
+import { dayCurve, dayPoints, daySummary, findDay, recifeParts } from '@/features/tide/utils/tideTable';
 import { cn } from '@/lib/utils';
 
-// A API aceita `to` até agora + 72 h (janela total de até 72 h): a parte à frente de "agora" é previsão da tábua.
-const WINDOWS = [
-  { id: '24', label: '24 h', past: 12, future: 12 },
-  { id: '48', label: '48 h', past: 24, future: 24 },
-  { id: '72', label: 'Próximas 72 h', past: 0, future: 72 },
-] as const;
-
-const m = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const HARBOR = 'pe02';
+const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const hhmm = (min: number) => `${String(Math.floor(min / 60)).padStart(2, '0')}h${String(min % 60).padStart(2, '0')}`;
 
 export const TidePage: React.FC = () => {
-  const [win, setWin] = useState<(typeof WINDOWS)[number]['id']>('48');
-  const w = WINDOWS.find((x) => x.id === win)!;
-  const query = useTimeline(w.past, w.future);
-  const when = (t: number) => `${formatRecifeDayMs(t)} ${formatRecifeHourMs(t)}`;
+  const timeline = useTimeline(1, 1);
+  const today = useMemo(() => recifeParts(timeline.now), [timeline.now]);
+  const table = useTideTable(HARBOR, today.year);
+  const [picked, setPicked] = useState<number | null>(null);
+  const day = picked ?? today.day;
+
+  const month = table.data?.months.find((x) => x.month === today.month);
+  const prevMonth = table.data?.months.find((x) => x.month === today.month - 1);
+  const nextMonth = table.data?.months.find((x) => x.month === today.month + 1);
+
+  const detail = useMemo(() => {
+    const cur = dayPoints(findDay(month, day));
+    const prev = day > 1 ? dayPoints(findDay(month, day - 1)) : dayPoints(prevMonth?.days.at(-1));
+    const next = month && day < month.days.length ? dayPoints(findDay(month, day + 1)) : dayPoints(nextMonth?.days[0]);
+    return { curve: dayCurve(prev, cur, next), summary: daySummary(cur) };
+  }, [month, prevMonth, nextMonth, day]);
+
+  const tideNow = useMemo(() => {
+    const pts = toTimePts(timeline.data?.tide.points ?? []);
+    const cur = nearestPoint(pts, timeline.now);
+    if (!cur) return null;
+    const after = pts.find((p) => p.t > cur.t && p.v != null);
+    return { v: cur.v, rising: after?.v != null ? after.v > cur.v : null };
+  }, [timeline.data, timeline.now]);
+
+  const monthName = month?.monthName ?? new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'America/Recife' }).format(timeline.now);
+  const firstWeekday = month ? new Date(Date.UTC(today.year, today.month - 1, 1)).getUTCDay() : 0;
+  const isToday = day === today.day;
+  const spring = (detail.summary?.hi ?? 0) >= 2;
+  const dayTitle = `DIA ${day} DE ${monthName.toUpperCase()} · ${detail.summary ? (spring ? 'MARÉ DE SIZÍGIA' : 'MARÉ DE QUADRATURA') : 'SEM DADOS DA TÁBUA'}`;
 
   return (
-    <PageShell title="Maré" description="Maré prevista pela tábua da DHN no porto de referência, com a hora atual marcada.">
-      <TideDatumNotice />
-      <div role="group" aria-label="Janela de tempo" className="flex flex-wrap gap-2">
-        {WINDOWS.map((o) => (
-          <button key={o.id} type="button" aria-pressed={win === o.id} onClick={() => setWin(o.id)} className={cn('h-11 rounded-full border px-4 text-body-strong md:h-8', win === o.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-foreground hover:bg-muted')}>
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <QueryState query={query} what="a maré" isEmpty={(t) => t.tide.points.length === 0} emptyTitle="Sem dados de maré nesta janela." emptyHint="A tábua do porto pode não estar carregada para este período.">
-        {(t) => <TideContent timeline={t} from={Date.parse(query.range.from)} to={Date.parse(query.range.to)} now={query.now} when={when} />}
-      </QueryState>
-    </PageShell>
-  );
-};
+    <div className="flex w-full flex-col gap-4 p-4 lg:h-full">
+      <section className="flex flex-wrap items-center gap-6 rounded-2xl border border-border bg-card px-5 py-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Tábua de maré · Porto do Recife</h1>
+          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Porto {HARBOR} · DHN via TabuaMare · altura sobre o nível de redução · sincronizada 1× por dia</p>
+        </div>
+        <div className="text-right">
+          <div data-testid="tide-now" className={cn('font-mono text-[30px] leading-9 font-extrabold', tideNow && tideNow.v >= 2 ? 'text-warning' : 'text-foreground')}>
+            {tideNow ? `${m2(tideNow.v)} m` : '—'}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {tideNow ? <>agora ({hhmm(today.minute)}){tideNow.rising != null && ` · ${tideNow.rising ? 'enchendo' : 'vazando'}`} · previsto</> : 'sem ponto de maré perto do horário atual'}
+          </div>
+        </div>
+      </section>
 
-const TideContent: React.FC<{ timeline: NonNullable<ReturnType<typeof useTimeline>['data']>; from: number; to: number; now: number; when: (t: number) => string }> = ({ timeline, from, to, now, when }) => {
-  const pts = useMemo(() => toTimePts(timeline.tide.points), [timeline.tide.points]);
-  const extremes = useMemo(() => tideExtremes(pts), [pts]);
-  const current = nearestPoint(pts, now);
-  return (
-    <>
-      <section aria-label="Maré agora" className="rounded-xl border border-border bg-card p-4">
-        <p className="text-caption text-muted-foreground">Porto <span className="text-code">{timeline.tide.harbor}</span> · altura prevista em metros, referência da tábua (NR)</p>
-        <p className="text-reading-lg text-foreground" data-testid="tide-now">{current ? <>{m(current.v)} <span className="text-body text-muted-foreground">m agora (previsto)</span></> : <span className="text-body text-muted-foreground">Sem ponto de maré perto do horário atual.</span>}</p>
-      </section>
-      <section className="rounded-xl border border-border bg-card p-4">
-        <TimeChart
-          title={`Maré prevista, porto ${timeline.tide.harbor}`}
-          unit="m, ref. NR"
-          from={from}
-          to={to}
-          decimals={2}
-          height={240}
-          series={[{ id: 'tide', label: `Maré prevista (${timeline.tide.harbor})`, kind: 'line', points: pts, colorClass: 'text-chart-1' }]}
-          markers={[{ t: now, label: 'agora' }]}
-          futureFrom={now}
-        />
-        <p className="mt-2 text-caption text-muted-foreground" data-testid="future-legend">Linha contínua: até agora. Linha tracejada sobre fundo cinza: previsão da tábua, daqui para frente.</p>
-      </section>
-      <section aria-label="Preamares e baixa-mares" className="rounded-xl border border-border bg-card p-4">
-        <h2 className="text-title text-foreground">Máximos e mínimos da série</h2>
-        <p className="text-caption text-muted-foreground">Achados nos próprios pontos exibidos (passo de {timeline.stepMinutes} min), sem ajuste de curva.</p>
-        {extremes.length === 0 ? (
-          <p className="mt-2 text-body text-muted-foreground">Nenhum máximo ou mínimo na janela.</p>
-        ) : (
-          <ul className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {extremes.map((e) => (
-              <li key={e.t} data-extreme={e.kind} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-body">
-                <span className="font-semibold text-foreground">{e.kind === 'HIGH' ? 'Preamar' : 'Baixa-mar'}</span>
-                <span className="text-reading text-foreground">{m(e.v)} m</span>
-                <span className="text-caption text-muted-foreground">{when(e.t)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </>
+      {table.isPending ? (
+        <div role="status" className="flex min-h-40 flex-1 items-center justify-center rounded-2xl border border-border bg-card text-body text-muted-foreground">Carregando a tábua…</div>
+      ) : table.isError || !table.data ? (
+        <div role="alert" className="flex min-h-40 flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-card p-6 text-center">
+          <p className="m-0 text-body-strong text-foreground">Não foi possível carregar a tábua de maré.</p>
+          <Button type="button" variant="outline" className="h-11 md:h-8" onClick={() => void table.refetch()}>Tentar de novo</Button>
+        </div>
+      ) : !month || month.days.length === 0 ? (
+        <div className="flex min-h-40 flex-1 flex-col items-center justify-center gap-1 rounded-2xl border border-border bg-card p-6 text-center">
+          <p className="m-0 text-body-strong text-foreground">Sem dados de maré neste mês.</p>
+          <p className="m-0 text-caption text-muted-foreground">A tábua do porto pode não estar carregada para este período.</p>
+        </div>
+      ) : (
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
+          <TideCalendar monthName={monthName} firstWeekday={firstWeekday} days={month.days} selected={day} onSelect={setPicked} />
+          <TideDay title={dayTitle} curve={detail.curve} summary={detail.summary} nowMinute={isToday ? today.minute : null} />
+        </div>
+      )}
+    </div>
   );
 };
 export default TidePage;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { constantRain, parseRainList } from './rain';
+import { constantRain, padRain, parseRainList, triangularRain } from './rain';
 
 describe('parseRainList', () => {
   it('separa por espaço, ponto e vírgula e linha; aceita vírgula decimal', () => {
@@ -23,5 +23,17 @@ describe('constantRain', () => {
     expect(constantRain(5, 3)).toEqual([5, 5, 5]);
     expect(constantRain(5, 100)).toHaveLength(72);
     expect(constantRain(5, 0)).toEqual([]);
+  });
+});
+
+describe('triangularRain e padRain', () => {
+  it('pico no meio com máximo igual ao informado', () => {
+    expect(triangularRain(75, 1)).toEqual([75]);
+    expect(triangularRain(60, 3)).toEqual([20, 60, 20]);
+    expect(Math.max(...triangularRain(40, 4))).toBe(40);
+  });
+  it('completa com zeros até o horizonte, sem cortar', () => {
+    expect(padRain([5, 5], 4)).toEqual([5, 5, 0, 0]);
+    expect(padRain([5, 5, 5], 2)).toEqual([5, 5, 5]);
   });
 });

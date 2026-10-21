@@ -3,6 +3,7 @@ import type { BucketSimulation } from '@/features/model/schemas/model.schema';
 import type { FloodReport } from '@/features/reports/schemas/report.schema';
 import type { SensorFreshness, SensorType } from '@/features/sensors/schemas/sensor.schema';
 import * as d from './data';
+import { gestaoHandlers } from './handlers-gestao';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
@@ -49,6 +50,7 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
 
 /** Handlers só dos endpoints novos do redesign (redesign-telas.yaml). Os existentes ficam com a API real. */
 export const handlers = [
+  ...gestaoHandlers,
   liveStreamHandler(),
   http.get('/api/pontos', () => HttpResponse.json(d.points)),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),

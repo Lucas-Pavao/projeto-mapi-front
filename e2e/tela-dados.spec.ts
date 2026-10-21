@@ -11,8 +11,8 @@ test('/admin/dados: fontes, execuções e integridade', async ({ page }, testInf
   await expect(page.locator('[data-source="APAC"]')).toContainText('Atrasada');
   await expect(page.locator('[data-source="TABUA_MARE"]')).toContainText('Parada');
   await expect(page.locator('tr[data-run-id]')).toHaveCount(2);
-  await page.getByRole('button', { name: 'Verificar agora' }).click();
-  await expect(page.getByRole('cell', { name: 'sintetico-alto' })).toBeVisible();
+  await page.getByRole('button', { name: 'Checar integridade' }).click();
+  await expect(page.locator('[data-health="sintetico-alto"]')).toBeVisible();
   await semRolagemHorizontal(page);
   await shot(page, testInfo, 'dados');
 });
