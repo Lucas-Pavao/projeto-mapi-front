@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { usePublicRisk, type Coord } from '@/features/public-risk/hooks/usePublicRisk';
 import { PUBLIC_WARNING, PublicRiskResult } from '@/features/public-risk/components/PublicRiskResult';
 import { retryAfterSeconds } from '@/features/public-risk/services/public-risk.service';
-import { geoFailureText, type GeoFailure } from '@/features/public-risk/utils/coords';
+import { geoFailureText, roundCoord, type GeoFailure } from '@/features/public-risk/utils/coords';
 import { httpStatus } from '@/lib/apiError';
 
 function errorText(error: unknown): string {
@@ -34,7 +34,10 @@ export const MyStreetPage: React.FC = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        setCoord({ lat: pos.coords.latitude, lon: pos.coords.longitude });
+        const next = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        // Mesma posição aproximada: a chave de cache não muda, então "Atualizar" refaz a consulta de propósito.
+        if (coord && roundCoord(coord.lat) === roundCoord(next.lat) && roundCoord(coord.lon) === roundCoord(next.lon)) void query.refetch();
+        setCoord(next);
       },
       (err) => {
         setLocating(false);
