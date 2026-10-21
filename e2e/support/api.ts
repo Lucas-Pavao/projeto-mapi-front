@@ -181,7 +181,7 @@ export async function installApi(page: Page, opts: ApiOptions = {}) {
     if (path === '/api/stream') {
       return route.fulfill({ status: role ? 200 : 403, contentType: 'text/event-stream', headers: { 'Cache-Control': 'no-cache' }, body: role ? `${stream}event: heartbeat\ndata: {}\n\n` : '' });
     }
-    let body: unknown = undefined;
+    let body: unknown;
     try { body = req.postDataJSON(); } catch { body = req.postData(); }
     calls.push({ method, path: path + url.search, body });
     // Caminhos dinâmicos: /api/pontos/:slug, /predictions, /terrain, /alerts/:id/ack etc.
