@@ -24,18 +24,18 @@ export interface RiskVisual {
   showsProbability: boolean;
 }
 
-const UNKNOWN_VISUAL: RiskVisual = { label: 'Previsão indisponível', hex: '#8a9a9c', onHex: '#0a1419', bg: 'bg-risk-unknown text-on-risk-unknown border-risk-unknown-edge', ping: 'bg-risk-unknown-edge', text: 'text-risk-unknown-text', border: 'border-risk-unknown-edge/40', softBg: 'bg-risk-unknown/10', tint: 'bg-risk-unknown/20', header: 'bg-risk-unknown text-on-risk-unknown', shadow: 'shadow-elevation-raised', showsProbability: false };
+const UNKNOWN_VISUAL: RiskVisual = { label: 'Previsão indisponível', hex: '#8a9a9c', onHex: '#0a1419', bg: 'bg-risk-unknown text-on-risk-unknown border-risk-unknown-edge', ping: 'bg-risk-unknown', text: 'text-risk-unknown-text', border: 'border-risk-unknown-edge/40', softBg: 'bg-risk-unknown/10', tint: 'bg-risk-unknown/20', header: 'bg-risk-unknown text-on-risk-unknown', shadow: 'shadow-elevation-raised', showsProbability: false };
 
 /** Único mapeamento risco→visual do app. `never` garante exaustividade em compilação. */
 export function getRiskVisual(level: RiskLevel | undefined | null): RiskVisual {
   const l: RiskLevel = level ?? 'UNKNOWN';
   switch (l) {
     case 'HIGH':
-      return { label: 'Alto', hex: '#d4373c', onHex: '#ffffff', bg: 'bg-risk-high text-on-risk-high border-risk-high-edge', ping: 'bg-risk-high-edge', text: 'text-risk-high-text', border: 'border-risk-high-edge/40', softBg: 'bg-risk-high/10', tint: 'bg-risk-high/20', header: 'bg-risk-high text-on-risk-high', shadow: 'shadow-elevation-raised', showsProbability: true };
+      return { label: 'Alto', hex: '#d4373c', onHex: '#ffffff', bg: 'bg-risk-high text-on-risk-high border-risk-high-edge', ping: 'bg-risk-high', text: 'text-risk-high-text', border: 'border-risk-high-edge/40', softBg: 'bg-risk-high/10', tint: 'bg-risk-high/20', header: 'bg-risk-high text-on-risk-high', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'MEDIUM':
-      return { label: 'Moderado', hex: '#f5a524', onHex: '#2a1a00', bg: 'bg-risk-moderate text-on-risk-moderate border-risk-moderate-edge', ping: 'bg-risk-moderate-edge', text: 'text-risk-moderate-text', border: 'border-risk-moderate-edge/40', softBg: 'bg-risk-moderate/10', tint: 'bg-risk-moderate/20', header: 'bg-risk-moderate text-on-risk-moderate', shadow: 'shadow-elevation-raised', showsProbability: true };
+      return { label: 'Moderado', hex: '#f5a524', onHex: '#2a1a00', bg: 'bg-risk-moderate text-on-risk-moderate border-risk-moderate-edge', ping: 'bg-risk-moderate', text: 'text-risk-moderate-text', border: 'border-risk-moderate-edge/40', softBg: 'bg-risk-moderate/10', tint: 'bg-risk-moderate/20', header: 'bg-risk-moderate text-on-risk-moderate', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'LOW':
-      return { label: 'Baixo', hex: '#9be7bd', onHex: '#0b2a1d', bg: 'bg-risk-low text-on-risk-low border-risk-low-edge', ping: 'bg-risk-low-edge', text: 'text-risk-low-text', border: 'border-risk-low-edge/40', softBg: 'bg-risk-low/10', tint: 'bg-risk-low/20', header: 'bg-risk-low text-on-risk-low', shadow: 'shadow-elevation-raised', showsProbability: true };
+      return { label: 'Baixo', hex: '#9be7bd', onHex: '#0b2a1d', bg: 'bg-risk-low text-on-risk-low border-risk-low-edge', ping: 'bg-risk-low', text: 'text-risk-low-text', border: 'border-risk-low-edge/40', softBg: 'bg-risk-low/10', tint: 'bg-risk-low/20', header: 'bg-risk-low text-on-risk-low', shadow: 'shadow-elevation-raised', showsProbability: true };
     case 'UNKNOWN':
       return UNKNOWN_VISUAL;
     default: {

@@ -28,7 +28,7 @@ describe('rótulo experimental', () => {
     expect(showsExperimentalLabel({ riskLevel: 'UNKNOWN' })).toBe(false);
   });
   it('legenda explica em uma frase', () => {
-    render(<RiskLegend open onOpenChange={() => {}} />);
+    render(<RiskLegend />);
     expect(screen.getByText(/Classes experimentais: modelo não validado\./)).toBeInTheDocument();
   });
 });

@@ -1,24 +1,15 @@
 import React from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { RiskLegendList } from './RiskLegendList';
-import { MapToolPopover } from '@/features/map/components/MapToolPopover';
 
 interface RiskLegendProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   className?: string;
+  showExperimentalNote?: boolean;
 }
 
-/** Legenda de risco (4 estados) como botão da barra do mapa; o painel abre sob demanda. */
-export const RiskLegend: React.FC<RiskLegendProps> = ({ open, onOpenChange, className }) => (
-  <MapToolPopover
-    id="risk-legend-body"
-    label="Legenda de risco"
-    icon={<ShieldAlert className="h-5 w-5" aria-hidden="true" />}
-    open={open}
-    onOpenChange={onOpenChange}
-    panelClassName={className}
-  >
-    <RiskLegendList />
-  </MapToolPopover>
+/** Legenda de risco (4 estados) como cartão sempre visível (RiskLegend do protótipo). Largura vem do consumidor. */
+export const RiskLegend: React.FC<RiskLegendProps> = ({ className, showExperimentalNote = true }) => (
+  <section aria-label="Legenda de risco" className={cn('rounded-xl border border-border bg-popover text-popover-foreground shadow-elevation-overlay', className)}>
+    <RiskLegendList showExperimentalNote={showExperimentalNote} />
+  </section>
 );

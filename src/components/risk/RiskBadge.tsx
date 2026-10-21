@@ -36,7 +36,7 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, variant = 'pill', p
         data-risk={level ?? 'UNKNOWN'}
         className={cn('relative inline-flex size-8 items-center justify-center', className)}
       >
-        {pulse && <span aria-hidden="true" className={cn('absolute inset-0 animate-ping rounded-lg opacity-40', v.ping)} />}
+        {pulse && <span aria-hidden="true" className={cn('absolute inset-0 animate-ping rounded-lg opacity-60', v.ping)} />}
         <span
           className={cn(
             'relative inline-flex size-8 items-center justify-center rounded-lg shadow-elevation-overlay',
@@ -45,7 +45,7 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, variant = 'pill', p
             unknown ? UNKNOWN_BORDER_MARKER : 'border-2',
           )}
         >
-          <RiskIcon level={level} className="size-5" />
+          <RiskIcon level={level} className="size-4" />
         </span>
       </span>
     );
@@ -55,15 +55,15 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({ level, variant = 'pill', p
     <span
       data-risk={level ?? 'UNKNOWN'}
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-bold leading-4',
+        'inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-bold',
         v.bg,
         unknown ? UNKNOWN_BORDER_PILL : 'border',
         className,
       )}
     >
-      <RiskIcon level={level} className="size-4 shrink-0" />
+      <RiskIcon level={level} className="size-3.5 shrink-0" />
       {v.label}
-      {pct && <span className="font-mono font-semibold">{pct}</span>}
+      {pct && <span className="font-mono font-semibold tabular-nums">{pct}</span>}
     </span>
   );
 };
