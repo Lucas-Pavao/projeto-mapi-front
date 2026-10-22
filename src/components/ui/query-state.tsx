@@ -20,7 +20,8 @@ interface QueryStateProps<T> {
   children: (data: T) => React.ReactNode;
 }
 
-const box = 'flex min-h-40 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-6 text-center';
+// col-span-full e w-full: o estado ocupa o lugar do conteúdo inteiro, mesmo quando a página é grade ou linha flex.
+const box = 'col-span-full flex min-h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border border-border bg-card p-6 text-center';
 
 /** Estados de tela para dados de servidor: carregando, erro (com nova tentativa), vazio e conteúdo. */
 export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, children }: QueryStateProps<T>) {

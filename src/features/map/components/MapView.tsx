@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MapPin } from 'lucide-react';
 import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsCompactMap } from '@/hooks/useMediaQuery';
 import { useTokenColor } from '@/lib/tokens';
 import { LivePanel } from './LivePanel';
 import { RainTideCard } from './RainTideCard';
@@ -28,7 +28,6 @@ import { hasRole, parseRole } from '@/lib/roles';
 import { useNotices } from '@/hooks/useNotices';
 import { NoticeRegion } from '@/components/ui/notice-region';
 import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
-import { RiskLegend } from '@/components/risk/RiskLegend';
 import { TerrainControl } from './TerrainControl';
 import { LocationAnalysisCard } from './LocationAnalysisCard';
 import { TerrainLayer } from './TerrainLayer';
@@ -37,6 +36,7 @@ import { MapLayerPanel } from './MapLayerPanel';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
+import { RiskLegendControl } from './RiskLegendControl';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
@@ -54,7 +54,7 @@ type FlyTo = (lng: number, lat: number, zoom: number, duration?: number) => void
 export const MapView: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
-  const isMobile = useIsMobile();
+  const isMobile = useIsCompactMap();
   const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch, applyPrediction } = useMapData();
   const { notices, notify, dismiss } = useNotices();
   const {
@@ -82,9 +82,10 @@ export const MapView: React.FC = () => {
   const [activeLayers, setActiveLayers] = useState<string[]>([...DEFAULT_ACTIVE_LAYERS]);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
-  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas ou terreno).
-  const [openTool, setOpenTool] = useState<'layers' | 'terrain' | null>(null);
-  const toolProps = (tool: 'layers' | 'terrain') => ({
+  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas, terreno ou níveis de risco).
+  type MapTool = 'layers' | 'terrain' | 'legend';
+  const [openTool, setOpenTool] = useState<MapTool | null>(null);
+  const toolProps = (tool: MapTool) => ({
     open: openTool === tool,
     onOpenChange: (v: boolean) => setOpenTool(v ? tool : null),
   });
@@ -190,23 +191,22 @@ export const MapView: React.FC = () => {
             onSensorClick={selectSensor}
             canSeeDataHealth={isAdmin}
           />
-          {/* Cartão de chuva e maré e, logo abaixo, as ferramentas do mapa: na mesma coluna, para não se sobreporem quando o cartão cresce. */}
+          {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
+              cada uma recolhida num botão. Na mesma coluna para não se sobreporem quando o cartão cresce. */}
           <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
-            <RainTideCard overview={overview} className="pointer-events-auto flex w-full flex-col gap-2 p-3.5" />
-            <div className="pointer-events-auto flex flex-col items-end gap-3">
+            <RainTideCard overview={overview} className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3.5" />
+            <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
+              <RiskLegendControl {...toolProps('legend')} />
             </div>
-          </div>
-          <div className="absolute bottom-4 right-4 z-20 w-[300px]">
-            <RiskLegend showExperimentalNote={false} />
           </div>
         </>
       )}
 
       {/* Avisos de API: erro com horário do último dado válido, ou estado vazio explícito */}
       {(hasError || (!isLoading && sensors.length === 0 && floodPoints.length === 0)) && (
-        <div className="absolute inset-x-4 top-[88px] z-30 pointer-events-auto md:inset-x-auto md:left-[392px] md:right-[332px] md:top-4">
+        <div className="absolute inset-x-4 top-[88px] z-30 pointer-events-auto lg:inset-x-auto lg:left-[392px] lg:right-[332px] lg:top-4">
           {hasError ? <ApiErrorBanner lastSuccessAt={lastSuccessAt} isRetrying={isRefreshing} onRetry={refetch} /> : <EmptyDataNotice />}
         </div>
       )}
@@ -241,7 +241,13 @@ export const MapView: React.FC = () => {
             <MapCircle center={circleCenter} radiusKm={3} color={circleColor} opacity={0.1} strokeColor={circleColor} strokeWidth={2} strokeOpacity={0.4} />
           )}
 
-          <SensorMarkers sensors={filteredSensorsForMap} selectedSensorId={selectedSensorId} nearbySensorIds={nearbySensorIds} onSelect={selectSensor} />
+          <SensorMarkers
+            sensors={filteredSensorsForMap}
+            selectedSensorId={selectedSensorId}
+            nearbySensorIds={nearbySensorIds}
+            floodPoints={filteredFloodPointsForMap}
+            onSelect={selectSensor}
+          />
           {!isMobile && overview.tideNow && <TideMarker tide={overview.tideNow} />}
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
@@ -348,7 +354,7 @@ export const MapView: React.FC = () => {
           {wizard && <MobileReportFlow fallbackPoint={wizard.point} points={floodPoints} send={reporting.sendReport} onClose={() => setWizard(null)} />}
         </>
       )}
-      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[640px]:bottom-auto max-[640px]:top-[116px]" />
+      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[1023px]:bottom-auto! max-[1023px]:top-[116px]!" />
     </div>
   );
 };

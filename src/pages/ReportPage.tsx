@@ -6,6 +6,7 @@ import { hasRole, parseRole } from '@/lib/roles';
 import { toTimePts } from '@/components/charts/chartMath';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 import { useSensorsLatest } from '@/features/sensors/hooks/useSensorsLatest';
+import { pickRiver } from '@/features/events/utils/river';
 import { useAlerts } from '@/features/alerts/hooks/useAlerts';
 import { useReports } from '@/features/reports/hooks/useReports';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
@@ -45,10 +46,11 @@ export const ReportPage: React.FC = () => {
   const names = useMemo(() => new Map((points.data ?? []).map((p) => [p.slug, p.name])), [points.data]);
   const rain = useMemo(() => (t ? averageRain(t) : []), [t]);
   const tide = useMemo(() => toTimePts(t?.tide.points ?? []), [t]);
-  const river = useMemo(() => toTimePts(t?.river[0]?.points ?? []), [t]);
+  const riverSeries = useMemo(() => pickRiver(t?.river, sensors.data), [t, sensors.data]);
+  const river = useMemo(() => toTimePts(riverSeries?.points ?? []), [riverSeries]);
   const rows = useMemo(() => (t ? pointRows(t, names, t0, t1) : []), [t, names, t0, t1]);
-  const riverSensor = sensors.data?.find((s) => s.sensorId === t?.river[0]?.stationId);
-  const riverName = riverSensor?.stationName ?? t?.river[0]?.stationId ?? null;
+  const riverSensor = sensors.data?.find((s) => s.sensorId === riverSeries?.stationId);
+  const riverName = riverSensor?.stationName ?? riverSeries?.stationId ?? null;
 
   const inWindow = (iso: string | null | undefined) => { const ms = iso ? Date.parse(iso) : NaN; return ms >= t0 && ms <= t1; };
   const alertsIn = canSee ? (alerts.data?.content ?? []).filter((a) => inWindow(a.triggeredAt)) : undefined;
@@ -61,7 +63,8 @@ export const ReportPage: React.FC = () => {
     { label: `pico de chuva (média)${peak ? ` · ${formatHoraCurta(new Date(peak.t).toISOString(), t1)}` : ''}`, value: peak ? `${num(peak.v)} mm/h` : '—' },
     { label: 'pontos que chegaram a alto', value: `${reached} de ${rows.length}`, tone: reached > 0 ? 'text-risk-high-text' : undefined },
     { label: 'alertas na janela', value: alertsIn ? String(alertsIn.length) : 'sem acesso' },
-    { label: `${riverName ?? 'rio'} (máximo)`, value: riverMax != null ? `${num(riverMax, 2)} m` : '—' },
+    // A série do rio na linha do tempo vem do sensor_data, em cm (como na tela Eventos).
+    { label: `${riverName ?? 'rio'} (máximo)`, value: riverMax != null ? `${num(riverMax, 0)} cm` : '—' },
   ];
   const stale = (sensors.data ?? []).filter((s) => s.stale).length;
   const sensorsLine = sensors.data ? `Sensores: ${sensors.data.length} monitorados, ${stale === 0 ? 'todos respondendo' : `${stale} sem resposta recente`}.` : null;

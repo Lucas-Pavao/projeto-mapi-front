@@ -15,6 +15,7 @@ import type { FloodPointResponseDTO } from '../types';
 import { fmtNum, sortPoints } from '../utils/overview';
 import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
+import { RiskLegendControl } from './RiskLegendControl';
 
 type Overview = ReturnType<typeof useMapOverview>;
 
@@ -83,6 +84,8 @@ export const MobileMapa: React.FC<Props> = ({ points, summary, summaryFailed, ov
               <span aria-hidden="true" className="size-3.5 rounded-full bg-primary" />
             </span>
           </button>
+          {/* Níveis de risco recolhidos, como no desktop; o painel para acima do botão Reportar e da folha de pontos. */}
+          <RiskLegendControl className="-my-2 ml-auto" bottomReserve={sheetH + 12 + 52 + 8} />
         </div>
       </div>}
 

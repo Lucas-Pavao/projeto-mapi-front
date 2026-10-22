@@ -106,8 +106,8 @@ export const reports: FloodReport[] = [
 
 export const ingestionSources: IngestionSource[] = [
   { source: 'CEMADEN', status: 'OK', expectedEveryMinutes: 10, lastSuccessAt: ago(4), lastRunId: '7c9e6679-7425-40de-944b-e07fc1f90ae7', lastError: null, rowsLast24h: 1440 },
-  { source: 'APAC', status: 'DELAYED', expectedEveryMinutes: 10, lastSuccessAt: ago(55), lastRunId: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', lastError: null, rowsLast24h: 900 },
-  { source: 'OPEN_METEO', status: 'FAILING', expectedEveryMinutes: 60, lastSuccessAt: ago(600), lastRunId: null, lastError: 'Sintético: tempo esgotado', rowsLast24h: 3 },
+  { source: 'APAC_METEO24H', status: 'DELAYED', expectedEveryMinutes: 10, lastSuccessAt: ago(55), lastRunId: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', lastError: null, rowsLast24h: 900 },
+  { source: 'OPEN_METEO_CURRENT', status: 'FAILING', expectedEveryMinutes: 60, lastSuccessAt: ago(600), lastRunId: null, lastError: 'Sintético: tempo esgotado', rowsLast24h: 3 },
 ];
 
 export const users: UserSummary[] = [
@@ -127,6 +127,6 @@ export const publicRisk = (): PublicRisk => ({
 
 export const ingestionRuns = [
   { id: '7c9e6679-7425-40de-944b-e07fc1f90ae7', source: 'CEMADEN', kind: 'LIVE', mode: 'REFETCH', status: 'SUCCEEDED', startedAt: ago(4), finishedAt: ago(3), fetched: 120, valid: 118, quarantined: 2, errorSummary: null },
-  { id: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', source: 'APAC', kind: 'LIVE', mode: 'REFETCH', status: 'FAILED', startedAt: ago(55), finishedAt: ago(54), fetched: 0, valid: 0, quarantined: 0, errorSummary: 'Sintético: tempo esgotado' },
+  { id: '1b4e28ba-2fa1-11d2-883f-0016d3cca427', source: 'APAC_METEO24H', kind: 'LIVE', mode: 'REFETCH', status: 'FAILED', startedAt: ago(55), finishedAt: ago(54), fetched: 0, valid: 0, quarantined: 0, errorSummary: 'Sintético: tempo esgotado' },
 ];
 export const integrity = [{ slug: SYNTHETIC_SLUG, totalWeatherRecords: 1200, totalSensorRecords: 3400, totalFloodEvents: 3, status: 'OK' }];
