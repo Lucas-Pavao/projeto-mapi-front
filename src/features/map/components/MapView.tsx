@@ -28,7 +28,6 @@ import { hasRole, parseRole } from '@/lib/roles';
 import { useNotices } from '@/hooks/useNotices';
 import { NoticeRegion } from '@/components/ui/notice-region';
 import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
-import { RiskLegend } from '@/components/risk/RiskLegend';
 import { TerrainControl } from './TerrainControl';
 import { LocationAnalysisCard } from './LocationAnalysisCard';
 import { TerrainLayer } from './TerrainLayer';
@@ -37,6 +36,7 @@ import { MapLayerPanel } from './MapLayerPanel';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
+import { RiskLegendControl } from './RiskLegendControl';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
@@ -82,9 +82,10 @@ export const MapView: React.FC = () => {
   const [activeLayers, setActiveLayers] = useState<string[]>([...DEFAULT_ACTIVE_LAYERS]);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
-  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas ou terreno).
-  const [openTool, setOpenTool] = useState<'layers' | 'terrain' | null>(null);
-  const toolProps = (tool: 'layers' | 'terrain') => ({
+  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas, terreno ou níveis de risco).
+  type MapTool = 'layers' | 'terrain' | 'legend';
+  const [openTool, setOpenTool] = useState<MapTool | null>(null);
+  const toolProps = (tool: MapTool) => ({
     open: openTool === tool,
     onOpenChange: (v: boolean) => setOpenTool(v ? tool : null),
   });
@@ -190,15 +191,15 @@ export const MapView: React.FC = () => {
             onSensorClick={selectSensor}
             canSeeDataHealth={isAdmin}
           />
-          {/* Coluna direita: cartão de chuva e maré, ferramentas do mapa e, no pé, a legenda. Tudo na mesma coluna para nada
-              se sobrepor em telas baixas: sem espaço, a legenda encolhe e rola em vez de cobrir os botões. */}
-          <div className="pointer-events-none absolute bottom-4 right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
+          {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
+              cada uma recolhida num botão. Na mesma coluna para não se sobreporem quando o cartão cresce. */}
+          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
             <RainTideCard overview={overview} className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3.5" />
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
+              <RiskLegendControl {...toolProps('legend')} />
             </div>
-            <RiskLegend showExperimentalNote={false} className="custom-scrollbar pointer-events-auto mt-auto min-h-0 w-full overflow-y-auto overscroll-contain" />
           </div>
         </>
       )}
