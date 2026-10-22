@@ -6,7 +6,7 @@ import { nearestPoint } from '@/features/events/utils/tide';
 import { useTideTable } from '@/features/tide/hooks/useTideTable';
 import { TideCalendar } from '@/features/tide/components/TideCalendar';
 import { TideDay } from '@/features/tide/components/TideDay';
-import { dayCurve, dayPoints, daySummary, findDay, recifeParts } from '@/features/tide/utils/tideTable';
+import { dayCurve, dayExtremes, dayPoints, daySummary, findDay, recifeParts } from '@/features/tide/utils/tideTable';
 import { cn } from '@/lib/utils';
 
 const HARBOR = 'pe02';
@@ -28,7 +28,7 @@ export const TidePage: React.FC = () => {
     const cur = dayPoints(findDay(month, day));
     const prev = day > 1 ? dayPoints(findDay(month, day - 1)) : dayPoints(prevMonth?.days.at(-1));
     const next = month && day < month.days.length ? dayPoints(findDay(month, day + 1)) : dayPoints(nextMonth?.days[0]);
-    return { curve: dayCurve(prev, cur, next), summary: daySummary(cur) };
+    return { curve: dayCurve(prev, cur, next), summary: daySummary(cur), extremes: dayExtremes(prev, cur, next) };
   }, [month, prevMonth, nextMonth, day]);
 
   const tideNow = useMemo(() => {
@@ -77,7 +77,7 @@ export const TidePage: React.FC = () => {
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
           <TideCalendar monthName={monthName} firstWeekday={firstWeekday} days={month.days} selected={day} onSelect={setPicked} />
-          <TideDay title={dayTitle} curve={detail.curve} summary={detail.summary} nowMinute={isToday ? today.minute : null} />
+          <TideDay title={dayTitle} curve={detail.curve} summary={detail.summary} extremes={detail.extremes} nowMinute={isToday ? today.minute : null} />
         </div>
       )}
     </div>

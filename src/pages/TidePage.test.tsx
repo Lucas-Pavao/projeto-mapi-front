@@ -19,8 +19,11 @@ describe('TidePage', () => {
     expect(await screen.findByRole('region', { name: 'Calendário do mês' })).toBeInTheDocument();
     expect(screen.getByTestId('tide-datum-notice')).toHaveTextContent('não são comparáveis');
     expect(screen.getByRole('img', { name: 'Maré ao longo do dia selecionado' })).toBeInTheDocument();
-    expect(screen.getByText(/preamar máx\./)).toBeInTheDocument();
-    expect(screen.getByText('baixa-mar mín.')).toBeInTheDocument();
+    // as fases do dia (preamares e baixa-mares) com hora, e a amplitude
+    const phases = screen.getByRole('list', { name: 'Preamares e baixa-mares do dia' });
+    expect(within(phases).getAllByText(/^preamar · \d\dh\d\d$/).length).toBeGreaterThan(0);
+    expect(within(phases).getAllByText(/^baixa-mar · \d\dh\d\d$/).length).toBeGreaterThan(0);
+    expect(screen.getByText('amplitude do dia')).toBeInTheDocument();
   });
 
   it('escolher um dia do calendário troca a curva e o título', async () => {

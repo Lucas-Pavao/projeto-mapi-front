@@ -1,6 +1,6 @@
 import React from 'react';
 import { TideDatumNotice } from '@/components/TideDatumNotice';
-import { SPRING_M, hm, minutesAbove, type DaySummary } from '../utils/tideTable';
+import { SPRING_M, hm, minutesAbove, type DayExtreme, type DaySummary } from '../utils/tideTable';
 
 const m2 = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const W = 720;
@@ -10,12 +10,14 @@ interface TideDayProps {
   title: string;
   curve: Array<number | null>;
   summary: DaySummary | null;
+  /** Preamares e baixa-mares do dia, na ordem da tábua. */
+  extremes: DayExtreme[];
   /** Minuto do dia em Recife, se o dia selecionado é hoje. */
   nowMinute: number | null;
 }
 
-/** Curva do dia selecionado (interpolada entre os pontos da tábua), resumo e a explicação do refluxo. */
-export const TideDay: React.FC<TideDayProps> = ({ title, curve, summary, nowMinute }) => {
+/** Curva do dia selecionado (interpolada entre os pontos da tábua), as preamares e baixa-mares, resumo e a explicação do refluxo. */
+export const TideDay: React.FC<TideDayProps> = ({ title, curve, summary, extremes, nowMinute }) => {
   const vals = curve.filter((v): v is number => v != null);
   const mn = Math.min(-0.2, (vals.length ? Math.min(...vals) : 0) - 0.2);
   const mx = Math.max(2.6, (vals.length ? Math.max(...vals) : 0) + 0.2);
@@ -34,8 +36,10 @@ export const TideDay: React.FC<TideDayProps> = ({ title, curve, summary, nowMinu
   const curIdx = nowMinute == null ? -1 : Math.min(curve.length - 1, Math.round((nowMinute / 1440) * (curve.length - 1)));
   const curV = curIdx >= 0 ? curve[curIdx] : null;
   const stats: Array<[string, string]> = summary
-    ? [[`${m2(summary.hi)} m`, `preamar máx. · ${hm(summary.hiMin).replace(/^(\d)h/, '0$1h')}`], [`${m2(summary.lo)} m`, 'baixa-mar mín.'], [`${m2(summary.range)} m`, 'amplitude'], [curve.some((v) => v != null) ? hm(above) : '—', `acima de ${m2(SPRING_M).replace(',00', ',0')} m`]]
+    ? [[`${m2(summary.range)} m`, 'amplitude do dia'], [curve.some((v) => v != null) ? hm(above) : '—', `acima de ${m2(SPRING_M).replace(',00', ',0')} m`]]
     : [];
+  const clock = (min: number) => hm(min).replace(/^(\d)h/, '0$1h');
+  const ex = (min: number) => ((min / 1440) * W).toFixed(1);
   return (
     <section aria-label="Curva do dia" className="flex min-h-0 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-4 lg:col-span-7">
       <div className="flex items-baseline justify-between">
@@ -52,14 +56,27 @@ export const TideDay: React.FC<TideDayProps> = ({ title, curve, summary, nowMinu
               <polyline points={s.join(' ')} fill="none" stroke="var(--sand)" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
             </React.Fragment>
           ))}
+          {extremes.map((e) => (
+            <circle key={`${e.kind}-${e.min}`} cx={ex(e.min)} cy={y(e.v)} r="4" fill={e.kind === 'PREAMAR' ? 'var(--sand)' : 'var(--card)'} stroke="var(--sand)" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          ))}
           {curX && <line x1={curX} x2={curX} y1="0" y2={H} stroke="var(--foreground)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />}
           {curX && curV != null && <ellipse cx={curX} cy={y(curV)} rx="5" ry="7" fill="var(--sand)" stroke="var(--card)" strokeWidth="2" />}
         </svg>
         <span className="absolute right-0 font-mono text-[11px] leading-4 font-bold text-warning" style={{ top: `calc((100% - 20px) * ${(1 - (SPRING_M - mn) / (mx - mn)).toFixed(3)} - 8px)` }}>{m2(SPRING_M)}</span>
         <div aria-hidden="true" className="absolute right-11 bottom-0 left-0 flex justify-between font-mono text-[11px] leading-4 text-muted-foreground"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>24h</span></div>
       </div>
+      {extremes.length > 0 && (
+        <ol aria-label="Preamares e baixa-mares do dia" className="m-0 grid list-none grid-cols-2 gap-2 p-0 sm:grid-cols-4">
+          {extremes.map((e) => (
+            <li key={`${e.kind}-${e.min}`} className="rounded-[10px] bg-muted p-2.5">
+              <div className="font-mono text-[17px] leading-[22px] font-bold">{m2(e.v)} m</div>
+              <div className="text-[11px] text-muted-foreground">{e.kind === 'PREAMAR' ? 'preamar' : 'baixa-mar'} · {clock(e.min)}</div>
+            </li>
+          ))}
+        </ol>
+      )}
       {stats.length > 0 && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2">
           {stats.map(([v, l]) => <div key={l} className="rounded-[10px] bg-muted p-2.5"><div className="font-mono text-[17px] leading-[22px] font-bold">{v}</div><div className="text-[11px] text-muted-foreground">{l}</div></div>)}
         </div>
       )}

@@ -15,7 +15,7 @@ interface TideCalendarProps {
   onSelect: (day: number) => void;
 }
 
-/** Calendário do mês: preamar de cada dia, destaque da sizígia e barra de amplitude. Tudo da tábua. */
+/** Calendário do mês: preamar máxima de cada dia (número), destaque da sizígia e barra de amplitude. Tudo da tábua. */
 export const TideCalendar: React.FC<TideCalendarProps> = ({ monthName, firstWeekday, days, selected, onSelect }) => {
   const rows = days.map((d) => ({ d, s: daySummary(dayPoints(d)) }));
   const maxRange = Math.max(0.01, ...rows.map((r) => r.s?.range ?? 0));
@@ -23,7 +23,7 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ monthName, firstWeek
   return (
     <section aria-label="Calendário do mês" className="flex min-h-0 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-4 lg:col-span-5">
       <div className="flex items-baseline justify-between">
-        <h2 className="m-0 text-xs leading-4 font-bold tracking-[0.06em] text-muted-foreground">{monthName.toUpperCase()} · AMPLITUDE DO DIA</h2>
+        <h2 className="m-0 text-xs leading-4 font-bold tracking-[0.06em] text-muted-foreground">{monthName.toUpperCase()} · PREAMAR MÁXIMA DO DIA</h2>
         <span className="text-xs text-muted-foreground">{spring} dias com preamar ≥ {m2(SPRING_M).replace(',00', ',0')} m</span>
       </div>
       <div aria-hidden="true" className="grid grid-cols-7 gap-1.5 text-center text-[11px] text-muted-foreground">{WEEK.map((w) => <span key={w}>{w}</span>)}</div>
@@ -50,7 +50,7 @@ export const TideCalendar: React.FC<TideCalendarProps> = ({ monthName, firstWeek
       </div>
       <div className="flex gap-3.5 text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1.5"><span className="size-3 rounded-[3px] border-2 border-warning" />preamar ≥ {m2(SPRING_M).replace(',00', ',0')} m (sizígia)</span>
-        <span className="flex items-center gap-1.5"><span className="h-2 w-3 bg-sand opacity-50" />amplitude</span>
+        <span className="flex items-center gap-1.5"><span className="h-2 w-3 bg-sand opacity-50" />amplitude (barra)</span>
       </div>
     </section>
   );

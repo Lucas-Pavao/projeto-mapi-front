@@ -59,7 +59,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
   const kpis = [
     { label: `pico de chuva (média) · ${peak ? formatHoraCurta(new Date(peak.t).toISOString()) : '—'}`, value: peak ? `${num(peak.v)} mm/h` : '—', tone: '' },
     { label: 'maré máxima', value: maxTide != null ? `${num(maxTide, 2)} m` : '—', tone: maxTide != null && maxTide >= 2 ? 'text-warning' : '' },
-    { label: `${riverName} máximo`, value: maxRiver != null ? `${num(maxRiver, 2)} m` : '—', tone: maxRiver != null && flood != null && maxRiver >= flood ? 'text-risk-high-text' : '' },
+    { label: `${riverName} máximo`, value: maxRiver != null ? `${num(maxRiver, 0)} cm` : '—', tone: maxRiver != null && flood != null && maxRiver >= flood ? 'text-risk-high-text' : '' },
     { label: 'alagamentos confirmados', value: String(events), tone: '' },
   ];
   const shown = story.filter((s) => s.t <= sel).slice(0, 14);

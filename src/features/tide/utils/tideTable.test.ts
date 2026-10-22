@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { dayCurve, daySummary, dayPoints, hm, minutesAbove, parseHour } from './tideTable';
+import { dayCurve, dayExtremes, daySummary, dayPoints, hm, minutesAbove, parseHour } from './tideTable';
 
 describe('tábua de maré', () => {
   it('lê horas HH:mm e descarta texto inválido', () => {
@@ -18,6 +18,13 @@ describe('tábua de maré', () => {
     expect(c[36]).toBeCloseTo(2);
     expect(c[18]).toBeCloseTo(1);
     expect(dayCurve([], [{ min: 600, v: 1 }, { min: 900, v: 2 }], [])[0]).toBeNull();
+  });
+  it('classifica as quatro fases do dia pelos vizinhos, inclusive nas bordas', () => {
+    // 21/10/2026 no Porto do Recife; vizinhos: baixa de 20/10 às 18:2x e baixa de 22/10 às 07:14
+    const cur = [{ min: 4, v: 1.81 }, { min: 400, v: 0.68 }, { min: 758, v: 1.84 }, { min: 1133, v: 0.73 }];
+    const out = dayExtremes([{ min: 1100, v: 0.8 }], cur, [{ min: 53, v: 1.98 }]);
+    expect(out.map((e) => e.kind)).toEqual(['PREAMAR', 'BAIXA_MAR', 'PREAMAR', 'BAIXA_MAR']);
+    expect(dayExtremes([], [{ min: 10, v: 1 }], [])).toEqual([]);
   });
   it('minutos acima do limite e formatação', () => {
     expect(minutesAbove([0, 2, 2.5, 1, 0], 2)).toBe(40);

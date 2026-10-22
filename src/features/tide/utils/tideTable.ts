@@ -32,6 +32,28 @@ export function daySummary(pts: DayPt[]): DaySummary | null {
   return { hi: hi.v, hiMin: hi.min, lo, range: hi.v - lo };
 }
 
+export type TideKind = 'PREAMAR' | 'BAIXA_MAR';
+export interface DayExtreme extends DayPt { kind: TideKind }
+
+/**
+ * Os extremos do dia (em geral 4: duas preamares e duas baixa-mares, maré semidiurna) com o tipo de cada um, pelos
+ * vizinhos na sequência da tábua, incluindo o último ponto do dia anterior e o primeiro do seguinte. Ponto sem
+ * vizinho nenhum fica de fora.
+ */
+export function dayExtremes(prev: DayPt[], cur: DayPt[], next: DayPt[]): DayExtreme[] {
+  const before = prev.at(-1);
+  const after = next[0];
+  return cur.flatMap((p, i) => {
+    const a = i > 0 ? cur[i - 1] : before;
+    const b = i < cur.length - 1 ? cur[i + 1] : after;
+    const ref = [a, b].filter((x): x is DayPt => !!x);
+    if (ref.length === 0) return [];
+    if (ref.every((r) => p.v > r.v)) return [{ ...p, kind: 'PREAMAR' as const }];
+    if (ref.every((r) => p.v < r.v)) return [{ ...p, kind: 'BAIXA_MAR' as const }];
+    return [];
+  });
+}
+
 export const findDay = (month: MonthDataDTO | undefined, day: number) => month?.days.find((d) => d.day === day);
 
 /**

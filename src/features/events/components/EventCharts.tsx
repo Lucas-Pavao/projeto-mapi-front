@@ -59,7 +59,7 @@ export const EventCharts: React.FC<ChartsProps> = ({ rain, tide, river, harbor, 
         <polyline points={linePts(tide, w, 70, 0, tideMax, w.sel)} fill="none" stroke="var(--sand)" strokeWidth="3" />
         {now(70)}
       </svg>
-      <Label title={riverName.toUpperCase()} sub="m · cotas APAC" />
+      <Label title={riverName.toUpperCase()} sub="cm · cota da régua (ANA/APAC)" />
       <svg viewBox={`0 0 ${CW} 70`} preserveAspectRatio="none" role="img" aria-label="Nível do rio ao longo do evento" className={`${svg} h-[70px]`}>
         {riverFlood != null && <line x1="0" x2={CW} y1={yf(riverFlood, 70, rMin, rMax)} y2={yf(riverFlood, 70, rMin, rMax)} stroke="var(--risk-high-edge)" strokeDasharray="4 4" strokeWidth="1" />}
         {riverAlert != null && <line x1="0" x2={CW} y1={yf(riverAlert, 70, rMin, rMax)} y2={yf(riverAlert, 70, rMin, rMax)} stroke="var(--risk-moderate)" strokeDasharray="4 4" strokeWidth="1" />}
