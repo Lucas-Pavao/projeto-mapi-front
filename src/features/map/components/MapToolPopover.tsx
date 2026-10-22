@@ -19,6 +19,10 @@ interface MapToolPopoverProps {
   badge?: boolean;
   children: React.ReactNode;
   panelClassName?: string;
+  /** Classes do contêiner (botão + painel). */
+  className?: string;
+  /** Espaço livre a manter abaixo do painel (px), p. ex. a folha de pontos do celular. Padrão: 16. */
+  bottomReserve?: number;
 }
 
 /**
@@ -26,24 +30,24 @@ interface MapToolPopoverProps {
  * para camadas, terreno e legenda ficarem organizados do mesmo jeito.
  */
 export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
-  id, label, stateLabel, icon, open, onOpenChange, active = false, badge = false, children, panelClassName,
+  id, label, stateLabel, icon, open, onOpenChange, active = false, badge = false, children, panelClassName, className, bottomReserve = 16,
 }) => {
   const [ownOpen, setOwnOpen] = useState(false);
   const isOpen = open ?? ownOpen;
   const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setOwnOpen(v));
-  // O painel abre alinhado ao topo do botão: a altura vai até 16 px do fim da tela, para não sair dela em telas baixas.
+  // O painel abre alinhado ao topo do botão: a altura vai até `bottomReserve` px do fim da tela, para não sair dela em telas baixas.
   const anchorRef = useRef<HTMLDivElement>(null);
   const [maxHeight, setMaxHeight] = useState<number>();
   useLayoutEffect(() => {
     if (!isOpen || !anchorRef.current) return;
-    const fit = () => setMaxHeight(Math.max(160, window.innerHeight - anchorRef.current!.getBoundingClientRect().top - 16));
+    const fit = () => setMaxHeight(Math.max(160, window.innerHeight - anchorRef.current!.getBoundingClientRect().top - bottomReserve));
     fit();
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
-  }, [isOpen]);
+  }, [isOpen, bottomReserve]);
 
   return (
-    <div ref={anchorRef} className="pointer-events-auto relative shrink-0">
+    <div ref={anchorRef} className={cn('pointer-events-auto relative shrink-0', className)}>
       <button
         type="button"
         aria-expanded={isOpen}
