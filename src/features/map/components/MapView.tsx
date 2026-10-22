@@ -190,16 +190,15 @@ export const MapView: React.FC = () => {
             onSensorClick={selectSensor}
             canSeeDataHealth={isAdmin}
           />
-          {/* Cartão de chuva e maré e, logo abaixo, as ferramentas do mapa: na mesma coluna, para não se sobreporem quando o cartão cresce. */}
-          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
-            <RainTideCard overview={overview} className="pointer-events-auto flex w-full flex-col gap-2 p-3.5" />
-            <div className="pointer-events-auto flex flex-col items-end gap-3">
+          {/* Coluna direita: cartão de chuva e maré, ferramentas do mapa e, no pé, a legenda. Tudo na mesma coluna para nada
+              se sobrepor em telas baixas: sem espaço, a legenda encolhe e rola em vez de cobrir os botões. */}
+          <div className="pointer-events-none absolute bottom-4 right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
+            <RainTideCard overview={overview} className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3.5" />
+            <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
             </div>
-          </div>
-          <div className="absolute bottom-4 right-4 z-20 w-[300px]">
-            <RiskLegend showExperimentalNote={false} />
+            <RiskLegend showExperimentalNote={false} className="custom-scrollbar pointer-events-auto mt-auto min-h-0 w-full overflow-y-auto overscroll-contain" />
           </div>
         </>
       )}
