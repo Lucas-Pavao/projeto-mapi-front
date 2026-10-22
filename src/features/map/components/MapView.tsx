@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MapPin } from 'lucide-react';
 import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useIsCompactMap } from '@/hooks/useMediaQuery';
 import { useTokenColor } from '@/lib/tokens';
 import { LivePanel } from './LivePanel';
 import { RainTideCard } from './RainTideCard';
@@ -54,7 +54,7 @@ type FlyTo = (lng: number, lat: number, zoom: number, duration?: number) => void
 export const MapView: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
-  const isMobile = useIsMobile();
+  const isMobile = useIsCompactMap();
   const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch, applyPrediction } = useMapData();
   const { notices, notify, dismiss } = useNotices();
   const {
@@ -205,7 +205,7 @@ export const MapView: React.FC = () => {
 
       {/* Avisos de API: erro com horário do último dado válido, ou estado vazio explícito */}
       {(hasError || (!isLoading && sensors.length === 0 && floodPoints.length === 0)) && (
-        <div className="absolute inset-x-4 top-[88px] z-30 pointer-events-auto md:inset-x-auto md:left-[392px] md:right-[332px] md:top-4">
+        <div className="absolute inset-x-4 top-[88px] z-30 pointer-events-auto lg:inset-x-auto lg:left-[392px] lg:right-[332px] lg:top-4">
           {hasError ? <ApiErrorBanner lastSuccessAt={lastSuccessAt} isRetrying={isRefreshing} onRetry={refetch} /> : <EmptyDataNotice />}
         </div>
       )}
@@ -240,7 +240,13 @@ export const MapView: React.FC = () => {
             <MapCircle center={circleCenter} radiusKm={3} color={circleColor} opacity={0.1} strokeColor={circleColor} strokeWidth={2} strokeOpacity={0.4} />
           )}
 
-          <SensorMarkers sensors={filteredSensorsForMap} selectedSensorId={selectedSensorId} nearbySensorIds={nearbySensorIds} onSelect={selectSensor} />
+          <SensorMarkers
+            sensors={filteredSensorsForMap}
+            selectedSensorId={selectedSensorId}
+            nearbySensorIds={nearbySensorIds}
+            floodPoints={filteredFloodPointsForMap}
+            onSelect={selectSensor}
+          />
           {!isMobile && overview.tideNow && <TideMarker tide={overview.tideNow} />}
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
@@ -347,7 +353,7 @@ export const MapView: React.FC = () => {
           {wizard && <MobileReportFlow fallbackPoint={wizard.point} points={floodPoints} send={reporting.sendReport} onClose={() => setWizard(null)} />}
         </>
       )}
-      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[640px]:bottom-auto max-[640px]:top-[116px]" />
+      <NoticeRegion notices={notices} onDismiss={dismiss} className="max-[1023px]:bottom-auto! max-[1023px]:top-[116px]!" />
     </div>
   );
 };
