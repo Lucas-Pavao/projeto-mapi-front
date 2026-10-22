@@ -191,7 +191,7 @@ export const MapView: React.FC = () => {
             canSeeDataHealth={isAdmin}
           />
           {/* Cartão de chuva e maré e, logo abaixo, as ferramentas do mapa: na mesma coluna, para não se sobreporem quando o cartão cresce. */}
-          <div className="pointer-events-none absolute right-4 top-4 z-20 flex w-[300px] flex-col items-end gap-3">
+          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
             <RainTideCard overview={overview} className="pointer-events-auto flex w-full flex-col gap-2 p-3.5" />
             <div className="pointer-events-auto flex flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
