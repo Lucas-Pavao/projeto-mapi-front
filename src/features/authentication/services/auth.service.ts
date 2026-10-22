@@ -6,7 +6,9 @@ export const authService = {
     // O backend seta accessToken/refreshToken como cookies httpOnly na resposta — o JS não
     // precisa (e não deve) manipular o token diretamente.
     await api.post('/api/auth/login', { username, password });
-    return { user: { username } };
+    // O perfil (role) só vem do /me: sem ele a sessão nascia como USER até o F5 e as telas de operador/admin sumiam.
+    const user = await authService.me();
+    return { user };
   },
 
   async register(data: RegisterRequest): Promise<void> {
