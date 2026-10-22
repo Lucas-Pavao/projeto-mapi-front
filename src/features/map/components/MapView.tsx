@@ -190,7 +190,14 @@ export const MapView: React.FC = () => {
             onSensorClick={selectSensor}
             canSeeDataHealth={isAdmin}
           />
-          <RainTideCard overview={overview} className="absolute right-4 top-4 z-20 flex w-[300px] flex-col gap-2 p-3.5" />
+          {/* Cartão de chuva e maré e, logo abaixo, as ferramentas do mapa: na mesma coluna, para não se sobreporem quando o cartão cresce. */}
+          <div className="pointer-events-none absolute right-4 top-4 z-20 flex w-[300px] flex-col items-end gap-3">
+            <RainTideCard overview={overview} className="pointer-events-auto flex w-full flex-col gap-2 p-3.5" />
+            <div className="pointer-events-auto flex flex-col items-end gap-3">
+              <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
+              <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
+            </div>
+          </div>
           <div className="absolute bottom-4 right-4 z-20 w-[300px]">
             <RiskLegend showExperimentalNote={false} />
           </div>
@@ -232,14 +239,6 @@ export const MapView: React.FC = () => {
 
           {circleCenter && (
             <MapCircle center={circleCenter} radiusKm={3} color={circleColor} opacity={0.1} strokeColor={circleColor} strokeWidth={2} strokeOpacity={0.4} />
-          )}
-
-          {/* Ferramentas do mapa (desktop): entre o cartão de chuva e a legenda, à direita. */}
-          {!isMobile && (
-            <div className="pointer-events-none absolute right-4 top-[248px] z-20 flex flex-col items-end gap-3">
-              <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
-              <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
-            </div>
           )}
 
           <SensorMarkers sensors={filteredSensorsForMap} selectedSensorId={selectedSensorId} nearbySensorIds={nearbySensorIds} onSelect={selectSensor} />
