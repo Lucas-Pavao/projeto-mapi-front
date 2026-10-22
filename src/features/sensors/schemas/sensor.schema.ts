@@ -20,6 +20,8 @@ export const sensorFreshnessSchema = z
     stationName: z.string().nullable().optional(),
     municipality: z.string().nullable().optional(),
     source: z.string().nullable().optional(),
+    /** Código da estação (ex.: 260345401A); é a chave das séries da linha do tempo. */
+    code: z.string().nullable().optional(),
     latitude: z.number().nullable().optional(),
     longitude: z.number().nullable().optional(),
   })

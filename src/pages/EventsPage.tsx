@@ -15,6 +15,7 @@ import { averageRain } from '@/features/reports/utils/eventReport';
 import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { formatHoraCheia, formatHoraCurta, num } from '@/features/operacao/utils/format';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
+import { pickRiver } from '@/features/events/utils/river';
 import { cn } from '@/lib/utils';
 
 const WINDOWS = [24, 48, 72] as const;
@@ -36,9 +37,11 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
   const [picked, setPicked] = useState<number | null>(null);
   const sel = Math.min(t1, Math.max(t0, picked ?? t1));
   const points = useFloodPoints();
-  const rivers = useSensorsLatest('RIVER_LEVEL');
+  // Todos os tipos: estação ANA ou APAC que mede chuva e rio sai como PRECIPITATION, mas tem nome e cotas do rio.
+  const rivers = useSensorsLatest();
   const names = useMemo(() => new Map((points.data ?? []).map((p) => [p.slug, p.name])), [points.data]);
-  const riverId = t.river[0]?.stationId;
+  const riverSeries = useMemo(() => pickRiver(t.river, rivers.data), [t.river, rivers.data]);
+  const riverId = riverSeries?.stationId;
   const sensor = rivers.data?.find((s) => s.sensorId === riverId);
   const lvl = (k: string) => { const v = (sensor as Record<string, unknown> | undefined)?.[k]; return typeof v === 'number' ? v : null; };
   const flood = lvl('riverFloodLevel'), alert = lvl('riverAlertLevel');
@@ -46,9 +49,9 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
 
   const rain = useMemo(() => averageRain(t), [t]);
   const tide = useMemo(() => toTimePts(t.tide.points), [t.tide.points]);
-  const river = useMemo(() => toTimePts(t.river[0]?.points ?? []), [t.river]);
+  const river = useMemo(() => toTimePts(riverSeries?.points ?? []), [riverSeries]);
   const cells = useMemo(() => t.risk.map((r) => ({ slug: r.slug, cells: buildCells(r.items, t0, t1) })), [t.risk, t0, t1]);
-  const story = useMemo(() => buildStory(t, names, { flood, alert, name: riverName }), [t, names, flood, alert, riverName]);
+  const story = useMemo(() => buildStory(t, names, { flood, alert, name: riverName, points: river }), [t, names, flood, alert, riverName, river]);
   const experimental = t.risk.some((r) => r.items.some((p) => showsExperimentalLabel(p)));
 
   const upTo = (xs: TimePt[]) => xs.filter((p) => p.t <= sel && p.v != null);

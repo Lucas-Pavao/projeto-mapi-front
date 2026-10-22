@@ -30,12 +30,21 @@ export function tideRising(points: readonly TimePt[], now: number): boolean | nu
   return a == null || b == null || a === b ? null : a > b;
 }
 
-export function seriesOf(tl: Timeline | undefined, kind: Kind, key: string): TimePt[] {
+/**
+ * Chaves de um sensor nas séries da linha do tempo: a observation guarda o código da estação (260345401A) para a
+ * CEMADEN e o id_sensor (ANA-TELE-...) para a ANA; /api/sensors/latest traz os dois.
+ */
+export const seriesKeys = (s: Pick<SensorFreshness, 'sensorId' | 'code'>): string[] => (s.code ? [s.sensorId, s.code] : [s.sensorId]);
+
+export function seriesOf(tl: Timeline | undefined, kind: Kind, key: string | readonly string[]): TimePt[] {
   if (!tl) return [];
   if (kind === 'mare') return toTimePts(tl.tide.points);
   const list = kind === 'rio' ? tl.river : tl.rain;
-  return toTimePts(list.find((s) => s.stationId === key)?.points ?? []);
+  const keys = typeof key === 'string' ? [key] : key;
+  return toTimePts(list.find((s) => keys.includes(s.stationId))?.points ?? []);
 }
+
+const KIND_ORDER: Record<Kind, number> = { rio: 0, mare: 1, chuva: 2 };
 
 /** Itens da lista lateral: sensores da API, mais a maré quando a linha do tempo a traz. */
 export function buildItems(sensors: readonly SensorFreshness[], tl: Timeline | undefined, now: number): ListItem[] {
@@ -46,7 +55,7 @@ export function buildItems(sensors: readonly SensorFreshness[], tl: Timeline | u
     if (kind === 'rio') {
       return { key: s.sensorId, kind, name, sub: s.stale ? `sem resposta ${formatAge(s.ageSeconds)}` : 'Nível do rio', value: s.stale || s.value == null ? '—' : `${num(s.value, 2)} ${unit}`, dot: 'var(--primary)', off: s.stale };
     }
-    const acc = s.stale ? null : rainAccum(seriesOf(tl, 'chuva', s.sensorId), now, 24);
+    const acc = s.stale ? null : rainAccum(seriesOf(tl, 'chuva', seriesKeys(s)), now, 24);
     return {
       key: s.sensorId, kind, name,
       sub: s.stale ? `sem resposta ${formatAge(s.ageSeconds)}` : `Pluviômetro · ${s.value != null ? `${num(s.value)} ${unit}` : 'sem leitura'}`,
@@ -57,9 +66,12 @@ export function buildItems(sensors: readonly SensorFreshness[], tl: Timeline | u
   const cur = valueAt(tide, now);
   if (tl && tide.length > 0) {
     const up = tideRising(tide, now);
-    items.splice(Math.min(1, items.length), 0, { key: TIDE_KEY, kind: 'mare', name: `Maré · porto ${tl.tide.harbor}`, sub: `Maré prevista${up == null ? '' : up ? ' · enchendo' : ' · vazando'}`, value: cur == null ? '—' : `${num(cur, 2)} m`, dot: 'var(--sand)', off: false });
+    items.push({ key: TIDE_KEY, kind: 'mare', name: `Maré · porto ${tl.tide.harbor}`, sub: `Maré prevista${up == null ? '' : up ? ' · enchendo' : ' · vazando'}`, value: cur == null ? '—' : `${num(cur, 2)} m`, dot: 'var(--sand)', off: false });
   }
-  return items;
+  // Como no protótipo: rio, maré e chuva; sensor sem resposta vai para o fim (a tela abre num que responde).
+  return items.map((it, i) => ({ it, i }))
+    .sort((a, b) => Number(a.it.off) - Number(b.it.off) || KIND_ORDER[a.it.kind] - KIND_ORDER[b.it.kind] || a.i - b.i)
+    .map(({ it }) => it);
 }
 
 export interface SideRow { label: string; value: string; tone?: 'high' | 'moderate' | 'muted' }
