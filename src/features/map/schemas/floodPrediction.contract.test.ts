@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { floodPredictionSchema, RISK_LEVELS } from './floodPointResponse.schema';
-import { validationStatusOf } from '../utils/risk';
+import { validationStatusOf } from '@/components/risk/risk';
 
 afterEach(() => vi.restoreAllMocks());
 

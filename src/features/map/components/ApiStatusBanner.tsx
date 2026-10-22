@@ -11,11 +11,11 @@ interface ErrorProps {
 
 /** Aviso visível quando a API cai ou o polling falha. Mantém os últimos dados no mapa. */
 export const ApiErrorBanner: React.FC<ErrorProps> = ({ lastSuccessAt, isRetrying, onRetry }) => (
-  <div role="alert" className="flex items-center gap-2 rounded-2xl border border-red-500/40 bg-zinc-950/95 px-3 py-2 text-sm text-white shadow-2xl backdrop-blur-xl md:flex-wrap md:gap-3 md:px-4 md:py-3">
-    <TriangleAlert className="h-5 w-5 shrink-0 text-red-400" aria-hidden="true" />
+  <div role="alert" className="flex items-center gap-2 rounded-2xl border border-destructive/40 bg-popover px-3 py-2 text-sm text-foreground shadow-elevation-overlay md:flex-wrap md:gap-3 md:px-4 md:py-3">
+    <TriangleAlert className="h-5 w-5 shrink-0 text-destructive" aria-hidden="true" />
     <div className="min-w-0 flex-1">
       <p className="text-xs font-bold md:text-sm">Não foi possível atualizar os dados.</p>
-      <p className="text-2xs text-zinc-300 md:text-xs">
+      <p className="text-2xs text-foreground md:text-xs">
         {lastValidText(lastSuccessAt)}.<span className="sr-only md:not-sr-only"> Os valores no mapa podem estar desatualizados.</span>
       </p>
     </div>
@@ -28,11 +28,11 @@ export const ApiErrorBanner: React.FC<ErrorProps> = ({ lastSuccessAt, isRetrying
 
 /** Estado vazio explícito: a API respondeu, mas não há pontos nem sensores. */
 export const EmptyDataNotice: React.FC = () => (
-  <div role="status" className="flex items-center gap-3 rounded-2xl border border-white/15 bg-zinc-950/95 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur-xl">
-    <Inbox className="h-5 w-5 shrink-0 text-zinc-300" aria-hidden="true" />
+  <div role="status" className="flex items-center gap-3 rounded-2xl border border-border bg-popover px-4 py-3 text-sm text-foreground shadow-elevation-overlay">
+    <Inbox className="h-5 w-5 shrink-0 text-foreground" aria-hidden="true" />
     <p>
       <strong>Nenhum ponto crítico ou sensor retornado pela API.</strong>{' '}
-      <span className="text-zinc-300">O mapa está vazio por falta de dados, não por ausência de risco.</span>
+      <span className="text-foreground">O mapa está vazio por falta de dados, não por ausência de risco.</span>
     </p>
   </div>
 );

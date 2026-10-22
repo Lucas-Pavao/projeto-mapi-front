@@ -1,90 +1,182 @@
+/* Tokens MAPi (fonte: design-ref/logos/project/tokens.json). Dark é o padrão; light via
+   data-theme="light" na raiz. A classe .dark acompanha data-theme (ver lib/theme.ts). */
+:root,
+:root[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, monospace;
+  --radius: 0.5rem;
+  --background: #0a1419;
+  --card: #111e25;
+  --popover: #16262e;
+  --muted: #16262e;
+  --secondary: #1d3039;
+  --accent: var(--secondary);
+  --border: #2a3f49;
+  --input: #5a7684;
+  --foreground: #e7eff2;
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+  --muted-foreground: #9db1ba;
+  --primary: #5cb8ff;
+  --primary-foreground: #04213a;
+  --ring: #5cb8ff;
+  --sand: #e8d5ae;
+  --on-sand: #2a2214;
+  --destructive: #ff7a70;
+  --success: #8fdcb2;
+  --info: #7cc4ff;
+  --warning: #f5b14a;
+  --risk-low: #9be7bd;
+  --on-risk-low: #0b2a1d;
+  --risk-low-edge: #9be7bd;
+  --risk-low-text: #9be7bd;
+  --risk-moderate: #f5a524;
+  --on-risk-moderate: #2a1a00;
+  --risk-moderate-edge: #f5a524;
+  --risk-moderate-text: #f5b14a;
+  --risk-high: #d4373c;
+  --on-risk-high: #ffffff;
+  --risk-high-edge: #ff6b6f;
+  --risk-high-text: #ff8589;
+  --risk-unknown: #8a9a9c;
+  --on-risk-unknown: #0a1419;
+  --risk-unknown-edge: #c3ced0;
+  --risk-unknown-text: #a9b6b8;
+  --chart-1: #5cb8ff;
+  --chart-2: #e8d5ae;
+  --chart-3: #7fd6e0;
+  --chart-4: #f2a7c3;
+  --chart-5: #b3c2c9;
+  --elevation-raised: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --elevation-overlay: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+/* Também vale em qualquer elemento com data-theme="light" (ex.: a folha do Relatório dentro do app escuro). */
+:root[data-theme="light"],
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f4f7f8;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --muted: #eaf0f2;
+  --secondary: #e3ebee;
+  --accent: var(--secondary);
+  --border: #d3dee2;
+  --input: #7d929b;
+  --foreground: #0c1b22;
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --secondary-foreground: var(--foreground);
+  --accent-foreground: var(--foreground);
+  --muted-foreground: #4b606a;
+  --primary: #0a62b8;
+  --primary-foreground: #ffffff;
+  --ring: #0a62b8;
+  --sand: #e8d5ae;
+  --on-sand: #2a2214;
+  --destructive: #c0261f;
+  --success: #1a7048;
+  --info: #0a62b8;
+  --warning: #94530a;
+  --risk-low: #9be7bd;
+  --on-risk-low: #0b2a1d;
+  --risk-low-edge: #1f7a52;
+  --risk-low-text: #1a7048;
+  --risk-moderate: #f5a524;
+  --on-risk-moderate: #2a1a00;
+  --risk-moderate-edge: #9a5b00;
+  --risk-moderate-text: #94530a;
+  --risk-high: #d4373c;
+  --on-risk-high: #ffffff;
+  --risk-high-edge: #d4373c;
+  --risk-high-text: #b42318;
+  --risk-unknown: #8a9a9c;
+  --on-risk-unknown: #0c1b22;
+  --risk-unknown-edge: #5b6b6d;
+  --risk-unknown-text: #56676a;
+  --chart-1: #0a62b8;
+  --chart-2: #8a6a2f;
+  --chart-3: #11727f;
+  --chart-4: #a3365f;
+  --chart-5: #5b6b72;
+  --elevation-raised: 0 1px 2px rgba(12, 27, 34, 0.08);
+  --elevation-overlay: 0 8px 24px rgba(12, 27, 34, 0.16);
+}
+
+/* Cor de destaque (data-accent): Capibaribe é o padrão dos tokens. Valores de design-ref/app.css. */
+[data-accent="atlantico"][data-theme="dark"], [data-accent="atlantico"].dark:not([data-theme]) { --primary: #9aa8ff; --ring: #9aa8ff; --primary-foreground: #10163d; --chart-1: #9aa8ff; }
+[data-accent="atlantico"][data-theme="light"] { --primary: #3a4bc0; --ring: #3a4bc0; --primary-foreground: #ffffff; --chart-1: #3a4bc0; }
+[data-accent="areia"][data-theme="dark"], [data-accent="areia"].dark:not([data-theme]) { --primary: #e8d5ae; --ring: #e8d5ae; --primary-foreground: #2a2214; --chart-1: #e8d5ae; --chart-2: #9aa8ff; }
+[data-accent="areia"][data-theme="light"] { --primary: #7a5a1e; --ring: #7a5a1e; --primary-foreground: #ffffff; --chart-1: #7a5a1e; --chart-2: #3a4bc0; }
+
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
+  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, monospace;
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
-:root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --popover: #18181b;
-  --popover-foreground: #f4f4f5;
-  --primary: #6366f1;
-  --primary-foreground: #ffffff;
-  --secondary: #18181b;
-  --secondary-foreground: #f4f4f5;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #18181b;
-  --accent-foreground: #f4f4f5;
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #6366f1;
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --card: #18181b;
-  --card-foreground: #f4f4f5;
-  --popover: #18181b;
-  --popover-foreground: #f4f4f5;
-  --primary: #6366f1;
-  --primary-foreground: #ffffff;
-  --secondary: #18181b;
-  --secondary-foreground: #f4f4f5;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #18181b;
-  --accent-foreground: #f4f4f5;
-  --destructive: oklch(0.396 0.141 25.723);
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #6366f1;
+  --color-card: var(--card);
+  --color-popover: var(--popover);
+  --color-muted: var(--muted);
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-foreground: var(--foreground);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-ring: var(--ring);
+  --color-sand: var(--sand);
+  --color-on-sand: var(--on-sand);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-warning: var(--warning);
+  --color-risk-low: var(--risk-low);
+  --color-on-risk-low: var(--on-risk-low);
+  --color-risk-low-edge: var(--risk-low-edge);
+  --color-risk-low-text: var(--risk-low-text);
+  --color-risk-moderate: var(--risk-moderate);
+  --color-on-risk-moderate: var(--on-risk-moderate);
+  --color-risk-moderate-edge: var(--risk-moderate-edge);
+  --color-risk-moderate-text: var(--risk-moderate-text);
+  --color-risk-high: var(--risk-high);
+  --color-on-risk-high: var(--on-risk-high);
+  --color-risk-high-edge: var(--risk-high-edge);
+  --color-risk-high-text: var(--risk-high-text);
+  --color-risk-unknown: var(--risk-unknown);
+  --color-on-risk-unknown: var(--on-risk-unknown);
+  --color-risk-unknown-edge: var(--risk-unknown-edge);
+  --color-risk-unknown-text: var(--risk-unknown-text);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  /* shadcn sidebar mapeado nos tokens MAPi */
+  --color-sidebar: var(--card);
+  --color-sidebar-foreground: var(--card-foreground);
+  --color-sidebar-primary: var(--primary);
+  --color-sidebar-primary-foreground: var(--primary-foreground);
+  --color-sidebar-accent: var(--accent);
+  --color-sidebar-accent-foreground: var(--accent-foreground);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
+  --shadow-elevation-raised: var(--elevation-raised);
+  --shadow-elevation-overlay: var(--elevation-overlay);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+  --radius-4xl: 1.5rem;
 }

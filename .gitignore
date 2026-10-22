@@ -29,3 +29,7 @@ dist-ssr
 
 # Terreno (ADR 0008): PMTiles regenerável por tools/terreno/run.sh tiles no projeto-mapi-api; não versionar
 public/terrain/*.pmtiles
+
+# Playwright
+test-results/
+playwright-report/

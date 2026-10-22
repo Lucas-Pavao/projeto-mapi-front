@@ -1,0 +1,50 @@
+/* Impressão (Relatório de situação): A4, sem navegação, conteúdo em fluxo normal e cores de risco preservadas. */
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  /* A casca das telas tem altura da janela e rolagem interna: na impressão o conteúdo flui. */
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+  }
+  #conteudo {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-sheet {
+    max-width: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .print-sheet section,
+  .print-sheet figure,
+  .print-sheet tr,
+  .print-sheet li {
+    break-inside: avoid;
+  }
+  .print-sheet h2 {
+    break-after: avoid;
+  }
+  a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

@@ -1,32 +1,32 @@
 import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
+import { ThemeControls } from '@/components/layout/ThemeControls';
+import logoDark from '@/assets/mapi-logo-on-dark.svg';
+import logoLight from '@/assets/mapi-logo-on-light.svg';
 import { LoginForm } from '@/features/authentication/components/LoginForm';
+import { LoginHero } from '@/features/authentication/components/LoginHero';
 
 export const LoginPage: React.FC = () => {
+  const { theme } = useTheme();
+  const { isAuthenticated, isLoading } = useAuth();
+  const expired = (useLocation().state as { expired?: boolean } | null)?.expired === true;
+  // Quem já tem sessão vai direto ao mapa (menos no meio da checagem inicial).
+  if (!isLoading && isAuthenticated) return <Navigate to="/map" replace />;
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-[400px] space-y-8">
-        <div className="flex flex-col items-center gap-2 mb-8">
-          <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-white font-bold text-2xl">M</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">MAPI</h1>
-        </div>
-        
-        <div className="bg-card border border-border rounded-lg p-8 shadow-2xl">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-bold text-foreground">Entrar na plataforma</h2>
-            <p className="text-sm text-muted-foreground mt-2">
-              Insira suas credenciais para acessar o mapa
-            </p>
-          </div>
-          
-          <LoginForm />
-        </div>
-        
-        <p className="text-center text-xs text-muted-foreground pt-4">
-          &copy; {new Date().getFullYear()} MAPI Monitoramento Ambiental. Todos os direitos reservados.
-        </p>
-      </div>
+    <div className="grid min-h-dvh w-full grid-cols-1 bg-background text-foreground lg:grid-cols-[7fr_5fr]">
+      <LoginHero />
+      <main className="relative flex flex-col items-center justify-center gap-5 p-6 sm:p-12">
+        <div className="absolute top-5 right-5 flex items-center gap-2"><ThemeControls /></div>
+        <img src={theme === 'light' ? logoLight : logoDark} alt="MAPi" className="h-10 w-auto self-start lg:hidden" />
+        {expired && (
+          <p role="status" className="m-0 w-full max-w-[400px] rounded-[10px] border border-info/40 bg-info/10 p-3 text-xs font-medium text-info">
+            Sua sessão expirou. Entre de novo para continuar.
+          </p>
+        )}
+        <LoginForm />
+      </main>
     </div>
   );
 };

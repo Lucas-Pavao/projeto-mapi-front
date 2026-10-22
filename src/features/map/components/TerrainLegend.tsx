@@ -12,10 +12,10 @@ export const TerrainLegend: React.FC = () => {
       <div
         role="img"
         aria-label={`Escala de cota do terreno, de ${TERRAIN_MIN_M} a ${TERRAIN_MAX_M} metros ou mais`}
-        className="h-3 w-full rounded border border-white/20"
+        className="h-3 w-full rounded border border-border"
         style={{ backgroundImage: gradient }}
       />
-      <ol className="relative mt-1 h-4 text-2xs tabular-nums text-zinc-300" aria-hidden="true">
+      <ol className="relative mt-1 h-4 text-2xs tabular-nums text-foreground" aria-hidden="true">
         {TERRAIN_LEGEND_TICKS_M.map((v) => (
           <li
             key={v}
@@ -26,8 +26,8 @@ export const TerrainLegend: React.FC = () => {
           </li>
         ))}
       </ol>
-      <p className="mt-0.5 text-2xs leading-snug text-zinc-300">Cota do terreno (m).</p>
-      <p className="mt-0.5 text-2xs leading-snug text-zinc-400">
+      <p className="mt-0.5 text-2xs leading-snug text-foreground">Cota do terreno (m).</p>
+      <p className="mt-0.5 text-2xs leading-snug text-muted-foreground">
         Datum não confirmado — cotas relativas. Fonte: MDT PE3D, voo de 2016.
       </p>
     </div>

@@ -149,7 +149,7 @@ type MapProps = {
 
 function DefaultLoader() {
   return (
-    <div className="bg-zinc-950 absolute inset-0 z-10 flex items-center justify-center">
+    <div className="bg-background absolute inset-0 z-10 flex items-center justify-center">
       <div className="flex gap-1">
         <span className="bg-primary size-2 animate-pulse rounded-full" />
         <span className="bg-primary size-2 animate-pulse rounded-full [animation-delay:150ms]" />
@@ -492,6 +492,12 @@ function MapMarker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marker]);
 
+  // O rótulo muda com o dado (ex.: risco do ponto via stream): mantém o nome acessível em dia.
+  useEffect(() => {
+    const element = marker.getElement();
+    if (element && label && element.getAttribute("role") === "button") element.setAttribute("aria-label", label);
+  }, [marker, label]);
+
   useEffect(() => {
     if (!map) return;
 
@@ -560,7 +566,7 @@ function MarkerContent({ children, className }: MarkerContentProps) {
 
 function DefaultMarkerIcon() {
   return (
-    <div className="relative h-4 w-4 rounded-full border-2 border-white bg-blue-500 shadow-lg" />
+    <div className="relative h-4 w-4 rounded-full border-2 border-border bg-chart-1 shadow-elevation-raised" />
   );
 }
 
@@ -570,7 +576,7 @@ function PopupCloseButton({ onClick }: { onClick: () => void }) {
       type="button"
       onClick={onClick}
       aria-label="Fechar"
-      className="focus-visible:ring-primary hover:bg-zinc-800 text-muted-foreground hover:text-foreground absolute top-1 right-1 z-10 inline-flex size-6 cursor-pointer items-center justify-center rounded-md transition-all focus:outline-none focus-visible:ring-2"
+      className="focus-visible:ring-primary hover:bg-muted text-muted-foreground hover:text-foreground absolute top-1 right-1 z-10 inline-flex size-6 cursor-pointer items-center justify-center rounded-md transition-all focus:outline-none focus-visible:ring-2"
     >
       <X className="size-4" />
     </button>
@@ -641,7 +647,7 @@ function MarkerPopup({
   return createPortal(
     <div
       className={cn(
-        "bg-popover text-popover-foreground relative max-w-64 rounded-lg border border-border p-4 shadow-2xl",
+        "bg-popover text-popover-foreground relative max-w-64 rounded-lg border border-border p-4 shadow-elevation-overlay",
         "animate-in fade-in-0 zoom-in-95 duration-200 ease-out",
         className,
       )}
@@ -792,7 +798,7 @@ const positionClasses = {
 
 function ControlGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-border bg-card/95 backdrop-blur-md [&>button:not(:last-child)]:border-border flex flex-col overflow-hidden rounded-lg border shadow-2xl [&>button:not(:last-child)]:border-b">
+    <div className="border-border bg-card/95 [&>button:not(:last-child)]:border-border flex flex-col overflow-hidden rounded-lg border shadow-elevation-overlay [&>button:not(:last-child)]:border-b">
       {children}
     </div>
   );
@@ -818,7 +824,7 @@ function ControlButton({
         "flex size-9 items-center justify-center transition-all",
         "first:rounded-t-lg last:rounded-b-lg",
         "text-foreground hover:text-primary",
-        "hover:bg-zinc-800/50",
+        "hover:bg-muted",
         "focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none focus-visible:ring-inset",
         "disabled:pointer-events-none disabled:opacity-50",
       )}
@@ -975,8 +981,8 @@ function CompassButton({ onClick }: { onClick: () => void }) {
         className="size-5 transition-transform duration-200"
         style={{ transformStyle: "preserve-3d" }}
       >
-        <path d="M12 2L16 12H12V2Z" className="fill-red-500" />
-        <path d="M12 2L8 12H12V2Z" className="fill-red-300" />
+        <path d="M12 2L16 12H12V2Z" className="fill-destructive" />
+        <path d="M12 2L8 12H12V2Z" className="fill-destructive" />
         <path d="M12 22L16 12H12V22Z" className="fill-muted-foreground/60" />
         <path d="M12 22L8 12H12V22Z" className="fill-muted-foreground/30" />
       </svg>
@@ -1108,7 +1114,7 @@ function MapPopup({
         if (e.key === "Escape") handleClose();
       }}
       className={cn(
-        "bg-popover text-popover-foreground relative max-w-64 rounded-lg border border-border p-4 shadow-2xl",
+        "bg-popover text-popover-foreground relative max-w-64 rounded-lg border border-border p-4 shadow-elevation-overlay",
         "animate-in fade-in-0 zoom-in-95 duration-200 ease-out",
         className,
       )}

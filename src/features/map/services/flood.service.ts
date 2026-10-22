@@ -6,7 +6,6 @@ import type {
   FloodEventDTO,
   ScraperEventDTO,
   MapiResponseDTO,
-  FloodScenarioLabelResponseDTO,
   FloodPredictionResponseDTO
 } from '../types';
 
@@ -63,10 +62,6 @@ export const floodService = {
     return { ...environmentalData, floodPrediction };
   },
 
-  async reportFlood(data: Partial<FloodEventDTO>): Promise<FloodEventDTO> {
-    const response = await api.post<FloodEventDTO>('/api/eventos-alagamento', data);
-    return response.data;
-  },
 
   // 201 = evento novo criado (corpo presente). 204 = já existia um evento equivalente (mesmo
   // ponto e dia) e foi ignorado — não é erro, só não há nada novo pra retornar.
@@ -75,9 +70,5 @@ export const floodService = {
     return response.status === 204 ? null : response.data;
   },
 
-  async reportScenario(data: { latitude: number; longitude: number; isFlooded: boolean }): Promise<FloodScenarioLabelResponseDTO> {
-    const response = await api.post<FloodScenarioLabelResponseDTO>('/api/pontos/scenarios', data);
-    return response.data;
-  },
 };
 

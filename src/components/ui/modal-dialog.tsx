@@ -4,8 +4,10 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface ModalDialogProps {
-  /** Nome acessível do diálogo. */
+  /** Nome acessível do diálogo (aria-label). Ignorado se `labelledBy` vier. */
   label: string;
+  /** id do elemento que nomeia o diálogo (aria-labelledby). */
+  labelledBy?: string;
   onClose: () => void;
   /** Classes do fundo (overlay). */
   className?: string;
@@ -16,7 +18,7 @@ interface ModalDialogProps {
  * Overlay modal acessível: role="dialog", aria-modal, foco preso (Tab/Shift+Tab ciclam),
  * Esc fecha, foco inicial no primeiro controle e retorno do foco ao elemento que abriu.
  */
-export const ModalDialog: React.FC<ModalDialogProps> = ({ label, onClose, className, children }) => {
+export const ModalDialog: React.FC<ModalDialogProps> = ({ label, labelledBy, onClose, className, children }) => {
   const ref = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -60,7 +62,8 @@ export const ModalDialog: React.FC<ModalDialogProps> = ({ label, onClose, classN
       ref={ref}
       role="dialog"
       aria-modal="true"
-      aria-label={label}
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
       tabIndex={-1}
       onKeyDown={onKeyDown}
       className={className}

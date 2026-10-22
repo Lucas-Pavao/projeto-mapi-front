@@ -25,7 +25,7 @@ export const DEGRADATION_REASONS = [
  * (ex.: 'CRITICAL'/'EXTREME' do backend antigo) vira 'UNKNOWN' e registra console.warn com o
  * valor recebido, para a coerção não esconder um bug. Remover o `.catch` ao fim da Fase 4.
  */
-const riskLevelSchema = z.enum(RISK_LEVELS).catch((ctx) => {
+export const riskLevelSchema = z.enum(RISK_LEVELS).catch((ctx) => {
   console.warn('[floodPrediction] riskLevel fora do contrato, tratado como UNKNOWN:', ctx.value);
   return 'UNKNOWN';
 });
@@ -33,9 +33,9 @@ const riskLevelSchema = z.enum(RISK_LEVELS).catch((ctx) => {
 export const MODEL_VALIDATION_STATUSES = ['NOT_VALIDATED', 'VALIDATED'] as const;
 
 /** ADR 0007 emenda 1 (RC-03): ausente ou valor desconhecido = NOT_VALIDATED (nunca presume validação). */
-const modelValidationStatusSchema = z.enum(MODEL_VALIDATION_STATUSES).optional().catch('NOT_VALIDATED');
+export const modelValidationStatusSchema = z.enum(MODEL_VALIDATION_STATUSES).optional().catch('NOT_VALIDATED');
 
-const degradationReasonSchema = z.enum(DEGRADATION_REASONS);
+export const degradationReasonSchema = z.enum(DEGRADATION_REASONS);
 
 const floodPredictionSchema = z
   .object({

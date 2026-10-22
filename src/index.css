@@ -1,13 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/atkinson-hyperlegible-mono";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary: #6366f1;
-  --color-secondary: #18181b;
   /* Menor tamanho de texto do app. Substitui os antigos text-[7..11px]. Em rem, escala com o
      font-size da raiz: 12 px normal; 15 px no modo projeção (>= 1920 px, ver abaixo). */
   --text-2xs: 0.75rem;
@@ -33,16 +32,18 @@ code {
 }
 
 @import "./styles/theme.css";
+@import "./styles/typography.css";
+@import "./styles/mapi.css";
+@import "./styles/print.css";
 
 @layer base {
   /* Foco visível em qualquer controle nativo, também sobre fundos translúcidos. */
   :focus-visible {
-    outline: 2px solid #ffffff;
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
-    box-shadow: 0 0 0 4px #6366f1;
   }
   .maplibregl-marker:focus-visible {
-    outline: 3px solid #ffffff;
+    outline: 3px solid var(--ring);
     outline-offset: 3px;
     border-radius: 0.75rem;
   }
@@ -62,6 +63,9 @@ code {
   html {
     @apply font-sans;
   }
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
   .maplibregl-popup-content {
     @apply bg-transparent! shadow-none! p-0! rounded-none!;
   }
@@ -74,7 +78,7 @@ code {
      do navegador, que destoa do visual escuro/glassmorphism do resto da UI. */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent) transparent;
   }
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -84,10 +88,10 @@ code {
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
     border-radius: 9999px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(255, 255, 255, 0.32);
+    background-color: color-mix(in srgb, var(--muted-foreground) 65%, transparent);
   }
 }

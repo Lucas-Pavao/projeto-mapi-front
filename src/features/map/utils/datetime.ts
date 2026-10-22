@@ -17,3 +17,11 @@ export function formatRecife(iso: string | null | undefined): string | null {
   if (Number.isNaN(date.getTime())) return null;
   return recifeFormatter.format(date).replace(',', '');
 }
+
+const hourFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Recife', hour: '2-digit', minute: '2-digit' });
+const dayFmt = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Recife', day: '2-digit', month: '2-digit' });
+
+/** "HH:mm" em America/Recife a partir de epoch ms. */
+export const formatRecifeHourMs = (ms: number): string => hourFmt.format(new Date(ms));
+/** "dd/MM" em America/Recife a partir de epoch ms. */
+export const formatRecifeDayMs = (ms: number): string => dayFmt.format(new Date(ms));
