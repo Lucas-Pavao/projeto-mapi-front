@@ -43,13 +43,13 @@ export interface DayExtreme extends DayPt { kind: TideKind }
 export function dayExtremes(prev: DayPt[], cur: DayPt[], next: DayPt[]): DayExtreme[] {
   const before = prev.at(-1);
   const after = next[0];
-  return cur.flatMap((p, i) => {
+  return cur.flatMap<DayExtreme>((p, i) => {
     const a = i > 0 ? cur[i - 1] : before;
     const b = i < cur.length - 1 ? cur[i + 1] : after;
     const ref = [a, b].filter((x): x is DayPt => !!x);
     if (ref.length === 0) return [];
-    if (ref.every((r) => p.v > r.v)) return [{ ...p, kind: 'PREAMAR' as const }];
-    if (ref.every((r) => p.v < r.v)) return [{ ...p, kind: 'BAIXA_MAR' as const }];
+    if (ref.every((r) => p.v > r.v)) return [{ ...p, kind: 'PREAMAR' }];
+    if (ref.every((r) => p.v < r.v)) return [{ ...p, kind: 'BAIXA_MAR' }];
     return [];
   });
 }
