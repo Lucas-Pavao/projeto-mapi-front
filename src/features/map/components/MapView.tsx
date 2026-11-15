@@ -37,6 +37,7 @@ import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
 import { RiskLegendControl } from './RiskLegendControl';
+import { thresholdsOf } from '@/components/risk/thresholds';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, MEASURED_RAIN_LAYER, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
@@ -208,7 +209,7 @@ export const MapView: React.FC = () => {
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
-              <RiskLegendControl {...toolProps('legend')} />
+              <RiskLegendControl thresholds={thresholdsOf(floodPoints)} {...toolProps('legend')} />
             </div>
             {measuredOn && (
               <MeasuredRainLegend

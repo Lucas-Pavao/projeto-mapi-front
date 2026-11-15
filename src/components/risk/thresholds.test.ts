@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pctTxt, riskOf, sqrtScale } from './thresholds';
+import { bandText, pctTxt, riskOf, sqrtScale, thresholdsOf } from './thresholds';
 
 const TH = { medium: 0.0159, high: 0.2441 };
 
@@ -32,5 +32,17 @@ describe('sqrtScale', () => {
     expect(sqrtScale(0.25)).toBe(0.5);
     expect(sqrtScale(-1)).toBe(0);
     expect(sqrtScale(2)).toBe(1);
+  });
+});
+
+describe('legenda por limiares', () => {
+  it('faixas em texto', () => {
+    expect(bandText('LOW', TH)).toBe('abaixo de 1,6%');
+    expect(bandText('MEDIUM', TH)).toBe('de 1,6% até abaixo de 24%');
+    expect(bandText('HIGH', TH)).toBe('24% ou mais');
+  });
+  it('pega os limiares do primeiro ponto que os traz', () => {
+    expect(thresholdsOf([{ floodPrediction: null }, { floodPrediction: { riskThresholds: TH } }])).toEqual(TH);
+    expect(thresholdsOf([{ floodPrediction: null }])).toBeNull();
   });
 });

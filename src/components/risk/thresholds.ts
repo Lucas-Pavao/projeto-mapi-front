@@ -23,3 +23,18 @@ export function pctTxt(p: number | null | undefined): string {
 export function sqrtScale(v: number): number {
   return Math.sqrt(Math.max(0, Math.min(1, v)));
 }
+
+/** Limiares vigentes: os da primeira previsão que os traz (todas vêm do mesmo metadata do modelo). Sem nenhum, null. */
+export function thresholdsOf(items: ReadonlyArray<{ floodPrediction?: { riskThresholds?: RiskThresholds | null } | null }> | null | undefined): RiskThresholds | null {
+  for (const i of items ?? []) if (i.floodPrediction?.riskThresholds) return i.floodPrediction.riskThresholds;
+  return null;
+}
+
+/** Faixa de cada classe em texto, a partir dos limiares: "abaixo de 1,6%", "de 1,6% até abaixo de 24%", "24% ou mais". */
+export function bandText(level: Exclude<RiskLevel, 'UNKNOWN'>, t: Pick<RiskThresholds, 'medium' | 'high'>): string {
+  switch (level) {
+    case 'LOW': return `abaixo de ${pctTxt(t.medium)}`;
+    case 'MEDIUM': return `de ${pctTxt(t.medium)} até abaixo de ${pctTxt(t.high)}`;
+    case 'HIGH': return `${pctTxt(t.high)} ou mais`;
+  }
+}
