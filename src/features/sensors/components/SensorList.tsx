@@ -1,19 +1,24 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { SourceTag } from '@/components/risk/SourceTag';
+import { CEMADEN_ATTRIBUTION } from '../schemas/station.schema';
 import type { Kind, ListItem } from '../utils/sensorView';
 
-export const FILTERS: ReadonlyArray<{ value: Kind | 'all'; label: string }> = [
+export type Filter = Kind | 'all' | 'problem';
+
+export const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
   { value: 'all', label: 'Todos' },
   { value: 'chuva', label: 'Chuva' },
   { value: 'rio', label: 'Rio' },
   { value: 'mare', label: 'Maré' },
+  { value: 'problem', label: 'Com problema' },
 ];
 
 interface Props {
   items: ListItem[];
   selected: string;
-  filter: Kind | 'all';
-  onFilter: (f: Kind | 'all') => void;
+  filter: Filter;
+  onFilter: (f: Filter) => void;
   onSelect: (key: string) => void;
   online: string;
 }
@@ -51,11 +56,17 @@ export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter,
             type="button"
             aria-pressed={r.key === selected}
             onClick={() => onSelect(r.key)}
-            className={cn('flex w-full cursor-pointer items-center gap-3 rounded-[10px] border-0 px-2 py-[9px] text-left text-foreground hover:bg-muted', r.key === selected ? 'bg-secondary' : 'bg-transparent')}
+            className={cn('flex w-full cursor-pointer items-center gap-3 rounded-[10px] border-0 px-2 py-[9px] text-left text-foreground hover:bg-muted', r.key === selected ? 'bg-secondary' : 'bg-transparent', r.fail && 'opacity-70')}
           >
             <span aria-hidden="true" className={cn('box-border size-2.5 shrink-0 rounded-full', r.off ? 'border-2 border-dashed border-risk-unknown-edge bg-transparent' : '')} style={r.off ? undefined : { background: r.dot }} />
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-[14px] font-bold leading-5">{r.name}</span>
+              {(r.sources?.length || r.monthTag) && (
+                <span className="flex flex-wrap items-center gap-1" data-testid="station-tags">
+                  {r.sources?.map((k) => <SourceTag key={k} kind={k} />)}
+                  {r.monthTag && <span className={cn('inline-flex h-[18px] items-center rounded border px-1.5 text-[10px] font-bold leading-none', r.monthTag.tone === 'destructive' ? 'border-destructive text-destructive' : r.monthTag.tone === 'warning' ? 'border-warning text-warning' : 'border-border text-muted-foreground')}>{r.monthTag.text}</span>}
+                </span>
+              )}
               <span className={cn('truncate text-[12px] leading-4', r.off ? 'text-warning' : 'text-muted-foreground')}>{r.sub}</span>
             </span>
             <span className={cn('font-mono text-[14px] font-semibold leading-5', r.off && 'text-muted-foreground')}>{r.value}</span>
@@ -63,5 +74,6 @@ export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter,
         </li>
       ))}
     </ul>
+    <p className="m-0 border-t border-border px-3.5 py-2.5 text-[11px] leading-[15px] text-muted-foreground">{CEMADEN_ATTRIBUTION}</p>
   </aside>
 );

@@ -22,7 +22,7 @@ describe('SensorsPage', () => {
     expect(pluv2).toHaveAttribute('data-stale', 'true');
     expect(within(pluv2).getByText(/sem resposta há/)).toBeInTheDocument();
     expect(within(pluv2).getByText('—')).toBeInTheDocument(); // sem valor: nunca zero
-    expect(screen.getByText('2 de 3 respondendo')).toBeInTheDocument();
+    expect(await screen.findByText('5 de 6 respondendo')).toBeInTheDocument();
   });
 
   it('seleciona o sensor e mostra o detalhe; sensor velho vem com aviso', async () => {
@@ -59,5 +59,42 @@ describe('SensorsPage', () => {
     server.use(http.get('/api/sensors/latest', () => HttpResponse.json([{ sensorId: 'x', type: 'OUTRO', observedAt: 'a', ageSeconds: 1, stale: false }])));
     renderPage(<SensorsPage />);
     expect(await screen.findByRole('alert', {}, { timeout: 3000 })).toBeInTheDocument();
+  });
+
+  it('estação canônica: tags ao vivo/PED e só PED, status do mês e filtro "Com problema"', async () => {
+    renderPage(<SensorsPage />);
+    const lista = within(await screen.findByRole('complementary', { name: 'Sensores' }));
+    const areias = (await lista.findByText('Sintético: Areias')).closest('li')!;
+    expect(within(areias).getByText('ao vivo')).toBeInTheDocument();
+    expect(within(areias).getByText('PED')).toBeInTheDocument();
+    const boa = lista.getByText('Sintético: Boa Viagem').closest('li')!;
+    expect(within(boa).getByText('só PED')).toBeInTheDocument();
+    expect(within(boa).getByText('reprovada no mês')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('radio', { name: 'Com problema' }));
+    await waitFor(() => expect(lista.queryByText('Sintético: rio 1')).toBeNull());
+    expect(lista.getByText('Sintético: Boa Viagem')).toBeInTheDocument();
+    expect(lista.getByText('Sintético: Areias')).toBeInTheDocument(); // 2 divergências
+    expect(screen.getAllByText('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC').length).toBeGreaterThan(0);
+  });
+
+  it('detalhe da estação: barras por fonte, lacuna, pico removido, divergências e apelidos', async () => {
+    renderPage(<SensorsPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /Sintético: Areias/ }));
+    const chart = await screen.findByTestId('station-chart');
+    expect(chart.querySelectorAll('[data-source="CEMADEN_PED"]').length).toBeGreaterThan(0);
+    expect(chart.querySelectorAll('[data-source="CEMADEN"]').length).toBeGreaterThan(0);
+    expect(chart.querySelectorAll('[data-testid="gap"]')).toHaveLength(1);
+    expect(chart.querySelectorAll('[data-testid="peak-mark"]')).toHaveLength(1);
+    expect(chart).toHaveTextContent('50,3');
+    expect(chart).toHaveTextContent('25,2');
+    expect(within(screen.getByTestId('divergences')).getAllByRole('row')).toHaveLength(3); // cabeçalho + 2
+    expect(screen.getByTestId('aliases')).toHaveTextContent('CEMADEN_PED:SINT-A');
+    expect(screen.getByTestId('quarantine')).toHaveTextContent('AFTER_GAP');
+  });
+
+  it('API de estações fora do ar: a lista segue com os sensores ao vivo', async () => {
+    server.use(http.get('/api/stations/canonical', () => HttpResponse.json({}, { status: 500 })));
+    renderPage(<SensorsPage />);
+    expect(await screen.findByText('Sintético: pluviômetro 1')).toBeInTheDocument();
   });
 });
