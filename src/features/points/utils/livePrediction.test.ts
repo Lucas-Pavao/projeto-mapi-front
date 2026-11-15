@@ -25,6 +25,12 @@ describe('applyPredictionToPoint', () => {
     const r = applyPredictionToPoint(point(), pred({ riskLevel: 'UNKNOWN', probability: 0.9, degradationReason: 'AI_ERROR', lastValidIssuedAt: '2026-10-21T10:00:00Z' }));
     expect(r.floodPrediction).toMatchObject({ riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_ERROR', lastValidIssuedAt: '2026-10-21T10:00:00Z' });
   });
+  it('Etapa 8: a previsão do stream traz a etiqueta de sintético e os limiares para o ponto', () => {
+    const r = applyPredictionToPoint(point('2026-10-21T11:00:00Z'), pred({
+      trainingData: 'SYNTHETIC', syntheticWarning: 'rótulo SINTÉTICO', riskThresholds: { medium: 0.02, high: 0.24, source: 'metadata' },
+    }));
+    expect(r.floodPrediction).toMatchObject({ trainingData: 'SYNTHETIC', syntheticWarning: 'rótulo SINTÉTICO', riskThresholds: { high: 0.24 } });
+  });
   it('sem previsão anterior também aplica', () => {
     const p = { ...point(), floodPrediction: undefined };
     expect(applyPredictionToPoint(p, pred({})).floodPrediction?.riskLevel).toBe('HIGH');

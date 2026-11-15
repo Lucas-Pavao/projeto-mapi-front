@@ -22,6 +22,10 @@ export function applyPredictionToPoint(point: FloodPointResponseDTO, p: Predicti
       degradationReason: p.degradationReason ?? null,
       lastValidIssuedAt: p.lastValidIssuedAt ?? null,
       modelValidationStatus: p.modelValidationStatus,
+      // A previsão nova substitui a etiqueta da anterior; sem isso, um risco sintético chegaria pelo stream sem aviso.
+      riskThresholds: p.riskThresholds ?? null,
+      trainingData: p.trainingData ?? null,
+      syntheticWarning: p.syntheticWarning ?? null,
     },
   };
 }

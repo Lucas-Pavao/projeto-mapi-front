@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { degradationReasonSchema, isoSchema, modelValidationStatusSchema, riskLevelSchema } from '@/lib/apiSchemas';
+import { riskThresholdsSchema } from '@/features/map/schemas/floodPointResponse.schema';
 
 export const predictionSummarySchema = z.object({
   slug: z.string(),
@@ -12,6 +13,10 @@ export const predictionSummarySchema = z.object({
   degradationReason: degradationReasonSchema.nullable().optional(),
   lastValidIssuedAt: isoSchema.nullable().optional(),
   modelValidationStatus: modelValidationStatusSchema,
+  // Etapa 8 do IN1165: o stream e a série carregam a etiqueta do modelo (sintético) e os limiares.
+  riskThresholds: riskThresholdsSchema.nullable().optional(),
+  trainingData: z.string().nullable().optional(),
+  syntheticWarning: z.string().nullable().optional(),
 });
 export type PredictionSummary = z.infer<typeof predictionSummarySchema>;
 
