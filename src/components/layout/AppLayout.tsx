@@ -23,8 +23,8 @@ export const AppLayout: React.FC = () => {
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[200] focus:rounded-lg focus:bg-card focus:px-3 focus:py-2">
         Pular para o conteúdo
       </a>
-      {/* No celular o mapa tem a própria barra superior (MobileMapa); o menu abre pelo logotipo dela. */}
-      <div className={cn('no-print', location.pathname === '/map' && 'max-[640px]:hidden')}>
+      {/* No celular e no tablet (< 1024 px) o mapa tem a própria barra superior (MobileMapa); o menu abre pelo logotipo dela. */}
+      <div className={cn('no-print', location.pathname === '/map' && 'max-[1023px]:hidden')}>
         <Nav />
       </div>
       <main id="conteudo" className="relative min-h-0 flex-1 overflow-y-auto">

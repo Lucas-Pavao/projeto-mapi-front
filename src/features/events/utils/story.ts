@@ -1,6 +1,6 @@
 import type { Timeline } from '../schemas/timeline.schema';
 import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
-import { toTimePts } from '@/components/charts/chartMath';
+import { toTimePts, type TimePt } from '@/components/charts/chartMath';
 
 export interface StoryItem { t: number; title: string; tone: 'low' | 'moderate' | 'high' | 'unknown' | 'info' }
 
@@ -16,7 +16,8 @@ export function transitionText(name: string, from: RiskLevel | null, to: RiskLev
   return from === 'HIGH' ? `${name} saiu do risco alto` : `${name} voltou para baixo`;
 }
 
-export interface RiverLevels { flood?: number | null; alert?: number | null; name?: string }
+/** `points`: a série do rio já escolhida (pickRiver); sem ela, a primeira da API. */
+export interface RiverLevels { flood?: number | null; alert?: number | null; name?: string; points?: TimePt[] }
 
 /** "O que aconteceu": mudanças de classe por ponto, alagamentos confirmados e cruzamentos de maré e de cota do rio. */
 export function buildStory(t: Timeline, names: ReadonlyMap<string, string>, river: RiverLevels = {}): StoryItem[] {
@@ -37,7 +38,7 @@ export function buildStory(t: Timeline, names: ReadonlyMap<string, string>, rive
     const a = tide[i - 1].v, b = tide[i].v;
     if (a != null && b != null && a <= TIDE_HIGH_M && b > TIDE_HIGH_M) out.push({ t: tide[i].t, title: 'Maré acima de 2,0 m', tone: 'moderate' });
   }
-  const rv = toTimePts(t.river[0]?.points ?? []);
+  const rv = river.points ?? toTimePts(t.river[0]?.points ?? []);
   const rname = river.name ?? 'Rio';
   for (let i = 1; i < rv.length; i++) {
     const a = rv[i - 1].v, b = rv[i].v;

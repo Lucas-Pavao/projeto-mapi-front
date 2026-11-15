@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, CloudRain, Shield, Thermometer, Waves, Wind, type LucideIcon } from 'lucide-react';
+import { Activity, AlertTriangle, CloudRain, Droplets, Shield, Thermometer, Waves, Wind, type LucideIcon } from 'lucide-react';
 import { getSensorConfig } from './sensor';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
@@ -9,7 +9,11 @@ export interface LayerOption {
 }
 
 /** Camadas do painel do mapa, na ordem exibida. */
+/** Chuva medida em 3 h por estação canônica (Cemaden, ADR 0023 do projeto-mapi-api). */
+export const MEASURED_RAIN_LAYER = 'Chuva medida 3 h';
+
 export const LAYER_OPTIONS: readonly LayerOption[] = [
+  { id: MEASURED_RAIN_LAYER, icon: Droplets, color: 'text-chart-1' },
   { id: 'Mista / Meteo', icon: Activity, color: 'text-success' },
   { id: 'Geotécnica', icon: Shield, color: 'text-warning' },
   { id: 'Rio / Hidro', icon: Waves, color: 'text-chart-1' },
@@ -20,7 +24,7 @@ export const LAYER_OPTIONS: readonly LayerOption[] = [
   { id: 'Pontos críticos', icon: AlertTriangle, color: 'text-destructive' },
 ];
 
-export const DEFAULT_ACTIVE_LAYERS: readonly string[] = ['Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos críticos', 'Meteo', 'Vento', 'Sensor'];
+export const DEFAULT_ACTIVE_LAYERS: readonly string[] = [MEASURED_RAIN_LAYER, 'Mista / Meteo', 'Geotécnica', 'Rio / Hidro', 'Chuva', 'Pontos críticos', 'Meteo', 'Vento', 'Sensor'];
 
 /** Sensores com coordenada válida cuja camada está ativa. */
 export function filterSensorsForMap(sensors: SensorResponseDTO[], activeLayers: readonly string[]): SensorResponseDTO[] {

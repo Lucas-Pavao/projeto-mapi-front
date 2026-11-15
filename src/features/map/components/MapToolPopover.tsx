@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,10 @@ interface MapToolPopoverProps {
   badge?: boolean;
   children: React.ReactNode;
   panelClassName?: string;
+  /** Classes do contêiner (botão + painel). */
+  className?: string;
+  /** Espaço livre a manter abaixo do painel (px), p. ex. a folha de pontos do celular. Padrão: 16. */
+  bottomReserve?: number;
 }
 
 /**
@@ -26,14 +30,24 @@ interface MapToolPopoverProps {
  * para camadas, terreno e legenda ficarem organizados do mesmo jeito.
  */
 export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
-  id, label, stateLabel, icon, open, onOpenChange, active = false, badge = false, children, panelClassName,
+  id, label, stateLabel, icon, open, onOpenChange, active = false, badge = false, children, panelClassName, className, bottomReserve = 16,
 }) => {
   const [ownOpen, setOwnOpen] = useState(false);
   const isOpen = open ?? ownOpen;
   const setOpen = (v: boolean) => (onOpenChange ? onOpenChange(v) : setOwnOpen(v));
+  // O painel abre alinhado ao topo do botão: a altura vai até `bottomReserve` px do fim da tela, para não sair dela em telas baixas.
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const [maxHeight, setMaxHeight] = useState<number>();
+  useLayoutEffect(() => {
+    if (!isOpen || !anchorRef.current) return;
+    const fit = () => setMaxHeight(Math.max(160, window.innerHeight - anchorRef.current!.getBoundingClientRect().top - bottomReserve));
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, [isOpen, bottomReserve]);
 
   return (
-    <div className="pointer-events-auto relative shrink-0">
+    <div ref={anchorRef} className={cn('pointer-events-auto relative shrink-0', className)}>
       <button
         type="button"
         aria-expanded={isOpen}
@@ -54,6 +68,7 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
         <section
           id={id}
           aria-label={label}
+          style={maxHeight ? { maxHeight: `min(60vh, ${maxHeight}px)` } : undefined}
           className={cn(
             'custom-scrollbar absolute right-14 top-0 z-30 flex max-h-[60vh] w-72 flex-col overflow-y-auto overscroll-contain rounded-2xl border border-border bg-popover shadow-elevation-overlay animate-in slide-in-from-right-2 duration-200',
             panelClassName,

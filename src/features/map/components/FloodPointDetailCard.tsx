@@ -27,6 +27,7 @@ import { getSafeFormattedDate } from '../utils/sensor';
 import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/components/risk/risk';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
+import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { InfoHint } from './InfoHint';
@@ -215,6 +216,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                   </div>
                   
                   {showsExperimentalLabel(prediction) && <ExperimentalBadge className="text-xs" />}
+                  <PredictionProvenance prediction={prediction} />
 
                   <div className="flex flex-wrap gap-4">
                     <div className="flex flex-col items-start gap-1">

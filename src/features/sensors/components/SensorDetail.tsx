@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
 import type { SensorFreshness } from '../schemas/sensor.schema';
 import { SENSOR_TYPE_UNIT, formatAge } from '../utils/age';
-import { TIDE_HIGH_M, rainAccum, seriesOf, tideRising, tideSide, toCsv, valueAt, type SideRow } from '../utils/sensorView';
+import { TIDE_HIGH_M, rainAccum, seriesKeys, seriesOf, tideRising, tideSide, toCsv, valueAt, type SideRow } from '../utils/sensorView';
 import { SeriesChart, type RefLine } from './SeriesChart';
 
 interface Props {
@@ -55,7 +55,7 @@ function build(p: Props): View {
   const place = [s.sensorId, s.municipality, s.source].filter(Boolean).join(' · ');
   const value = s.stale || s.value == null ? '—' : `${num(s.value, s.type === 'RIVER_LEVEL' ? 2 : 1)} ${unit}`;
   if (sel.kind === 'rio') {
-    const pts = seriesOf(timeline, 'rio', s.sensorId);
+    const pts = seriesOf(timeline, 'rio', seriesKeys(s));
     const lv = [{ v: levelOf(s, 'riverFloodLevel'), n: 'Inundação' }, { v: levelOf(s, 'riverAlertLevel'), n: 'Alerta' }, { v: levelOf(s, 'riverPreAlertLevel'), n: 'Pré-alerta' }];
     const lines: RefLine[] = [];
     if (lv[0].v != null) lines.push({ value: lv[0].v, color: 'var(--risk-high-edge)', text: 'var(--risk-high-text)', label: num(lv[0].v, 2) });
@@ -85,7 +85,7 @@ function build(p: Props): View {
       sideNote: 'A API guarda riverPreAlertLevel, riverAlertLevel e riverFloodLevel publicados pela APAC; sem eles, a cota fica em "—".', source: s.source ?? '—', id: s.sensorId,
     };
   }
-  const pts = seriesOf(timeline, 'chuva', s.sensorId);
+  const pts = seriesOf(timeline, 'chuva', seriesKeys(s));
   const max = Math.max(10, ...pts.map((q) => q.v ?? 0));
   const day = pts.filter((q) => q.t <= now + 1).map((q) => q.v ?? 0);
   const acc = (h: number) => rainAccum(pts, now, h);

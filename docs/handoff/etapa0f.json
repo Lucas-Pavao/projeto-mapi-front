@@ -1,0 +1,45 @@
+{
+  "bloco": "FRONT",
+  "etapa": "0F",
+  "data": "2026-11-15",
+  "repositorio": "projeto-mapi-front",
+  "branch": "feat/in1165-etapa0f (a partir de fix/saude-dos-dados @ dbb9476)",
+  "le": "projeto-mapi-api/docs/handoff/etapa0.json",
+  "citacao_obrigatoria": "DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC (constante CEMADEN_ATTRIBUTION em src/features/map/utils/measuredRain.ts)",
+  "biblioteca_de_mapa": "MapLibre GL 5 via react-map-gl 8 e o wrapper src/components/ui/map.tsx (MapMarker, MarkerContent, MapPopup)",
+  "rota_consumida": "GET /api/stations/rain-accumulations (proxy do nginx, mesma origem)",
+  "componentes_novos": {
+    "MeasuredRainLayer": "src/features/map/components/MeasuredRainLayer.tsx: marcadores + detalhe (popup à direita no computador, BottomSheet no celular), seleção local",
+    "MeasuredRainMarkers": "marcador quadrado com o acumulado de 3 h; atributo data-kind = value | zero | no-data",
+    "MeasuredRainDetail": "acumulados de 1 a 120 h, última leitura em Recife (UTC−3), códigos de origem (apelidos), citação",
+    "MeasuredRainLegend": "legenda 'Chuva no mapa': Medida × zero × sem dado × Reanálise (modelo), horário de cálculo, citação"
+  },
+  "hooks_e_dados": {
+    "useMeasuredRain": "TanStack Query, chave ['stations','rain-accumulations'], refetch 5 min, só com a camada ligada",
+    "useMeasuredRainLayer": "devolve { query, stations (canônicas com coordenada), aliasCodes (códigos CEMADEN:<code>) }",
+    "schema": "src/features/map/schemas/measuredRain.schema.ts (zod; rainOrigin precisa ser 'MEASURED'); tipos MeasuredRain e StationAccumulation via z.infer",
+    "service": "src/features/map/services/station.service.ts (stationService.getMeasuredRain)"
+  },
+  "chaves_de_dado_novas": {
+    "camada": "MEASURED_RAIN_LAYER = 'Chuva medida 3 h' em utils/layers.ts, ligada por padrão",
+    "estado_visual": "measuredKind(v): 'value' (>0) | 'zero' (0) | 'no-data' (null)",
+    "deduplicacao": "withoutCanonicalDuplicates(sensors, aliasCodes): com a camada ligada, sensor source='APAC/Cemaden' cujo code é apelido de canônica sai do mapa"
+  },
+  "medido_x_reanalise": "o único acumulado de 3 h/24 h que já existia na tela é o do cartão LocationAnalysisCard (Open-Meteo, previsão ou reanálise); ganhou a etiqueta 'modelo' e o texto 'estimados, não medidos'. A legenda explica as duas origens por escrito.",
+  "verificacao": {
+    "tsc_eslint": "limpos",
+    "vitest": "423/423 em 4 de 5 rodadas; 1 rodada com 1 falha intermitente não identificada (não reproduziu em 3 rodadas seguidas)",
+    "testes_novos": "utils/measuredRain.test.ts (5), components/MeasuredRain.test.tsx (4)",
+    "visual_dado_real": "2026-11-15, Chrome em localhost:3000 logado pelo Lucas: camada com 0,0 mm e 'sem dado' tracejado; detalhe de Areias e Campina do Barreto (janelas sem dado ao lado de 0,0 mm); legenda; etiqueta 'modelo' no cartão de local; com a rota em 503 a legenda diz 'Chuva medida indisponível agora' e os pluviômetros ao vivo voltam",
+    "ciclo_da_api_no_teste": "81 estações, 51 com acumulado de 3 h, 15 NO_DATA, 13 fora do cadastro (log de MeasuredRainAccumulationServiceImpl)"
+  },
+  "para_a_etapa_8": {
+    "painel_de_risco": "FloodPointPopup, FloodPointDetailCard, MobilePointSheet e RiskBadge/RiskLegend (src/components/risk); limiar e aviso de sintético entram nesses",
+    "contrato_predicao_front": "src/features/map/schemas/floodPointResponse.schema.ts e src/features/points/schemas/prediction.schema.ts"
+  },
+  "limitacoes": [
+    "No celular não há painel de camadas; a camada fica sempre ligada e a legenda aparece dentro da folha da estação.",
+    "lastReadingUtc vem da série gravada pelo MAPi: estação só da PED (sem coleta ao vivo) mostra 'sem leitura nos últimos 5 dias' mesmo quando a PED tem acumulado.",
+    "Reconstruir o mapi-front pelo compose recria o mapi-api (depends_on): ~1,5 min de 503 na rota até o primeiro ciclo."
+  ]
+}

@@ -13,6 +13,7 @@ vi.mock('@/components/ui/map', () => ({
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapLayerPanel } from './MapLayerPanel';
 import { MapUserIsland } from './MapUserIsland';
+import { RiskLegendControl } from './RiskLegendControl';
 import type { FloodPointResponseDTO } from '../types';
 
 afterEach(cleanup);
@@ -55,6 +56,19 @@ describe('MapLayerPanel', () => {
     expect(screen.getByRole('button', { name: 'Vento' })).toHaveAttribute('aria-pressed', 'false');
     fireEvent.click(screen.getByRole('button', { name: 'Vento' }));
     expect(onToggle).toHaveBeenCalledWith('Vento');
+  });
+});
+
+describe('RiskLegendControl', () => {
+  it('fica recolhida no botão e abre com os quatro níveis', () => {
+    const onOpenChange = vi.fn();
+    const { rerender } = render(<RiskLegendControl open={false} onOpenChange={onOpenChange} />);
+    expect(screen.queryByRole('region', { name: 'Níveis de risco' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Níveis de risco' }));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    rerender(<RiskLegendControl open onOpenChange={onOpenChange} />);
+    const panel = screen.getByRole('region', { name: 'Níveis de risco' });
+    expect(panel.querySelectorAll('[data-risk]')).toHaveLength(4);
   });
 });
 

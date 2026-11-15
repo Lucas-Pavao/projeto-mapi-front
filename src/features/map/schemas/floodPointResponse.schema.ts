@@ -37,6 +37,14 @@ export const modelValidationStatusSchema = z.enum(MODEL_VALIDATION_STATUSES).opt
 
 export const degradationReasonSchema = z.enum(DEGRADATION_REASONS);
 
+/** Limiares de probabilidade do modelo (vêm do metadata da IA, escolhidos na validação). */
+export const riskThresholdsSchema = z.object({
+  medium: z.number(),
+  high: z.number(),
+  source: z.string().nullable().optional(),
+});
+export type RiskThresholds = z.infer<typeof riskThresholdsSchema>;
+
 const floodPredictionSchema = z
   .object({
     riskLevel: riskLevelSchema,
@@ -51,9 +59,23 @@ const floodPredictionSchema = z
     degradationReason: degradationReasonSchema.nullable().optional(),
     lastValidIssuedAt: z.string().nullable().optional(),
     contributors: z
-      .array(z.object({ featureId: z.string(), label: z.string(), contribution: z.number() }))
+      .array(
+        z.object({
+          featureId: z.string(),
+          label: z.string(),
+          contribution: z.number(),
+          // Etapa 8 do IN1165: valor da feature em unidade física (modelo v2); ausente em previsões antigas.
+          value: z.number().nullable().optional(),
+          unit: z.string().nullable().optional(),
+        }),
+      )
       .optional(),
     imputedFeatures: z.array(z.object({ featureId: z.string(), label: z.string() })).optional(),
+    // Etapa 8 do IN1165 (por adição): limiares que produziram a faixa, fonte da chuva do treino e aviso de sintético.
+    riskThresholds: riskThresholdsSchema.nullable().optional(),
+    rainSource: z.string().nullable().optional(),
+    trainingData: z.string().nullable().optional(),
+    syntheticWarning: z.string().nullable().optional(),
   })
   .passthrough();
 

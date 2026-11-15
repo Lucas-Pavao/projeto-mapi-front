@@ -24,6 +24,29 @@ describe('AdminDataPage', () => {
     expect(screen.getByText(/2 com atraso, falha ou quarentena/)).toBeInTheDocument();
   });
 
+  it('junta as chaves da API nas fontes da tela e marca fonte sem ciclo como sob demanda', async () => {
+    const live = new Date(Date.now() - 5 * 60_000).toISOString();
+    server.use(http.get('/api/admin/ingestion/sources', () => HttpResponse.json([
+      { source: 'ANA_SOAP', status: 'OK', expectedEveryMinutes: 15, lastSuccessAt: live, lastRunId: 'a1', rowsLast24h: 10 },
+      { source: 'APAC_METEO24H', status: 'QUARANTINED', expectedEveryMinutes: 5, lastSuccessAt: live, lastRunId: 'b1', rowsLast24h: 0 },
+      { source: 'APAC_PORTAL', status: 'IDLE', expectedEveryMinutes: null, lastSuccessAt: null, lastRunId: null, rowsLast24h: 0 },
+      { source: 'TABUAMARE_PE02', status: 'OK', expectedEveryMinutes: null, lastSuccessAt: live, lastRunId: 'c1', rowsLast24h: 54 },
+      { source: 'DHN_TABUA_PE02', status: 'IDLE', expectedEveryMinutes: null, lastSuccessAt: null, lastRunId: null, rowsLast24h: 0 },
+      { source: 'TIDE_PE02_HOURLY', status: 'IDLE', expectedEveryMinutes: null, lastSuccessAt: null, lastRunId: null, rowsLast24h: 0 },
+    ])));
+    renderPage(<AdminDataPage />);
+    const list = await screen.findByRole('list', { name: 'Fontes de dados' });
+    expect(list.querySelectorAll('li')).toHaveLength(3);
+    const apac = list.querySelector('[data-source="APAC"]') as HTMLElement;
+    expect(within(apac).getByText('Em quarentena')).toBeInTheDocument();
+    expect(within(apac).getByText('A última coleta ficou toda na quarentena.')).toBeInTheDocument();
+    const tabua = list.querySelector('[data-source="TABUA"]') as HTMLElement;
+    expect(within(tabua).getByText('Sob demanda')).toBeInTheDocument();
+    expect(within(tabua).getByText('TabuaMare / DHN')).toBeInTheDocument();
+    expect(within(list.querySelector('[data-source="ANA"]') as HTMLElement).getByText('ANA · telemetria')).toBeInTheDocument();
+    expect(screen.getByText(/de 3 fontes em dia/)).toBeInTheDocument();
+  });
+
   it('lastRunId é UUID (texto), não número', async () => {
     renderPage(<AdminDataPage />);
     expect(await screen.findByRole('button', { name: 'Ver execuções de CEMADEN' })).toHaveTextContent('7c9e6679');

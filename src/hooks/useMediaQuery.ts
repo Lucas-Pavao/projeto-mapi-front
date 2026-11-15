@@ -14,3 +14,9 @@ export function useMediaQuery(query: string): boolean {
 
 /** Celular: largura <= 640 px. */
 export const useIsMobile = () => useMediaQuery('(max-width: 640px)');
+
+/**
+ * Mapa compacto: largura < 1024 px. Abaixo disso o layout de desktop (painel de 360 px + coluna de 300 px) não cabe,
+ * e o mapa usa o layout do celular também no tablet.
+ */
+export const useIsCompactMap = () => useMediaQuery('(max-width: 1023px)');

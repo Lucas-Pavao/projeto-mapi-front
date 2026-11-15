@@ -11,7 +11,9 @@ const n = (v: number | null | undefined) => (v == null ? '—' : v.toLocaleStrin
 
 const runColor = (status: string | null | undefined) => {
   const s = (status ?? '').toUpperCase();
-  if (s === 'SUCCEEDED') return 'var(--success)';
+  // A API grava OK/PARTIAL/FAILED/RUNNING (ingestion_run.status); SUCCEEDED é o nome do contrato antigo.
+  if (s === 'OK' || s === 'SUCCEEDED') return 'var(--success)';
+  if (s === 'PARTIAL') return 'var(--warning)';
   if (s === 'FAILED') return 'var(--destructive)';
   if (s === 'RUNNING') return 'var(--info)';
   return 'var(--muted-foreground)';
