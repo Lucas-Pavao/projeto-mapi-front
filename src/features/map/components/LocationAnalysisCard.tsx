@@ -122,8 +122,10 @@ export const LocationAnalysisCard: React.FC<LocationAnalysisCardProps> = ({
                 <Stat label="24 h" value={fmt(agg?.rain24h)} unit="mm" icon={<Droplets className="text-chart-1" />} />
               </div>
               {agg?.rainSource && (
-                <p className="m-0 px-0.5 text-2xs text-muted-foreground">
-                  Acumulados: {agg.rainSource === 'OPEN_METEO_FORECAST' ? 'Open-Meteo, últimas 24 h' : 'reanálise do Open-Meteo'}
+                <p className="m-0 flex items-center gap-1.5 px-0.5 text-2xs text-muted-foreground">
+                  <span className="inline-flex h-[18px] items-center rounded-[4px] border-[1.5px] border-warning px-1 font-mono text-[10px] font-semibold text-warning">modelo</span>
+                  {/* Os acumulados de 3 h e 24 h deste cartão são estimados por modelo, não medidos (ver legenda "Chuva no mapa"). */}
+                  Acumulados {agg.rainSource === 'OPEN_METEO_FORECAST' ? 'da previsão do Open-Meteo, últimas 24 h' : 'da reanálise do Open-Meteo'}: estimados, não medidos
                 </p>
               )}
             </Section>

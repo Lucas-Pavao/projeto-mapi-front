@@ -39,7 +39,11 @@ import { SensorMarkers } from './SensorMarkers';
 import { RiskLegendControl } from './RiskLegendControl';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
-import { DEFAULT_ACTIVE_LAYERS, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
+import { DEFAULT_ACTIVE_LAYERS, MEASURED_RAIN_LAYER, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
+import { withoutCanonicalDuplicates } from '../utils/measuredRain';
+import { useMeasuredRainLayer } from '../hooks/useMeasuredRainLayer';
+import { MeasuredRainLayer } from './MeasuredRainLayer';
+import { MeasuredRainLegend } from './MeasuredRainLegend';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
 import type { TerrainStatus } from '../utils/terrain';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
@@ -114,7 +118,13 @@ export const MapView: React.FC = () => {
     (id: string) => setActiveLayers((prev) => (prev.includes(id) ? prev.filter((l) => l !== id) : [...prev, id])),
     [],
   );
-  const filteredSensorsForMap = useMemo(() => filterSensorsForMap(sensors, activeLayers), [sensors, activeLayers]);
+  // Chuva medida (Cemaden): com a camada ligada, o pluviômetro ao vivo que já é apelido de uma estação canônica sai do mapa.
+  const measuredOn = activeLayers.includes(MEASURED_RAIN_LAYER);
+  const measured = useMeasuredRainLayer(measuredOn);
+  const filteredSensorsForMap = useMemo(
+    () => withoutCanonicalDuplicates(filterSensorsForMap(sensors, activeLayers), measured.aliasCodes),
+    [sensors, activeLayers, measured.aliasCodes],
+  );
   const filteredFloodPointsForMap = useMemo(() => filterFloodPointsForMap(floodPoints, activeLayers), [floodPoints, activeLayers]);
 
   // Highlighting logic
@@ -200,6 +210,14 @@ export const MapView: React.FC = () => {
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
               <RiskLegendControl {...toolProps('legend')} />
             </div>
+            {measuredOn && (
+              <MeasuredRainLegend
+                data={measured.query.data}
+                isLoading={measured.query.isLoading}
+                isError={measured.query.isError}
+                className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3"
+              />
+            )}
           </div>
         </>
       )}
@@ -248,6 +266,7 @@ export const MapView: React.FC = () => {
             floodPoints={filteredFloodPointsForMap}
             onSelect={selectSensor}
           />
+          <MeasuredRainLayer stations={measured.stations} data={measured.query.data} isMobile={isMobile} onOpen={closePopups} />
           {!isMobile && overview.tideNow && <TideMarker tide={overview.tideNow} />}
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
