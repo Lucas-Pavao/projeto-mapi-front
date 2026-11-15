@@ -28,13 +28,16 @@ const fill = (user = 'ana', pass = 'segredo123') => {
 };
 
 describe('LoginPage', () => {
-  it('entra: POST /api/auth/login e avisa o contexto', async () => {
+  it('entra: POST /api/auth/login e avisa o contexto com o perfil do /me', async () => {
     let body: unknown = null;
-    server.use(http.post('/api/auth/login', async ({ request }) => { body = await request.json(); return new HttpResponse(null, { status: 200 }); }));
+    server.use(
+      http.post('/api/auth/login', async ({ request }) => { body = await request.json(); return new HttpResponse(null, { status: 200 }); }),
+      http.get('/api/auth/me', () => HttpResponse.json({ id: 1, username: 'ana', email: null, name: null, role: 'ADMIN' })),
+    );
     open();
     fill();
     fireEvent.click(screen.getByRole('button', { name: 'ENTRAR' }));
-    await waitFor(() => expect(state.login).toHaveBeenCalledWith({ username: 'ana' }));
+    await waitFor(() => expect(state.login).toHaveBeenCalledWith(expect.objectContaining({ username: 'ana', role: 'ADMIN' })));
     expect(body).toEqual({ username: 'ana', password: 'segredo123' });
   });
 
@@ -63,6 +66,7 @@ describe('LoginPage', () => {
     server.use(
       http.post('/api/auth/register', async ({ request }) => { body = await request.json(); return new HttpResponse(null, { status: 201 }); }),
       http.post('/api/auth/login', () => new HttpResponse(null, { status: 200 })),
+      http.get('/api/auth/me', () => HttpResponse.json({ id: 2, username: 'bia', email: 'bia@exemplo.org', name: null, role: 'USER' })),
     );
     open('/login?convite=tok-123');
     expect(await screen.findByText(/Você chegou por um convite/)).toBeInTheDocument();
@@ -71,7 +75,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('E-mail (opcional)'), { target: { value: 'bia@exemplo.org' } });
     fireEvent.click(screen.getByRole('button', { name: 'CRIAR CONTA' }));
     await waitFor(() => expect(body).toEqual({ username: 'bia', password: 'outrasenha1', email: 'bia@exemplo.org', inviteToken: 'tok-123' }));
-    await waitFor(() => expect(state.login).toHaveBeenCalledWith({ username: 'bia' }));
+    await waitFor(() => expect(state.login).toHaveBeenCalledWith(expect.objectContaining({ username: 'bia', role: 'USER' })));
   });
 
   it('convite inválido (422) tem mensagem própria', async () => {
