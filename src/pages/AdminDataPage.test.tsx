@@ -96,4 +96,29 @@ describe('AdminDataPage', () => {
     renderPage(<AdminDataPage />);
     expect(await screen.findByRole('alert', {}, { timeout: 3000 })).toBeInTheDocument();
   });
+
+  it('CEMADEN_PED é uma fonte própria, separada do Cemaden ao vivo', async () => {
+    const live = new Date(Date.now() - 5 * 60_000).toISOString();
+    server.use(http.get('/api/admin/ingestion/sources', () => HttpResponse.json([
+      { source: 'CEMADEN', status: 'OK', expectedEveryMinutes: 3, lastSuccessAt: live, lastRunId: 'a1', rowsLast24h: 10 },
+      { source: 'CEMADEN_PED', status: 'QUARANTINED', expectedEveryMinutes: 10, lastSuccessAt: live, lastRunId: 'b1', rowsLast24h: 2000 },
+    ])));
+    renderPage(<AdminDataPage />);
+    const list = await screen.findByRole('list', { name: 'Fontes de dados' });
+    const ped = list.querySelector('[data-source="CEMADEN_PED"]') as HTMLElement;
+    expect(within(ped).getByText('Cemaden PED')).toBeInTheDocument();
+    expect(list.querySelector('[data-source="CEMADEN"]')).not.toBeNull();
+  });
+
+  it('grade estação × mês: ícone e texto por estado, motivo na descrição, citação do Cemaden', async () => {
+    renderPage(<AdminDataPage />);
+    const grid = await screen.findByTestId('month-grid');
+    await within(grid).findByText('Sintético: Areias');
+    expect(grid.querySelectorAll('[data-status="OK"]')).toHaveLength(3);
+    const fail = grid.querySelector('[data-status="FAIL"]') as HTMLElement;
+    expect(fail.getAttribute('aria-label')).toContain('reprovada no mês: zero travado');
+    expect(grid.querySelector('[data-status="UNCHECKED"]')).not.toBeNull();
+    expect(grid).toHaveTextContent('regra chuva-ponto-v4');
+    expect(grid).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
+  });
 });

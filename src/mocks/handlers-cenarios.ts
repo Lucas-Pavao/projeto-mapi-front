@@ -36,7 +36,19 @@ export const hourlyHours = (): StationHour[] => {
   });
 };
 
+export const monthChecksMock = () => {
+  const months = ['2026-09-01T00:00:00Z', '2026-10-01T00:00:00Z', '2026-11-01T00:00:00Z'];
+  return {
+    ruleVersion: 'chuva-ponto-v4', months,
+    stations: [
+      { stationId: 'SINT-A', name: 'Sintético: Areias', cells: months.map((monthStartUtc) => ({ monthStartUtc, status: 'OK', reasons: [] })) },
+      { stationId: 'SINT-C', name: 'Sintético: Boa Viagem', cells: [{ monthStartUtc: months[1], status: 'UNCHECKED', reasons: ['FEW_WET_NEIGHBORS'] }, { monthStartUtc: months[2], status: 'FAIL', reasons: ['STUCK_ZERO'] }] },
+    ],
+  };
+};
+
 export const cenariosHandlers = [
+  http.get('/api/admin/stations/month-checks', () => HttpResponse.json(monthChecksMock())),
   http.get('/api/stations/canonical', () => HttpResponse.json(canonicalStations)),
   http.get('/api/stations/rain-accumulations', () => HttpResponse.json({
     computedAtUtc: null, fetchedAtUtc: new Date().toISOString(), stale: false, timezone: 'UTC', unit: 'mm', rainOrigin: 'MEASURED', source: 'sintético', attribution: ATTRIBUTION,

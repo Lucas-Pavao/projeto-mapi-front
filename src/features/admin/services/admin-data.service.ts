@@ -4,6 +4,7 @@ import {
   dataHealthSchema, ingestionRunPageSchema, ingestionSourceSchema, inviteSchema, userPageSchema, userSummarySchema,
   type DataHealth, type IngestionRunPage, type IngestionSource, type Invite, type UserPage, type UserPatch, type UserSummary,
 } from '../schemas/admin.schema';
+import { monthChecksSchema, type MonthChecks } from '../schemas/month-checks.schema';
 import type { Role } from '@/lib/apiSchemas';
 
 export interface RunFilter { source?: string; status?: string; page?: number; size?: number }
@@ -21,6 +22,11 @@ export const adminDataService = {
   async checkIntegrity(): Promise<DataHealth[]> {
     const { data } = await api.get<unknown>('/api/admin/ingestion/check-integrity');
     return z.array(dataHealthSchema).parse(data);
+  },
+  /** Grade estação × mês da checagem espacial (B4). Sem datas, a API devolve os últimos 6 meses (máximo 24). */
+  async monthChecks(): Promise<MonthChecks> {
+    const { data } = await api.get<unknown>('/api/admin/stations/month-checks');
+    return monthChecksSchema.parse(data);
   },
   async users(page = 0, size = 20): Promise<UserPage> {
     const { data } = await api.get<unknown>('/api/admin/users', { params: { page, size } });

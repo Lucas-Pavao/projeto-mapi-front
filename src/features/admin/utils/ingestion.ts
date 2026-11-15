@@ -14,11 +14,12 @@ export const isProblem = (s: IngestionStatus) => s === 'FAILING' || s === 'QUARA
 
 
 /**
- * As 6 fontes da tela (mockup "Saúde dos dados"). A API lista cada chave do source_registry e do ingestion_run
+ * As 7 fontes da tela (mockup "Saúde dos dados"). A API lista cada chave do source_registry e do ingestion_run
  * (ex.: TABUAMARE_PE02, DHN_TABUA_PE02 e TIDE_PE02_HOURLY são a mesma maré); aqui elas viram uma fonte só.
  */
 export const SOURCE_GROUPS: { id: string; name: string; what: string; members: string[] }[] = [
   { id: 'CEMADEN', name: 'APAC · Cemaden', what: 'Chuva (pluviômetros)', members: ['CEMADEN'] },
+  { id: 'CEMADEN_PED', name: 'Cemaden PED', what: 'Chuva validada (blocos de 10 min)', members: ['CEMADEN_PED'] },
   { id: 'APAC', name: 'APAC · meteorologia', what: 'Chuva e nível de rio', members: ['APAC_METEO24H', 'APAC_PORTAL', 'APAC'] },
   { id: 'ANA', name: 'ANA · telemetria', what: 'Chuva e rio', members: ['ANA_SOAP', 'ANA'] },
   {

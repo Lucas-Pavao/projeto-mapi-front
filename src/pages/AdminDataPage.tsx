@@ -4,6 +4,7 @@ import { useIngestionSources, useIntegrityCheck } from '@/features/admin/hooks/u
 import { SourceCard } from '@/features/admin/components/SourceCard';
 import { RunsPanel } from '@/features/admin/components/RunsPanel';
 import { IntegrityPanel } from '@/features/admin/components/IntegrityPanel';
+import { MonthGrid } from '@/features/admin/components/MonthGrid';
 import { groupSources, isProblem } from '@/features/admin/utils/ingestion';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 
@@ -49,6 +50,7 @@ export const AdminDataPage: React.FC = () => {
                 <RunsPanel sources={items.map((s) => s.source)} source={source} onSource={setSource} integrityBusy={integrity.isPending} onCheckIntegrity={check} />
                 <IntegrityPanel data={integrity.data} error={integrity.error} pending={integrity.isPending} checkedAt={checkedAt} names={names} />
               </div>
+              <MonthGrid />
             </>
           );
         }}
