@@ -1,4 +1,4 @@
-import { Activity, Bell, ChartLine, Database, FileText, Map, MapPin, MessageSquareWarning, Radio, SlidersHorizontal, Waves } from 'lucide-react';
+import { Activity, Bell, ChartLine, CloudRain, Database, FileText, Map, MapPin, MessageSquareWarning, Radio, SlidersHorizontal, Waves } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Role } from '@/lib/apiSchemas';
 
@@ -23,6 +23,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Alertas', to: '/alertas', icon: Bell, minRole: 'OPERADOR', priority: true, badge: 'alerts' },
   { label: 'Evento', to: '/eventos', icon: Activity, minRole: 'USER', priority: true },
   { label: 'Simulador', to: '/modelo/simulador', icon: SlidersHorizontal, minRole: 'USER', priority: false },
+  { label: 'Chuva', to: '/chuva', icon: CloudRain, minRole: 'USER', priority: false },
   { label: 'Modelo', to: '/modelo', icon: ChartLine, minRole: 'USER', priority: false },
   { label: 'Maré', to: '/mare', icon: Waves, minRole: 'USER', priority: false },
   { label: 'Dados', to: '/admin/dados', icon: Database, minRole: 'ADMIN', priority: false },
