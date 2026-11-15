@@ -1,12 +1,14 @@
-import React, { useId, useMemo } from 'react';
+import React, { useId } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ModalDialog } from '@/components/ui/modal-dialog';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
 import { RISK_MEANING, getRiskVisual, showsExperimentalLabel } from '@/components/risk/risk';
-import { scaleLinear } from '@/components/charts/chartMath';
-import { usePredictionSeries } from '@/features/points/hooks/usePredictionSeries';
+import { MobileProbabilityChart } from './MobileProbabilityChart';
+import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
+import { contributorRows } from '@/features/points/utils/contributors';
+import { distanceText } from '@/features/points/utils/rainCandidates';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
@@ -24,50 +26,10 @@ interface Props {
   onReport: () => void;
 }
 
-const W = 354;
-const H = 90;
 const nav = 'flex size-11 items-center justify-center rounded-[10px] border border-border bg-transparent text-foreground';
 const tile = 'rounded-xl bg-muted p-3';
 const tileLabel = 'text-[11px] text-muted-foreground';
 const tileValue = 'font-mono text-lg leading-6 font-extrabold';
-
-/** Probabilidade ao longo do dia: bandas de risco, área e linha (o dado nulo abre buraco) e a marca de agora. */
-const ProbabilityChart: React.FC<{ slug: string }> = ({ slug }) => {
-  const series = usePredictionSeries(slug, 24);
-  const m = useMemo(() => {
-    const items = [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
-    const from = Date.parse(series.data?.from ?? '') || 0;
-    const to = Date.parse(series.data?.to ?? '') || 1;
-    const x = scaleLinear(from, to, 0, W);
-    const y = scaleLinear(0, 1, H, 0);
-    const runs: Array<Array<[number, number]>> = [];
-    let cur: Array<[number, number]> = [];
-    for (const i of items) {
-      const t = Date.parse(i.issuedAt);
-      if (i.riskLevel === 'UNKNOWN' || i.probability == null || !Number.isFinite(t)) {
-        if (cur.length) runs.push(cur);
-        cur = [];
-      } else cur.push([x(t), y(i.probability)]);
-    }
-    if (cur.length) runs.push(cur);
-    const vals = items.filter((i) => i.riskLevel !== 'UNKNOWN' && i.probability != null).map((i) => i.probability as number);
-    return {
-      lines: runs.filter((r) => r.length > 1).map((r) => r.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(' ')),
-      areas: runs.filter((r) => r.length > 1).map((r) => `${r[0][0].toFixed(1)},${H} ${r.map(([a, b]) => `${a.toFixed(1)},${b.toFixed(1)}`).join(' ')} ${r[r.length - 1][0].toFixed(1)},${H}`),
-      nowX: x(to),
-      label: vals.length ? `Probabilidade nas últimas 24 horas: de ${Math.round(Math.min(...vals) * 100)}% a ${Math.round(Math.max(...vals) * 100)}%` : 'Probabilidade nas últimas 24 horas: sem previsão válida na janela',
-    };
-  }, [series.data]);
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={m.label} className="block h-[90px] w-full">
-      <rect x={0} y={0} width={W} height={18} fill="var(--risk-high)" opacity={0.12} />
-      <rect x={0} y={18} width={W} height={27} fill="var(--risk-moderate)" opacity={0.1} />
-      {m.areas.map((p) => <polygon key={p.slice(0, 30)} points={p} fill="var(--primary)" opacity={0.2} />)}
-      {m.lines.map((p) => <polyline key={p.slice(0, 30)} points={p} fill="none" stroke="var(--primary)" strokeWidth={2.5} />)}
-      <line x1={m.nowX} x2={m.nowX} y1={0} y2={H} stroke="var(--foreground)" strokeWidth={1.5} />
-    </svg>
-  );
-};
 
 /** Detalhe do ponto no celular (MobilePonto.dc.html): folha de até 640 px sobre o mapa, com anterior/próximo e "Reportar cenário no local". */
 export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingStatus, index, total, onPrev, onNext, onBack, onReport }) => {
@@ -81,7 +43,9 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
   const rain3h = precise?.historicalAggregates?.rain3h;
   const tide = precise?.tideHeightTabuaMare;
   const now = precise?.precipitation;
-  const contributors = [...(prediction?.contributors ?? [])].sort((a, b) => b.contribution - a.contribution).slice(0, 3);
+  const contributors = contributorRows(prediction?.contributors);
+  const rain = useRainCandidates(point.slug).data;
+  const usedRain = rain?.candidates.find((c) => c.stationId === rain.usedStationId);
   const clock = formatRecife(new Date().toISOString())?.slice(-5).replace(':', 'h');
   return (
     <ModalDialog label="Detalhe do ponto" labelledBy={titleId} onClose={onBack} className="pointer-events-none fixed inset-0 z-[60]">
@@ -106,11 +70,15 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
           {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
           <PredictionProvenance prediction={prediction} />
         </div>
-        <ProbabilityChart slug={point.slug} />
+        <MobileProbabilityChart slug={point.slug} />
         {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[15px] leading-[22px]" /> : <p className="m-0 text-[15px] leading-[22px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
         <div className="grid grid-cols-2 gap-2">
           <div className={tile}><div className={tileLabel}>Chuva 3 h</div><div className={tileValue}>{rain3h != null ? `${fmtNum(rain3h)} mm` : dash}</div></div>
-          <div className={tile}><div className={tileLabel}>Chuva agora</div><div className={tileValue}>{now != null ? `${fmtNum(now)} mm/h` : dash}</div></div>
+          <div className={tile}>
+            <div className={tileLabel}>Chuva agora</div>
+            <div className={tileValue}>{rain ? (rain.valueMm != null && usedRain ? `${fmtNum(rain.valueMm)} mm/h` : '—') : now != null ? `${fmtNum(now)} mm/h` : dash}</div>
+            {rain && <div className="text-[11px] text-muted-foreground">{usedRain && rain.valueMm != null ? `${usedRain.name} · ${distanceText(usedRain.distanceM)}` : 'nenhuma estação com valor'}</div>}
+          </div>
           <div className={tile}><div className={tileLabel}>Maré</div><div className={tileValue}>{tide != null ? `${fmtNum(tide, 2)} m` : dash}</div></div>
           <div className={tile}><div className={tileLabel}>Mecanismo</div><div className="text-[13px] leading-[17px] font-bold">{point.description ?? '—'}</div></div>
         </div>
@@ -118,9 +86,9 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
           <div className="flex flex-col gap-2">
             <span className="text-xs font-extrabold tracking-[.06em] text-muted-foreground">O QUE MAIS PESOU</span>
             {contributors.map((c) => (
-              <div key={c.featureId} className="flex flex-col gap-[3px]">
-                <div className="flex justify-between text-[13px]"><span>{c.label}</span><span className="font-mono font-bold">{Math.round(c.contribution * 100)}%</span></div>
-                <div className="h-1.5 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, c.contribution * 100))}%` }} /></div>
+              <div key={c.id} className="flex flex-col gap-[3px]">
+                <div className="flex justify-between gap-2 text-[13px]"><span>{c.label}{c.valueText && <>: <strong className="font-mono">{c.valueText}</strong></>}</span><span className="font-mono font-bold">{c.ppText}</span></div>
+                <div className="h-1.5 rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${c.width.toFixed(1)}%` }} /></div>
               </div>
             ))}
           </div>

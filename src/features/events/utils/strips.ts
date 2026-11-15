@@ -1,4 +1,5 @@
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
+import { riskOf } from '@/components/risk/thresholds';
 import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 
 export const CELLS = 72;
@@ -7,6 +8,12 @@ const MAX_AGE_MS = 3 * 3_600_000;
 const LAST_GRACE_MS = 10 * 60_000;
 
 export interface Cell { i: number; start: number; end: number; level: RiskLevel | null; probability: number | null }
+
+/** Nível da previsão: UNKNOWN fica UNKNOWN; com probabilidade e limiares, `riskOf` (>=); senão o que a API classificou. */
+export function levelOf(p: PredictionSummary): RiskLevel {
+  if (p.riskLevel === 'UNKNOWN' || p.probability == null) return p.riskLevel;
+  return riskOf(p.probability, p.riskThresholds) ?? p.riskLevel;
+}
 
 /** Divide [t0, t1] em `n` células e dá a cada uma a última previsão emitida até o fim dela. */
 export function buildCells(items: readonly PredictionSummary[], t0: number, t1: number, n = CELLS): Cell[] {
@@ -20,7 +27,7 @@ export function buildCells(items: readonly PredictionSummary[], t0: number, t1: 
     const reach = i === n - 1 ? end + LAST_GRACE_MS : end;
     while (k + 1 < sorted.length && sorted[k + 1].t <= reach) k++;
     const cur = k >= 0 && reach - sorted[k].t <= MAX_AGE_MS ? sorted[k].p : null;
-    out.push({ i, start: t0 + i * step, end, level: cur?.riskLevel ?? null, probability: cur && cur.riskLevel !== 'UNKNOWN' ? (cur.probability ?? null) : null });
+    out.push({ i, start: t0 + i * step, end, level: cur ? levelOf(cur) : null, probability: cur && cur.riskLevel !== 'UNKNOWN' ? (cur.probability ?? null) : null });
   }
   return out;
 }

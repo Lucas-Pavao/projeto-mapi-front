@@ -1,5 +1,6 @@
 import { toTimePts, type TimePt } from '@/components/charts/chartMath';
-import { buildCells, highMinutes } from '@/features/events/utils/strips';
+import { pctTxt } from '@/components/risk/thresholds';
+import { buildCells, highMinutes, levelOf } from '@/features/events/utils/strips';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
 import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
@@ -28,7 +29,7 @@ export function pointRows(t: Timeline, names: ReadonlyMap<string, string>, t0: n
       let maxProb: number | null = null, maxAt: number | null = null, maxLevel: RiskLevel | null = null;
       for (const p of r.items) {
         if (p.riskLevel === 'UNKNOWN' || p.probability == null) continue;
-        if (maxProb == null || p.probability > maxProb) { maxProb = p.probability; maxAt = Date.parse(p.issuedAt); maxLevel = p.riskLevel; }
+        if (maxProb == null || p.probability > maxProb) { maxProb = p.probability; maxAt = Date.parse(p.issuedAt); maxLevel = levelOf(p); }
       }
       return { slug: r.slug, name: names.get(r.slug) ?? r.slug, maxProb, maxAt, maxLevel, highMin: Math.round(highMinutes(buildCells(r.items, t0, t1), t1)) };
     })
@@ -41,7 +42,7 @@ const at = (ms: number | null, now: number) => (ms == null ? '—' : (formatHora
 export function summaryText(rows: readonly PointRow[], rain: readonly TimePt[], tide: readonly TimePt[], now: number): string {
   const parts: string[] = [];
   const worst = rows.find((r) => r.maxProb != null);
-  if (worst) parts.push(`O ponto com maior probabilidade na janela foi ${worst.name}, com ${Math.round((worst.maxProb as number) * 100)}% às ${at(worst.maxAt, now)}.`);
+  if (worst) parts.push(`O ponto com maior probabilidade na janela foi ${worst.name}, com ${pctTxt(worst.maxProb)} às ${at(worst.maxAt, now)}.`);
   else parts.push('Nenhum ponto teve previsão válida na janela.');
   const peak = rain.reduce<TimePt | null>((m, p) => (p.v != null && (m == null || p.v > (m.v as number)) ? p : m), null);
   if (peak) parts.push(`O pico de chuva média foi de ${num(peak.v)} mm/h, na hora que terminou às ${at(peak.t, now)}.`);

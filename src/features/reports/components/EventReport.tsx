@@ -2,6 +2,8 @@ import React from 'react';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { getRiskVisual } from '@/components/risk/risk';
+import { bandText, pctTxt, thresholdsOf } from '@/components/risk/thresholds';
+import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
 import type { TimePt } from '@/components/charts/chartMath';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import type { Alert } from '@/features/alerts/schemas/alert.schema';
@@ -57,6 +59,8 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
     return v.length ? `${sx(v[0].t, from, to).toFixed(1)},${HT} ${v.map((p) => `${sx(p.t, from, to).toFixed(1)},${sy(p.v as number, rainMax).toFixed(1)}`).join(' ')} ${sx(v[v.length - 1].t, from, to).toFixed(1)},${HT}` : '';
   })();
   const byslug = new Map(points.map((p) => [p.slug, p]));
+  const thresholds = thresholdsOf(points);
+  const synthetic = points.map((p) => p.floodPrediction).find((f) => f?.trainingData === 'SYNTHETIC' || f?.syntheticWarning);
   return (
     <article
       data-theme="light" data-accent="capibaribe" aria-label="Relatório de situação"
@@ -123,7 +127,7 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
                   return (
                     <tr key={r.slug} data-slug={r.slug}>
                       <td className="border-b border-border py-[5px] pr-2 font-bold">{r.name}</td>
-                      <td className={cn('border-b border-border pr-2 font-mono font-bold', r.maxLevel ? getRiskVisual(r.maxLevel).text : 'text-muted-foreground')}>{r.maxProb != null ? `${Math.round(r.maxProb * 100)}%` : '—'}</td>
+                      <td className={cn('border-b border-border pr-2 font-mono font-bold', r.maxLevel ? getRiskVisual(r.maxLevel).text : 'text-muted-foreground')}>{r.maxProb != null ? pctTxt(r.maxProb) : '—'}</td>
                       <td className="border-b border-border pr-2 font-mono">{r.maxAt != null ? H(r.maxAt, generatedAt) : '—'}</td>
                       <td className="border-b border-border pr-2 font-mono">{r.highMin ? `${r.highMin} min` : '—'}</td>
                       <td className="border-b border-border py-[3px]">
@@ -135,6 +139,14 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
               </tbody>
             </table>
           )}
+          {!failed.timeline && !failed.points && rows.length > 0 && (
+            <p data-testid="report-thresholds" className="m-0 mt-1.5 text-[10px] leading-[14px] text-muted-foreground">
+              {thresholds
+                ? `Classes pelos limiares do modelo (probabilidade bruta): moderado ${bandText('MEDIUM', thresholds)}; alto ${bandText('HIGH', thresholds)}. "Tempo em alto" conta a partir do limiar alto, inclusive.`
+                : 'Limiares do modelo indisponíveis: a classe é a enviada pela API.'}
+            </p>
+          )}
+          <SyntheticWarning prediction={synthetic} className="mt-1.5 text-[10px] leading-[14px]" />
         </section>
       )}
 

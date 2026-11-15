@@ -1,5 +1,6 @@
 import React from 'react';
 import { RISK_LABEL_PT } from '../utils/riskLabels';
+import { pctTxt } from '@/components/risk/thresholds';
 import { cn } from '@/lib/utils';
 import { highMinutes, type Cell } from '../utils/strips';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
@@ -22,7 +23,7 @@ export const EventStrip: React.FC<Props> = ({ name, cells, sel, onPick }) => {
       <div className="text-[12px] font-bold leading-[15px]">{name}<br /><span className="font-normal text-muted-foreground">{mins ? `alto por ${mins} min` : 'sem risco alto'}</span></div>
       <div role="group" aria-label={`Risco de ${name}`} className="flex h-[26px] gap-px">
         {cells.map((c) => {
-          const label = `${name} às ${formatHoraCurta(new Date(c.end).toISOString()) ?? ''}: ${c.level ? RISK_LABEL_PT[c.level] : 'sem previsão'}${c.probability != null ? ` ${Math.round(c.probability * 100)}%` : ''}`;
+          const label = `${name} às ${formatHoraCurta(new Date(c.end).toISOString()) ?? ''}: ${c.level ? RISK_LABEL_PT[c.level] : 'sem previsão'}${c.probability != null ? ` ${pctTxt(c.probability)}` : ''}`;
           return (
             <button
               key={c.i} type="button" tabIndex={-1} aria-label={label} title={label} onClick={() => onPick(c.end)} data-risk={c.level ?? 'NONE'}
