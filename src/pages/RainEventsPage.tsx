@@ -28,7 +28,7 @@ export const RainEventsPage: React.FC = () => {
       <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5">
         <div className="min-w-0 flex-1">
           <h1 className="m-0 text-[22px] leading-7 font-extrabold">Eventos de chuva</h1>
-          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Últimos 365 dias · horas rotuladas pelo fim, em UTC · chuva medida × reanálise · ADR 0017</p>
+          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">set/2021 → out/2026 · horas rotuladas pelo fim, em UTC · chuva medida × reanálise · ADR 0017</p>
         </div>
         <label className="flex items-center gap-2 text-xs font-bold">Ponto
           <select value={slug} onChange={(e) => { setSlug(e.target.value); setSel(null); }} className="h-8 rounded-lg border border-input bg-background px-2 text-xs font-normal text-foreground">

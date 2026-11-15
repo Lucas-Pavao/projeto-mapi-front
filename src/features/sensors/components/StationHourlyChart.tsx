@@ -1,16 +1,16 @@
 import React from 'react';
-import { formatHoraCheia, num } from '@/features/operacao/utils/format';
+import { formatHoraCheia } from '@/features/operacao/utils/format';
 import { CHART_H, CHART_W, IDF_MM_H, STRONG_MM_H, hourlyModel, yPct } from '../utils/stationView';
 import type { StationHour } from '../schemas/station.schema';
 
 const LINES = [
   { mm: IDF_MM_H, stroke: 'var(--risk-high-edge)', text: 'text-risk-high-text', label: '50,3' },
-  { mm: STRONG_MM_H, stroke: 'var(--risk-moderate)', text: 'text-risk-moderate-text', label: '25,2' },
+  { mm: STRONG_MM_H, stroke: 'var(--risk-moderate)', text: 'text-risk-moderate-text', label: '25,15' },
 ];
 
 /**
  * Chuva por hora (mm/h), uma barra por hora, colorida pela fonte usada (PED ou ao vivo). Hora sem dado vira faixa cinza
- * (nunca barra de zero) e o pico isolado removido vira marcador (o valor não aparece). Linhas de 25,2 (forte) e 50,3 mm/h (IDF).
+ * (nunca barra de zero) e o pico isolado removido vira marcador (o valor não aparece). Linhas de 25,15 (forte) e 50,3 mm/h (IDF).
  */
 export const StationHourlyChart: React.FC<{ hours: StationHour[]; dim?: boolean }> = ({ hours, dim }) => {
   const m = hourlyModel(hours);
@@ -22,7 +22,7 @@ export const StationHourlyChart: React.FC<{ hours: StationHour[]; dim?: boolean 
   return (
     <div className="relative min-h-[200px] flex-1" data-testid="station-chart">
       <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} preserveAspectRatio="none" role="img"
-           aria-label={`Chuva por hora em mm/h: ${total} de ${hours.length} horas com valor; linhas em 25,2 mm/h (forte) e 50,3 mm/h (IDF)`}
+           aria-label={`Chuva por hora em mm/h: ${total} de ${hours.length} horas com valor; linhas em 25,15 mm/h (forte, ≥ 25,15 mm/h) e 50,3 mm/h (IDF)`}
            className="absolute left-0 top-0 h-[calc(100%-20px)] w-[calc(100%-48px)] overflow-visible">
         {LINES.map((l) => <line key={l.label} x1="0" x2={CHART_W} y1={yPct(l.mm) * CHART_H} y2={yPct(l.mm) * CHART_H} stroke={l.stroke} strokeWidth="1.5" strokeDasharray="6 5" />)}
         {m.gaps.map((g) => <rect key={g.x} data-testid="gap" x={g.x} y="0" width={g.w} height={CHART_H} fill="var(--risk-unknown)" opacity="0.18" />)}
@@ -40,7 +40,7 @@ export const StationHourlyChart: React.FC<{ hours: StationHour[]; dim?: boolean 
       <div aria-hidden="true" className="absolute bottom-0 left-0 right-12 flex justify-between font-mono text-[11px] leading-4 text-muted-foreground">
         {ticks.map((t, i) => <span key={i}>{t}</span>)}
       </div>
-      <span className="sr-only">{num(STRONG_MM_H, 1)} mm/h é chuva forte; 50,3 mm/h é o limiar IDF.</span>
+      <span className="sr-only">25,15 mm/h é chuva forte; 50,3 mm/h é o limiar IDF.</span>
     </div>
   );
 };

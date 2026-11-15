@@ -29,7 +29,7 @@ export function summaryKpis(s: RainSummary): Kpi[] {
     { label: 'sem lacuna', value: fmt(sumOf(s.rows, 'TOTAL', 'countWithoutGap')) },
     { label: 'fracos', value: fmt(sumOf(s.rows, 'FRACA', 'count')), tone: 'muted' },
     { label: 'médios', value: fmt(sumOf(s.rows, 'MEDIA', 'count')) },
-    { label: 'fortes', value: fmt(sumOf(s.rows, 'FORTE', 'count')) },
+    { label: 'eventos de chuva forte', value: fmt(sumOf(s.rows, 'FORTE', 'count')) },
     { label: 'acima da capacidade', value: fmt(sumOf(s.rows, 'TOTAL', 'eventsAboveCapacity')), tone: 'high' },
     { label: 'horas com valor', value: cov.length ? `${(cov.reduce((a, b) => a + b, 0) / cov.length * 100).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%` : '—', tone: 'muted' },
   ];

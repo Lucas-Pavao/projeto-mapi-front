@@ -69,7 +69,7 @@ export const StationDetail: React.FC<{ station: CanonicalStation; hourly: UseQue
           <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-3.5 rounded-sm bg-primary" />PED (vale na mesma hora)</span>
           <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-3.5 rounded-sm bg-chart-3" />ao vivo (enquanto a PED não chega)</span>
           <span className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-3.5 rounded-sm bg-risk-unknown/30" />sem dado</span>
-          <span>25,2 = forte · 50,3 = IDF · círculo cortado = pico isolado removido</span>
+          <span>forte (≥ 25,15 mm/h) · 50,3 = IDF · círculo cortado = pico isolado removido</span>
         </div>
       </Panel>
       <Panel aria-label="Resumo" className="lg:col-span-5 lg:min-h-0 lg:overflow-y-auto">

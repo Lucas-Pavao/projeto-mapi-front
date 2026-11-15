@@ -1,17 +1,12 @@
-import { useState } from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { RAIN_SOURCES, type RainSource } from '../schemas/rain-events.schema';
 import { rainEventsService } from '../services/rain-events.service';
 
-const DAY = 86_400_000;
+const RAIN_WINDOW = { from: '2021-09-01T00:00:00Z', to: '2026-10-08T00:00:00Z' } as const;
 
-/** Janela de 365 dias terminando na última hora cheia, fixada na montagem (chave de cache estável). */
+/** Período padrão: a série inteira (set/2021 → out/2026), o mesmo dos KPIs de EVENTOS-DE-CHUVA.md. Fixo: chave de cache estável. */
 export function useRainWindow() {
-  const [w] = useState(() => {
-    const to = Math.floor(Date.now() / 3_600_000) * 3_600_000;
-    return { from: new Date(to - 365 * DAY).toISOString(), to: new Date(to).toISOString() };
-  });
-  return w;
+  return RAIN_WINDOW;
 }
 
 export const useRainSummary = (slug: string, source: RainSource, w: { from: string; to: string }) =>

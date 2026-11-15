@@ -86,7 +86,7 @@ describe('SensorsPage', () => {
     expect(chart.querySelectorAll('[data-testid="gap"]')).toHaveLength(1);
     expect(chart.querySelectorAll('[data-testid="peak-mark"]')).toHaveLength(1);
     expect(chart).toHaveTextContent('50,3');
-    expect(chart).toHaveTextContent('25,2');
+    expect(chart).toHaveTextContent('25,15');
     expect(within(screen.getByTestId('divergences')).getAllByRole('row')).toHaveLength(3); // cabeçalho + 2
     expect(screen.getByTestId('aliases')).toHaveTextContent('CEMADEN_PED:SINT-A');
     expect(screen.getByTestId('quarantine')).toHaveTextContent('AFTER_GAP');
