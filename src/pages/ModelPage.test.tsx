@@ -13,9 +13,15 @@ afterEach(() => {
 });
 afterAll(() => server.close());
 
+const openF1 = () => {
+  const r = renderPage(<ModelPage />);
+  fireEvent.click(screen.getByRole('tab', { name: /F1/ }));
+  return r;
+};
+
 describe('ModelPage', () => {
   it('mostra origem, hash, conclusão e AUC exatamente como no payload', async () => {
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByText('sintetico/resultado-fake.json')).toBeInTheDocument();
     expect(screen.getByText('0'.repeat(64))).toBeInTheDocument();
     expect(screen.getByText('data de congelamento não registrada')).toBeInTheDocument();
@@ -28,7 +34,7 @@ describe('ModelPage', () => {
   });
 
   it('nada inventado: números reais da avaliação F1 não aparecem quando o payload é outro', async () => {
-    const { container } = renderPage(<ModelPage />);
+    const { container } = openF1();
     await screen.findByText('sintetico/resultado-fake.json');
     const text = container.textContent ?? '';
     for (const real of ['0,891', '0,777', '689', '0,8907']) expect(text).not.toContain(real);
@@ -36,7 +42,7 @@ describe('ModelPage', () => {
 
   it('só exibe campos presentes: payload mínimo não gera seções vazias nem zeros', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({ ...evaluation, result: { n_neg: 5 } })));
-    renderPage(<ModelPage />);
+    openF1();
     await screen.findByRole('region', { name: 'Amostra e origem' });
     expect(screen.queryByRole('region', { name: 'AUC com intervalo (IC)' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'Hipótese H1' })).toBeNull();
@@ -46,7 +52,7 @@ describe('ModelPage', () => {
 
   it('alterna para a análise secundária e escolhe a linha do AUC', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({ ...evaluation, result: { ...evaluation.result, auc_todos: { 'B3/B3': { auc: 0.722, ic: [0.511, 0.912], auc18: 0.7, ic18: [0.5, 0.9] } } } })));
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByRole('radio', { name: '11 positivos (principal)' })).toBeChecked();
     fireEvent.click(screen.getByRole('radio', { name: '14 positivos (secundária)' }));
     expect(screen.getByText(/AUC E IC 95% \(14 × 99 DIAS\)/)).toBeInTheDocument();
@@ -56,30 +62,63 @@ describe('ModelPage', () => {
 
   it('formato desconhecido mostra o JSON como veio', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({ ...evaluation, result: { auc_B2: 'texto' } })));
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByText('CONTEÚDO (FORMATO NÃO RECONHECIDO)', { selector: 'h2' })).toBeInTheDocument();
     expect(screen.getByText(/"auc_B2": "texto"/)).toBeInTheDocument();
   });
 
   it('hash do cabeçalho diferente do corpo alerta', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json(evaluation, { headers: { 'X-Content-SHA256': 'a'.repeat(64) } })));
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByRole('alert')).toHaveTextContent('hash do cabeçalho');
   });
 
   it('503 (arquivo ausente ou hash divergente) tem estado próprio', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({}, { status: 503 })));
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByText('Avaliação indisponível.')).toBeInTheDocument();
   });
 
   it('resultado vazio e erro genérico', async () => {
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({ ...evaluation, result: {} })));
-    const { unmount } = renderPage(<ModelPage />);
+    const { unmount } = openF1();
     expect(await screen.findByText('A avaliação veio vazia.')).toBeInTheDocument();
     unmount();
     server.use(http.get('/api/model/evaluation', () => HttpResponse.json({}, { status: 500 })));
-    renderPage(<ModelPage />);
+    openF1();
     expect(await screen.findByText('Não foi possível carregar a avaliação.', {}, { timeout: 3000 })).toBeInTheDocument();
+  });
+
+  it('abre no xgb_v2 com aviso de sintético, limiares do cartão e baselines', () => {
+    renderPage(<ModelPage />);
+    expect(screen.getByRole('tab', { name: /xgb_v2/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/DADOS SINTÉTICOS/);
+    const limiares = screen.getByRole('region', { name: 'Limiares de risco' });
+    expect(limiares).toHaveTextContent('Moderado ≥ 1,6%');
+    expect(limiares).toHaveTextContent('Alto ≥ 24%');
+    const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
+    expect(base.querySelectorAll('[data-row]').length).toBeGreaterThanOrEqual(5);
+    expect(within(base).getByText('Nunca alaga')).toBeInTheDocument();
+    expect(screen.getAllByText(/cruza o zero/).length).toBeGreaterThan(0); // ablação com IC no zero
+  });
+
+  it('a sonda de probabilidade classifica com >= nos limiares', () => {
+    renderPage(<ModelPage />);
+    const slider = screen.getByRole('slider');
+    fireEvent.change(slider, { target: { value: '24' } });
+    expect(screen.getByTestId('probe-result')).toHaveTextContent('Moderado'); // 24% < 24,41%
+    fireEvent.change(slider, { target: { value: '25' } });
+    expect(screen.getByTestId('probe-result')).toHaveTextContent('Alto');
+    fireEvent.change(slider, { target: { value: '1' } });
+    expect(screen.getByTestId('probe-result')).toHaveTextContent('Baixo');
+  });
+
+  it('trocar de métrica muda os números e a aba F1 continua acessível', () => {
+    renderPage(<ModelPage />);
+    const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
+    fireEvent.click(within(base).getByRole('radio', { name: 'Brier' }));
+    expect(within(base).getByText('0,037')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: /F1/ }));
+    expect(screen.getByRole('tab', { name: /F1/ })).toHaveAttribute('aria-selected', 'true');
   });
 });
