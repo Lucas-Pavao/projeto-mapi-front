@@ -1,6 +1,6 @@
 import React from 'react';
-import { TriangleAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SyntheticWarning } from './SyntheticWarning';
 import { fmtOne, syntheticWarningOf, thresholdReason } from './provenance';
 import type { FloodPrediction } from '@/features/map/schemas/floodPointResponse.schema';
 
@@ -22,13 +22,7 @@ export const PredictionProvenance: React.FC<Props> = ({ prediction, className })
   if (!warning && !reason && top.length === 0) return null;
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs leading-[16px]', className)} data-testid="prediction-provenance">
-      {warning && (
-        <p role="note" data-testid="synthetic-warning"
-           className="m-0 flex items-start gap-1.5 rounded-md border border-warning/60 bg-warning/10 px-2 py-1 font-bold text-warning">
-          <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
-          {warning}
-        </p>
-      )}
+      <SyntheticWarning prediction={prediction} />
       {reason && (
         <p className="m-0 text-muted-foreground" data-testid="threshold-reason">
           {reason}

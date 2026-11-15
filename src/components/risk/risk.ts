@@ -1,3 +1,4 @@
+import { pctTxt } from './thresholds';
 import type { DegradationReason, ModelValidationStatus, RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 
 /**
@@ -60,13 +61,13 @@ export function degradationText(reason: DegradationReason | null | undefined): s
   return DEGRADATION_TEXT[reason] ?? 'motivo não informado';
 }
 
-/** "42%" ou null. UNKNOWN e probabilidade null nunca geram porcentagem (ADR 0007 §6). */
+/** "42%" (1 casa abaixo de 10 %) ou null. UNKNOWN e probabilidade null nunca geram porcentagem (ADR 0007 §6). */
 export function formatProbability(
   level: RiskLevel | undefined | null,
   probability: number | null | undefined,
 ): string | null {
   if (!getRiskVisual(level).showsProbability || probability == null) return null;
-  return `${(probability * 100).toFixed(0)}%`;
+  return pctTxt(probability);
 }
 
 /** Texto operacional de cada classe, para a legenda. Não promete o que o modelo ainda não faz. */
