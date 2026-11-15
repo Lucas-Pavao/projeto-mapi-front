@@ -62,7 +62,7 @@ describe('PointPage', () => {
   it('gráfico traz os limiares do metadata, não 50 % e 80 %', async () => {
     open();
     const chart = await screen.findByTestId('probability-chart');
-    expect(await within(chart).findByTestId('threshold-high')).toHaveTextContent('24%');
+    expect(await within(chart).findByTestId('threshold-high')).toHaveTextContent('24,4%');
     expect(within(chart).getByTestId('threshold-medium')).toHaveTextContent('1,6%');
     expect(chart.textContent).not.toMatch(/80%|50%/);
   });

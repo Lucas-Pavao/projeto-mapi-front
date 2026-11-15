@@ -14,7 +14,7 @@ describe('RiskBadge', () => {
     const { container } = render(<RiskBadge level="HIGH" probability={0.47} />);
     expect(screen.getByText('Alto')).toBeInTheDocument();
     expect(container.querySelector('svg')).not.toBeNull();
-    expect(screen.getByText('47%')).toHaveClass('font-mono');
+    expect(screen.getByText('47,0%')).toHaveClass('font-mono');
   });
   it('UNKNOWN: tracejado, sem porcentagem mesmo com probabilidade', () => {
     const { container } = render(<RiskBadge level="UNKNOWN" probability={0.9} />);

@@ -18,11 +18,13 @@ describe('riskOf', () => {
 });
 
 describe('pctTxt', () => {
-  it('1 casa até 10 %, inteiro depois, vírgula decimal', () => {
+  it('sempre 1 casa decimal, vírgula decimal', () => {
     expect(pctTxt(0.0159)).toBe('1,6%');
     expect(pctTxt(0.0953)).toBe('9,5%');
-    expect(pctTxt(0.2441)).toBe('24%');
-    expect(pctTxt(1)).toBe('100%');
+    expect(pctTxt(0.2441)).toBe('24,4%');
+    expect(pctTxt(0.31)).toBe('31,0%');
+    expect(pctTxt(0.009)).toBe('0,9%');
+    expect(pctTxt(1)).toBe('100,0%');
   });
   it('null é traço, nunca 0 %', () => expect(pctTxt(null)).toBe('—'));
 });
@@ -38,8 +40,8 @@ describe('sqrtScale', () => {
 describe('legenda por limiares', () => {
   it('faixas em texto', () => {
     expect(bandText('LOW', TH)).toBe('abaixo de 1,6%');
-    expect(bandText('MEDIUM', TH)).toBe('de 1,6% até abaixo de 24%');
-    expect(bandText('HIGH', TH)).toBe('24% ou mais');
+    expect(bandText('MEDIUM', TH)).toBe('de 1,6% até abaixo de 24,4%');
+    expect(bandText('HIGH', TH)).toBe('24,4% ou mais');
   });
   it('pega os limiares do primeiro ponto que os traz', () => {
     expect(thresholdsOf([{ floodPrediction: null }, { floodPrediction: { riskThresholds: TH } }])).toEqual(TH);

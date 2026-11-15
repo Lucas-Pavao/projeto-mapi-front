@@ -49,7 +49,7 @@ export function getRiskVisual(level: RiskLevel | undefined | null): RiskVisual {
 }
 
 const DEGRADATION_TEXT: Record<DegradationReason, string> = {
-  INSUFFICIENT_DATA: 'dados insuficientes para prever',
+  INSUFFICIENT_DATA: 'sem dado suficiente',
   AI_TIMEOUT: 'o modelo demorou demais para responder',
   AI_UNAVAILABLE: 'o modelo está fora do ar',
   AI_ERROR: 'erro no modelo de previsão',
@@ -61,7 +61,7 @@ export function degradationText(reason: DegradationReason | null | undefined): s
   return DEGRADATION_TEXT[reason] ?? 'motivo não informado';
 }
 
-/** "42%" (1 casa abaixo de 10 %) ou null. UNKNOWN e probabilidade null nunca geram porcentagem (ADR 0007 §6). */
+/** "42%" (sempre 1 casa) ou null. UNKNOWN e probabilidade null nunca geram porcentagem (ADR 0007 §6). */
 export function formatProbability(
   level: RiskLevel | undefined | null,
   probability: number | null | undefined,

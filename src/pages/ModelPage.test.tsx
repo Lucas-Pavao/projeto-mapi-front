@@ -95,7 +95,7 @@ describe('ModelPage', () => {
     expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/DADOS SINTÉTICOS/);
     const limiares = screen.getByRole('region', { name: 'Limiares de risco' });
     expect(limiares).toHaveTextContent('Moderado ≥ 1,6%');
-    expect(limiares).toHaveTextContent('Alto ≥ 24%');
+    expect(limiares).toHaveTextContent('Alto ≥ 24,4%');
     const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
     expect(base.querySelectorAll('[data-row]').length).toBeGreaterThanOrEqual(5);
     expect(within(base).getByText('Nunca alaga')).toBeInTheDocument();
@@ -106,7 +106,7 @@ describe('ModelPage', () => {
     renderPage(<ModelPage />);
     const slider = screen.getByRole('slider');
     fireEvent.change(slider, { target: { value: '24' } });
-    expect(screen.getByTestId('probe-result')).toHaveTextContent('Moderado'); // 24% < 24,41%
+    expect(screen.getByTestId('probe-result')).toHaveTextContent('Moderado'); // 24,0% < 24,4%
     fireEvent.change(slider, { target: { value: '25' } });
     expect(screen.getByTestId('probe-result')).toHaveTextContent('Alto');
     fireEvent.change(slider, { target: { value: '1' } });

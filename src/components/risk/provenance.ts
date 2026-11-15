@@ -1,7 +1,8 @@
 import { getRiskVisual } from './risk';
+import { pctTxt } from './thresholds';
 import type { FloodPrediction, RiskLevel, RiskThresholds } from '@/features/map/schemas/floodPointResponse.schema';
 
-const pct = (v: number) => `${(v * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`;
+const pct = pctTxt;
 export const fmtOne = (v: number) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 /** Aviso de modelo treinado com rótulo sintético: texto visível, nunca em tooltip (Etapa 8 do IN1165). */

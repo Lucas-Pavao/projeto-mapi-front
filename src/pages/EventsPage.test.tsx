@@ -31,7 +31,7 @@ describe('EventsPage', () => {
     expect(unk.every((b) => !/%/.test(b.getAttribute('aria-label') ?? ''))).toBe(true);
     expect(unk[0].getAttribute('aria-label')).toMatch(/Previsão indisponível/);
     const alto = strip.querySelector('button[data-risk="HIGH"]');
-    expect(alto?.getAttribute('aria-label')).toMatch(/Alto \d+%/);
+    expect(alto?.getAttribute('aria-label')).toMatch(/Alto \d+,\d%/);
     expect(screen.getByText(/Previsão experimental/)).toBeInTheDocument();
   });
 

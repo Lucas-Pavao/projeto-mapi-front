@@ -12,11 +12,11 @@ export function riskOf(p: number | null | undefined, thresholds: Pick<RiskThresh
   return 'LOW';
 }
 
-/** "3,2%" até 10 % (1 casa), "24%" a partir daí; null vira "—". Probabilidades de 1 % a 10 % não somem no arredondamento. */
+/** Sempre 1 casa decimal ("0,9%", "1,6%", "24,4%", "31,0%"); null vira "—". */
 export function pctTxt(p: number | null | undefined): string {
   if (p == null || !Number.isFinite(p)) return '—';
   const v = p * 100;
-  return `${(v < 10 ? v.toFixed(1) : Math.round(v).toString()).replace('.', ',')}%`;
+  return `${v.toFixed(1).replace('.', ',')}%`;
 }
 
 /** Escala de raiz quadrada: abre a faixa baixa (0–10 %), onde ficam os limiares do modelo. */

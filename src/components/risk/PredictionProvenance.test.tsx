@@ -22,7 +22,7 @@ describe('PredictionProvenance (Etapa 8 do IN1165)', () => {
   it('mostra o aviso de sintético em texto visível, a faixa com o limiar e 3 fatores em unidade física', () => {
     render(<PredictionProvenance prediction={base} />);
     expect(screen.getByTestId('synthetic-warning')).toHaveTextContent('SINTÉTICO');
-    expect(screen.getByTestId('threshold-reason')).toHaveTextContent('Alto: probabilidade 31% ≥ limiar alto 24,4%');
+    expect(screen.getByTestId('threshold-reason')).toHaveTextContent('Alto: probabilidade 31,0% ≥ limiar alto 24,4%');
     const items = screen.getByTestId('top-contributors').querySelectorAll('li');
     expect(items).toHaveLength(3);
     expect(items[0]).toHaveTextContent('Chuva acumulada em 3 horas: 60 mm');
@@ -48,7 +48,7 @@ describe('PredictionProvenance (Etapa 8 do IN1165)', () => {
 
   it('faixa moderada e baixa citam o limiar certo', () => {
     const t = { medium: 0.1, high: 0.5, source: 'metadata' };
-    expect(thresholdReason('MEDIUM', 0.2, t)).toBe('Moderado: 10% ≤ probabilidade 20% < limiar alto 50%');
-    expect(thresholdReason('LOW', 0.05, t)).toBe('Baixo: probabilidade 5% < limiar moderado 10%');
+    expect(thresholdReason('MEDIUM', 0.2, t)).toBe('Moderado: 10,0% ≤ probabilidade 20,0% < limiar alto 50,0%');
+    expect(thresholdReason('LOW', 0.05, t)).toBe('Baixo: probabilidade 5,0% < limiar moderado 10,0%');
   });
 });

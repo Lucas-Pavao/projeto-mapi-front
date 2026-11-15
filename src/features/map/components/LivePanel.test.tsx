@@ -28,7 +28,7 @@ describe('LivePanel', () => {
     expect(rows[0].textContent).toContain('Alto B');
     expect(rows[1].textContent).toContain('Sem C');
     expect(rows[2].textContent).toContain('Baixo A');
-    expect(rows[0].textContent).toContain('80%');
+    expect(rows[0].textContent).toContain('80,0%');
     expect(rows[1].textContent).not.toMatch(/%/);
     expect(screen.getByTestId('experimental-label')).toBeInTheDocument();
   });
