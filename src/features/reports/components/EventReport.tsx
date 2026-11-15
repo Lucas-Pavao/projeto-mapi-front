@@ -172,7 +172,7 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
       )}
 
       <p className="m-0 mt-auto border-t border-border pt-2 text-[9px] leading-[13px] text-muted-foreground">
-        Previsão experimental, modelo não validado (ADR 0007). Probabilidades não confirmam alagamento no local. “Previsão indisponível” não é risco baixo. Fontes: APAC, Cemaden, ANA, Open-Meteo, DHN/TabuaMare, CKAN Recife.
+        Previsão experimental, modelo não validado (ADR 0007). Probabilidades não confirmam alagamento no local. “Previsão indisponível” não é risco baixo. Fontes: APAC, Cemaden, ANA, Open-Meteo, DHN/TabuaMare, CKAN Recife. DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC.
       </p>
     </article>
   );

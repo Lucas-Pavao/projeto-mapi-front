@@ -43,7 +43,7 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
   const rain3h = precise?.historicalAggregates?.rain3h;
   const tide = precise?.tideHeightTabuaMare;
   const now = precise?.precipitation;
-  const contributors = contributorRows(prediction?.contributors);
+  const contributors = contributorRows(prediction?.contributors, 3, prediction?.imputedFeatures);
   const rain = useRainCandidates(point.slug).data;
   const usedRain = rain?.candidates.find((c) => c.stationId === rain.usedStationId);
   const clock = formatRecife(new Date().toISOString())?.slice(-5).replace(':', 'h');

@@ -68,12 +68,14 @@ describe('PointPage', () => {
   });
 
   it('mostra o aviso de sintético quando a previsão é sintética', async () => {
-    server.use(http.get('/api/pontos/:slug', ({ params }) => HttpResponse.json({ id: 1, slug: params.slug, name: 'Sintético: ponto', active: true, latitude: -8, longitude: -34.9, floodPrediction: { riskLevel: 'LOW', floodProbability: 0.01, trainingData: 'SYNTHETIC', contributors: [{ featureId: 'rain_3h', label: 'Chuva 3 h', contribution: 0.031, value: 12.4, unit: 'mm' }], imputedFeatures: [{ featureId: 'rain_1h', label: 'Chuva 1 h' }] } })));
+    server.use(http.get('/api/pontos/:slug', ({ params }) => HttpResponse.json({ id: 1, slug: params.slug, name: 'Sintético: ponto', active: true, latitude: -8, longitude: -34.9, floodPrediction: { riskLevel: 'LOW', floodProbability: 0.01, trainingData: 'SYNTHETIC', contributors: [{ featureId: 'rain_3h', label: 'Chuva 3 h', contribution: 0.031, value: 12.4, unit: 'mm' }, { featureId: 'tide', label: 'Nível da maré', contribution: -0.01, value: 0, unit: 'm' }], imputedFeatures: [{ featureId: 'rain_1h', label: 'Chuva 1 h' }, { featureId: 'tide', label: 'Nível da maré' }] } })));
     open();
     expect(await screen.findByTestId('synthetic-warning')).toHaveTextContent(/SINTÉTICO/);
     expect(await screen.findByTestId('contributors')).toHaveTextContent('Chuva 3 h: 12,4 mm');
     expect(screen.getByTestId('contributors')).toHaveTextContent('+3,1 p.p.');
-    expect(screen.getByTestId('imputed')).toHaveTextContent('Chuva 1 h');
+    expect(screen.getAllByTestId('imputed')[0]).toHaveTextContent('Chuva 1 h');
+    expect(screen.getByTestId('contributors')).toHaveTextContent('Nível da maré: imputado');
+    expect(screen.getByTestId('contributors')).not.toHaveTextContent('0 m');
   });
 
   it('Chuva agora cita a estação usada e o rio fica fora do modelo', async () => {
@@ -93,5 +95,6 @@ describe('PointPage', () => {
     expect(panel.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('—');
     expect(panel.querySelector('[data-role="NO_VALUE"]')).toHaveTextContent('sem dado');
     expect(panel).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
+    expect(within(panel).getByTestId('rain-reference-hour')).toHaveTextContent(/^dados até \d{2}\/\d{2} \d{2}:\d{2}$/);
   });
 });

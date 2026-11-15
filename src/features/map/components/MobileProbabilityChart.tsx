@@ -15,8 +15,10 @@ export const MobileProbabilityChart: React.FC<{ slug: string }> = ({ slug }) => 
   const series = usePredictionSeries(slug, 24);
   const m = useMemo(() => {
     const items = [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
-    const from = Date.parse(series.data?.from ?? '') || 0;
-    const to = Date.parse(series.data?.to ?? '') || 1;
+    const from = Date.parse(series.data?.from ?? '');
+    const to = Date.parse(series.data?.to ?? '');
+    // Sem janela válida não há eixo de tempo: nada é desenhado (estado vazio), nem com valores inventados.
+    if (!Number.isFinite(from) || !Number.isFinite(to) || to <= from) return null;
     const x = scaleLinear(from, to, 0, W);
     const y = (p: number) => H - sqrtScale(p) * H;
     const runs: Array<Array<[number, number]>> = [];
@@ -44,6 +46,7 @@ export const MobileProbabilityChart: React.FC<{ slug: string }> = ({ slug }) => 
         + (th ? `. Limiares: moderado a partir de ${pctTxt(th.medium)}, alto a partir de ${pctTxt(th.high)}` : '. Sem limiares de risco disponíveis'),
     };
   }, [series.data]);
+  if (!m) return <p data-testid="mobile-chart-empty" className="m-0 flex h-[90px] items-center text-[13px] text-muted-foreground">{series.isError ? 'Não foi possível carregar as previsões.' : 'Sem previsões na janela.'}</p>;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={m.label} className="block h-[90px] w-full" data-testid="mobile-chart">
       {m.yHigh != null && m.yMed != null && (

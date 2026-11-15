@@ -11,7 +11,7 @@ import { waterWeatherTiles } from '../utils/waterWeather';
 
 /** "O que mais pesou agora": as 3 maiores contribuições em pontos percentuais, com o valor e a unidade da feature, e o que foi imputado. */
 export const ContributorsPanel: React.FC<{ contributors: Contributor[] | undefined; imputed?: ReadonlyArray<{ featureId: string; label: string }>; unknown: boolean }> = ({ contributors, imputed, unknown }) => {
-  const rows = contributorRows(contributors);
+  const rows = contributorRows(contributors, 3, imputed);
   return (
     <Panel aria-label="Por que este risco" className="min-h-0">
       <PanelTitle>O que mais pesou agora</PanelTitle>

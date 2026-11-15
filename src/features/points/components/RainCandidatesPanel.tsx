@@ -4,6 +4,7 @@ import { Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { cn } from '@/lib/utils';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { RainCandidates } from '../schemas/rain-candidates.schema';
+import { formatRecifeDayMs, formatRecifeHourMs } from '@/features/map/utils/datetime';
 import { candidateStatus, candidateValue, distanceText, ROLE_TAG } from '../utils/rainCandidates';
 
 /** B3: estações até 5 km e qual delas deu a chuva do ponto (maior valor entre as válidas; reprovada no mês não entra). */
@@ -15,6 +16,7 @@ export const RainCandidatesPanel: React.FC<{ query: UseQueryResult<RainCandidate
         <PanelTitle>Chuva do ponto · estações até {data ? distanceText(data.radiusM) : '5 km'}</PanelTitle>
         <Link to="/sensores" className="text-[12px] text-primary hover:text-foreground">Estações</Link>
       </div>
+      {data && <p data-testid="rain-reference-hour" className="m-0 text-[12px] leading-4 text-muted-foreground">{data.hourEndUtc ? `dados até ${formatRecifeDayMs(Date.parse(data.hourEndUtc))} ${formatRecifeHourMs(Date.parse(data.hourEndUtc))}` : 'Sem série de chuva para este ponto.'}</p>}
       {query.isError && <p role="alert" className="m-0 text-[12px] leading-4 text-warning">Não foi possível carregar as estações candidatas.</p>}
       {query.isPending && <p className="m-0 text-[12px] leading-4 text-muted-foreground">Carregando estações…</p>}
       {data && data.candidates.length === 0 && <p className="m-0 text-[12px] leading-4 text-muted-foreground">Nenhuma estação do Cemaden dentro do raio: o ponto fica sem dado de chuva medida.</p>}

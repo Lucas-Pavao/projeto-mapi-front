@@ -18,6 +18,7 @@ export const PredictionProvenance: React.FC<Props> = ({ prediction, className })
   if (!prediction || prediction.riskLevel === 'UNKNOWN') return null;
   const warning = syntheticWarningOf(prediction);
   const reason = thresholdReason(prediction.riskLevel, prediction.floodProbability, prediction.riskThresholds);
+  const imputedIds = new Set((prediction.imputedFeatures ?? []).map((i) => i.featureId));
   const top = (prediction.contributors ?? []).slice(0, 3);
   if (!warning && !reason && top.length === 0) return null;
   return (
@@ -37,7 +38,7 @@ export const PredictionProvenance: React.FC<Props> = ({ prediction, className })
               <li key={c.featureId} className="flex justify-between gap-2 text-muted-foreground">
                 <span>
                   {c.label}
-                  {c.value != null ? `: ${fmtOne(c.value)}${c.unit ? ` ${c.unit}` : ''}` : ''}
+                  {imputedIds.has(c.featureId) ? ': imputado' : c.value != null ? `: ${fmtOne(c.value)}${c.unit ? ` ${c.unit}` : ''}` : ''}
                 </span>
                 <span className="font-mono tabular-nums">{c.contribution >= 0 ? '+' : '−'}{fmtOne(Math.abs(c.contribution) * 100)} p.p.</span>
               </li>

@@ -51,4 +51,9 @@ describe('PredictionProvenance (Etapa 8 do IN1165)', () => {
     expect(thresholdReason('MEDIUM', 0.2, t)).toBe('Moderado: 10,0% ≤ probabilidade 20,0% < limiar alto 50,0%');
     expect(thresholdReason('LOW', 0.05, t)).toBe('Baixo: probabilidade 5,0% < limiar moderado 10,0%');
   });
+
+  it('feature imputada mostra "imputado" no lugar do valor', () => {
+    render(<PredictionProvenance prediction={{ ...base, imputedFeatures: [{ featureId: 'current_rainfall', label: 'Chuva atual' }] } as unknown as FloodPrediction} />);
+    expect(screen.getByTestId('top-contributors')).toHaveTextContent('Chuva atual: imputado');
+  });
 });
