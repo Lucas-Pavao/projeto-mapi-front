@@ -14,6 +14,10 @@ import { PointHeader } from '@/features/points/components/PointHeader';
 import { PointList } from '@/features/points/components/PointList';
 import { ProbabilityChart } from '@/features/points/components/ProbabilityChart';
 import { ContributorsPanel, TerrainPanel, WaterWeatherPanel } from '@/features/points/components/PointPanels';
+import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
+import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
+import { RainCandidatesPanel } from '@/features/points/components/RainCandidatesPanel';
+import { thresholdReason } from '@/components/risk/provenance';
 import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { httpStatus } from '@/lib/apiError';
 import { cn } from '@/lib/utils';
@@ -30,6 +34,7 @@ export const PointPage: React.FC = () => {
   const point = usePoint(slug);
   const all = useFloodPoints();
   const series = usePredictionSeries(slug);
+  const rain = useRainCandidates(slug);
   const [now] = useState(() => Date.now());
 
   const items = useMemo(() => [...(series.data?.items ?? [])].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt)), [series.data]);
@@ -45,6 +50,11 @@ export const PointPage: React.FC = () => {
   }
 
   const unknown = latest?.riskLevel === 'UNKNOWN';
+  const fp = p?.floodPrediction;
+  // A previsão mais recente pode ser UNKNOWN (sem limiares): usa os da última que os trouxe, depois os do ponto.
+  const thresholds = [...items].reverse().find((i) => i.riskThresholds)?.riskThresholds ?? fp?.riskThresholds ?? null;
+  const modelInfo = { trainingData: latest?.trainingData ?? fp?.trainingData, syntheticWarning: latest?.syntheticWarning ?? fp?.syntheticWarning };
+  const reason = latest && !unknown ? thresholdReason(latest.riskLevel, latest.probability, thresholds) : null;
   const pct = latest ? formatProbability(latest.riskLevel, latest.probability) : null;
   return (
     <PageFrame className="lg:flex-row">
@@ -56,6 +66,7 @@ export const PointPage: React.FC = () => {
               <>
                 {!pt.active && <p role="status" className="mb-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-body text-warning">Ponto desativado: sem previsões novas.</p>}
                 <PointHeader point={pt} prediction={latest} />
+                <SyntheticWarning prediction={modelInfo} className="mt-3 text-[13px] leading-[18px]" />
               </>
             )}
           </QueryState>
@@ -70,15 +81,24 @@ export const PointPage: React.FC = () => {
               {series.isError ? (
                 <p role="alert" className="m-0 flex-1 text-[13px] text-warning">Não foi possível carregar as previsões. Confira a conexão e recarregue.</p>
               ) : (
-                <ProbabilityChart items={items} now={now} latest={latest} />
+                <ProbabilityChart items={items} now={now} latest={latest} thresholds={thresholds} />
               )}
               <p className="m-0 text-[13px] leading-[18px]">
-                {latest ? RISK_MEANING[latest.riskLevel] : 'Sem previsões nas últimas 24 h.'}
+                {latest ? (
+                  <>
+                    <strong data-testid="threshold-reason">{unknown ? `Motivo: ${degradationText(latest.degradationReason)}.` : reason ? `${reason}.` : 'Limiares indisponíveis: sem classe.'}</strong>{' '}
+                    {RISK_MEANING[latest.riskLevel]}
+                  </>
+                ) : 'Sem previsões nas últimas 24 h.'}
+              </p>
+              <p className="m-0 text-[11px] leading-[15px] text-muted-foreground">
+                Escala em raiz quadrada para os limiares do metadata (escolhidos na validação) ficarem legíveis. Probabilidade bruta, sem calibração.
               </p>
             </Panel>
-            <div className="flex min-h-0 flex-col lg:col-span-5"><ContributorsPanel contributors={p.floodPrediction?.contributors} unknown={unknown} /></div>
-            <div className="flex flex-col lg:col-span-7"><WaterWeatherPanel point={p} /></div>
+            <div className="flex min-h-0 flex-col lg:col-span-5"><ContributorsPanel contributors={fp?.contributors} imputed={fp?.imputedFeatures} unknown={unknown} /></div>
+            <div className="flex flex-col lg:col-span-7"><WaterWeatherPanel point={p} rain={rain.data} /></div>
             <div className="flex flex-col lg:col-span-5"><TerrainPanel slug={p.slug} distanceToChannelM={p.distanceToChannelM} /></div>
+            <div className="flex flex-col lg:col-span-12"><RainCandidatesPanel query={rain} /></div>
             {items.length > 0 && <HistoricoAcessivel items={items} />}
           </>
         )}

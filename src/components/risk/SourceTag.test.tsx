@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { SourceTag, sourceKindsOf } from './SourceTag';
+import { SourceTag } from './SourceTag';
+import { sourceKindsOf } from './sourceKinds';
 import { SyntheticWarning } from './SyntheticWarning';
 
 describe('SourceTag', () => {

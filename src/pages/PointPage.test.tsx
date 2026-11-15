@@ -58,4 +58,40 @@ describe('PointPage', () => {
     open('sintetico-2');
     expect(await screen.findByText('Ponto desativado: sem previsões novas.')).toBeInTheDocument();
   });
+
+  it('gráfico traz os limiares do metadata, não 50 % e 80 %', async () => {
+    open();
+    const chart = await screen.findByTestId('probability-chart');
+    expect(await within(chart).findByTestId('threshold-high')).toHaveTextContent('24%');
+    expect(within(chart).getByTestId('threshold-medium')).toHaveTextContent('1,6%');
+    expect(chart.textContent).not.toMatch(/80%|50%/);
+  });
+
+  it('mostra o aviso de sintético quando a previsão é sintética', async () => {
+    server.use(http.get('/api/pontos/:slug', ({ params }) => HttpResponse.json({ id: 1, slug: params.slug, name: 'Sintético: ponto', active: true, latitude: -8, longitude: -34.9, floodPrediction: { riskLevel: 'LOW', floodProbability: 0.01, trainingData: 'SYNTHETIC', contributors: [{ featureId: 'rain_3h', label: 'Chuva 3 h', contribution: 0.031, value: 12.4, unit: 'mm' }], imputedFeatures: [{ featureId: 'rain_1h', label: 'Chuva 1 h' }] } })));
+    open();
+    expect(await screen.findByTestId('synthetic-warning')).toHaveTextContent(/SINTÉTICO/);
+    expect(await screen.findByTestId('contributors')).toHaveTextContent('Chuva 3 h: 12,4 mm');
+    expect(screen.getByTestId('contributors')).toHaveTextContent('+3,1 p.p.');
+    expect(screen.getByTestId('imputed')).toHaveTextContent('Chuva 1 h');
+  });
+
+  it('Chuva agora cita a estação usada e o rio fica fora do modelo', async () => {
+    open();
+    const tiles = await screen.findAllByTestId('water-tile');
+    await screen.findByText(/Sintético: Ibura · 690 m/);
+    expect(tiles.some((t) => t.textContent?.includes('fora do modelo'))).toBe(true);
+  });
+
+  it('candidatas até 5 km: usada, menor, fora (com motivo) e sem valor (nunca zero)', async () => {
+    open();
+    const panel = await screen.findByTestId('rain-candidates');
+    const rows = await within(panel).findAllByText(/Sintético:/);
+    expect(rows.length).toBe(4);
+    expect(panel.querySelector('[data-role="USED"]')).toHaveTextContent('usada');
+    expect(panel.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('reprovada no mês (zero travado, subestima)');
+    expect(panel.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('—');
+    expect(panel.querySelector('[data-role="NO_VALUE"]')).toHaveTextContent('sem dado');
+    expect(panel).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
+  });
 });

@@ -1,3 +1,5 @@
+import { sqrtScale } from '@/components/risk/thresholds';
+import type { RiskThresholds } from '@/features/map/schemas/floodPointResponse.schema';
 import type { PredictionSummary } from '../schemas/prediction.schema';
 
 export const VB_W = 640;
@@ -12,8 +14,15 @@ export function chartWindow(now: number, pastH = 9, futureH = 3): ChartWindow {
 }
 
 export const xOf = (t: number, w: ChartWindow) => ((t - w.t0) / (w.t1 - w.t0)) * VB_W;
-/** 0 em baixo, 1 em cima: as faixas 50 % (y=100) e 80 % (y=40) do protótipo. */
-export const yOf = (p: number) => (1 - Math.min(1, Math.max(0, p))) * VB_H;
+/** 0 em baixo, 1 em cima, em escala de raiz quadrada: os limiares do modelo (poucos %) ficam legíveis. */
+export const yOf = (p: number) => (1 - sqrtScale(p)) * VB_H;
+
+export interface Bands { yHigh: number; yMed: number }
+
+/** Posição (y do SVG) dos dois limiares enviados pela API; sem limiares não há faixa. */
+export function bandsOf(t: Pick<RiskThresholds, 'medium' | 'high'> | null | undefined): Bands | null {
+  return t ? { yHigh: yOf(t.high), yMed: yOf(t.medium) } : null;
+}
 
 export interface Run { points: Array<{ x: number; y: number }> }
 

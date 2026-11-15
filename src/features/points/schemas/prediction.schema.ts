@@ -17,6 +17,8 @@ export const predictionSummarySchema = z.object({
   riskThresholds: riskThresholdsSchema.nullable().optional(),
   trainingData: z.string().nullable().optional(),
   syntheticWarning: z.string().nullable().optional(),
+  // B5: fonte da chuva do treino/da previsão.
+  rainSource: z.string().nullable().optional(),
 });
 export type PredictionSummary = z.infer<typeof predictionSummarySchema>;
 
