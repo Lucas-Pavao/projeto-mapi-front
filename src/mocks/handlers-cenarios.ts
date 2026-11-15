@@ -47,32 +47,7 @@ export const monthChecksMock = () => {
   };
 };
 
-const ev = (id: string, slug: string, maxHourlyMmH: number, over = true) => ({
-  floodPointSlug: slug, eventId: id, source: 'X', startUtc: '2026-05-10T14:00:00Z', endUtc: '2026-05-10T18:00:00Z', durationMin: 240, totalMm: 52.4, maxHourlyMmH,
-  type: 'FORTE', hasGap: false, truncated: false, stationId: 'SINT-A', stationDistanceM: 800, rainOrigin: 'MEASURED', excessOverCapacityMm: over ? 8 : 0, hoursAboveCapacity: over ? 1 : 0,
-});
-
-/** Eventos sintéticos por fonte: a reanálise suaviza os picos, então passa menos da capacidade. */
-export const rainEventsFor = (source: string) => ({
-  manifest: { datasetId: 'sint', source, params: { capacityMmH: 60.1 }, rows: 3 },
-  events: source === 'OPEN_METEO_ARCHIVE'
-    ? [ev('e1', 'sintetico-1', 34)]
-    : [ev('e1', 'sintetico-1', 71.2), ev('e2', 'sintetico-1', 64.5), ev('e3', 'sintetico-1', 40), { ...ev('e4', 'sintetico-1', 99), truncated: true }],
-});
-
-const summaryFor = (source: string) => ({
-  manifest: { datasetId: 'sint', source, params: { capacityMmH: 60.1 }, rows: 3 },
-  rows: [
-    { floodPointSlug: 'sintetico-1', type: 'FORTE', count: 3, countWithoutGap: 2, eventsAboveCapacity: 2, coverageFraction: 0.9 },
-    { floodPointSlug: 'sintetico-1', type: 'MEDIA', count: 5, countWithoutGap: 5, eventsAboveCapacity: 0, coverageFraction: 0.9 },
-    { floodPointSlug: 'sintetico-1', type: 'FRACA', count: 12, countWithoutGap: 11, eventsAboveCapacity: 0, coverageFraction: 0.9 },
-    { floodPointSlug: 'sintetico-1', type: 'TOTAL', count: 20, countWithoutGap: 18, eventsAboveCapacity: 2, coverageFraction: 0.9 },
-  ],
-});
-
 export const cenariosHandlers = [
-  http.get('/api/analise/eventos-chuva/resumo', ({ request }) => HttpResponse.json(summaryFor(new URL(request.url).searchParams.get('source') ?? 'ANA'))),
-  http.get('/api/analise/eventos-chuva', ({ request }) => HttpResponse.json(rainEventsFor(new URL(request.url).searchParams.get('source') ?? 'ANA'))),
   http.get('/api/admin/stations/month-checks', () => HttpResponse.json(monthChecksMock())),
   http.get('/api/stations/canonical', () => HttpResponse.json(canonicalStations)),
   http.get('/api/stations/rain-accumulations', () => HttpResponse.json({
