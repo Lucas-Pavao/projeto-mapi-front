@@ -89,9 +89,10 @@ describe('ModelPage', () => {
     expect(await screen.findByText('Não foi possível carregar a avaliação.', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
-  it('abre no xgb_v2 com aviso de sintético, limiares do cartão e baselines', () => {
+  it('aba do xgb_v2: aviso de sintético, limiares do cartão e baselines', () => {
     renderPage(<ModelPage />);
-    expect(screen.getByRole('tab', { name: /xgb_v2/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
+    expect(screen.getByRole('tab', { name: /^xgb_v2/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/DADOS SINTÉTICOS/);
     const limiares = screen.getByRole('region', { name: 'Limiares de risco' });
     expect(limiares).toHaveTextContent('Moderado ≥ 1,6%');
@@ -104,6 +105,7 @@ describe('ModelPage', () => {
 
   it('a sonda de probabilidade classifica com >= nos limiares', () => {
     renderPage(<ModelPage />);
+    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
     const slider = screen.getByRole('slider');
     fireEvent.change(slider, { target: { value: '24' } });
     expect(screen.getByTestId('probe-result')).toHaveTextContent('Moderado'); // 24,0% < 24,4%
@@ -115,10 +117,21 @@ describe('ModelPage', () => {
 
   it('trocar de métrica muda os números e a aba F1 continua acessível', () => {
     renderPage(<ModelPage />);
+    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
     const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
     fireEvent.click(within(base).getByRole('radio', { name: 'Brier' }));
     expect(within(base).getByText('0,037')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: /F1/ }));
     expect(screen.getByRole('tab', { name: /F1/ })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('abre no v3 com o v2 ao lado, a etiqueta de sintético, a antecedência e os resultados negativos', () => {
+    renderPage(<ModelPage />);
+    expect(screen.getByRole('tab', { name: /v2 × v3/ })).toHaveAttribute('aria-selected', 'true');
+    const cmp = screen.getByTestId('compare-v2-v3');
+    expect(cmp).toHaveTextContent(/DADOS SINTÉTICOS/);
+    expect(cmp).toHaveTextContent('Alaga nas próximas 6 h');
+    expect(within(cmp).getByRole('region', { name: 'Alertas e eventos' })).toHaveTextContent('antecedência mediana 0 h');
+    expect(within(cmp).getByRole('region', { name: 'Resultados negativos' })).toHaveTextContent('0,77 → 0,62');
   });
 });
