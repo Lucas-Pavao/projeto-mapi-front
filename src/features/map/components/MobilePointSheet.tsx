@@ -24,6 +24,8 @@ interface Props {
   onNext: () => void;
   onBack: () => void;
   onReport: () => void;
+  /** Abre a análise completa (3 abas) numa folha inferior. */
+  onOpenAnalysis?: () => void;
 }
 
 const nav = 'flex size-11 items-center justify-center rounded-[10px] border border-border bg-transparent text-foreground';
@@ -32,7 +34,7 @@ const tileLabel = 'text-[11px] text-muted-foreground';
 const tileValue = 'font-mono text-lg leading-6 font-extrabold';
 
 /** Detalhe do ponto no celular (MobilePonto.dc.html): folha de até 640 px sobre o mapa, com anterior/próximo e "Reportar cenário no local". */
-export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingStatus, index, total, onPrev, onNext, onBack, onReport }) => {
+export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingStatus, index, total, onPrev, onNext, onBack, onReport, onOpenAnalysis }) => {
   const titleId = useId();
   const prediction = status?.floodPrediction ?? point.floodPrediction;
   const precise = status?.preciseData;
@@ -92,6 +94,11 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
               </div>
             ))}
           </div>
+        )}
+        {onOpenAnalysis && (
+          <button type="button" onClick={onOpenAnalysis} className="flex h-11 flex-none items-center justify-center rounded-[10px] border border-border bg-transparent text-sm font-bold text-foreground">
+            Análise completa
+          </button>
         )}
         <button type="button" onClick={onReport} className="flex h-[52px] flex-none items-center justify-center rounded-[10px] bg-primary text-[15px] font-extrabold text-primary-foreground">
           Reportar cenário no local

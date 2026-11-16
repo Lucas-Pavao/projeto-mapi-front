@@ -110,7 +110,12 @@ export const MapCardsDock: React.FC<DockProps> = ({ cards, floodPoints, floodPoi
   const { state } = cards;
   const analysisPoint = state.analysis ? floodPoints.find((p) => p.slug === state.analysis?.slug) : undefined;
   const merged = analysisPoint ? mergeStatus(analysisPoint, floodPointStatus) : undefined;
-  const closeAnalysis = () => cards.close('closeAnalysis');
+  // No celular, fechar a análise volta ao resumo do ponto (MobilePointSheet); no desktop só fecha o painel.
+  const closeAnalysis = () => {
+    const slug = state.analysis?.slug;
+    cards.close('closeAnalysis');
+    if (isMobile && slug) cards.openPoint(slug);
+  };
   const closeStation = () => cards.close('closeStation');
   const closeLocation = () => cards.close('closeLocation');
   const openPoint = (slug: string) => { const p = floodPoints.find((x) => x.slug === slug); if (p) onSelectPoint(p); else cards.openPoint(slug); };

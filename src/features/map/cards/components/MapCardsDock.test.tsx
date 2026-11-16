@@ -16,7 +16,7 @@ afterAll(() => server.close());
 const A = { ...P.high, slug: 'sintetico-1', name: 'Sintético: A' } as FloodPointResponseDTO;
 const B = { ...P.medium, slug: 'sintetico-2', name: 'Sintético: B' } as FloodPointResponseDTO;
 
-const Harness = () => {
+const Harness = ({ mobile = false }: { mobile?: boolean }) => {
   const cards = useMapCards();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') cards.escape(); };
@@ -26,13 +26,13 @@ const Harness = () => {
   return (
     <div>
       <button type="button" onClick={() => cards.openAnalysis('sintetico-2')}>trocar para B</button>
-      <output data-testid="url">{window.location.search}</output>
-      <MapCardsDock cards={cards} floodPoints={[A, B]} floodPointStatus={null} isMobile={false} stations={[]} riverSensor={undefined}
+      <output data-testid="state">{JSON.stringify(cards.state)}</output>
+      <MapCardsDock cards={cards} floodPoints={[A, B]} floodPointStatus={null} isMobile={mobile} stations={[]} riverSensor={undefined}
         onSelectPoint={(p) => cards.openPoint(p.slug)} onCloseSelection={cards.closeAll} onReportAt={() => {}} />
     </div>
   );
 };
-const open = (url: string) => renderPage(<Harness />, { route: url });
+const open = (url: string, mobile = false) => renderPage(<Harness mobile={mobile} />, { route: url });
 
 describe('MapCardsDock (painel, estação ao lado e card de local)', () => {
   it('?ponto&aba abre o painel na aba pedida; candidata abre o card da estação ao lado; Esc fecha a estação e depois o painel', async () => {
@@ -76,5 +76,13 @@ describe('MapCardsDock (painel, estação ao lado e card de local)', () => {
     open('/map?ponto=sintetico-1&aba=inputs');
     fireEvent.click(await screen.findByText(/Sintético: Ibura/));
     expect(await screen.findByText('Estação não encontrada.')).toBeInTheDocument();
+  });
+
+  it('celular: a análise abre em folha com as 3 abas e, ao fechar, volta ao resumo do ponto', async () => {
+    open('/map?ponto=sintetico-1&aba=why', true);
+    const sheet = (await screen.findByTestId('analysis-panel')).parentElement as HTMLElement;
+    expect(within(sheet).getAllByRole('tab').map((t) => t.textContent)).toEqual(['Por quê', 'Entradas', 'Origem']);
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Fechar análise' }));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent as string)).toMatchObject({ analysis: null, point: 'sintetico-1' }));
   });
 });

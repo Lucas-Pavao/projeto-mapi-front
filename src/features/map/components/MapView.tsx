@@ -380,7 +380,7 @@ export const MapView: React.FC = () => {
             onReport={() => setWizard({})}
             hidden={selectedFloodPointId !== undefined || selectedSensorId !== undefined || Boolean(location) || Boolean(cards.state.analysis || cards.state.station || cards.state.river)}
           />
-          {selectedFloodPoint && (
+          {selectedFloodPoint && !cards.state.analysis && (
             <MobilePointSheet
               key={selectedFloodPoint.id}
               point={selectedFloodPoint}
@@ -391,6 +391,7 @@ export const MapView: React.FC = () => {
               onPrev={() => stepPoint(-1)}
               onNext={() => stepPoint(1)}
               onBack={closeEverything}
+              onOpenAnalysis={() => cards.openAnalysis(selectedFloodPoint.slug)}
               onReport={() => setWizard({ point: selectedFloodPoint })}
             />
           )}
