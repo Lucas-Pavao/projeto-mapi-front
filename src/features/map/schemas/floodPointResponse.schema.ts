@@ -93,6 +93,21 @@ const floodPredictionSchema = z
     }).nullable().optional(),
     probabilityKind: z.string().nullable().optional(),
     floodProbabilityUncorrected: z.number().nullable().optional(),
+    // Plano de 16/11, fase 4, por adição: previsão de chuva do ponto no mesmo ciclo (quantis em mm por horizonte).
+    rainForecast: z.object({
+      issuedAt: z.string().nullable().optional(),
+      modelVersion: z.string().nullable().optional(),
+      sources: z.array(z.string()).optional(),
+      usedByModel: z.boolean().optional(),
+      horizons: z.array(z.object({
+        horizonHours: z.number(),
+        q50Mm: z.number(),
+        q80Mm: z.number(),
+        q95Mm: z.number(),
+        probMedia: z.number().nullable().optional(),
+        probForte: z.number().nullable().optional(),
+      })).optional(),
+    }).nullable().optional(),
   })
   .passthrough();
 

@@ -4,6 +4,7 @@ import { ModalDialog } from '@/components/ui/modal-dialog';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
+import { RainForecastSummary } from '@/components/risk/RainForecastSummary';
 import { RISK_MEANING, getRiskVisual, showsExperimentalLabel } from '@/components/risk/risk';
 import { MobileProbabilityChart } from './MobileProbabilityChart';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
@@ -71,6 +72,7 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
           <p className="m-0 text-[13px] text-muted-foreground">{point.municipality ?? 'Recife'}{valid ? ` · válida até ${valid}` : ''}</p>
           {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
           <PredictionProvenance prediction={prediction} />
+          <RainForecastSummary prediction={prediction} />
         </div>
         <MobileProbabilityChart slug={point.slug} />
         {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[15px] leading-[22px]" /> : <p className="m-0 text-[15px] leading-[22px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}

@@ -1,0 +1,67 @@
+{
+  "modelVersion": "rain_v1",
+  "target": "MEASURED",
+  "attribution": "DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC",
+  "source": "projeto-mapi-ai/reports/v4/rain/evaluation.json",
+  "testPeriod": "2025-07-31 a 2026-10-31",
+  "forteEventsInTest": 28,
+  "horizons": [
+    {
+      "horizonHours": 1,
+      "model": "gb_rede",
+      "pinballMm": 0.144,
+      "pinballPersistenceMm": 0.172,
+      "coverageQ50": 0.836,
+      "coverageQ80": 0.897,
+      "coverageQ95": 0.964,
+      "forteRecallRaining": 0.321,
+      "forteRecallDry": 0.0,
+      "forteEventsWarned": 20,
+      "leadMedianMin": 20.0,
+      "leadCi95Min": [
+        10.0,
+        40.0
+      ],
+      "warnedWhileDryPct": 0.0,
+      "falsePerEvent": 3.0
+    },
+    {
+      "horizonHours": 3,
+      "model": "gb_rede_om",
+      "pinballMm": 0.381,
+      "pinballPersistenceMm": 0.447,
+      "coverageQ50": 0.751,
+      "coverageQ80": 0.881,
+      "coverageQ95": 0.971,
+      "forteRecallRaining": 0.443,
+      "forteRecallDry": 0.044,
+      "forteEventsWarned": 21,
+      "leadMedianMin": 40.0,
+      "leadCi95Min": [
+        20.0,
+        140.0
+      ],
+      "warnedWhileDryPct": 3.6,
+      "falsePerEvent": 4.2
+    },
+    {
+      "horizonHours": 6,
+      "model": "gb_rede_om",
+      "pinballMm": 0.725,
+      "pinballPersistenceMm": 0.841,
+      "coverageQ50": 0.685,
+      "coverageQ80": 0.886,
+      "coverageQ95": 0.97,
+      "forteRecallRaining": 0.456,
+      "forteRecallDry": 0.047,
+      "forteEventsWarned": 24,
+      "leadMedianMin": 195.0,
+      "leadCi95Min": [
+        40.0,
+        310.0
+      ],
+      "warnedWhileDryPct": 7.1,
+      "falsePerEvent": 11.4
+    }
+  ]
+}

@@ -4,6 +4,8 @@ import { useModelEvaluation } from '@/features/model/hooks/useModelEvaluation';
 import { EvaluationView, ModelHeader } from '@/features/model/components/EvaluationView';
 import { ModelV2View } from '@/features/model/components/ModelV2View';
 import { CompareV2V3 } from '@/features/model/components/CompareV2V3';
+import { RainForecastView } from '@/features/model/components/RainForecastView';
+import { loadRainCard } from '@/features/model/schemas/rainForecast.schema';
 import { loadModelCardV3 } from '@/features/model/schemas/modelCardV3.schema';
 import { loadModelCard } from '@/features/model/schemas/modelCard.schema';
 import { parseEvaluationResult } from '@/features/model/schemas/model.schema';
@@ -13,10 +15,12 @@ import { cn } from '@/lib/utils';
 const SUBTITLE = 'Avaliação F1 pré-registrada · os números vêm do arquivo congelado, sem recálculo';
 const CARD = loadModelCard();
 const CARD_V3 = loadModelCardV3();
+const RAIN_CARD = loadRainCard();
 
-type Tab = 'v3' | 'v2' | 'f1';
+type Tab = 'v3' | 'chuva' | 'v2' | 'f1';
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'v3', label: 'v2 × v3 · rótulo sintético' },
+  { id: 'chuva', label: 'Previsão de chuva · dado medido' },
   { id: 'v2', label: 'xgb_v2 · rótulo sintético' },
   { id: 'f1', label: 'F1 · balde × rótulo real' },
 ];
@@ -52,8 +56,8 @@ const F1Tab: React.FC = () => {
 
 export const ModelPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('v3');
-  const title = tab === 'v3' ? `Modelo em produção · ${CARD_V3?.modelVersion ?? 'v3'}` : `Modelo anterior · ${CARD?.modelVersion ?? 'xgb_v2'}`;
-  const subtitle = tab === 'v3'
+  const title = tab === 'chuva' ? `Previsão de chuva · ${RAIN_CARD?.modelVersion ?? 'rain_v1'}` : tab === 'v3' ? `Modelo em produção · ${CARD_V3?.modelVersion ?? 'v3'}` : `Modelo anterior · ${CARD?.modelVersion ?? 'xgb_v2'}`;
+  const subtitle = tab === 'chuva' ? 'Chuva das próximas 1, 3 e 6 h no ponto · conferida todo dia contra a chuva medida (Cemaden)' : tab === 'v3'
     ? `Alagamento nas próximas ${CARD_V3?.horizonHours ?? 6} h · chuva medida (Cemaden) · v2 ao lado para comparar`
     : 'Chuva medida (Cemaden) · limiares escolhidos na validação · dados do cartão do modelo';
   return (
@@ -71,6 +75,7 @@ export const ModelPage: React.FC = () => {
       {tab === 'f1' && <Tabs tab={tab} onTab={setTab} />}
       <div id="model-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4">
         {tab === 'f1' ? <F1Tab />
+          : tab === 'chuva' ? (RAIN_CARD ? <RainForecastView card={RAIN_CARD} /> : <EmptyState title="Cartão do modelo de chuva inválido." hint="O arquivo rain_v1_card.json não bate com o contrato. Avise a equipe técnica." />)
           : tab === 'v3' ? (CARD && CARD_V3 ? <CompareV2V3 v2={CARD} v3={CARD_V3} /> : <EmptyState title="Cartão do modelo inválido." hint="v3_model_card.json ou xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />)
           : CARD ? <ModelV2View card={CARD} /> : <EmptyState title="Cartão do modelo inválido." hint="O arquivo xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />}
       </div>

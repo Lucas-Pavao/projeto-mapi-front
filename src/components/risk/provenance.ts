@@ -69,3 +69,44 @@ export function rainInputText(p: Pick<FloodPrediction, 'rainSource' | 'rainInput
   if (src === 'REANALYSIS_FALLBACK') return 'Chuva ESTIMADA (Open-Meteo), não medida: faltou chuva medida e o recurso reserva está ligado.';
   return null;
 }
+
+const mm = (v: number) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mm`;
+const RAIN_SOURCE_LABEL: Record<string, string> = { CEMADEN_PED: 'pluviômetros do Cemaden', OPEN_METEO_FORECAST: 'previsão do Open-Meteo' };
+
+export interface RainForecastLine {
+  horizonHours: number;
+  /** "de 0,2 a 4,0 mm": a faixa entre os quantis de 50% e 95%, nunca um número único. */
+  band: string;
+  /** "em 8 de cada 10 vezes, até 1,1 mm". */
+  typical: string;
+  probFortePct: string | null;
+}
+
+/** Chuva MEDIDA que entrou na previsão: última hora e 3 h. Null quando a API não mandou valor (ausente não é zero). */
+export function measuredRainText(p: Pick<FloodPrediction, 'rainInput'> | null | undefined): string | null {
+  const values = p?.rainInput?.values ?? [];
+  const of = (id: string) => values.find((v) => v.featureId === id)?.valueMm;
+  const h1 = of('current_rainfall');
+  const h3 = of('rainfall_3h_accumulated');
+  if (h1 == null && h3 == null) return null;
+  const parts = [h1 != null ? `${mm(h1)} na última hora` : 'última hora sem dado', h3 != null ? `${mm(h3)} em 3 h` : '3 h sem dado'];
+  return parts.join(' · ');
+}
+
+/** Chuva PREVISTA por horizonte, como faixa entre quantis. */
+export function rainForecastLines(p: Pick<FloodPrediction, 'rainForecast'> | null | undefined): RainForecastLine[] {
+  return (p?.rainForecast?.horizons ?? []).map((h) => ({
+    horizonHours: h.horizonHours,
+    band: `de ${mm(h.q50Mm).replace(' mm', '')} a ${mm(h.q95Mm)}`,
+    typical: `em 8 de cada 10 vezes, até ${mm(h.q80Mm)}`,
+    probFortePct: h.probForte != null ? pct(h.probForte) : null,
+  }));
+}
+
+/** "modelo rain_v1 · pluviômetros do Cemaden e previsão do Open-Meteo". */
+export function rainForecastOrigin(p: Pick<FloodPrediction, 'rainForecast'> | null | undefined): string | null {
+  const f = p?.rainForecast;
+  if (!f) return null;
+  const src = (f.sources ?? []).map((s) => RAIN_SOURCE_LABEL[s] ?? s).join(' e ');
+  return [f.modelVersion ? `modelo ${f.modelVersion}` : null, src || null].filter(Boolean).join(' · ') || null;
+}
