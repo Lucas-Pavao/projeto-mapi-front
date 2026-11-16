@@ -69,7 +69,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise de local" className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-[18px]" aria-hidden="true" /></button>}
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-3.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain scroll px-4 py-3.5">
         {banner && (
           <div role="status" data-testid="location-banner" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-3 py-2.5 text-xs leading-[17px]', TONE_BORDER[banner.tone], TONE_TINT[banner.tone], banner.dashed && 'border-dashed')}>
             <Info className={cn('mt-px size-4 shrink-0', TONE_TEXT[banner.tone])} aria-hidden="true" />

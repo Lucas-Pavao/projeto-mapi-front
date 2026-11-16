@@ -52,7 +52,7 @@ export function stateNote(c: StationCardData): NoteView | null {
       return { tone: 'warning', title: `Pico isolado removido${n?.hourEndUtc ? ` às ${hour(n.hourEndUtc)}` : ''}.`, text: 'Pico de 10 mm ou mais com vizinhas abaixo de 1 mm a até 6 km. A barra cinza mostra o valor corrigido.' };
     case 'UNCHECKED': {
       // Sem linha de checagem: o mês ainda não foi checado (a checagem roda sobre o mês fechado). Não inventar motivo.
-      if (!c.monthCheck) return { tone: 'muted', title: 'Mês ainda sem checagem.', text: 'A checagem espacial roda sobre o mês fechado. Até lá a estação conta como válida.' };
+      if (!c.monthCheck) return { tone: 'muted', title: 'Mês ainda sem checagem.', text: 'A checagem espacial do mês ainda não rodou (roda a cada hora, com a carga da PED). Até lá a estação conta como válida.' };
       const r = c.monthCheck.reasons ?? [];
       const text = r.includes('FEW_WET_NEIGHBORS') ? 'Poucas vizinhas com chuva no mês (FEW_WET_NEIGHBORS). Continua sendo usada.'
         : r.length ? `Motivo: ${r.map((x) => REASON_TEXT[x] ?? x).join(', ')}. Continua sendo usada.` : 'Continua sendo usada.';

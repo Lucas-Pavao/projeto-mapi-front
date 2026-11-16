@@ -63,7 +63,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, series, rain, now, tab, 
         </div>
       </header>
 
-      <div id="analysis-body" role="tabpanel" aria-labelledby={`analysis-tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-[18px] py-3.5">
+      <div id="analysis-body" role="tabpanel" aria-labelledby={`analysis-tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain scroll px-[18px] py-3.5">
         {tab === 'why' && (
           <>
             {!unknown && <SyntheticWarning prediction={p} className="rounded-[10px] px-2.5 py-2 text-xs leading-[17px]" />}

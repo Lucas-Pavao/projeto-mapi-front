@@ -59,7 +59,7 @@ const AnchoredCard: React.FC<{ lon: number; lat: number; label: string; children
   }, [map, lon, lat]);
   if (!map || !box) return null;
   return createPortal(
-    <div data-testid="anchored-card" aria-label={label} className="absolute z-30 overflow-y-auto overscroll-contain rounded-[14px]"
+    <div data-testid="anchored-card" aria-label={label} className="scroll absolute z-30 overflow-y-auto overscroll-contain rounded-[14px]"
       style={{ left: box.left, top: box.top, maxHeight: box.maxHeight }}
       // Rolar ou arrastar dentro do card não mexe no mapa.
       onWheel={stop} onMouseDown={stop} onTouchStart={stop} onDoubleClick={stop} onClick={stop}>
@@ -181,7 +181,7 @@ export const MapCardsDock: React.FC<DockProps> = ({ cards, floodPoints, floodPoi
   return (
     <>
       {analysis && <CardFrame onClose={closeAnalysis} outside={false} className="absolute inset-y-0 right-0 z-40 w-[480px] max-w-full">{analysis}</CardFrame>}
-      {stationDock && <CardFrame onClose={closeStation} outside={false} className={`absolute top-4 z-40 max-h-[calc(100%-2rem)] overflow-y-auto rounded-[14px] ${stationDockSide(state)}`}>{stationDock}</CardFrame>}
+      {stationDock && <CardFrame onClose={closeStation} outside={false} className={`absolute top-4 z-40 scroll max-h-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-[14px] ${stationDockSide(state)}`}>{stationDock}</CardFrame>}
       {/* Altura do mapa (top e bottom fixos), como no protótipo: o card rola por dentro e o rodapé com o relato fica sempre visível. */}
       {location && <CardFrame onClose={closeLocation} className={`absolute bottom-4 top-4 z-40 flex ${state.location?.side === 'left' ? 'left-[392px]' : 'right-4'}`}>{location}</CardFrame>}
     </>
