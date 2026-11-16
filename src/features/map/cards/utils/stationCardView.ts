@@ -23,6 +23,8 @@ export function stateMeta(c: Pick<StationCardData, 'state' | 'pedOnly' | 'monthC
 export const TONE_TEXT: Record<Tone, string> = { warning: 'text-warning', destructive: 'text-destructive', muted: 'text-muted-foreground', success: 'text-success', primary: 'text-primary' };
 export const TONE_TOP: Record<Tone, string> = { warning: 'border-t-warning', destructive: 'border-t-destructive', muted: 'border-t-muted-foreground', success: 'border-t-success', primary: 'border-t-primary' };
 export const TONE_BORDER: Record<Tone, string> = { warning: 'border-warning', destructive: 'border-destructive', muted: 'border-muted-foreground', success: 'border-success', primary: 'border-primary' };
+/** Fundo de aviso: a cor do tom a 10%, como no protótipo. */
+export const TONE_TINT: Record<Tone, string> = { warning: 'bg-warning/10', destructive: 'bg-destructive/10', muted: 'bg-muted-foreground/10', success: 'bg-success/10', primary: 'bg-primary/10' };
 
 const hour = (iso: string | null | undefined) => (iso ? formatRecifeHourMs(Date.parse(iso)) : '—');
 const mm1 = (v: number | null | undefined) => (v == null ? '—' : `${num(v, 1)} mm`);
@@ -99,13 +101,20 @@ export function quarantineText(q: Record<string, number>): string {
   return parts.length ? parts.join(' · ') : 'nenhuma';
 }
 
-export function roleTag(u: StationCardData['uses'][number]): { text: string; tone: Tone } {
+/** Etiqueta do papel da estação no ponto, preenchida como no protótipo: usada = cor cheia; demais = fundo neutro. */
+export function roleTag(u: StationCardData['uses'][number]): { text: string; tone: Tone; className: string } {
   switch (u.role) {
-    case 'USED': return { text: 'usada agora', tone: 'primary' };
-    case 'LOWER': return { text: `menor que ${u.usedStationName ?? '—'}`, tone: 'muted' };
-    case 'EXCLUDED': return { text: 'fora · reprovada', tone: 'destructive' };
-    case 'NO_VALUE': return { text: 'sem valor', tone: 'warning' };
+    case 'USED': return { text: 'usada agora', tone: 'primary', className: 'bg-primary text-primary-foreground' };
+    case 'LOWER': return { text: `menor que ${u.usedStationName ?? '—'}`, tone: 'muted', className: 'bg-muted text-muted-foreground' };
+    case 'EXCLUDED': return { text: 'fora · reprovada', tone: 'destructive', className: 'bg-destructive/15 text-destructive' };
+    case 'NO_VALUE': return { text: 'sem valor', tone: 'warning', className: 'bg-muted text-warning' };
   }
+}
+
+/** Cor do "valor exibido vem de": PED na cor de destaque, ao vivo na cor da série ao vivo. */
+export function sourceClass(c: StationCardData): string {
+  if (c.state === 'NO_RESPONSE' || c.state === 'GAP_NOW' || c.nowSource == null) return 'text-muted-foreground';
+  return c.nowSource === 'CEMADEN_PED' ? 'text-primary' : 'text-chart-3';
 }
 
 export const aliasText = (c: Pick<StationCardData, 'aliases' | 'aliasDistanceM'>): string =>

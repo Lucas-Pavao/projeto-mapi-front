@@ -2,7 +2,7 @@ import type { AnalysisTab } from './analysis';
 
 /**
  * Estado dos cards do mapa: um por vez. Abrir um fecha o outro; o painel de análise (lateral) convive com o card de uma
- * estação aberta ao lado dele. Esc fecha o de cima: estação, depois o painel, depois o resto.
+ * estação aberta ao lado dele, e a análise de local também. Esc fecha o de cima: estação, depois o painel, depois o resto.
  */
 export interface CardsState {
   point: string | null;
@@ -18,7 +18,7 @@ export type CardsAction =
   | { type: 'openPoint'; slug: string }
   | { type: 'openAnalysis'; slug: string; tab?: AnalysisTab }
   | { type: 'setTab'; tab: AnalysisTab }
-  | { type: 'openStation'; id: string }
+  | { type: 'openStation'; id: string; fromLocation?: boolean }
   | { type: 'openRiver'; id: string }
   | { type: 'openLocation'; lat: number; lon: number; side: 'left' | 'right' }
   | { type: 'closeStation' }
@@ -38,9 +38,9 @@ export function cardsReducer(s: CardsState, a: CardsAction): CardsState {
       return { ...EMPTY_CARDS, analysis: { slug: a.slug, tab: a.tab ?? s.analysis?.tab ?? 'why' } };
     case 'setTab':
       return s.analysis ? { ...s, analysis: { ...s.analysis, tab: a.tab } } : s;
-    // A estação abre ao lado do painel (candidata) ou sozinha (clique no mapa); fecha ponto, rio e local.
+    // A estação abre ao lado do painel ou da análise de local (candidata da lista) ou sozinha (clique no mapa).
     case 'openStation':
-      return { ...EMPTY_CARDS, analysis: s.analysis, station: a.id };
+      return { ...EMPTY_CARDS, analysis: s.analysis, location: a.fromLocation ? s.location : null, station: a.id };
     case 'openRiver':
       return { ...EMPTY_CARDS, river: a.id };
     case 'openLocation':
@@ -51,6 +51,7 @@ export function cardsReducer(s: CardsState, a: CardsAction): CardsState {
     case 'closeRiver': return { ...s, river: null };
     case 'closeLocation': return { ...s, location: null };
     case 'escape':
+      // Esc fecha o card da estação; outro Esc fecha o painel ou a análise de local (protótipo, regras de interação).
       if (s.station) return { ...s, station: null };
       if (s.analysis) return { ...s, analysis: null };
       return EMPTY_CARDS;

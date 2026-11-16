@@ -28,9 +28,9 @@ describe('LocationCard: os 5 estados', () => {
   });
   it('2 lacuna: "sem dado", sem trocar por estimativa e ponto próximo UNKNOWN sem porcentagem', () => {
     show('gap');
-    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado');
+    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado · Cemaden');
     expect(screen.getAllByTestId('rain-tile').every((t) => /sem dado/.test(t.textContent ?? ''))).toBe(true);
-    expect(screen.getByTestId('location-banner')).toHaveTextContent('não é trocado por estimativa');
+    expect(screen.getByTestId('location-banner')).toHaveTextContent('não é trocada por estimativa');
     expect(screen.queryByText(/estimada/)).toBeNull();
     expect(screen.getByTestId('nearest-point').textContent).not.toMatch(/\d%/);
     expect(screen.getByTestId('nearest-point')).toHaveTextContent('sem dado suficiente');
@@ -38,7 +38,7 @@ describe('LocationCard: os 5 estados', () => {
   it('3 estimada: etiqueta "estimada · Open-Meteo" só neste modo, borda tracejada e sem candidatas', () => {
     show('estimated');
     expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('estimada · Open-Meteo');
-    expect(screen.getByTestId('location-banner')).toHaveTextContent('Sem pluviômetro até 5 km');
+    expect(screen.getByTestId('location-banner')).toHaveTextContent('Nenhum pluviômetro válido até 5 km');
     expect(screen.getAllByTestId('rain-tile')[0]).toHaveClass('border-dashed');
     expect(screen.queryByText(/PLUVIÔMETROS ATÉ 5 KM/)).toBeNull();
   });
@@ -49,13 +49,13 @@ describe('LocationCard: os 5 estados', () => {
     expect(screen.queryByRole('region', { name: 'Terreno' })).toBeNull();
     expect(screen.getByTestId('tide-tile')).toHaveTextContent('1,81');
     expect(screen.getByTestId('weather')).toBeInTheDocument();
-    expect(screen.getByTestId('location-banner')).toHaveTextContent('Local no mar');
+    expect(screen.getByTestId('location-banner')).toHaveTextContent('Ponto no mar');
   });
   it('5 fora da área: aviso, sem terreno e sem botão de relato', () => {
     show('outside', { onReport: () => {} });
     expect(screen.getByTestId('location-banner')).toHaveTextContent('Fora da área monitorada');
     expect(screen.queryByRole('region', { name: 'Terreno' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Reportar alagamento aqui' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Reportar alagamento aqui' })).toBeDisabled(); // aparece, desabilitado (protótipo)
     cleanup();
     show('measured', { onReport: () => {} });
     expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Reportar alagamento aqui' })).toBeInTheDocument();

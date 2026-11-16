@@ -12,23 +12,31 @@ export function locationState(a: Pick<LocationAnalysis, 'isSea' | 'inArea'> & { 
 
 export interface Banner { tone: 'warning' | 'muted' | 'primary'; dashed: boolean; title: string; text: string }
 
-export function bannerOf(state: LocationState, a: LocationAnalysis): Banner | null {
+/** Aviso do topo, com os textos do protótipo (CardLocal): um por estado, nenhum na chuva medida. */
+export function bannerOf(state: LocationState): Banner | null {
   switch (state) {
     case 'MEASURED': return null;
-    case 'GAP': return { tone: 'warning', dashed: false, title: 'Estações válidas sem dado nesta hora.', text: 'O valor fica "sem dado": não é trocado por estimativa nem vira zero.' };
-    case 'ESTIMATED': return { tone: 'primary', dashed: true, title: 'Sem pluviômetro até 5 km.', text: 'A chuva abaixo é estimada pela reanálise (Open-Meteo), não medida.' };
-    case 'SEA': return { tone: 'muted', dashed: false, title: 'Local no mar.', text: 'Sem chuva medida nem terreno: só maré, tempo e o ponto mais próximo.' };
-    case 'OUTSIDE': return { tone: 'warning', dashed: true, title: 'Fora da área monitorada.', text: `Fora da RMR: sem terreno e sem relato${a.rain.mode === 'ESTIMATED' ? '; a chuva é estimada' : ''}.` };
+    case 'GAP': return { tone: 'warning', dashed: true, title: 'Sem chuva medida agora.', text: 'As estações válidas até 5 km estão sem dado nesta hora. A lacuna não vira zero e não é trocada por estimativa.' };
+    case 'ESTIMATED': return { tone: 'warning', dashed: false, title: 'Nenhum pluviômetro válido até 5 km.', text: 'A chuva abaixo é estimada (Open-Meteo): suaviza picos e não entra em nenhuma previsão.' };
+    case 'SEA': return { tone: 'muted', dashed: true, title: 'Ponto no mar.', text: 'Sem terreno nem pluviômetro. Mostramos só maré e tempo estimado.' };
+    case 'OUTSIDE': return { tone: 'warning', dashed: false, title: 'Fora da área monitorada.', text: 'O MAPi cobre a Região Metropolitana do Recife. Chuva e tempo abaixo são estimativas de reanálise.' };
   }
 }
 
-export interface RainSourceTag { text: string; tone: 'success' | 'warning' | 'primary' }
+export interface RainSourceTag { text: string; measured: boolean }
 
 export function rainSourceTag(mode: RainMode): RainSourceTag {
-  return mode === 'MEASURED' ? { text: 'medida · Cemaden', tone: 'success' } : mode === 'GAP' ? { text: 'sem dado', tone: 'warning' } : { text: 'estimada · Open-Meteo', tone: 'primary' };
+  return mode === 'MEASURED' ? { text: 'medida · Cemaden', measured: true } : mode === 'GAP' ? { text: 'sem dado · Cemaden', measured: false } : { text: 'estimada · Open-Meteo', measured: false };
 }
 
-export interface RainTile { label: string; value: string; unit: string; missing: boolean }
+/** Nota sob os números da chuva (protótipo). */
+export function rainNote(mode: RainMode): string {
+  return mode === 'MEASURED' ? 'Vale o maior valor entre os pluviômetros válidos até 5 km, a mesma regra da chuva dos pontos críticos. Hora sem dado deixa o acumulado vazio.'
+    : mode === 'GAP' ? 'Volta a aparecer quando a estação mandar a próxima leitura ou a PED preencher a hora.'
+    : 'Reanálise horária: serve de referência, não de medição.';
+}
+
+export interface RainTile { label: string; value: string; unit: string; missing: boolean; first: boolean }
 
 /**
  * Chuva agora/3 h/24 h. Ausente nunca vira 0: "incompleto" no acumulado de chuva MEDIDA com hora faltando; "sem dado" na
@@ -36,17 +44,34 @@ export interface RainTile { label: string; value: string; unit: string; missing:
  */
 export function rainTiles(a: LocationAnalysis): RainTile[] {
   const acc = a.rain.mode === 'MEASURED' ? 'incompleto' : 'sem dado';
-  const t = (label: string, v: number | null | undefined, unit: string, miss: string): RainTile => ({ label, value: v == null ? miss : num(v, 1), unit: v == null ? '' : unit, missing: v == null });
-  return [t('Agora', a.rain.nowMmH, 'mm/h', 'sem dado'), t('3 h', a.rain.acc3hMm, 'mm', acc), t('24 h', a.rain.acc24hMm, 'mm', acc)];
+  const t = (label: string, v: number | null | undefined, unit: string, miss: string, first = false): RainTile => ({ label, value: v == null ? miss : num(v, 1), unit: v == null ? '' : unit, missing: v == null, first });
+  return [t('Agora', a.rain.nowMmH, 'mm/h', 'sem dado', true), t('3 h', a.rain.acc3hMm, 'mm', acc), t('24 h', a.rain.acc24hMm, 'mm', acc)];
 }
+
+/** Valor e etiqueta da candidata na lista (protótipo): fora = motivo do mês; sem valor = "sem dado"; senão mm/h. */
+export const CANDIDATE_TAG_CLASS: Record<LocationCandidate['role'], string> = {
+  USED: 'text-primary', LOWER: 'text-muted-foreground', EXCLUDED: 'text-destructive', NO_VALUE: 'text-warning',
+};
 
 /** Estilo da linha do mapa até cada candidata: cheia = usada, tracejada = menor/sem valor, vermelha = reprovada. */
 export type LineStyle = { color: string; dash: [number, number] | undefined; width: number };
-export function lineStyleOf(c: Pick<LocationCandidate, 'role'>): LineStyle {
+export interface LinePalette { primary: string; destructive: string; muted: string }
+export const DEFAULT_LINE_PALETTE: LinePalette = { primary: '#5cb8ff', destructive: '#d4373c', muted: '#8a9a9c' };
+
+/** Cores do tema atual (variáveis CSS), para as linhas acompanharem tema e cor de destaque; sem DOM, as padrão. */
+export function themeLinePalette(): LinePalette {
+  if (typeof window === 'undefined') return DEFAULT_LINE_PALETTE;
+  const css = getComputedStyle(document.documentElement);
+  const v = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
+  return { primary: v('--primary', DEFAULT_LINE_PALETTE.primary), destructive: v('--destructive', DEFAULT_LINE_PALETTE.destructive), muted: v('--muted-foreground', DEFAULT_LINE_PALETTE.muted) };
+}
+
+/** Protótipo: usada = cheia e mais grossa; menor/sem valor = tracejada neutra; reprovada = tracejada vermelha. */
+export function lineStyleOf(c: Pick<LocationCandidate, 'role'>, p: LinePalette = DEFAULT_LINE_PALETTE): LineStyle {
   switch (c.role) {
-    case 'USED': return { color: '#5cb8ff', dash: undefined, width: 3 };
-    case 'EXCLUDED': return { color: '#d4373c', dash: [2, 2], width: 2 };
-    default: return { color: '#8a9a9c', dash: [4, 3], width: 2 };
+    case 'USED': return { color: p.primary, dash: undefined, width: 2.5 };
+    case 'EXCLUDED': return { color: p.destructive, dash: [4, 4], width: 1.5 };
+    default: return { color: p.muted, dash: [4, 4], width: 1.5 };
   }
 }
 

@@ -38,6 +38,7 @@ export function useMapCards() {
     openAnalysis: (slug: string, tab?: AnalysisTab) => dispatch({ type: 'openAnalysis', slug, tab }),
     setTab: (tab: AnalysisTab) => dispatch({ type: 'setTab', tab }),
     openStation: (id: string) => dispatch({ type: 'openStation', id }),
+    openStationFromLocation: (id: string) => dispatch({ type: 'openStation', id, fromLocation: true }),
     openRiver: (id: string) => dispatch({ type: 'openRiver', id }),
     openLocation: (lat: number, lon: number, side: 'left' | 'right') => dispatch({ type: 'openLocation', lat, lon, side }),
     close: (type: CloseType) => dispatch({ type }),

@@ -7,7 +7,7 @@ import { formatRecifeHourMs } from '../../utils/datetime';
 import { CEMADEN_ATTRIBUTION } from '@/features/sensors/schemas/station.schema';
 import type { StationCardData } from '../schemas/stationCard.schema';
 import {
-  TONE_BORDER, TONE_TEXT, TONE_TOP, accText, aliasText, liveText, monthText, nowText, pedText, quarantineText, roleTag, sourceText, stateMeta, stateNote,
+  TONE_BORDER, TONE_TEXT, TONE_TINT, TONE_TOP, accText, aliasText, liveText, monthText, nowText, pedText, quarantineText, roleTag, sourceClass, sourceText, stateMeta, stateNote,
 } from '../utils/stationCardView';
 
 const BAR_W = 292;
@@ -52,7 +52,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
   const last = c.blocks[c.blocks.length - 1];
   return (
     <section role="dialog" aria-label={`Pluviômetro ${name}`} data-state={c.state} data-pedonly={c.pedOnly}
-      className={cn('flex w-[320px] max-w-full flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone], meta.dashed && '[border-top-style:dashed]')}>
+      className={cn('flex w-[320px] max-w-full flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="state-chip" className={cn('inline-flex h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
@@ -72,7 +72,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <div className="flex items-end justify-between gap-2.5">
         <div><div className="text-[11px] leading-[14px] text-muted-foreground">Chuva agora</div><div data-testid="now" className={cn('font-mono text-[26px] font-extrabold leading-8', now.warn && 'text-warning')}>{now.value}</div></div>
-        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">valor exibido vem de</div><div className="text-[13px] font-bold leading-[18px]">{sourceText(c)}</div></div>
+        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">valor exibido vem de</div><div data-testid="source" className={cn('text-[13px] font-bold leading-[18px]', sourceClass(c))}>{sourceText(c)}</div></div>
       </div>
 
       <div>
@@ -97,7 +97,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
       </div>
 
       {note && (
-        <div role="status" data-testid="note" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-xs leading-[17px]', TONE_BORDER[note.tone])}>
+        <div role="status" data-testid="note" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-xs leading-[17px]', TONE_BORDER[note.tone], TONE_TINT[note.tone])}>
           <Info className={cn('mt-px size-4 shrink-0', TONE_TEXT[note.tone])} aria-hidden="true" />
           <span><strong>{note.title}</strong> {note.text}</span>
         </div>
@@ -118,7 +118,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
           return (
             <div key={u.slug} data-use={u.role} className="flex items-center justify-between gap-2 text-xs leading-4">
               {onOpenPoint ? <button type="button" onClick={() => onOpenPoint(u.slug)} className="cursor-pointer border-0 bg-transparent p-0 text-left text-foreground hover:underline">{label}</button> : <span>{label}</span>}
-              <span className={cn('inline-flex h-5 items-center rounded-full border px-2 text-[11px] font-bold', TONE_BORDER[tag.tone], TONE_TEXT[tag.tone])}>{tag.text}</span>
+              <span className={cn('inline-flex h-5 shrink-0 items-center rounded-full px-2 text-[11px] font-bold', tag.className)}>{tag.text}</span>
             </div>
           );
         })}

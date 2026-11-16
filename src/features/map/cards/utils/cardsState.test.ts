@@ -61,4 +61,19 @@ describe('URL', () => {
   it('fechar tudo limpa os parâmetros do card e preserva os outros', () => {
     expect(paramsFromState(EMPTY_CARDS, new URLSearchParams('ponto=A&aba=why&x=1')).toString()).toBe('x=1');
   });
+  it('estação da lista da análise de local abre ao lado dela; Esc fecha a estação e depois o local', () => {
+    let s = run(EMPTY_CARDS, { type: 'openLocation', lat: -8.1, lon: -34.95, side: 'right' }, { type: 'openStation', id: 'E1', fromLocation: true });
+    expect(s.location).not.toBeNull();
+    expect(s.station).toBe('E1');
+    s = run(s, { type: 'escape' });
+    expect(s.station).toBeNull();
+    expect(s.location).not.toBeNull();
+    s = run(s, { type: 'escape' });
+    expect(s.location).toBeNull();
+  });
+
+  it('estação clicada no mapa fecha a análise de local', () => {
+    const s = run(EMPTY_CARDS, { type: 'openLocation', lat: -8.1, lon: -34.95, side: 'right' }, { type: 'openStation', id: 'E1' });
+    expect(s.location).toBeNull();
+  });
 });
