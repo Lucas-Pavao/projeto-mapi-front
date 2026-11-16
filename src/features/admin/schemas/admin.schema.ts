@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isoSchema, pageOf, roleSchema } from '@/lib/apiSchemas';
 
-export const ingestionStatusSchema = z.enum(['OK', 'DELAYED', 'FAILING', 'QUARANTINED', 'IDLE']);
+export const ingestionStatusSchema = z.enum(['OK', 'DELAYED', 'FAILING', 'QUARANTINED', 'IDLE', 'STALE']);
 export type IngestionStatus = z.infer<typeof ingestionStatusSchema>;
 
 export const ingestionSourceSchema = z.object({
@@ -13,8 +13,18 @@ export const ingestionSourceSchema = z.object({
   lastRunId: z.string().nullable().optional(),
   lastError: z.string().nullable().optional(),
   rowsLast24h: z.number().optional(),
+  /** Idade da leitura ACEITA mais nova contra o limite da fonte (V29). Ausente em APIs antigas. */
+  freshness: z.object({
+    state: z.enum(['FRESH', 'STALE', 'NO_DATA', 'COVERAGE_LOW', 'UNMONITORED']).catch('UNMONITORED'),
+    lastAcceptedAt: isoSchema.nullable().optional(),
+    ageMinutes: z.number().nullable().optional(),
+    maxAgeMinutes: z.number().nullable().optional(),
+    coverageUntil: isoSchema.nullable().optional(),
+    minCoverageAheadMinutes: z.number().nullable().optional(),
+  }).nullable().optional(),
 });
 export type IngestionSource = z.infer<typeof ingestionSourceSchema>;
+export type Freshness = NonNullable<IngestionSource['freshness']>;
 
 export const userSummarySchema = z.object({
   id: z.number(),

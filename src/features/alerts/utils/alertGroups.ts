@@ -18,6 +18,7 @@ const GROUP_OF: Record<AlertKind, Exclude<AlertGroup, 'all'>> = {
   TIDE_ABOVE: 'tide',
   RAIN_RATE: 'rain',
   SENSOR_STALE: 'sensor',
+  SOURCE_STALE: 'sensor',
 };
 
 export const groupOf = (kind: AlertKind) => GROUP_OF[kind];

@@ -4,7 +4,7 @@ import { DialogPanel } from '@/components/ui/dialog-panel';
 import { Field, Select } from '@/components/ui/form-field';
 import { Input } from '@/components/ui/input';
 import { TideDatumNotice } from '@/components/TideDatumNotice';
-import type { AlertKind, AlertRule, AlertRuleInput } from '../schemas/alert.schema';
+import type { RuleKind as AlertKind, AlertRule, AlertRuleInput } from '../schemas/alert.schema';
 import { RULE_KINDS, validateRule } from '../utils/ruleKinds';
 
 interface PointOption { slug: string; name: string }

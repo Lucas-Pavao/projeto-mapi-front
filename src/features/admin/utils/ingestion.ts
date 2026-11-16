@@ -7,10 +7,11 @@ export const INGESTION_STATUS = {
   DELAYED: { label: 'Atrasada', Icon: Clock, tone: 'text-warning border-warning/40 bg-warning/10' },
   FAILING: { label: 'Com falha', Icon: CircleAlert, tone: 'text-destructive border-destructive/40 bg-destructive/10' },
   QUARANTINED: { label: 'Em quarentena', Icon: ShieldAlert, tone: 'text-destructive border-destructive/40 bg-destructive/10' },
-  IDLE: { label: 'Parada', Icon: CirclePause, tone: 'text-muted-foreground border-border bg-muted' },
+  IDLE: { label: 'Sem execução', Icon: CirclePause, tone: 'text-muted-foreground border-border bg-muted' },
+  STALE: { label: 'Parada (sem leitura aceita)', Icon: CircleAlert, tone: 'text-destructive border-destructive/40 bg-destructive/10' },
 } satisfies Record<IngestionStatus, { label: string; Icon: ComponentType<{ className?: string }>; tone: string }>;
 
-export const isProblem = (s: IngestionStatus) => s === 'FAILING' || s === 'QUARANTINED' || s === 'DELAYED';
+export const isProblem = (s: IngestionStatus) => s === 'FAILING' || s === 'STALE' || s === 'QUARANTINED' || s === 'DELAYED';
 
 
 /**
@@ -37,7 +38,7 @@ export interface SourceView extends IngestionSource {
   runSource: string;
 }
 
-const SEVERITY: Record<IngestionStatus, number> = { FAILING: 4, QUARANTINED: 3, DELAYED: 2, OK: 1, IDLE: 0 };
+const SEVERITY: Record<IngestionStatus, number> = { FAILING: 5, STALE: 4, QUARANTINED: 3, DELAYED: 2, OK: 1, IDLE: 0 };
 const latest = (a: string | null | undefined, b: string | null | undefined) => (!a ? b : !b ? a : Date.parse(a) >= Date.parse(b) ? a : b);
 
 /**
@@ -66,6 +67,8 @@ export function groupSources(items: IngestionSource[]): SourceView[] {
       lastRunId: worst.lastRunId ?? recent?.lastRunId ?? null,
       lastError: worst.lastError ?? null,
       rowsLast24h: members.reduce((n, m) => n + (m.rowsLast24h ?? 0), 0),
+      // a pior frescura entre as chaves do grupo (a maré junta tábua, horária e DHN)
+      freshness: worstFreshness(members),
       runSource: (worst.lastRunId ? worst : recent ?? members[0]).source,
     });
   }
@@ -85,6 +88,7 @@ export const STATUS_COLOR: Record<IngestionStatus, string> = {
   DELAYED: 'var(--warning)',
   FAILING: 'var(--destructive)',
   QUARANTINED: 'var(--destructive)',
+  STALE: 'var(--destructive)',
   IDLE: 'var(--muted-foreground)',
 };
 
@@ -108,4 +112,24 @@ export function agoText(iso: string | null | undefined, now: number): string {
 export function elapsedFraction(iso: string | null | undefined, everyMin: number | null | undefined, now: number): number | null {
   if (!iso || !everyMin) return null;
   return Math.min(1, Math.max(0, (now - Date.parse(iso)) / 60_000 / everyMin));
+}
+
+const FRESH_SEVERITY = { NO_DATA: 4, STALE: 3, COVERAGE_LOW: 2, FRESH: 1, UNMONITORED: 0 } as const;
+
+export function worstFreshness(members: IngestionSource[]): IngestionSource['freshness'] {
+  const fs = members.map((m) => m.freshness).filter((f): f is NonNullable<IngestionSource['freshness']> => !!f && f.state !== 'UNMONITORED');
+  if (!fs.length) return members.find((m) => m.freshness)?.freshness ?? null;
+  return fs.reduce((a, b) => (FRESH_SEVERITY[b.state] > FRESH_SEVERITY[a.state] ? b : a));
+}
+
+/** Texto da leitura aceita: "leitura aceita há 12 min (máx. 90 min)", "nenhuma leitura aceita", "tábua até 26/11". */
+export function freshnessText(f: IngestionSource['freshness'], now: number): string | null {
+  if (!f || f.state === 'UNMONITORED') return null;
+  if (f.minCoverageAheadMinutes) {
+    if (!f.coverageUntil) return 'sem tábua à frente';
+    const days = Math.floor((Date.parse(f.coverageUntil) - now) / 86_400_000);
+    return `tábua cobre ${days} d à frente (mín. ${Math.round(f.minCoverageAheadMinutes / 1440)} d)`;
+  }
+  if (!f.lastAcceptedAt) return 'nenhuma leitura aceita em 60 dias';
+  return `leitura aceita ${agoText(f.lastAcceptedAt, now)} (máx. ${everyText(f.maxAgeMinutes).replace('a cada ', '')})`;
 }
