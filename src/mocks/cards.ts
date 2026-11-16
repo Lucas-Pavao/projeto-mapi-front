@@ -25,14 +25,17 @@ const base: StationCardData = {
   lastReadingUtc: new Date(HOUR_END).toISOString(), attribution: ATTRIBUTION,
 };
 
-/** Os 8 estados do card: 7 `state` + a variante só PED. */
+/**
+ * Os 8 estados do card: 7 `state` + a variante só PED. NO_RESPONSE = nenhuma leitura nas 3 h; GAP_NOW = nenhuma leitura em
+ * (at − 70 min, at] (as 7 últimas posições), com leitura antes disso.
+ */
 export const STATION_CARD_FIXTURES: Record<string, StationCardData> = {
   normal: base,
   divergent: { ...base, state: 'DIVERGENT', liveMmH: 2.0, note: { kind: 'DIVERGENT', hourEndUtc: new Date(HOUR_END).toISOString(), liveMm: 2.0, pedMm: 3.2, diffMm: 1.2 } },
   peak: { ...base, state: 'PEAK_REMOVED', blocks: blocksOf((i) => (i === 6 ? 2 : 0.4), 'CEMADEN_PED', 6), note: { kind: 'PEAK_REMOVED', hourEndUtc: new Date(HOUR_END - 6_000_000).toISOString() } },
   unchecked: { ...base, state: 'UNCHECKED', monthCheck: { monthStartUtc: '2026-11-01T00:00:00Z', status: 'UNCHECKED', reasons: ['FEW_WET_NEIGHBORS'] } },
-  gap: { ...base, state: 'GAP_NOW', nowMmH: null, nowSource: null, liveMmH: null, pedMmH: null, blocks: blocksOf((i) => (i >= 15 ? null : 0.4)), acc1hMm: null, acc3hMm: null, quarantineToday: { GAP: 2, AFTER_GAP: 0, SUSPECT_QUALIFIER: 0 } },
-  noResponse: { ...base, state: 'NO_RESPONSE', nowMmH: null, nowSource: null, liveMmH: null, pedMmH: null, blocks: blocksOf((i) => (i >= 6 ? null : 0.4)), acc1hMm: null, acc3hMm: null, lastReadingUtc: new Date(HOUR_END - 4 * 3_600_000).toISOString(),
+  gap: { ...base, state: 'GAP_NOW', nowMmH: null, nowSource: null, liveMmH: null, pedMmH: null, blocks: blocksOf((i) => (i >= 11 ? null : 0.4)), acc1hMm: null, acc3hMm: null, quarantineToday: { GAP: 2, AFTER_GAP: 0, SUSPECT_QUALIFIER: 0 } },
+  noResponse: { ...base, state: 'NO_RESPONSE', nowMmH: null, nowSource: null, liveMmH: null, pedMmH: null, blocks: blocksOf(() => null), acc1hMm: null, acc3hMm: null, lastReadingUtc: new Date(HOUR_END - 4 * 3_600_000).toISOString(),
     uses: [{ slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceM: 688, role: 'NO_VALUE', usedStationName: null }] },
   failMonth: { ...base, state: 'FAIL_MONTH', monthCheck: { monthStartUtc: '2026-11-01T00:00:00Z', status: 'FAIL', reasons: ['UNDERCATCH'] }, uses: [{ slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceM: 688, role: 'EXCLUDED', usedStationName: null }] },
   pedOnly: { ...base, canonicalId: 'SINT-P', name: 'Sintético: Cavaleiro', aliases: ['CEMADEN_PED:SINT-P'], aliasDistanceM: null, sources: ['CEMADEN_PED'], pedOnly: true, liveMmH: null },

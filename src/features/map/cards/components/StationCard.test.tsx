@@ -35,7 +35,9 @@ describe('StationCard: os 8 estados', () => {
   it('5 lacuna agora: "sem dado", blocos tracejados e acumulados incompletos (nunca 0)', () => {
     show('gap');
     expect(screen.getByTestId('now')).toHaveTextContent('sem dado');
-    expect(screen.getByTestId('station-bars').querySelectorAll('[data-block="gap"]').length).toBeGreaterThan(0);
+    const bars = screen.getByTestId('station-bars');
+    expect(bars.querySelectorAll('[data-block="gap"]')).toHaveLength(7); // nenhuma leitura em 70 min
+    expect(bars.querySelectorAll('[data-block="CEMADEN_PED"]').length).toBeGreaterThan(0); // mas houve leitura nas 3 h
     expect(screen.getByTestId('accs')).toHaveTextContent('incompleto');
     expect(screen.getByTestId('accs').textContent).not.toMatch(/\b0 mm|0,0 mm/);
     expect(screen.getByTestId('note')).toHaveTextContent('não vira zero');
@@ -44,6 +46,7 @@ describe('StationCard: os 8 estados', () => {
     show('noResponse');
     expect(screen.getByTestId('state-chip')).toHaveTextContent('Sem resposta');
     expect(screen.getByTestId('now')).toHaveTextContent('—');
+    expect(screen.getByTestId('station-bars').querySelectorAll('[data-block="gap"]')).toHaveLength(18); // nenhuma leitura nas 3 h
     expect(screen.getByTestId('note')).toHaveTextContent(/Parou de responder às \d{2}:\d{2}/);
     expect(document.querySelector('[data-use="NO_VALUE"]')).toHaveTextContent('sem valor');
   });

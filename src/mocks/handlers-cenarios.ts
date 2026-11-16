@@ -52,6 +52,7 @@ export const cenariosHandlers = [
   http.get<{ id: string }>('/api/stations/:id/card', ({ params }) => HttpResponse.json(stationCardFor(params.id))),
   http.get('/api/locations/analysis', ({ request }) => {
     const u = new URL(request.url);
+    // A API devolve a lat/lon pedida.
     return HttpResponse.json({ ...LOCATION_FIXTURES.measured, lat: Number(u.searchParams.get('lat')), lon: Number(u.searchParams.get('lon')) });
   }),
   http.get('/api/admin/stations/month-checks', () => HttpResponse.json(monthChecksMock())),
