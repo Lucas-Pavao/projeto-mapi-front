@@ -9,6 +9,8 @@ import { thresholdReason } from '@/components/risk/provenance';
 const panel = 'flex min-h-0 min-w-0 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-4';
 const overline = 'm-0 text-xs leading-4 font-bold uppercase tracking-[0.06em] text-muted-foreground';
 const n = (v: number, d = 3) => v.toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
+/** Posição na escala de raiz quadrada (0–100%). */
+const sqrtPos = (v: number) => `${(Math.sqrt(Math.max(0, Math.min(1, v))) * 100).toFixed(2)}%`;
 const sg = (v: number, d = 3) => `${v >= 0 ? '+' : '−'}${n(Math.abs(v), d)}`;
 
 type Metric = 'prAuc' | 'rocAuc' | 'brier';
@@ -18,7 +20,19 @@ const METRICS: ReadonlyArray<{ id: Metric; label: string; name: string; note: st
   { id: 'brier', label: 'Brier', name: 'Brier (menor é melhor)', note: 'Erro quadrático da probabilidade. A versão calibrada só muda o Brier, não a ordenação.' },
 ];
 
-const FIELDS = ['modelVersion', 'riskLevel', 'floodProbability', 'riskThresholds {medium, high, source}', 'rainSource', 'trainingData', 'syntheticWarning', 'contributors[] {featureId, label, contribution, value, unit}', 'imputedFeatures[]', 'degradationReason'];
+/** Campos da resposta da previsão (ADR 0007, emenda 2), com o que cada um diz: chave e descrição, como no protótipo. */
+const FIELDS: ReadonlyArray<[string, string]> = [
+  ['modelVersion', 'versão do artefato (antes: unversioned)'],
+  ['riskLevel', 'LOW | MEDIUM | HIGH; UNKNOWN só na degradação'],
+  ['floodProbability', 'probabilidade bruta do modelo'],
+  ['riskThresholds', 'medium e high, lidos do metadata'],
+  ['rainSource', 'fonte da chuva com que o modelo foi treinado'],
+  ['trainingData', 'SYNTHETIC enquanto o rótulo for sintético'],
+  ['syntheticWarning', 'texto obrigatório na tela quando o treino é sintético'],
+  ['contributors', 'maiores contribuições SHAP, em p.p., com valor e unidade'],
+  ['imputedFeatures', 'entradas que chegaram vazias e foram preenchidas'],
+  ['degradationReason', 'por que o risco ficou indisponível'],
+];
 
 const Baselines: React.FC<{ card: ModelCard }> = ({ card }) => {
   const [metric, setMetric] = useState<Metric>('prAuc');
@@ -63,11 +77,19 @@ const Probe: React.FC<{ card: ModelCard }> = ({ card }) => {
         <span className="flex justify-between text-[13px] font-bold">Probabilidade do modelo<span className="font-mono" data-testid="probe-p">{pctTxt(prob)}</span></span>
         <input type="range" min={0} max={100} step={1} value={p} onChange={(e) => setP(Number(e.target.value))} className="m-0 w-full" />
       </label>
+      {/* Escala de raiz quadrada (protótipo): com limiares de 1,6% e 24,4%, na escala linear a faixa baixa some.
+          Os rótulos ficam exatamente nas fronteiras das cores. */}
       <div className="relative flex h-[34px] overflow-hidden rounded-lg" aria-hidden="true">
-        <span style={{ width: `${t.medium * 100}%` }} className="bg-risk-low" /><span style={{ width: `${(t.high - t.medium) * 100}%` }} className="bg-risk-moderate" /><span className="flex-1 bg-risk-high" />
-        <span className="absolute inset-y-0 -ml-px w-[3px] bg-foreground" style={{ left: `${p}%` }} />
+        <span style={{ width: sqrtPos(t.medium) }} className="bg-risk-low" /><span style={{ width: `calc(${sqrtPos(t.high)} - ${sqrtPos(t.medium)})` }} className="bg-risk-moderate" /><span className="flex-1 bg-risk-high" />
+        <span data-testid="probe-marker" className="absolute inset-y-0 -ml-px w-[3px] bg-foreground" style={{ left: sqrtPos(prob) }} />
       </div>
-      <div className="flex justify-between font-mono text-[11px] text-muted-foreground"><span>0%</span><span>{pctTxt(t.medium)}</span><span>{pctTxt(t.high)}</span><span>100%</span></div>
+      <div className="relative h-4 font-mono text-[11px] text-muted-foreground" data-testid="probe-scale">
+        <span className="absolute left-0">0%</span>
+        <span className="absolute -translate-x-1/2" style={{ left: sqrtPos(t.medium) }}>{pctTxt(t.medium)}</span>
+        <span className="absolute -translate-x-1/2" style={{ left: sqrtPos(t.high) }}>{pctTxt(t.high)}</span>
+        <span className="absolute right-0">100%</span>
+      </div>
+      <p className="m-0 text-[11px] text-muted-foreground">escala de raiz quadrada</p>
       <div className="flex items-center gap-2.5" data-testid="probe-result">
         <RiskBadge level={level} probability={prob} />
         <span className="text-xs text-muted-foreground">{thresholdReason(level, prob, t)}</span>
@@ -117,7 +139,7 @@ const Xai: React.FC<{ card: ModelCard }> = ({ card }) => {
   return (
     <section aria-label="Explicações" className={cn(panel, 'lg:col-span-4')}>
       <h2 className={overline}>Explicações (SHAP × LIME)</h2>
-      <ol className="m-0 pl-[18px] text-[13px] leading-5">{x.top5.map((t) => <li key={t}>{t}</li>)}</ol>
+      <ol className="m-0 list-decimal pl-[22px] text-[13px] leading-5 marker:font-mono marker:text-muted-foreground">{x.top5.map((t) => <li key={t}>{t}</li>)}</ol>
       <div className="grid grid-cols-2 gap-2">
         {tiles.map(([v, l]) => <div key={l} className="rounded-[10px] bg-muted px-2.5 py-2"><div className="font-mono text-base font-bold leading-5">{v}</div><div className="text-[11px] leading-[14px] text-muted-foreground">{l}</div></div>)}
       </div>
@@ -127,19 +149,21 @@ const Xai: React.FC<{ card: ModelCard }> = ({ card }) => {
 
 /** Tela do modelo em produção (xgb_v2): tudo lido do cartão estático; o aviso de rótulo sintético fica sempre visível. */
 export const ModelV2View: React.FC<{ card: ModelCard }> = ({ card }) => (
-  <div className="flex min-h-0 flex-1 flex-col gap-3.5" data-testid="model-v2">
+  <div className="flex flex-1 flex-col gap-3.5" data-testid="model-v2">
     <p role="note" data-testid="synthetic-warning" className="m-0 flex items-center gap-2.5 rounded-xl border-[1.5px] border-warning bg-warning/10 px-4 py-2.5 text-[13px] leading-[18px]">
       <TriangleAlert className="size-[18px] shrink-0 text-warning" aria-hidden="true" />
       <span><strong className="text-warning">{card.tag ?? 'DADOS SINTÉTICOS'}.</strong> Nenhum número desta tela é desempenho em alagamento real. O rótulo veio de uma fórmula de chuva medida e maré ({n(card.synthetic.n, 0)} linhas, {pctTxt(card.synthetic.positiveRate)} positivas, semente {card.synthetic.seed}).</span>
     </p>
-    <div className="grid min-h-0 grid-cols-1 gap-3.5 lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-12">
       <Baselines card={card} />
       <Probe card={card} />
       <Ablations card={card} />
       <Xai card={card} />
       <section aria-label="Contrato da previsão" className={cn(panel, 'lg:col-span-4')}>
         <h2 className={overline}>O que a previsão traz agora</h2>
-        <ul className="m-0 flex list-none flex-col gap-1 p-0">{FIELDS.map((f) => <li key={f} className="font-mono text-xs leading-4">{f}</li>)}</ul>
+        <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs leading-4">
+          {FIELDS.map(([k, v]) => <React.Fragment key={k}><dt className="font-mono text-primary">{k}</dt><dd className="m-0 text-muted-foreground">{v}</dd></React.Fragment>)}
+        </dl>
         {card.sources && <p className="m-0 mt-auto text-[11px] leading-[15px] text-muted-foreground">Origem: {Object.keys(card.sources).length} arquivos com SHA-256 registrado em <span className="font-mono">model_card.json</span>.{card.attribution ? ` ${card.attribution}.` : ''}</p>}
       </section>
     </div>

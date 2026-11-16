@@ -18,7 +18,7 @@ const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
 ];
 
 const Tabs: React.FC<{ tab: Tab; onTab: (t: Tab) => void }> = ({ tab, onTab }) => (
-  <div role="tablist" aria-label="Avaliações" className="flex gap-0.5 self-start rounded-[10px] bg-muted p-1">
+  <div role="tablist" aria-label="Avaliações" className="flex shrink-0 gap-0.5 self-start rounded-[10px] bg-muted p-1 [header_&]:self-center">
     {TABS.map((t) => (
       <button key={t.id} id={`tab-${t.id}`} type="button" role="tab" aria-selected={tab === t.id} aria-controls="model-panel" onClick={() => onTab(t.id)}
         className={cn('h-8 cursor-pointer rounded-lg border-0 px-3 text-xs font-bold', tab === t.id ? 'bg-card text-foreground' : 'bg-transparent text-muted-foreground')}>
@@ -49,16 +49,18 @@ const F1Tab: React.FC = () => {
 export const ModelPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('v2');
   return (
-    <div className="flex w-full flex-col gap-4 p-4 lg:h-full">
+    <div className="flex w-full flex-col gap-4 p-4 lg:min-h-full">
       {tab === 'v2' && (
         <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5">
           <div className="min-w-0 flex-1">
             <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Modelo em produção · {CARD?.modelVersion ?? 'xgb_v2'}</h1>
             <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Chuva medida (Cemaden) · limiares escolhidos na validação · dados do cartão do modelo</p>
           </div>
+          {/* Protótipo (ModeloV2): as abas ficam no cabeçalho, à direita. */}
+          <Tabs tab={tab} onTab={setTab} />
         </header>
       )}
-      <Tabs tab={tab} onTab={setTab} />
+      {tab !== 'v2' && <Tabs tab={tab} onTab={setTab} />}
       <div id="model-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4">
         {tab === 'f1' ? <F1Tab /> : CARD ? <ModelV2View card={CARD} /> : <EmptyState title="Cartão do modelo inválido." hint="O arquivo xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />}
       </div>
