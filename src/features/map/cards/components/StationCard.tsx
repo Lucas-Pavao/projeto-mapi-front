@@ -126,7 +126,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <Link to="/sensores" className="flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Ver série e divergências</Link>
       <p className="m-0 text-[9px] leading-3 tracking-[.02em] text-muted-foreground">
-        {c.attribution ?? CEMADEN_ATTRIBUTION} · {c.state === 'NO_RESPONSE' ? `pela última vez ${c.lastReadingUtc ? formatHoraCurta(c.lastReadingUtc) : '—'}` : `atualizado ${c.lastReadingUtc ? formatHoraCurta(c.lastReadingUtc) : '—'}`}
+        {c.attribution ?? CEMADEN_ATTRIBUTION} · {c.state === 'NO_RESPONSE' ? (c.lastReadingUtc ? `última leitura ${formatHoraCurta(c.lastReadingUtc)}` : 'sem leitura em 30 dias') : `atualizado ${c.lastReadingUtc ? formatHoraCurta(c.lastReadingUtc) : '—'}`}
       </p>
     </section>
   );

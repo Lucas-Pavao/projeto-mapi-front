@@ -36,9 +36,12 @@ const useSide = (lon: number, lat: number, width = 340): 'left' | 'right' => {
 /** Popup ancorado a uma coordenada: abre à direita do marcador e, perto da borda direita, à esquerda. */
 const SidePopup: React.FC<{ lon: number; lat: number; label: string; onClose: () => void; children: React.ReactNode }> = ({ lon, lat, label, onClose, children }) => {
   const side = useSide(lon, lat);
+  const { map } = useMap();
+  // O card fica centrado no ponto: mais alto que o mapa, rola por dentro em vez de sair da tela.
+  const maxHeight = map ? Math.max(240, map.getContainer().clientHeight - 32) : undefined;
   return (
     <MapPopup longitude={lon} latitude={lat} onClose={onClose} className={POPUP} anchor={side === 'left' ? 'left' : 'right'} offset={[side === 'left' ? 34 : -34, 0]} autoPan label={label}>
-      {children}
+      <div data-testid="side-popup-body" className="overflow-y-auto overscroll-contain rounded-2xl" style={{ maxHeight }}>{children}</div>
     </MapPopup>
   );
 };
