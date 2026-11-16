@@ -23,7 +23,8 @@ let inflight: Promise<void> | null = null;
 
 /**
  * Renova a sessão com o refresh token do cookie httpOnly. Uma chamada por vez (as demais esperam a mesma).
- * Sucesso: emite `refreshed`. Qualquer falha: emite `expired` e rejeita (o app faz logout).
+ * Sucesso: emite `refreshed`. Falha de sessão (401, 403, 400): emite `expired` e rejeita (o app faz logout).
+ * API indisponível (sem resposta, 502, 503, 504): só rejeita; a sessão continua.
  * Usa o axios puro, sem os interceptores de `api`, para não entrar em laço.
  */
 export function refreshSession(): Promise<void> {
@@ -34,7 +35,8 @@ export function refreshSession(): Promise<void> {
       sessionEvents.emit('refreshed');
     })
     .catch((e: unknown) => {
-      sessionEvents.emit('expired');
+      // API fora do ar (reinício, rede): a sessão não acabou, só não deu para renovar agora.
+      if (!isApiUnavailable(e)) sessionEvents.emit('expired');
       throw e;
     })
     .finally(() => {
@@ -47,4 +49,14 @@ export function refreshSession(): Promise<void> {
 export function isTokenRevoked(error: unknown): boolean {
   if (!axios.isAxiosError(error) || error.response?.status !== 401) return false;
   return (error.response.data as { code?: unknown } | undefined)?.code === 'TOKEN_REVOKED';
+}
+
+/**
+ * A API não respondeu (rede, contêiner reiniciando: o nginx do front devolve 502). Não diz nada sobre a sessão: o
+ * token tem segredo fixo e o refresh fica no banco, então ambos sobrevivem ao reinício. Só 401/403 encerram a sessão.
+ */
+export function isApiUnavailable(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  if (!error.response) return true;
+  return [502, 503, 504].includes(error.response.status);
 }

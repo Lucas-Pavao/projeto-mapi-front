@@ -118,4 +118,20 @@ describe('sessão e perfil (TOKEN_REVOKED)', () => {
     app('/map');
     expect(await screen.findByText('tela de login')).toBeInTheDocument();
   });
+
+  it('API reiniciando (502 no /me): espera e continua logado quando ela volta, sem ir ao login', async () => {
+    let calls = 0;
+    server.use(http.get('/api/auth/me', () => (++calls < 3 ? new HttpResponse(null, { status: 502 }) : HttpResponse.json(me('ADMIN')))));
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      app('/map');
+      expect(await screen.findByText('carregando sessão')).toBeInTheDocument();
+      await vi.advanceTimersByTimeAsync(7000);
+      expect(await screen.findByText('tela do mapa')).toBeInTheDocument();
+      expect(screen.queryByText('tela de login')).toBeNull();
+      expect(calls).toBe(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
