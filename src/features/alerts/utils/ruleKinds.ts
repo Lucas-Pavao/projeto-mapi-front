@@ -1,4 +1,4 @@
-import type { AlertKind, AlertRuleInput } from '../schemas/alert.schema';
+import type { AlertKind, AlertRuleInput, RuleKind } from '../schemas/alert.schema';
 
 export interface RuleKindInfo {
   label: string;
@@ -12,7 +12,7 @@ export interface RuleKindInfo {
   help: string;
 }
 
-export const RULE_KINDS: Record<AlertKind, RuleKindInfo> = {
+export const RULE_KINDS: Record<RuleKind, RuleKindInfo> = {
   RISK_LEVEL: { label: 'Nível de risco', unit: null, usesMinRisk: true, needsSource: false, target: 'point', help: 'Dispara quando o ponto entra em risco Moderado ou Alto (conforme o mínimo).' },
   RIVER_STAGE: { label: 'Cota do rio', unit: 'm', usesMinRisk: false, needsSource: false, target: 'station', help: 'Dispara quando a estação de rio passa do limiar.' },
   TIDE_ABOVE: { label: 'Maré acima de', unit: 'm', usesMinRisk: false, needsSource: true, target: 'point', help: 'Maré prevista na referência da tábua (NR). Exige fonte do limiar.' },
@@ -21,10 +21,10 @@ export const RULE_KINDS: Record<AlertKind, RuleKindInfo> = {
   PREDICTION_UNAVAILABLE: { label: 'Previsão indisponível', unit: null, usesMinRisk: false, needsSource: false, target: 'point', help: 'Dispara quando o modelo não responde (UNKNOWN). Nunca é tratado como risco baixo.' },
 };
 
-export const ALERT_KIND_LABEL = (k: AlertKind): string => RULE_KINDS[k].label;
+export const ALERT_KIND_LABEL = (k: AlertKind): string => (k === 'SOURCE_STALE' ? 'Fonte de dados parada' : RULE_KINDS[k].label);
 
 /** Valida o formulário da regra; devolve erros por campo (vazio = válido). */
-export function validateRule(r: Partial<AlertRuleInput> & { kind: AlertKind }): Record<string, string> {
+export function validateRule(r: Partial<AlertRuleInput> & { kind: RuleKind }): Record<string, string> {
   const info = RULE_KINDS[r.kind];
   const e: Record<string, string> = {};
   if (info.unit) {

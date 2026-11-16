@@ -1,8 +1,8 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import type { MapMouseEvent } from 'maplibre-gl';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Map, MapControls, MapMarker, MarkerContent, MapCircle } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
-import { MapPin } from 'lucide-react';
 import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsCompactMap } from '@/hooks/useMediaQuery';
@@ -29,7 +29,12 @@ import { useNotices } from '@/hooks/useNotices';
 import { NoticeRegion } from '@/components/ui/notice-region';
 import { ApiErrorBanner, EmptyDataNotice } from './ApiStatusBanner';
 import { TerrainControl } from './TerrainControl';
-import { LocationAnalysisCard } from './LocationAnalysisCard';
+import { MapCardsDock, MapCardsLayer } from '../cards/components/MapCards';
+import { useMapCards } from '../cards/hooks/useMapCards';
+import { anyCardOpen, oppositeSide } from '../cards/utils/cardsState';
+import { riverState } from '../utils/overview';
+import { resolveCanonical, stationAnchors } from '../cards/utils/stationResolve';
+import { useCanonicalStations } from '@/features/sensors/hooks/useStations';
 import { TerrainLayer } from './TerrainLayer';
 import { LocationInitializer } from './LocationInitializer';
 import { MapLayerPanel } from './MapLayerPanel';
@@ -37,6 +42,7 @@ import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
 import { RiskLegendControl } from './RiskLegendControl';
+import { thresholdsOf } from '@/components/risk/thresholds';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, MEASURED_RAIN_LAYER, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
@@ -68,20 +74,21 @@ export const MapView: React.FC = () => {
     selectedFloodPoint,
     showDetailCard,
     setShowDetailCard,
-    clickedLocation,
     locationInfo,
-    nearestHarbor,
-    isFetchingLocation,
     floodPointStatus,
     setFloodPointStatus,
     sensorStatus,
     isFetchingStatus,
     setIsFetchingStatus,
-    handleMapClick,
     handleSensorClick,
     handleFloodPointClick,
     closePopups,
   } = useMapInteractions(sensors, floodPoints);
+
+  // Cards do mapa (um por vez): ponto, análise, estação, rio e local; URL ?ponto&aba e ?local.
+  const cards = useMapCards();
+  const location = useMemo(() => (cards.state.location ? { lat: cards.state.location.lat, lng: cards.state.location.lon } : null), [cards.state.location]);
+  const closeEverything = useCallback(() => { closePopups(); cards.closeAll(); }, [closePopups, cards]);
 
   const [activeLayers, setActiveLayers] = useState<string[]>([...DEFAULT_ACTIVE_LAYERS]);
   const [showTerrain, setShowTerrain] = useState(false);
@@ -104,11 +111,20 @@ export const MapView: React.FC = () => {
 
   const reporting = useFloodReporting({ notify });
 
+  // Esc fecha o card de cima (estação, depois painel, depois o resto); sem card aberto, limpa a seleção de sensor/ponto.
+  const escapeCards = useCallback(() => {
+    if (anyCardOpen(cards.state)) cards.escape();
+    else closePopups();
+  }, [cards, closePopups]);
+  // Sem nenhum card aberto, o destaque do ponto selecionado também sai do mapa.
+  useEffect(() => {
+    if (!anyCardOpen(cards.state) && selectedFloodPointId !== undefined) closePopups();
+  }, [cards.state, selectedFloodPointId, closePopups]);
   useMapEscape({
     blocked: showDetailCard || reporting.reportTarget !== null || wizard !== null,
     openTool,
     closeTool: useCallback(() => setOpenTool(null), []),
-    closePopups,
+    closePopups: escapeCards,
   });
 
   // Status em tempo real quando um ponto crítico é selecionado
@@ -121,6 +137,9 @@ export const MapView: React.FC = () => {
   // Chuva medida (Cemaden): com a camada ligada, o pluviômetro ao vivo que já é apelido de uma estação canônica sai do mapa.
   const measuredOn = activeLayers.includes(MEASURED_RAIN_LAYER);
   const measured = useMeasuredRainLayer(measuredOn);
+  // Estações canônicas (B1) + chuva medida: coordenadas para ancorar o card e apelidos para resolver o pluviômetro ao vivo.
+  const canonical = useCanonicalStations();
+  const anchors = useMemo(() => stationAnchors(canonical.data, measured.stations), [canonical.data, measured.stations]);
   const filteredSensorsForMap = useMemo(
     () => withoutCanonicalDuplicates(filterSensorsForMap(sensors, activeLayers), measured.aliasCodes),
     [sensors, activeLayers, measured.aliasCodes],
@@ -130,16 +149,15 @@ export const MapView: React.FC = () => {
   // Highlighting logic
   const circleCenter = useMemo<[number, number] | null>(() => {
     // Só o local tocado ganha a zona de análise; o ponto crítico selecionado fica limpo, como no protótipo.
-    if (clickedLocation) return [clickedLocation.lng, clickedLocation.lat];
     return null;
-  }, [clickedLocation]);
+  }, []);
 
   // Cores do paint do MapLibre vêm dos tokens em runtime e seguem tema e destaque.
   const primaryColor = useTokenColor('--primary', '#5cb8ff');
   const selectedRisk =
     (selectedFloodPoint && (floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel)) || undefined;
   const riskFill = useRiskFill(selectedRisk);
-  const circleColor = clickedLocation || !selectedFloodPoint ? primaryColor : riskFill;
+  const circleColor = !selectedFloodPoint ? primaryColor : riskFill;
 
   // Celular: a folha inferior cobre até 70 vh; o mapa desloca o marcador para a área livre acima dela.
   const focusLat = selectedFloodPoint?.latitude ?? selectedSensor?.latitude ?? null;
@@ -158,20 +176,51 @@ export const MapView: React.FC = () => {
     canSeeAlerts: hasRole(parseRole(user?.role), 'OPERADOR'),
   });
 
+  // Lista "Sensores": estações unificadas com a chuva medida, mesmo com a camada de chuva medida desligada no mapa.
+  const measuredAll = useMemo(() => measured.query.data?.stations ?? [], [measured.query.data]);
+  const selectStation = useCallback(
+    (canonicalId: string) => {
+      closeEverything();
+      cards.openStation(canonicalId);
+      const a = anchors.find((x) => x.canonicalId === canonicalId);
+      if (a?.lat != null && a?.lon != null) flyTo(a.lon, a.lat, 13.5, 1500);
+    },
+    [closeEverything, cards, anchors, flyTo],
+  );
+
   const selectSensor = useCallback(
     (sensor: SensorResponseDTO) => {
-      handleSensorClick(sensor);
-      if (sensor.latitude && sensor.longitude) flyTo(sensor.longitude, sensor.latitude, 13.5, 1500);
+      closeEverything();
+      // Régua de rio: card próprio (RiverCard) no gerenciador; os demais sensores seguem com o popup de sensor.
+      // Pluviômetro Cemaden que é apelido de uma canônica abre o StationCard pela canonicalId (flyTo na coordenada da canônica).
+      const station = resolveCanonical(sensor, anchors);
+      if (riverState(sensor.value, sensor) !== null) cards.openRiver(sensor.sensorId);
+      else if (station) cards.openStation(station.canonicalId);
+      else handleSensorClick(sensor);
+      const lat = station?.lat ?? sensor.latitude;
+      const lon = station?.lon ?? sensor.longitude;
+      if (lat && lon) flyTo(lon, lat, 13.5, 1500);
     },
-    [handleSensorClick, flyTo],
+    [handleSensorClick, flyTo, closeEverything, cards, anchors],
   );
   const selectFloodPoint = useCallback(
     (point: FloodPointResponseDTO) => {
       handleFloodPointClick(point);
+      cards.openPoint(point.slug);
       if (point.latitude && point.longitude) flyTo(point.longitude, point.latitude, 13.5, 1500);
     },
-    [handleFloodPointClick, flyTo],
+    [handleFloodPointClick, flyTo, cards],
   );
+
+  // Clique no mapa vazio: abre o card de local do lado oposto ao clique (marcadores tratam o próprio clique).
+  const onMapClick = useCallback((e: MapMouseEvent) => {
+    if ((e.originalEvent?.target as HTMLElement | undefined)?.closest?.('.maplibregl-marker, .maplibregl-popup, [data-card-root]')) return;
+    closePopups();
+    const width = mapRef.current?.getContainer().clientWidth ?? 1200;
+    cards.openLocation(e.lngLat.lat, e.lngLat.lng, oppositeSide(e.point.x, width));
+  }, [closePopups, cards]);
+
+  const riverSensor = useMemo(() => (cards.state.river ? sensors.find((x) => x.sensorId === cards.state.river) : undefined), [cards.state.river, sensors]);
 
   const sortedPoints = useMemo(() => sortPoints(floodPoints), [floodPoints]);
   const selectedIndex = selectedFloodPoint ? sortedPoints.findIndex((p) => p.id === selectedFloodPoint.id) : -1;
@@ -199,6 +248,9 @@ export const MapView: React.FC = () => {
             selectedSensorId={selectedSensorId}
             onFloodPointClick={selectFloodPoint}
             onSensorClick={selectSensor}
+            stations={measuredAll}
+            onStationClick={selectStation}
+            selectedStationId={cards.state.station}
             canSeeDataHealth={isAdmin}
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
@@ -208,7 +260,7 @@ export const MapView: React.FC = () => {
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
-              <RiskLegendControl {...toolProps('legend')} />
+              <RiskLegendControl thresholds={thresholdsOf(floodPoints)} {...toolProps('legend')} />
             </div>
             {measuredOn && (
               <MeasuredRainLegend
@@ -230,7 +282,7 @@ export const MapView: React.FC = () => {
       )}
 
       <main className="h-full w-full relative">
-        <Map ref={mapRef} theme={theme} onClick={handleMapClick} center={[-34.877, -8.057]} zoom={12}>
+        <Map ref={mapRef} theme={theme} onClick={onMapClick} center={[-34.877, -8.057]} zoom={12}>
           <LocationInitializer onLocationUpdate={setUserLocation} />
           <TerrainLayer enabled={showTerrain} onStatusChange={setTerrainStatus} />
           {!isMobile && (
@@ -266,7 +318,24 @@ export const MapView: React.FC = () => {
             floodPoints={filteredFloodPointsForMap}
             onSelect={selectSensor}
           />
-          <MeasuredRainLayer stations={measured.stations} data={measured.query.data} isMobile={isMobile} onOpen={closePopups} />
+          <MeasuredRainLayer
+            stations={measured.stations}
+            data={measured.query.data}
+            isMobile={isMobile}
+            onOpen={closeEverything}
+            onSelectStation={cards.openStation}
+            activeId={cards.state.station}
+          />
+          <MapCardsLayer
+            cards={cards}
+            floodPoints={floodPoints}
+            floodPointStatus={floodPointStatus}
+            isMobile={isMobile}
+            stations={anchors}
+            riverSensor={riverSensor}
+            onSelectPoint={selectFloodPoint}
+            onCloseSelection={closeEverything}
+          />
           {!isMobile && overview.tideNow && <TideMarker tide={overview.tideNow} />}
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
@@ -280,46 +349,26 @@ export const MapView: React.FC = () => {
             isMobile={isMobile}
             selectedSensor={selectedSensor}
             sensorStatus={sensorStatus}
-            selectedFloodPoint={selectedFloodPoint}
+            selectedFloodPoint={isMobile ? selectedFloodPoint : undefined}
             floodPointStatus={floodPointStatus}
             isFetchingStatus={isFetchingStatus}
             onShowDetails={() => setShowDetailCard(true)}
-            onClose={closePopups}
+            onClose={closeEverything}
           />
 
-          {clickedLocation && (
-            <MapMarker longitude={clickedLocation.lng} latitude={clickedLocation.lat} offset={[0, -12]}>
-              <MarkerContent>
-                <div className="relative flex items-center justify-center">
-                  <div className="absolute -inset-4 rounded-full bg-primary/20 animate-ping opacity-30" />
-                  <div className="h-6 w-6 rounded-full border-2 border-border bg-primary flex items-center justify-center relative z-10">
-                    <MapPin className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                </div>
-              </MarkerContent>
-            </MapMarker>
-          )}
         </Map>
 
-        {(clickedLocation || isFetchingLocation) && (
-          <LocationAnalysisCard
-            coords={clickedLocation}
-            loading={isFetchingLocation}
-            info={locationInfo}
-            harborName={(nearestHarbor?.harbor_name as string | undefined) ?? null}
-            onClose={() => closePopups()}
-            onSensorSelect={(reading) => {
-              const fullSensor = sensors.find((s) => s.sensorId === reading.sensorId);
-              if (fullSensor) {
-                handleSensorClick(fullSensor);
-                if (fullSensor.latitude && fullSensor.longitude) flyTo(fullSensor.longitude, fullSensor.latitude, 16);
-              }
-            }}
-            onReport={() => {
-              if (clickedLocation) reporting.openReportAt(clickedLocation);
-            }}
-          />
-        )}
+        <MapCardsDock
+          cards={cards}
+          floodPoints={floodPoints}
+          floodPointStatus={floodPointStatus}
+          isMobile={isMobile}
+          stations={anchors}
+          riverSensor={riverSensor}
+          onSelectPoint={selectFloodPoint}
+          onCloseSelection={closeEverything}
+          onReportAt={(c) => reporting.openReportAt(c)}
+        />
 
         {showDetailCard && selectedSensor && <SensorDetailCard sensor={selectedSensor} status={sensorStatus} onClose={() => setShowDetailCard(false)} />}
 
@@ -335,10 +384,11 @@ export const MapView: React.FC = () => {
           />
         )}
 
-        {!isMobile && (
+        {/* Com um card aberto o flutuante colide com ele; na análise de local o relato sai pelo botão do próprio card. */}
+        {!isMobile && !anyCardOpen(cards.state) && (
           <GeolocateReportButton
             isGettingLocation={reporting.isGettingLocation}
-            hiddenOnSmall={Boolean(clickedLocation || isFetchingLocation)}
+            hiddenOnSmall={Boolean(location)}
             onClick={reporting.handleGetGeolocation}
           />
         )}
@@ -354,9 +404,9 @@ export const MapView: React.FC = () => {
             lastSuccessAt={lastSuccessAt}
             onSelect={selectFloodPoint}
             onReport={() => setWizard({})}
-            hidden={selectedFloodPointId !== undefined || selectedSensorId !== undefined || Boolean(clickedLocation || isFetchingLocation)}
+            hidden={selectedFloodPointId !== undefined || selectedSensorId !== undefined || Boolean(location) || Boolean(cards.state.analysis || cards.state.station || cards.state.river)}
           />
-          {selectedFloodPoint && (
+          {selectedFloodPoint && !cards.state.analysis && (
             <MobilePointSheet
               key={selectedFloodPoint.id}
               point={selectedFloodPoint}
@@ -366,7 +416,8 @@ export const MapView: React.FC = () => {
               total={sortedPoints.length}
               onPrev={() => stepPoint(-1)}
               onNext={() => stepPoint(1)}
-              onBack={closePopups}
+              onBack={closeEverything}
+              onOpenAnalysis={() => cards.openAnalysis(selectedFloodPoint.slug)}
               onReport={() => setWizard({ point: selectedFloodPoint })}
             />
           )}

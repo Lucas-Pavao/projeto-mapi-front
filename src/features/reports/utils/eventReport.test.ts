@@ -24,7 +24,7 @@ describe('relatório do evento', () => {
   it('resumo só afirma o que os dados mostram', () => {
     const rows = pointRows(tl, new Map([['a', 'Ponto A']]), 0, 8 * H);
     const t = summaryText(rows, averageRain(tl), [{ t: 3 * H, v: 2.3 }], 8 * H);
-    expect(t).toContain('Ponto A, com 90%');
+    expect(t).toContain('Ponto A, com 90,0%');
     expect(t).toContain('3,0 mm/h');
     expect(t).toContain('2,30 m');
     expect(summaryText([], [], [{ t: 0, v: 1 }], 0)).toBe('Nenhum ponto teve previsão válida na janela.');

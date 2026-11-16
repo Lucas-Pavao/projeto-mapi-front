@@ -52,3 +52,20 @@ export function withoutCanonicalDuplicates(sensors: SensorResponseDTO[], aliasCo
   if (aliasCodes.size === 0) return sensors;
   return sensors.filter((s) => !(s.source === 'APAC/Cemaden' && s.code != null && aliasCodes.has(s.code)));
 }
+
+/** Fonte de uma leitura do feed, em texto: o prefixo "[CEMADEN]"/"[APAC]" do nome diz o dono da estação, não a fonte. */
+export function feedSourceText(source: string | null | undefined): string {
+  if (!source) return 'fonte não informada';
+  if (source === 'APAC/Cemaden') return 'feed da APAC';
+  if (source.startsWith('APAC')) return 'APAC';
+  if (source === 'ANA') return 'ANA';
+  return source;
+}
+
+/** Linha da lista do mapa para uma estação unificada: número com janela e fonte declaradas, ausente nunca vira zero. */
+export function stationRowText(s: StationAccumulation, now: number): { value: string; sub: string; missing: boolean } {
+  const age = s.lastReadingUtc ? Math.max(0, Math.round((now - Date.parse(s.lastReadingUtc)) / 60_000)) : null;
+  const ageTxt = age == null ? '' : age < 60 ? ` · leitura há ${age} min` : ` · leitura há ${Math.round(age / 60)} h`;
+  if (s.acc3hMm == null) return { value: 'sem dado', sub: `Chuva em 3 h · Cemaden PED · não mediu (não é zero)${ageTxt}`, missing: true };
+  return { value: `${s.acc3hMm.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mm`, sub: `Chuva em 3 h · Cemaden PED${ageTxt}`, missing: false };
+}

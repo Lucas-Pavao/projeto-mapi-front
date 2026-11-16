@@ -76,6 +76,38 @@ const floodPredictionSchema = z
     rainSource: z.string().nullable().optional(),
     trainingData: z.string().nullable().optional(),
     syntheticWarning: z.string().nullable().optional(),
+    // Modelo v3 (C1/C2), por adição: chuva que ENTROU na previsão, com estações e idade; e que probabilidade é.
+    rainInput: z.object({
+      source: z.string().nullable().optional(),
+      hourEndUtc: z.string().nullable().optional(),
+      latestReadingUtc: z.string().nullable().optional(),
+      ageMinutes: z.number().nullable().optional(),
+      validStations: z.number().nullable().optional(),
+      values: z.array(z.object({
+        featureId: z.string(),
+        valueMm: z.number().nullable().optional(),
+        hours: z.number().nullable().optional(),
+        hoursWithValue: z.number().nullable().optional(),
+        stations: z.array(z.object({ stationId: z.string(), name: z.string().nullable().optional(), source: z.string().nullable().optional() })).optional(),
+      })).optional(),
+    }).nullable().optional(),
+    probabilityKind: z.string().nullable().optional(),
+    floodProbabilityUncorrected: z.number().nullable().optional(),
+    // Plano de 16/11, fase 4, por adição: previsão de chuva do ponto no mesmo ciclo (quantis em mm por horizonte).
+    rainForecast: z.object({
+      issuedAt: z.string().nullable().optional(),
+      modelVersion: z.string().nullable().optional(),
+      sources: z.array(z.string()).optional(),
+      usedByModel: z.boolean().optional(),
+      horizons: z.array(z.object({
+        horizonHours: z.number(),
+        q50Mm: z.number(),
+        q80Mm: z.number(),
+        q95Mm: z.number(),
+        probMedia: z.number().nullable().optional(),
+        probForte: z.number().nullable().optional(),
+      })).optional(),
+    }).nullable().optional(),
   })
   .passthrough();
 

@@ -16,6 +16,7 @@ const SensorsPage = lazy(() => import('@/pages/SensorsPage'));
 const AlertsPage = lazy(() => import('@/pages/AlertsPage'));
 const EventsPage = lazy(() => import('@/pages/EventsPage'));
 const ModelPage = lazy(() => import('@/pages/ModelPage'));
+const RainEventsPage = lazy(() => import('@/pages/RainEventsPage'));
 const SimulatorPage = lazy(() => import('@/pages/SimulatorPage'));
 const TidePage = lazy(() => import('@/pages/TidePage'));
 const AdminDataPage = lazy(() => import('@/pages/AdminDataPage'));
@@ -74,6 +75,7 @@ function App() {
                   <Route path="/pontos/:slug" element={<PointPage />} />
                   <Route path="/sensores" element={<SensorsPage />} />
                   <Route path="/eventos" element={<EventsPage />} />
+                  <Route path="/chuva" element={<RainEventsPage />} />
                   <Route path="/modelo" element={<ModelPage />} />
                   <Route path="/modelo/simulador" element={<SimulatorPage />} />
                   <Route path="/mare" element={<TidePage />} />

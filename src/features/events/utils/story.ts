@@ -1,6 +1,7 @@
 import type { Timeline } from '../schemas/timeline.schema';
 import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
 import { toTimePts, type TimePt } from '@/components/charts/chartMath';
+import { levelOf } from './strips';
 
 export interface StoryItem { t: number; title: string; tone: 'low' | 'moderate' | 'high' | 'unknown' | 'info' }
 
@@ -27,9 +28,10 @@ export function buildStory(t: Timeline, names: ReadonlyMap<string, string>, rive
     const sorted = [...r.items].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
     let prev: RiskLevel | null = null;
     for (const p of sorted) {
-      const text = transitionText(name, prev, p.riskLevel);
-      if (text) out.push({ t: Date.parse(p.issuedAt), title: text, tone: TONE[p.riskLevel] });
-      prev = p.riskLevel;
+      const level = levelOf(p);
+      const text = transitionText(name, prev, level);
+      if (text) out.push({ t: Date.parse(p.issuedAt), title: text, tone: TONE[level] });
+      prev = level;
     }
   }
   for (const e of t.floodEvents ?? []) out.push({ t: Date.parse(e.startTime), title: `Alagamento confirmado em ${names.get(e.slug) ?? e.slug}`, tone: 'high' });

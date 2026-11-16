@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import api from './api';
-import { sessionEvents, type SessionEvent } from './session';
+import { refreshSession, sessionEvents, type SessionEvent } from './session';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
@@ -76,5 +76,14 @@ describe('interceptor de sessão', () => {
     await expect(api.get('/api/y')).rejects.toBeTruthy();
     expect(refreshes).toBe(0);
     assign.mockRestore();
+  });
+
+  it('refresh com a API fora do ar (502) rejeita sem emitir expired: a sessão não acabou', async () => {
+    server.use(http.post('/api/auth/refresh', () => new HttpResponse(null, { status: 502 })));
+    const seen: string[] = [];
+    const off = sessionEvents.on((e) => seen.push(e));
+    await expect(refreshSession()).rejects.toBeTruthy();
+    off();
+    expect(seen).toEqual([]);
   });
 });

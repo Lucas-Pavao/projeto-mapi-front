@@ -1,6 +1,8 @@
 import api from '@/lib/api';
 import { bucketSimulationSchema, modelEvaluationSchema, type BucketInput, type BucketSimulation, type ModelEvaluation } from '../schemas/model.schema';
 
+import { rainForecastAccuracySchema, type RainForecastAccuracy } from '../schemas/rainForecast.schema';
+
 export type BucketSimulationInput = BucketInput;
 
 export const modelService = {
@@ -16,5 +18,10 @@ export const modelService = {
   async simulateBucket(input: BucketSimulationInput): Promise<BucketSimulation> {
     const { data } = await api.post<unknown>('/api/model/simulate/bucket', input);
     return bucketSimulationSchema.parse(data);
+  },
+  /** Acerto da previsão de chuva nos últimos dias (conferência diária contra a chuva medida). */
+  async rainForecastAccuracy(days = 30): Promise<RainForecastAccuracy> {
+    const { data } = await api.get<unknown>('/api/rain-forecast/accuracy', { params: { days } });
+    return rainForecastAccuracySchema.parse(data);
   },
 };

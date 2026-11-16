@@ -17,8 +17,10 @@ const ago = (minutes: number) => new Date(Date.now() - minutes * MIN).toISOStrin
 
 export const SYNTHETIC_SLUG = 'sintetico-1';
 
+const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
+
 export const predictions = (slug: string): PredictionSummary[] => [
-  { slug, riskLevel: 'LOW', probability: 0.12, issuedAt: ago(180), validUntil: ago(120), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
+  { slug, riskLevel: 'LOW', probability: 0.012, issuedAt: ago(180), validUntil: ago(120), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED', riskThresholds: TH },
   { slug, riskLevel: 'MEDIUM', probability: 0.41, issuedAt: ago(120), validUntil: ago(60), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
   { slug, riskLevel: 'HIGH', probability: 0.78, issuedAt: ago(60), validUntil: ago(0), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
   // UNKNOWN: sem probabilidade, com motivo da degradação.

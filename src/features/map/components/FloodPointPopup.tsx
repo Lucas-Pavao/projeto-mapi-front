@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
+import { RainForecastSummary } from '@/components/risk/RainForecastSummary';
 import { RISK_MEANING, showsExperimentalLabel, getRiskVisual } from '@/components/risk/risk';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
@@ -47,6 +48,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
       </div>
       {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
       <PredictionProvenance prediction={prediction} />
+      <RainForecastSummary prediction={prediction} />
       {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[13px] leading-[18px]" /> : <p className="m-0 text-[13px] leading-[18px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
       <div className="grid grid-cols-3 gap-1.5">
         <div className={tile}>

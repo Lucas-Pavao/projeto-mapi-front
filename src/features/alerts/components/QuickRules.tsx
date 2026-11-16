@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAlertRules, useSaveRule } from '../hooks/useAlertRules';
-import type { Alert, AlertKind, AlertRule, AlertRuleInput } from '../schemas/alert.schema';
+import type { Alert, RuleKind as AlertKind, AlertRule, AlertRuleInput } from '../schemas/alert.schema';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { actionErrorMessage } from '@/lib/apiError';
 import { cn } from '@/lib/utils';

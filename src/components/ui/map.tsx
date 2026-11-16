@@ -1054,9 +1054,11 @@ function MapPopup({
     popup.setDOMContent(container);
     popup.addTo(map);
     if (autoPan) {
-      // Leva o ponto para perto da base da tela: o popup abre acima dele e ganha a altura disponível.
+      // Popup acima do ponto: leva o ponto para perto da base da tela, e o popup ganha a altura disponível.
+      // Popup ao lado (anchor left/right) fica centrado no ponto: o ponto vai para o meio da altura.
       const h = map.getContainer().clientHeight;
-      map.easeTo({ center: [longitude, latitude], offset: [0, Math.max(0, h / 2 - 72)], duration: 400 });
+      const side = popupOptions.anchor === "left" || popupOptions.anchor === "right";
+      map.easeTo({ center: [longitude, latitude], offset: [0, side ? 0 : Math.max(0, h / 2 - 72)], duration: 400 });
     }
 
     return () => {

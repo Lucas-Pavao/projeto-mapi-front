@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShieldQuestion } from 'lucide-react';
 import { RiskLegendList } from '@/components/risk/RiskLegendList';
+import type { RiskThresholds } from '@/features/map/schemas/floodPointResponse.schema';
 import { MapToolPopover } from './MapToolPopover';
 
 interface Props {
@@ -9,10 +10,12 @@ interface Props {
   onOpenChange?: (open: boolean) => void;
   className?: string;
   bottomReserve?: number;
+  /** Limiares do metadata do modelo: a legenda mostra a faixa de cada classe. */
+  thresholds?: RiskThresholds | null;
 }
 
 /** Legenda dos níveis de risco como botão da barra do mapa, no mesmo formato de camadas e terreno. */
-export const RiskLegendControl: React.FC<Props> = ({ open, onOpenChange, className, bottomReserve }) => (
+export const RiskLegendControl: React.FC<Props> = ({ open, onOpenChange, className, bottomReserve, thresholds }) => (
   <MapToolPopover
     id="risk-legend-panel"
     label="Níveis de risco"
@@ -22,6 +25,6 @@ export const RiskLegendControl: React.FC<Props> = ({ open, onOpenChange, classNa
     className={className}
     bottomReserve={bottomReserve}
   >
-    <RiskLegendList showExperimentalNote={false} />
+    <RiskLegendList showExperimentalNote={false} thresholds={thresholds} />
   </MapToolPopover>
 );

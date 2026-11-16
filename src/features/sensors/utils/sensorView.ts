@@ -2,6 +2,7 @@ import { HOUR_MS, toTimePts, type TimePt } from '@/components/charts/chartMath';
 import { tideExtremes } from '@/features/events/utils/tide';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
 import { num } from '@/features/operacao/utils/format';
+import type { SourceKind } from '@/components/risk/sourceKinds';
 import type { SensorFreshness } from '../schemas/sensor.schema';
 import { SENSOR_TYPE_UNIT, formatAge } from './age';
 
@@ -9,7 +10,11 @@ export type Kind = 'chuva' | 'rio' | 'mare';
 export const TIDE_KEY = 'mare';
 export const TIDE_HIGH_M = 2.0;
 
-export interface ListItem { key: string; kind: Kind; name: string; sub: string; value: string; dot: string; off: boolean }
+export interface ListItem {
+  key: string; kind: Kind; name: string; sub: string; value: string; dot: string; off: boolean;
+  /** Estação canônica do Cemaden (B1): tags de fonte, status do mês e marca de "com problema". */
+  sources?: SourceKind[]; monthTag?: { text: string; tone: 'warning' | 'destructive' | 'muted' }; problem?: boolean; fail?: boolean;
+}
 
 /** Último valor da série até `now` (ou null). */
 export function valueAt(points: readonly TimePt[], now: number): number | null {

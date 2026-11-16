@@ -16,6 +16,7 @@ import { fmtNum, sortPoints } from '../utils/overview';
 import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
 import { RiskLegendControl } from './RiskLegendControl';
+import { thresholdsOf } from '@/components/risk/thresholds';
 
 type Overview = ReturnType<typeof useMapOverview>;
 
@@ -85,7 +86,7 @@ export const MobileMapa: React.FC<Props> = ({ points, summary, summaryFailed, ov
             </span>
           </button>
           {/* Níveis de risco recolhidos, como no desktop; o painel para acima do botão Reportar e da folha de pontos. */}
-          <RiskLegendControl className="-my-2 ml-auto" bottomReserve={sheetH + 12 + 52 + 8} />
+          <RiskLegendControl thresholds={thresholdsOf(points)} className="-my-2 ml-auto" bottomReserve={sheetH + 12 + 52 + 8} />
         </div>
       </div>}
 

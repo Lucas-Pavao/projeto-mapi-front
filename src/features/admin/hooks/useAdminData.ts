@@ -6,6 +6,7 @@ import type { Role } from '@/lib/apiSchemas';
 export const useIngestionSources = () => useQuery({ queryKey: ['admin', 'ingestion', 'sources'], queryFn: adminDataService.ingestionSources, refetchInterval: 60_000 });
 export const useIngestionRuns = (f: RunFilter) =>
   useQuery({ queryKey: ['admin', 'ingestion', 'runs', f], queryFn: () => adminDataService.ingestionRuns(f), placeholderData: keepPreviousData });
+export const useMonthChecks = () => useQuery({ queryKey: ['admin', 'stations', 'month-checks'], queryFn: adminDataService.monthChecks });
 export const useIntegrityCheck = () => useMutation({ mutationFn: adminDataService.checkIntegrity });
 
 export const useAdminUsers = (page = 0, size = 20) =>

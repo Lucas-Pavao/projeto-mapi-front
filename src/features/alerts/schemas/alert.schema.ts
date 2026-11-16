@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { degradationReasonSchema, isoSchema, modelValidationStatusSchema, pageOf, riskLevelSchema } from '@/lib/apiSchemas';
 
-export const alertKindSchema = z.enum(['RISK_LEVEL', 'RIVER_STAGE', 'TIDE_ABOVE', 'RAIN_RATE', 'SENSOR_STALE', 'PREDICTION_UNAVAILABLE']);
+/** Tipos de regra que o operador cria. */
+export const ruleKindSchema = z.enum(['RISK_LEVEL', 'RIVER_STAGE', 'TIDE_ABOVE', 'RAIN_RATE', 'SENSOR_STALE', 'PREDICTION_UNAVAILABLE']);
+export type RuleKind = z.infer<typeof ruleKindSchema>;
+/** Tipos de alerta disparado: os das regras e os do sistema (SOURCE_STALE: fonte sem leitura aceita, V29). */
+export const alertKindSchema = z.enum([...ruleKindSchema.options, 'SOURCE_STALE']);
 
 export const alertSchema = z.object({
   id: z.number(),
@@ -32,7 +36,7 @@ export type AlertKind = z.infer<typeof alertKindSchema>;
 /** Corpo de POST /api/alert-rules e PUT /api/alert-rules/{id} (AlertRuleInput). */
 export const alertRuleInputSchema = z
   .object({
-    kind: alertKindSchema,
+    kind: ruleKindSchema,
     floodPointSlug: z.string().nullable().optional(),
     stationId: z.string().nullable().optional(),
     threshold: z.number().nullable().optional(),

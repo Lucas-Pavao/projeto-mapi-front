@@ -27,7 +27,7 @@ describe('getRiskVisual', () => {
 });
 
 describe('formatProbability', () => {
-  it('formata risco conhecido', () => expect(formatProbability('MEDIUM', 0.42)).toBe('42%'));
+  it('formata risco conhecido', () => expect(formatProbability('MEDIUM', 0.42)).toBe('42,0%'));
   it('UNKNOWN nunca mostra porcentagem, mesmo com 0.0 do backend antigo', () => {
     expect(formatProbability('UNKNOWN', 0.0)).toBeNull();
     expect(formatProbability('UNKNOWN', 0.7)).toBeNull();

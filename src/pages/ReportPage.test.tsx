@@ -21,9 +21,10 @@ describe('ReportPage', () => {
     renderPage(<ReportPage />);
     const sheet = await screen.findByRole('article', { name: 'Relatório de situação' });
     expect(sheet).toHaveTextContent('Previsão experimental — modelo não validado');
+    expect(sheet).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
     expect(sheet.closest('[data-theme="light"]')).not.toBeNull(); // folha sempre no tema claro
     const resumo = await within(sheet).findByRole('region', { name: 'Resumo' });
-    expect(resumo).toHaveTextContent(/O ponto com maior probabilidade na janela foi Sintético: ponto de teste, com 78%/);
+    expect(resumo).toHaveTextContent(/O ponto com maior probabilidade na janela foi Sintético: ponto de teste, com 78,0%/);
     const pts = await within(sheet).findByRole('region', { name: 'Pontos críticos' });
     const rows = await within(pts).findAllByRole('row');
     expect(rows[1]).toHaveTextContent('Sintético: ponto de teste');

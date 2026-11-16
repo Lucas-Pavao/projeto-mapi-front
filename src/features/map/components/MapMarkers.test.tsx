@@ -69,6 +69,14 @@ describe('RiskLegendControl', () => {
     rerender(<RiskLegendControl open onOpenChange={onOpenChange} />);
     const panel = screen.getByRole('region', { name: 'Níveis de risco' });
     expect(panel.querySelectorAll('[data-risk]')).toHaveLength(4);
+    expect(screen.queryByTestId('legend-band')).toBeNull(); // sem limiares, sem faixa inventada
+  });
+
+  it('com limiares do metadata mostra a faixa de cada classe (sem 50 % nem 80 %)', () => {
+    render(<RiskLegendControl open onOpenChange={vi.fn()} thresholds={{ medium: 0.0159, high: 0.2441, source: 'metadata' }} />);
+    const bands = screen.getAllByTestId('legend-band').map((b) => b.textContent);
+    expect(bands).toEqual(['abaixo de 1,6%', 'de 1,6% até abaixo de 24,4%', '24,4% ou mais']);
+    expect(screen.getByTestId('legend-source')).toHaveTextContent('metadata');
   });
 });
 

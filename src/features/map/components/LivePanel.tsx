@@ -14,6 +14,8 @@ import { getDataFreshness, getSensorConfig } from '../utils/sensor';
 import { fmtNum, riverState, sortPoints } from '../utils/overview';
 import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
+import type { StationAccumulation } from '../schemas/measuredRain.schema';
+import { feedSourceText, liveAliasCodes, stationRowText } from '../utils/measuredRain';
 
 type Overview = ReturnType<typeof useMapOverview>;
 type Tab = 'points' | 'sensors';
@@ -30,6 +32,13 @@ interface Props {
   selectedSensorId?: number;
   onFloodPointClick: (p: FloodPointResponseDTO) => void;
   onSensorClick: (s: SensorResponseDTO) => void;
+  /**
+   * Estações unificadas com a chuva medida (rain-accumulations). Com elas, o pluviômetro do feed que é a mesma
+   * estação física sai da lista e a estação aparece uma vez só, com janela e fonte declaradas.
+   */
+  stations?: StationAccumulation[];
+  onStationClick?: (canonicalId: string) => void;
+  selectedStationId?: string | null;
   /** Só ADMIN abre "Saúde dos dados" (ADR 0010). */
   canSeeDataHealth: boolean;
   className?: string;
@@ -44,6 +53,7 @@ const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-
 /** Painel esquerdo "Agora na RMR" do mapa (Main.dc.html): contagem, abas Pontos críticos e Sensores, fontes. */
 export const LivePanel: React.FC<Props> = ({
   points, sensors, summary, summaryFailed, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
+  stations = [], onStationClick, selectedStationId,
 }) => {
   const [tab, setTab] = useState<Tab>('points');
   const sorted = useMemo(() => sortPoints(points), [points]);
@@ -53,8 +63,15 @@ export const LivePanel: React.FC<Props> = ({
   const reason = points.map((p) => p.floodPrediction?.degradationReason).find(Boolean);
   const time = clockText(summary?.computedAt ?? lastSuccessAt);
 
+  const [now] = useState(() => Date.now());
+  const unified = useMemo(() => stations.filter((s) => s.canonicalId != null)
+    .map((s) => ({ s, ...stationRowText(s, now) }))
+    .sort((a, b) => (a.s.name ?? '').localeCompare(b.s.name ?? '')), [stations, now]);
+  const aliasCodes = useMemo(() => liveAliasCodes(stations), [stations]);
   const sensorRows = useMemo(() => {
-    const rows = sensors.map((s) => {
+    // O pluviômetro do feed que é apelido de uma estação unificada sai: a estação aparece uma vez, na lista unificada.
+    const own = sensors.filter((s) => !(s.source === 'APAC/Cemaden' && s.code != null && aliasCodes.has(s.code)));
+    const rows = own.map((s) => {
       const cfg = getSensorConfig(s);
       const fresh = getDataFreshness(s.timestamp);
       const stale = fresh.status === 'stale';
@@ -62,13 +79,14 @@ export const LivePanel: React.FC<Props> = ({
       return {
         key: s.id, sensor: s, stale, dot: cfg.color,
         name: s.stationName || s.sensorId,
-        sub: stale ? `${cfg.label} · ${ageText(fresh.minutesAgo)}` : state ? `Nível · ${state} · ${s.source ?? ''}`.replace(/ · $/, '') : `${cfg.label} · ${ageText(fresh.minutesAgo)}`,
+        // Fonte e janela declaradas: o número é a ÚLTIMA leitura do feed (não um acumulado).
+        sub: state ? `Nível · ${state} · ${feedSourceText(s.source)}` : `${cfg.label} · última leitura · ${feedSourceText(s.source)} · ${ageText(fresh.minutesAgo)}`,
         value: stale || s.value == null ? '—' : `${fmtNum(s.value)} ${s.unit ?? ''}`.trim(),
         river: s.riverAlertLevel != null || s.riverPreAlertLevel != null || s.riverFloodLevel != null,
       };
     });
     return rows.sort((a, b) => Number(b.river) - Number(a.river) || a.name.localeCompare(b.name));
-  }, [sensors]);
+  }, [sensors, aliasCodes]);
   const tideRow = overview.tideNow ? 1 : 0;
 
   const tabBtn = (id: Tab, label: string) => (
@@ -109,7 +127,7 @@ export const LivePanel: React.FC<Props> = ({
         )}
         <div role="tablist" aria-label="Tipo de lista" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
           {tabBtn('points', `Pontos críticos · ${points.length}`)}
-          {tabBtn('sensors', `Sensores · ${sensors.length + tideRow}`)}
+          {tabBtn('sensors', `Sensores · ${unified.length + sensorRows.length + tideRow}`)}
         </div>
       </div>
 
@@ -151,6 +169,19 @@ export const LivePanel: React.FC<Props> = ({
               </div>
             </li>
           )}
+          {unified.map(({ s, value, sub, missing }) => (
+            <li key={`st-${s.canonicalId}`}>
+              <button type="button" data-testid="unified-station" onClick={() => onStationClick?.(s.canonicalId as string)} aria-pressed={selectedStationId === s.canonicalId}
+                className={cn(row, 'px-2 py-[9px]', selectedStationId === s.canonicalId && 'bg-secondary')}>
+                <span aria-hidden="true" className={cn('box-border size-2.5 flex-none rounded-full', missing ? 'border-2 border-dashed border-risk-unknown-edge bg-transparent' : 'bg-primary')} />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-sm leading-5 font-bold">{s.name ?? s.canonicalId}</span>
+                  <span className={cn('truncate text-xs leading-4', missing ? 'text-warning' : 'text-muted-foreground')}>{sub}</span>
+                </span>
+                <span className={cn('font-mono text-sm leading-5 font-semibold', missing && 'text-warning')}>{value}</span>
+              </button>
+            </li>
+          ))}
           {sensorRows.map((r) => (
             <li key={r.key}>
               <button type="button" onClick={() => onSensorClick(r.sensor)} aria-pressed={selectedSensorId === r.key} className={cn(row, 'px-2 py-[9px]', selectedSensorId === r.key && 'bg-secondary')}>
@@ -163,7 +194,7 @@ export const LivePanel: React.FC<Props> = ({
               </button>
             </li>
           ))}
-          {sensors.length === 0 && !overview.tideNow && <li className="p-4 text-center text-xs text-muted-foreground">Nenhum sensor retornado pela API.</li>}
+          {sensors.length === 0 && unified.length === 0 && !overview.tideNow && <li className="p-4 text-center text-xs text-muted-foreground">Nenhum sensor retornado pela API.</li>}
           <li><Link to="/sensores" className="row-hover mt-1 flex h-9 items-center rounded-[10px] px-2 text-xs leading-4 text-primary hover:bg-muted">Ver a página de sensores</Link></li>
         </ul>
       )}

@@ -28,6 +28,7 @@ import { getRiskVisual, formatProbability, showsExperimentalLabel } from '@/comp
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
+import { RainForecastSummary } from '@/components/risk/RainForecastSummary';
 import { formatRecife } from '../utils/datetime';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { InfoHint } from './InfoHint';
@@ -217,6 +218,7 @@ export const FloodPointDetailCard: React.FC<FloodPointDetailCardProps> = ({
                   
                   {showsExperimentalLabel(prediction) && <ExperimentalBadge className="text-xs" />}
                   <PredictionProvenance prediction={prediction} />
+                  <RainForecastSummary prediction={prediction} />
 
                   <div className="flex flex-wrap gap-4">
                     <div className="flex flex-col items-start gap-1">

@@ -1,7 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { sessionEvents } from '@/lib/session';
+import { isApiUnavailable, sessionEvents } from '@/lib/session';
 import type { User } from '@/features/authentication/types';
 import { authService } from '@/features/authentication/services/auth.service';
+
+/** Reinício da API leva ~1 min (Flyway + Spring); a checagem de sessão espera até 2 min antes de desistir. */
+export const ME_RETRY_DELAY_MS = 3000;
+export const ME_RETRY_MAX_MS = 120_000;
 
 interface AuthContextType {
   user: User | null;
@@ -49,7 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(fresh);
             if (prev && prev.role !== fresh.role) setRoleChanged(true);
           })
-          .catch(() => {
+          .catch((err: unknown) => {
+            if (isApiUnavailable(err)) return; // API reiniciando: mantém a sessão
             setUser(null);
             setSessionExpired(true);
           });
@@ -64,21 +69,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // O token vive num cookie httpOnly, invisível pro JS por design — a única forma de saber se
   // já existe uma sessão válida (ex: usuário deu F5 na página) é perguntar pro backend.
+  // API fora do ar (ex.: reinício do contêiner, ~1 min de 502) não é "sem sessão": a checagem tenta de novo, com
+  // "carregando" na tela, por até ME_RETRY_MAX_MS. Antes, o primeiro 502 levava ao login.
   useEffect(() => {
     let cancelled = false;
-    authService
-      .me()
-      .then((fetchedUser) => {
-        if (!cancelled) setUser(fetchedUser);
-      })
-      .catch(() => {
-        if (!cancelled) setUser(null);
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const started = Date.now();
+    const check = () => {
+      authService
+        .me()
+        .then((fetchedUser) => {
+          if (cancelled) return;
+          setUser(fetchedUser);
+          setIsLoading(false);
+        })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          if (isApiUnavailable(err) && Date.now() - started < ME_RETRY_MAX_MS) {
+            timer = setTimeout(check, ME_RETRY_DELAY_MS);
+            return;
+          }
+          setUser(null);
+          setIsLoading(false);
+        });
+    };
+    check();
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
     };
   }, []);
 

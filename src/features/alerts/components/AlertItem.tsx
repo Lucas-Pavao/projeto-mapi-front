@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { CloudRain, OctagonAlert, TriangleAlert, WifiOff, Waves, type LucideIcon } from 'lucide-react';
+import { CloudRain, OctagonAlert, TriangleAlert, WifiOff, Waves, type LucideIcon, DatabaseZap } from 'lucide-react';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
 import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
@@ -21,6 +21,7 @@ const ICON: Record<AlertKind, LucideIcon> = {
   TIDE_ABOVE: Waves,
   RAIN_RATE: CloudRain,
   SENSOR_STALE: WifiOff,
+  SOURCE_STALE: DatabaseZap,
 };
 
 interface Props {
