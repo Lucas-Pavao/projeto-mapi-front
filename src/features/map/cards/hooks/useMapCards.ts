@@ -28,7 +28,7 @@ export function useMapCards() {
   const [params, setParams] = useSearchParams();
   const [state, dispatch] = useReducer(cardsReducer, params, stateFromParams);
   const paramsRef = useRef(params);
-  paramsRef.current = params;
+  useEffect(() => { paramsRef.current = params; }, [params]);
   useEffect(() => {
     const next = paramsFromState(state, paramsRef.current);
     if (next.toString() !== paramsRef.current.toString()) setParams(next, { replace: true });
