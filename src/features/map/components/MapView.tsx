@@ -176,6 +176,18 @@ export const MapView: React.FC = () => {
     canSeeAlerts: hasRole(parseRole(user?.role), 'OPERADOR'),
   });
 
+  // Lista "Sensores": estações unificadas com a chuva medida, mesmo com a camada de chuva medida desligada no mapa.
+  const measuredAll = useMemo(() => measured.query.data?.stations ?? [], [measured.query.data]);
+  const selectStation = useCallback(
+    (canonicalId: string) => {
+      closeEverything();
+      cards.openStation(canonicalId);
+      const a = anchors.find((x) => x.canonicalId === canonicalId);
+      if (a?.lat != null && a?.lon != null) flyTo(a.lon, a.lat, 13.5, 1500);
+    },
+    [closeEverything, cards, anchors, flyTo],
+  );
+
   const selectSensor = useCallback(
     (sensor: SensorResponseDTO) => {
       closeEverything();
@@ -236,6 +248,9 @@ export const MapView: React.FC = () => {
             selectedSensorId={selectedSensorId}
             onFloodPointClick={selectFloodPoint}
             onSensorClick={selectSensor}
+            stations={measuredAll}
+            onStationClick={selectStation}
+            selectedStationId={cards.state.station}
             canSeeDataHealth={isAdmin}
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),

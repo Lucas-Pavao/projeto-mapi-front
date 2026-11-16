@@ -47,4 +47,27 @@ describe('LivePanel', () => {
     expect(screen.getByText('Previsão indisponível.')).toBeInTheDocument();
     expect(screen.queryByTestId('experimental-label')).toBeNull();
   });
+
+  it('lista unificada: a estação aparece uma vez, com janela e fonte; ausente não vira zero; o feed declara a fonte', () => {
+    const feed = { id: 9, sensorId: 'APAC-CEM-1', code: '261160618A', stationName: '[CEMADEN] Torreão', source: 'APAC/Cemaden',
+      type: 'PRECIPITATION', value: 0, unit: 'mm', timestamp: new Date().toISOString() } as unknown as SensorResponseDTO;
+    const apac = { id: 10, sensorId: 'APAC-X', code: 'X1', stationName: '[APAC] Charneca', source: 'APAC/Cemaden',
+      type: 'PRECIPITATION', value: 0.2, unit: 'mm', timestamp: new Date().toISOString() } as unknown as SensorResponseDTO;
+    const st = (id: string, name: string, acc3: number | null) => ({ canonicalId: id, stationCode: id, name, municipality: 'Recife', lat: -8, lon: -34.9,
+      aliases: [`CEMADEN:${id}`, `CEMADEN_PED:${id}`], status: acc3 == null ? 'NO_DATA' as const : 'OK' as const,
+      lastReadingUtc: new Date(Date.now() - 12 * 60_000).toISOString(), acc1hMm: null, acc3hMm: acc3, acc6hMm: null, acc12hMm: null,
+      acc24hMm: null, acc48hMm: null, acc72hMm: null, acc96hMm: null, acc120hMm: null });
+    const onStation = vi.fn();
+    renderPanel({ sensors: [feed, apac], stations: [st('261160618A', 'Torreão', 1.4), st('261160621A', 'Areias', null)], onStationClick: onStation });
+    fireEvent.click(screen.getByRole('tab', { name: /Sensores/ }));
+    const rows = screen.getAllByTestId('unified-station');
+    expect(rows).toHaveLength(2);
+    expect(rows.find((r) => r.textContent?.includes('Torreão'))).toHaveTextContent('Chuva em 3 h · Cemaden PED · leitura há 12 min');
+    expect(rows.find((r) => r.textContent?.includes('Areias'))).toHaveTextContent('sem dado');
+    expect(rows.find((r) => r.textContent?.includes('Areias'))).toHaveTextContent('não é zero');
+    expect(screen.queryByText('[CEMADEN] Torreão')).toBeNull();            // o mesmo pluviômetro não aparece duas vezes
+    expect(screen.getByText('[APAC] Charneca').closest('button')).toHaveTextContent('última leitura · feed da APAC');
+    fireEvent.click(rows.find((r) => r.textContent?.includes('Torreão')) as HTMLElement);
+    expect(onStation).toHaveBeenCalledWith('261160618A');
+  });
 });

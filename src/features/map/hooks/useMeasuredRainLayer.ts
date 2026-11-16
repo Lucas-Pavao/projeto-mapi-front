@@ -6,7 +6,8 @@ const NO_CODES: ReadonlySet<string> = new Set();
 
 /** Dados da camada de chuva medida: estações com coordenada e códigos ao vivo que elas já representam. */
 export function useMeasuredRainLayer(enabled: boolean) {
-  const query = useMeasuredRain(enabled);
+  // Sempre busca: a lista "Sensores" do painel mostra as estações unificadas mesmo com a camada desligada no mapa.
+  const query = useMeasuredRain(true);
   const stations = useMemo(() => mappableStations(query.data?.stations ?? []), [query.data]);
   const aliasCodes = useMemo(() => (enabled ? liveAliasCodes(query.data?.stations ?? []) : NO_CODES), [enabled, query.data]);
   return { query, stations: enabled ? stations : [], aliasCodes };
