@@ -12,14 +12,18 @@ interface Props {
   isMobile: boolean;
   /** Avisa o mapa para fechar as outras seleções quando uma estação é aberta. */
   onOpen: () => void;
+  /** Gerenciador de cards: a estação abre como StationCard (B6) fora daqui; este componente só avisa e marca a ativa. */
+  onSelectStation?: (canonicalId: string) => void;
+  activeId?: string | null;
 }
 
 /**
  * Marcadores e detalhe da chuva medida. Vai dentro do <Map>; a seleção é estado de UI local. O detalhe abre à direita do
  * marcador (como o do ponto crítico): acima dele, era cortado no topo do mapa e coberto pelo painel esquerdo.
  */
-export const MeasuredRainLayer: React.FC<Props> = ({ stations, data, isMobile, onOpen }) => {
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+export const MeasuredRainLayer: React.FC<Props> = ({ stations, data, isMobile, onOpen, onSelectStation, activeId }) => {
+  const [ownId, setSelectedId] = useState<string | null>(null);
+  const selectedId = onSelectStation ? (activeId ?? null) : ownId;
   const selected = stations.find((s) => s.canonicalId === selectedId);
   const close = () => setSelectedId(null);
   const detail = selected && (
@@ -32,10 +36,11 @@ export const MeasuredRainLayer: React.FC<Props> = ({ stations, data, isMobile, o
         selectedId={selectedId}
         onSelect={(s) => {
           onOpen();
-          setSelectedId(s.canonicalId);
+          if (onSelectStation) onSelectStation(s.canonicalId as string);
+          else setSelectedId(s.canonicalId);
         }}
       />
-      {selected &&
+      {selected && !onSelectStation &&
         (isMobile ? (
           <BottomSheet title="Chuva medida" srTitle={selected.name ?? selected.canonicalId ?? 'Estação'} onClose={close}>
             {detail}
