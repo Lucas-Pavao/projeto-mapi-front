@@ -44,7 +44,7 @@ export const PointCard: React.FC<Props> = ({ point, series, rain, now, onClose, 
   ];
   return (
     <section role="dialog" aria-label={`Resumo do ponto ${point.name}`} data-state={state}
-      className={cn('flex w-[320px] max-w-full flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay', TOP[level] ?? TOP.UNKNOWN, unknown && '[border-top-style:dashed]')}>
+      className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TOP[level] ?? TOP.UNKNOWN, unknown && '[border-top-style:dashed]')}>
       <div className="flex items-center justify-between gap-2">
         <RiskBadge level={level} probability={p?.floodProbability} />
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}

@@ -27,7 +27,7 @@ interface CommonProps {
 /**
  * Card ancorado a uma coordenada, como no protótipo: ao lado do marcador (à direita; perto da borda direita, à
  * esquerda), com o topo perto do marcador e preso entre 16 px e {@link CARD_TOP_MAX} px do alto do mapa. O mapa não se
- * move ao abrir; o card acompanha o arrasto e rola por dentro quando é mais alto que o espaço.
+ * move ao abrir; o card acompanha o arrasto e rola por dentro (a barra fica dentro da borda do card) quando é mais alto que o espaço.
  */
 const CARD_W = 320;
 const CARD_GAP = 24;
@@ -59,7 +59,7 @@ const AnchoredCard: React.FC<{ lon: number; lat: number; label: string; children
   }, [map, lon, lat]);
   if (!map || !box) return null;
   return createPortal(
-    <div data-testid="anchored-card" aria-label={label} className="scroll absolute z-30 overflow-y-auto overscroll-contain rounded-[14px]"
+    <div data-testid="anchored-card" aria-label={label} className="absolute z-30 flex flex-col [&>[data-card-root]]:flex [&>[data-card-root]]:min-h-0 [&>[data-card-root]]:flex-col"
       style={{ left: box.left, top: box.top, maxHeight: box.maxHeight }}
       // Rolar ou arrastar dentro do card não mexe no mapa.
       onWheel={stop} onMouseDown={stop} onTouchStart={stop} onDoubleClick={stop} onClick={stop}>

@@ -52,7 +52,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
   const last = c.blocks[c.blocks.length - 1];
   return (
     <section role="dialog" aria-label={`Pluviômetro ${name}`} data-state={c.state} data-pedonly={c.pedOnly}
-      className={cn('flex w-[320px] max-w-full flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
+      className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="state-chip" className={cn('inline-flex h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
@@ -92,7 +92,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <div className="grid grid-cols-3 gap-1.5" data-testid="accs">
         {([['1 h', c.acc1hMm], ['3 h', c.acc3hMm], ['24 h', c.acc24hMm]] as const).map(([l, v]) => (
-          <div key={l} className="rounded-lg border border-border px-2 py-1.5"><div className="text-[10px] leading-[13px] text-muted-foreground">{l}</div><div className={cn('font-mono text-[13px] font-bold leading-[18px]', v == null && 'text-warning')}>{accText(v)}</div></div>
+          <div key={l} className="min-w-0 rounded-lg border border-border px-2 py-1.5"><div className="text-[10px] leading-[13px] text-muted-foreground">{l}</div><div className={cn('truncate text-[13px] font-bold leading-[18px]', v == null ? 'font-sans text-warning' : 'font-mono')}>{accText(v)}</div></div>
         ))}
       </div>
 

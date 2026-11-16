@@ -33,7 +33,7 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
   const stops = `var(--risk-low) 0 ${a}, var(--risk-moderate) ${a} ${b}, var(--risk-high) ${b} 100%`;
   return (
     <section role="dialog" aria-label={`Régua do rio ${riverName ?? name}`} data-state={state}
-      className={cn('flex w-[300px] max-w-full flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay', TOP[state])}>
+      className={cn('flex w-[300px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TOP[state])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="river-state" className={cn('inline-flex h-[22px] items-center rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', EDGE[state])}>{RIVER_STATE_LABEL[state]}</span>
