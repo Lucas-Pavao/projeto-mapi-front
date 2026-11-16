@@ -137,7 +137,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           <div className="grid grid-cols-2 gap-2">
             <Tile testId="tide-tile" label="Maré prevista"
               sub={`${a.tide?.harbor ?? 'Porto do Recife'}${a.tide?.rising == null ? '' : a.tide.rising ? ' · enchendo' : ' · vazando'}`}>
-              {a.tide?.levelM != null ? num(a.tide.levelM, 2) : '—'}<Unit>m</Unit>
+              {a.tide?.levelM != null ? <>{num(a.tide.levelM, 2)}<Unit>m</Unit></> : '—'}
             </Tile>
             <Tile testId="river-tile" label="Rio mais próximo" className={cn(!a.river && 'opacity-60')}
               sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do modelo` : 'nenhuma régua a menos de 6 km'}>

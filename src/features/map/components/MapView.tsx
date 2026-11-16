@@ -369,8 +369,8 @@ export const MapView: React.FC = () => {
           />
         )}
 
-        {/* Com a análise de local aberta, o relato sai pelo botão do próprio card (protótipo); o flutuante colidia com ele. */}
-        {!isMobile && !location && (
+        {/* Com um card aberto o flutuante colide com ele; na análise de local o relato sai pelo botão do próprio card. */}
+        {!isMobile && !anyCardOpen(cards.state) && (
           <GeolocateReportButton
             isGettingLocation={reporting.isGettingLocation}
             hiddenOnSmall={Boolean(location)}
