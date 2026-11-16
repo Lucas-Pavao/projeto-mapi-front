@@ -3,7 +3,7 @@ import { MapMarker, MapPopup, MapRoute, MarkerContent, useMap } from '@/componen
 import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { MapPin } from 'lucide-react';
 import type { FloodPointResponseDTO, SensorResponseDTO } from '../../types';
-import type { StationAccumulation } from '../../schemas/measuredRain.schema';
+import type { StationAnchor } from '../utils/stationResolve';
 import { useLocationAnalysis } from '../hooks/useLocationAnalysis';
 import type { useMapCards } from '../hooks/useMapCards';
 import { popupSide } from '../utils/cardsState';
@@ -44,7 +44,7 @@ const SidePopup: React.FC<{ lon: number; lat: number; label: string; onClose: ()
 };
 
 interface LayerProps extends CommonProps {
-  stations: StationAccumulation[];
+  stations: StationAnchor[];
   riverSensor: SensorResponseDTO | undefined;
 }
 
@@ -100,7 +100,7 @@ const LocationOverlay: React.FC<{ lat: number; lon: number }> = ({ lat, lon }) =
 };
 
 interface DockProps extends CommonProps {
-  stations: StationAccumulation[];
+  stations: StationAnchor[];
   riverSensor: SensorResponseDTO | undefined;
   onReportAt: (c: { lat: number; lng: number }) => void;
 }

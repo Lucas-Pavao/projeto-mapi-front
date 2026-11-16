@@ -33,6 +33,8 @@ import { MapCardsDock, MapCardsLayer } from '../cards/components/MapCards';
 import { useMapCards } from '../cards/hooks/useMapCards';
 import { anyCardOpen, oppositeSide } from '../cards/utils/cardsState';
 import { riverState } from '../utils/overview';
+import { resolveCanonical, stationAnchors } from '../cards/utils/stationResolve';
+import { useCanonicalStations } from '@/features/sensors/hooks/useStations';
 import { TerrainLayer } from './TerrainLayer';
 import { LocationInitializer } from './LocationInitializer';
 import { MapLayerPanel } from './MapLayerPanel';
@@ -135,6 +137,9 @@ export const MapView: React.FC = () => {
   // Chuva medida (Cemaden): com a camada ligada, o pluviômetro ao vivo que já é apelido de uma estação canônica sai do mapa.
   const measuredOn = activeLayers.includes(MEASURED_RAIN_LAYER);
   const measured = useMeasuredRainLayer(measuredOn);
+  // Estações canônicas (B1) + chuva medida: coordenadas para ancorar o card e apelidos para resolver o pluviômetro ao vivo.
+  const canonical = useCanonicalStations();
+  const anchors = useMemo(() => stationAnchors(canonical.data, measured.stations), [canonical.data, measured.stations]);
   const filteredSensorsForMap = useMemo(
     () => withoutCanonicalDuplicates(filterSensorsForMap(sensors, activeLayers), measured.aliasCodes),
     [sensors, activeLayers, measured.aliasCodes],
@@ -175,11 +180,16 @@ export const MapView: React.FC = () => {
     (sensor: SensorResponseDTO) => {
       closeEverything();
       // Régua de rio: card próprio (RiverCard) no gerenciador; os demais sensores seguem com o popup de sensor.
+      // Pluviômetro Cemaden que é apelido de uma canônica abre o StationCard pela canonicalId (flyTo na coordenada da canônica).
+      const station = resolveCanonical(sensor, anchors);
       if (riverState(sensor.value, sensor) !== null) cards.openRiver(sensor.sensorId);
+      else if (station) cards.openStation(station.canonicalId);
       else handleSensorClick(sensor);
-      if (sensor.latitude && sensor.longitude) flyTo(sensor.longitude, sensor.latitude, 13.5, 1500);
+      const lat = station?.lat ?? sensor.latitude;
+      const lon = station?.lon ?? sensor.longitude;
+      if (lat && lon) flyTo(lon, lat, 13.5, 1500);
     },
-    [handleSensorClick, flyTo, closeEverything, cards],
+    [handleSensorClick, flyTo, closeEverything, cards, anchors],
   );
   const selectFloodPoint = useCallback(
     (point: FloodPointResponseDTO) => {
@@ -306,7 +316,7 @@ export const MapView: React.FC = () => {
             floodPoints={floodPoints}
             floodPointStatus={floodPointStatus}
             isMobile={isMobile}
-            stations={measured.stations}
+            stations={anchors}
             riverSensor={riverSensor}
             onSelectPoint={selectFloodPoint}
             onCloseSelection={closeEverything}
@@ -338,7 +348,7 @@ export const MapView: React.FC = () => {
           floodPoints={floodPoints}
           floodPointStatus={floodPointStatus}
           isMobile={isMobile}
-          stations={measured.stations}
+          stations={anchors}
           riverSensor={riverSensor}
           onSelectPoint={selectFloodPoint}
           onCloseSelection={closeEverything}
