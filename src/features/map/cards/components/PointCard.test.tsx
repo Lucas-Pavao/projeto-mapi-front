@@ -52,6 +52,19 @@ describe('PointCard: os 5 estados', () => {
     show('high', { rain: pointRain({ valueMm: null, usedStationId: null }) });
     expect(screen.getAllByTestId('tile')[0]).toHaveTextContent('—nenhuma estação');
   });
+  it('chuva de 3 h ausente: "incompleto" com estação válida e "sem dado" sem ela, em amarelo; nunca 0', () => {
+    show('high');
+    const t3 = screen.getAllByTestId('tile')[1];
+    expect(t3).toHaveTextContent('12,4 mm');
+    cleanup();
+    const noAgg = { ...P.high, liveData: { historicalAggregates: {} } } as typeof P.high;
+    render(<MemoryRouter><PointCard point={noAgg} series={pointSeries()} rain={pointRain()} now={now} /></MemoryRouter>);
+    expect(screen.getAllByTestId('tile')[1]).toHaveTextContent('incompleto');
+    expect(screen.getAllByTestId('tile')[1].querySelector('.text-warning')).not.toBeNull();
+    cleanup();
+    render(<MemoryRouter><PointCard point={noAgg} series={pointSeries()} rain={pointRain({ valueMm: null, usedStationId: null })} now={now} /></MemoryRouter>);
+    expect(screen.getAllByTestId('tile')[1]).toHaveTextContent('sem dado');
+  });
   it('"Análise completa" chama o callback', () => {
     const open = vi.fn();
     show('high', {}, open);

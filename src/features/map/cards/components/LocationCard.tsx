@@ -85,13 +85,15 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
             </p>
             {a.rain.candidates.length > 0 && (
               <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">PLUVIÔMETROS ATÉ 5 KM · {a.rain.candidates.length} ({a.rain.nValid ?? 0} VÁLIDOS)</span>
+                <span data-testid="candidates-title" className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">
+                  {a.rain.mode === 'ESTIMATED' ? 'PLUVIÔMETROS NO RAIO (NENHUM VÁLIDO)' : `PLUVIÔMETROS ATÉ 5 KM · ${a.rain.candidates.length}${a.rain.nValid != null ? ` (${a.rain.nValid} VÁLIDOS)` : ''}`}
+                </span>
                 {a.rain.candidates.map((c) => (
                   <button key={c.stationId} type="button" data-role={c.role} onClick={() => onOpenStation?.(c.stationId)}
                     className={cn('grid cursor-pointer grid-cols-[10px_1fr_auto_auto] items-center gap-2 rounded-lg border bg-transparent px-2 py-1.5 text-left text-xs leading-4 text-foreground', c.role === 'USED' ? 'border-primary bg-primary/10' : 'border-border')}>
                     <span aria-hidden="true" className={cn('size-2 rounded-full', c.role === 'USED' ? 'bg-primary' : c.role === 'EXCLUDED' ? 'bg-destructive' : 'bg-chart-3')} />
                     <span className="min-w-0 truncate"><strong>{c.name}</strong> <span className="text-muted-foreground">· {distanceText(c.distanceM)} · {candidateStatus(c)}</span></span>
-                    <span className="font-mono">{candidateValue({ role: c.role, valueMm: c.valueMmH ?? null })}</span>
+                    {a.rain.mode === 'ESTIMATED' ? <span aria-hidden="true" /> : <span className="font-mono">{candidateValue({ role: c.role, valueMm: c.valueMmH ?? null })}</span>}
                     <span className="min-w-[58px] text-right text-[11px] font-bold text-muted-foreground">{ROLE_TAG[c.role]}</span>
                   </button>
                 ))}

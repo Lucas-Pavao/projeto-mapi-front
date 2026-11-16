@@ -30,11 +30,14 @@ export function rainSourceTag(mode: RainMode): RainSourceTag {
 
 export interface RainTile { label: string; value: string; unit: string; missing: boolean }
 
-/** Chuva agora/3 h/24 h. null = "sem dado" (lacuna) ou "—"; nunca 0. */
+/**
+ * Chuva agora/3 h/24 h. Ausente nunca vira 0: "incompleto" no acumulado de chuva MEDIDA com hora faltando; "sem dado" na
+ * lacuna, na estimativa sem valor e no "agora".
+ */
 export function rainTiles(a: LocationAnalysis): RainTile[] {
-  const miss = a.rain.mode === 'GAP' ? 'sem dado' : '—';
-  const t = (label: string, v: number | null | undefined, unit: string): RainTile => ({ label, value: v == null ? miss : num(v, 1), unit: v == null ? '' : unit, missing: v == null });
-  return [t('Agora', a.rain.nowMmH, 'mm/h'), t('3 h', a.rain.acc3hMm, 'mm'), t('24 h', a.rain.acc24hMm, 'mm')];
+  const acc = a.rain.mode === 'MEASURED' ? 'incompleto' : 'sem dado';
+  const t = (label: string, v: number | null | undefined, unit: string, miss: string): RainTile => ({ label, value: v == null ? miss : num(v, 1), unit: v == null ? '' : unit, missing: v == null });
+  return [t('Agora', a.rain.nowMmH, 'mm/h', 'sem dado'), t('3 h', a.rain.acc3hMm, 'mm', acc), t('24 h', a.rain.acc24hMm, 'mm', acc)];
 }
 
 /** Estilo da linha do mapa até cada candidata: cheia = usada, tracejada = menor/sem valor, vermelha = reprovada. */

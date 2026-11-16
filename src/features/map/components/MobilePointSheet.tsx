@@ -8,7 +8,7 @@ import { RISK_MEANING, getRiskVisual, showsExperimentalLabel } from '@/component
 import { MobileProbabilityChart } from './MobileProbabilityChart';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
 import { contributorRows } from '@/features/points/utils/contributors';
-import { distanceText } from '@/features/points/utils/rainCandidates';
+import { distanceText, missingAccText } from '@/features/points/utils/rainCandidates';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
@@ -75,7 +75,7 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
         <MobileProbabilityChart slug={point.slug} />
         {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[15px] leading-[22px]" /> : <p className="m-0 text-[15px] leading-[22px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
         <div className="grid grid-cols-2 gap-2">
-          <div className={tile}><div className={tileLabel}>Chuva 3 h</div><div className={tileValue}>{rain3h != null ? `${fmtNum(rain3h)} mm` : dash}</div></div>
+          <div className={tile}><div className={tileLabel}>Chuva 3 h</div><div className={tileValue}>{rain3h != null ? `${fmtNum(rain3h)} mm` : isFetchingStatus ? '…' : <span className="text-warning">{missingAccText(usedRain != null)}</span>}</div></div>
           <div className={tile}>
             <div className={tileLabel}>Chuva agora</div>
             <div className={tileValue}>{rain ? (rain.valueMm != null && usedRain ? `${fmtNum(rain.valueMm)} mm/h` : '—') : now != null ? `${fmtNum(now)} mm/h` : dash}</div>

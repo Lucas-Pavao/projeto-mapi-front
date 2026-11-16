@@ -6,7 +6,7 @@ import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
 import { num } from '@/features/operacao/utils/format';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { contributorRows } from '@/features/points/utils/contributors';
-import { distanceText } from '@/features/points/utils/rainCandidates';
+import { distanceText, missingAccText } from '@/features/points/utils/rainCandidates';
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
 import type { FloodPointResponseDTO } from '../../types';
@@ -39,7 +39,7 @@ export const PointCard: React.FC<Props> = ({ point, series, rain, now, onClose, 
   const tide = point.tideHeight ?? point.liveData?.tideHeight ?? null;
   const tiles: Array<{ l: string; v: string; s: string; warn: boolean }> = [
     { l: 'Chuva agora', v: rain?.valueMm != null && used ? `${num(rain.valueMm, 1)} mm/h` : '—', s: stationText, warn: rain?.valueMm == null },
-    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : '—', s: 'medida · Cemaden', warn: agg?.rain3h == null },
+    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: 'medida · Cemaden', warn: agg?.rain3h == null },
     { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideUnit ?? 'DHN (NR)', warn: false },
   ];
   return (

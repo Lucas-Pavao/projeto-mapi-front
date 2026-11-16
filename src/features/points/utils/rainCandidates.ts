@@ -28,9 +28,12 @@ export function candidateStatus(c: Pick<RainCandidate, 'monthStatus' | 'reasons'
   return c.reasons.length > 0 ? `${base} (${c.reasons.map((r) => REASON_TEXT[r] ?? r).join(', ')})` : base;
 }
 
-/** Valor da candidata: excluída = "—"; válida sem valor = "sem dado" (nunca 0). */
+/** Valor da candidata na hora, sempre em mm/h (chuva da hora): excluída = "—"; válida sem valor = "sem dado" (nunca 0). */
 export function candidateValue(c: Pick<RainCandidate, 'role' | 'valueMm'>): string {
   if (c.role === 'EXCLUDED') return '—';
   if (c.valueMm == null) return 'sem dado';
-  return `${c.valueMm.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mm`;
+  return `${c.valueMm.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} mm/h`;
 }
+
+/** Acumulado ausente: "incompleto" quando há estação válida (faltou hora na janela) e "sem dado" quando não há (lacuna ou sem estação). Nunca 0. */
+export const missingAccText = (hasValidStation: boolean): string => (hasValidStation ? 'incompleto' : 'sem dado');

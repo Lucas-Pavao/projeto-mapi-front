@@ -134,7 +134,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, series, rain, now, tab, 
                   ['issuedAt', formatHoraCurta(p?.issuedAt) ?? '—'],
                   ['validUntil', formatHoraCurta(p?.validUntil) ?? '—'],
                   ['degradationReason', p?.degradationReason ?? 'nenhum'],
-                  ['contributors', `${p?.contributors?.length ?? 0} fator(es) · ${imputed.length} imputado(s)`],
+                  ['contributors', unknown ? 'sem previsão agora' : `${p?.contributors?.length ?? 0} fator(es) · ${imputed.length} imputado(s)`],
                 ] as const).map(([k, v]) => <React.Fragment key={k}><dt className="font-mono text-primary">{k}</dt><dd className="m-0">{v}</dd></React.Fragment>)}
               </dl>
             </section>

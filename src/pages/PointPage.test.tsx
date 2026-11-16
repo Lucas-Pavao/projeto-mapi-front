@@ -94,6 +94,7 @@ describe('PointPage', () => {
     expect(panel.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('reprovada no mês (zero travado, subestima)');
     expect(panel.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('—');
     expect(panel.querySelector('[data-role="NO_VALUE"]')).toHaveTextContent('sem dado');
+    expect(panel.querySelector('[data-role="USED"]')).toHaveTextContent('3,2 mm/h');
     expect(panel).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
     expect(within(panel).getByTestId('rain-reference-hour')).toHaveTextContent(/^dados até \d{2}\/\d{2} \d{2}:\d{2}$/);
   });

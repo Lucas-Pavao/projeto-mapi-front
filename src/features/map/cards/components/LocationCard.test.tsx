@@ -14,7 +14,10 @@ describe('LocationCard: os 5 estados', () => {
     expect(screen.getByRole('dialog')).toHaveAttribute('data-state', 'MEASURED');
     expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('medida · Cemaden');
     expect(screen.getAllByTestId('rain-tile')[0]).toHaveTextContent('3,2mm/h');
-    expect(screen.getAllByTestId('rain-tile')[2]).toHaveTextContent('—'); // 24 h incompleta: traço, não 0
+    expect(screen.getAllByTestId('rain-tile')[2]).toHaveTextContent('incompleto'); // 24 h com hora faltando: nunca 0
+    expect(screen.getAllByTestId('rain-tile')[2].querySelector('.text-warning')).not.toBeNull();
+    expect(document.querySelector('[data-role="USED"]')).toHaveTextContent('3,2 mm/h'); // candidata da hora em mm/h
+    expect(screen.getByTestId('candidates-title')).toHaveTextContent('3 (2 VÁLIDOS)');
     expect(screen.queryByTestId('location-banner')).toBeNull();
     expect(document.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('reprovada no mês (zero travado)');
     fireEvent.click(document.querySelector('[data-role="USED"]') as HTMLElement);
@@ -61,6 +64,27 @@ describe('LocationCard: os 5 estados', () => {
     show('measured');
     expect(screen.getByTestId('river-tile')).toHaveTextContent('fora do modelo');
     expect(screen.getByRole('dialog')).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
+  });
+});
+
+describe('LocationCard: candidatas por modo e contagem', () => {
+  it('estimada: pluviômetros do raio sem valor medido, só papel e motivo', () => {
+    const a = { ...L.estimated, rain: { ...L.estimated.rain, candidates: [
+      { stationId: 'X1', name: 'Sintético: X1', distanceM: 3000, valueMmH: 9.9, monthStatus: 'FAIL' as const, reasons: ['STUCK_ZERO'], role: 'EXCLUDED' as const, lat: -8, lon: -35 },
+      { stationId: 'X2', name: 'Sintético: X2', distanceM: 4000, valueMmH: 7.7, monthStatus: 'OFFLINE' as const, reasons: [], role: 'EXCLUDED' as const, lat: -8, lon: -35 }] } };
+    render(<LocationCard analysis={a} />);
+    expect(screen.getByTestId('candidates-title')).toHaveTextContent('PLUVIÔMETROS NO RAIO (NENHUM VÁLIDO)');
+    const rows = document.querySelectorAll('[data-role]');
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('reprovada no mês (zero travado)');
+    expect(rows[0]).toHaveTextContent('fora');
+    expect(screen.getByRole('dialog').textContent).not.toMatch(/9,9|7,7/); // valor medido não aparece junto da estimativa
+  });
+  it('sem nValid não mostra contagem de válidos', () => {
+    const a = { ...L.measured, rain: { ...L.measured.rain, nValid: null } };
+    render(<LocationCard analysis={a} />);
+    expect(screen.getByTestId('candidates-title').textContent).not.toMatch(/VÁLIDOS/);
+    expect(screen.getByTestId('candidates-title').textContent).not.toMatch(/\b0\b/);
   });
 });
 

@@ -34,6 +34,7 @@ describe('AnalysisPanel: 3 abas', () => {
     fireEvent.click(document.querySelector('[data-role="LOWER"]') as HTMLElement);
     expect(onStation).toHaveBeenCalledWith('SINT-B');
     expect(document.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('reprovada no mês (zero travado)');
+    expect(document.querySelector('[data-role="USED"]')).toHaveTextContent('3,2 mm/h'); // valor da hora, em mm/h
   });
   it('Entradas: feature imputada aparece declarada', () => {
     const pt = { ...P.high, floodPrediction: { ...P.high.floodPrediction, imputedFeatures: [{ featureId: 'tide_level', label: 'Nível da maré' }] } } as FloodPointResponseDTO;
@@ -56,6 +57,9 @@ describe('AnalysisPanel: 3 abas', () => {
     expect(screen.getByTestId('analysis-reason')).toHaveTextContent('Sem dado suficiente');
     expect(within(screen.getByRole('dialog')).queryByTestId('synthetic-warning')).toBeNull();
     expect(document.querySelector('[data-risk="UNKNOWN"]')?.textContent).toBe('Previsão indisponível');
+    fireEvent.click(screen.getByRole('tab', { name: 'Origem' }));
+    expect(screen.getByTestId('provenance')).toHaveTextContent('contributorssem previsão agora');
+    expect(screen.getByTestId('provenance').textContent).not.toMatch(/0 fator/);
   });
   it('parseTab: valor inválido da URL cai em "Por quê"', () => {
     expect(parseTab('inputs')).toBe('inputs');
