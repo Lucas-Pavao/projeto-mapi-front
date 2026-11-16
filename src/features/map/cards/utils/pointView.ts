@@ -1,3 +1,4 @@
+import { insufficientText } from '@/components/risk/provenance';
 import { degradationText, RISK_MEANING } from '@/components/risk/risk';
 import { sqrtScale } from '@/components/risk/thresholds';
 import { thresholdReason } from '@/components/risk/provenance';
@@ -20,7 +21,11 @@ export const isUnknownState = (s: PointCardState) => s === 'INSUFFICIENT' || s =
 
 /** Linha "Por quê" do card: o limiar que produziu a faixa, ou o motivo de não haver previsão (nunca porcentagem em UNKNOWN). */
 export function reasonOf(state: PointCardState, p: FloodPrediction | null | undefined, rainStation: string | null): { label: string; text: string } {
-  if (state === 'INSUFFICIENT') return { label: 'Sem dado suficiente:', text: `falta chuva medida da hora atual ou das últimas 3 h (${rainStation ?? 'nenhuma estação válida'}). Lacuna não vira zero.` };
+  if (state === 'INSUFFICIENT') {
+    const why = insufficientText(p);
+    const what = why.includes('maré') && !why.includes('chuva') ? 'falta a maré prevista da hora' : `falta chuva medida da hora atual ou das últimas 3 h (${rainStation ?? 'nenhuma estação válida'})`;
+    return { label: `${why.charAt(0).toUpperCase()}${why.slice(1)}:`, text: `${what}. Ausente não vira zero.` };
+  }
   if (state === 'UNAVAILABLE') return { label: 'Modelo indisponível:', text: `${degradationText(p?.degradationReason)}. O último valor válido não é mostrado como atual.` };
   const t = thresholdReason(p?.riskLevel, p?.floodProbability, p?.riskThresholds);
   return { label: 'Por quê:', text: t ?? 'limiares indisponíveis, sem classe calculada pelo front.' };

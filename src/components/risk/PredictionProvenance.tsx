@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { SyntheticWarning } from './SyntheticWarning';
-import { fmtOne, syntheticWarningOf, thresholdReason } from './provenance';
+import { absentInputs, fmtOne, rainInputText, riskHeadline, syntheticWarningOf, thresholdReason } from './provenance';
 import type { FloodPrediction } from '@/features/map/schemas/floodPointResponse.schema';
 
 interface Props {
@@ -20,10 +20,19 @@ export const PredictionProvenance: React.FC<Props> = ({ prediction, className })
   const reason = thresholdReason(prediction.riskLevel, prediction.floodProbability, prediction.riskThresholds);
   const imputedIds = new Set((prediction.imputedFeatures ?? []).map((i) => i.featureId));
   const top = (prediction.contributors ?? []).slice(0, 3);
-  if (!warning && !reason && top.length === 0) return null;
+  const absent = absentInputs(prediction);
+  const rainTxt = rainInputText(prediction);
+  if (!warning && !reason && top.length === 0 && absent.length === 0) return null;
   return (
     <div className={cn('flex flex-col gap-1.5 text-xs leading-[16px]', className)} data-testid="prediction-provenance">
+      <p className="m-0 font-bold text-foreground" data-testid="risk-headline">{riskHeadline(prediction)}</p>
       <SyntheticWarning prediction={prediction} />
+      {absent.length > 0 && (
+        <p role="note" data-testid="absent-inputs" className="m-0 rounded-md border border-warning bg-warning/10 px-2 py-1.5 text-foreground">
+          <strong className="text-warning">Entradas ausentes nesta previsão:</strong> {absent.map((a) => a.label).join(', ')}.
+          {' '}Ausente não virou zero: o modelo recebeu "sem dado".
+        </p>
+      )}
       {reason && (
         <p className="m-0 text-muted-foreground" data-testid="threshold-reason">
           {reason}
@@ -46,11 +55,7 @@ export const PredictionProvenance: React.FC<Props> = ({ prediction, className })
           </ul>
         </div>
       )}
-      {prediction.rainSource && (
-        <p className="m-0 text-[11px] text-muted-foreground">
-          Modelo treinado com chuva {prediction.rainSource === 'MEASURED' ? 'medida (pluviômetro do Cemaden)' : 'de reanálise'}.
-        </p>
-      )}
+      {rainTxt && <p className="m-0 text-[11px] text-muted-foreground" data-testid="rain-input">{rainTxt}</p>}
     </div>
   );
 };

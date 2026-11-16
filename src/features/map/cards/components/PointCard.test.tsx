@@ -30,7 +30,7 @@ describe('PointCard: os 5 estados', () => {
   it('4 sem dado suficiente: sem porcentagem, trecho tracejado e a estação da chuva', () => {
     show('insufficient', { gap: true });
     expect(screen.getByRole('dialog')).toHaveAttribute('data-state', 'INSUFFICIENT');
-    expect(screen.getByTestId('point-reason')).toHaveTextContent('Sem dado suficiente: falta chuva medida');
+    expect(screen.getByTestId('point-reason')).toHaveTextContent('Sem chuva medida suficiente agora: falta chuva medida');
     expect(document.querySelector('[data-risk="UNKNOWN"]')?.textContent).toBe('Previsão indisponível'); // selo sem porcentagem
     expect(screen.getByTestId('point-reason').textContent).not.toMatch(/\d%/);
     expect(screen.getAllByTestId('chart-gap').length).toBeGreaterThan(0);

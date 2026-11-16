@@ -76,6 +76,23 @@ const floodPredictionSchema = z
     rainSource: z.string().nullable().optional(),
     trainingData: z.string().nullable().optional(),
     syntheticWarning: z.string().nullable().optional(),
+    // Modelo v3 (C1/C2), por adição: chuva que ENTROU na previsão, com estações e idade; e que probabilidade é.
+    rainInput: z.object({
+      source: z.string().nullable().optional(),
+      hourEndUtc: z.string().nullable().optional(),
+      latestReadingUtc: z.string().nullable().optional(),
+      ageMinutes: z.number().nullable().optional(),
+      validStations: z.number().nullable().optional(),
+      values: z.array(z.object({
+        featureId: z.string(),
+        valueMm: z.number().nullable().optional(),
+        hours: z.number().nullable().optional(),
+        hoursWithValue: z.number().nullable().optional(),
+        stations: z.array(z.object({ stationId: z.string(), name: z.string().nullable().optional(), source: z.string().nullable().optional() })).optional(),
+      })).optional(),
+    }).nullable().optional(),
+    probabilityKind: z.string().nullable().optional(),
+    floodProbabilityUncorrected: z.number().nullable().optional(),
   })
   .passthrough();
 

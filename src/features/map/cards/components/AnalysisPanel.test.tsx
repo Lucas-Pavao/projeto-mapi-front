@@ -54,7 +54,7 @@ describe('AnalysisPanel: 3 abas', () => {
   it('sem previsão: sem contribuições nem porcentagem, motivo explícito', () => {
     render(<Harness point={P.insufficient} />);
     expect(screen.getByText(/Sem previsão agora, então não há contribuições/)).toBeInTheDocument();
-    expect(screen.getByTestId('analysis-reason')).toHaveTextContent('Sem dado suficiente');
+    expect(screen.getByTestId('analysis-reason')).toHaveTextContent('Sem chuva medida suficiente agora');
     expect(within(screen.getByRole('dialog')).queryByTestId('synthetic-warning')).toBeNull();
     expect(document.querySelector('[data-risk="UNKNOWN"]')?.textContent).toBe('Previsão indisponível');
     fireEvent.click(screen.getByRole('tab', { name: 'Origem' }));
