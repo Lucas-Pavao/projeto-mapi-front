@@ -79,7 +79,7 @@ export const PointCard: React.FC<Props> = ({ point, series, rain, now, onClose, 
       <p className="m-0 text-[10px] leading-[13px] text-muted-foreground">
         {unknown
           ? `Sem previsão válida agora${p?.lastValidIssuedAt ? ` · última válida ${formatHoraCurta(p.lastValidIssuedAt)}` : ''}${p?.modelVersion ? ` · ${p.modelVersion}` : ''}`
-          : `Emitida ${formatHoraCurta(p?.issuedAt) ?? '—'} · válida até ${formatHoraCurta(p?.validUntil) ?? '—'}${p?.modelVersion ? ` · ${p.modelVersion}` : ''}${p?.rainSource === 'MEASURED' ? ' · chuva medida' : ''}`}
+          : `Emitida ${formatHoraCurta(p?.issuedAt) ?? '—'}${p?.validUntil ? ` · válida até ${formatHoraCurta(p.validUntil)}` : ''}${p?.modelVersion ? ` · ${p.modelVersion}` : ''}${p?.rainSource === 'MEASURED' ? ' · chuva medida' : ''}`}
       </p>
     </section>
   );

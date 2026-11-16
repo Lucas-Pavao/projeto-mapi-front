@@ -46,9 +46,9 @@ export const PointProbabilityChart: React.FC<Props> = ({ items, now, width: W, h
       </svg>
       <div className="flex justify-between font-mono text-[10px] leading-[14px] text-muted-foreground">
         <span>{formatRecifeHourMs(now - hours * 3_600_000)}</span>
-        <span>{th ? `escala raiz · alto ≥ ${pctTxt(th.high)} · mod. ≥ ${pctTxt(th.medium)}` : 'sem limiares'}</span>
         <span>{formatRecifeHourMs(now)}</span>
       </div>
+      <p className="font-mono text-[10px] leading-[14px] text-muted-foreground">{th ? `escala raiz · alto ≥ ${pctTxt(th.high)} · mod. ≥ ${pctTxt(th.medium)}` : 'sem limiares'}</p>
     </div>
   );
 };

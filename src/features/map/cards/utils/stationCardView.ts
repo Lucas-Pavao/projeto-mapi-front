@@ -8,14 +8,14 @@ export type Tone = 'warning' | 'destructive' | 'muted' | 'success' | 'primary';
 export interface StateMeta { label: string; tone: Tone; dashed: boolean }
 
 /** Rótulo e cor do estado. Cor nunca é o único sinal: o rótulo vai sempre junto. */
-export function stateMeta(c: Pick<StationCardData, 'state' | 'pedOnly'>): StateMeta {
+export function stateMeta(c: Pick<StationCardData, 'state' | 'pedOnly' | 'monthCheck'>): StateMeta {
   switch (c.state) {
     case 'NO_RESPONSE': return { label: 'Sem resposta', tone: 'warning', dashed: true };
     case 'GAP_NOW': return { label: 'Lacuna agora', tone: 'warning', dashed: true };
     case 'FAIL_MONTH': return { label: 'Reprovada no mês · fora da chuva do ponto', tone: 'destructive', dashed: false };
     case 'DIVERGENT': return { label: 'Fontes divergem', tone: 'warning', dashed: false };
     case 'PEAK_REMOVED': return { label: 'Pico isolado removido', tone: 'warning', dashed: false };
-    case 'UNCHECKED': return { label: 'Checagem inconclusiva', tone: 'muted', dashed: false };
+    case 'UNCHECKED': return { label: c.monthCheck ? 'Checagem inconclusiva' : 'Mês sem checagem', tone: 'muted', dashed: false };
     case 'NORMAL': return c.pedOnly ? { label: 'Só PED · sem ao vivo', tone: 'primary', dashed: false } : { label: 'Ao vivo + PED', tone: 'success', dashed: false };
   }
 }
@@ -48,8 +48,14 @@ export function stateNote(c: StationCardData): NoteView | null {
       return { tone: 'warning', title: `Fontes divergem${n?.hourEndUtc ? ` em ${hour(n.hourEndUtc)}` : ''}:`, text: `ao vivo ${mm1(n?.liveMm)} × PED ${mm1(n?.pedMm)} (diferença ${mm1(n?.diffMm)} > 0,5 mm). Vale a PED.` };
     case 'PEAK_REMOVED':
       return { tone: 'warning', title: `Pico isolado removido${n?.hourEndUtc ? ` às ${hour(n.hourEndUtc)}` : ''}.`, text: 'Pico de 10 mm ou mais com vizinhas abaixo de 1 mm a até 6 km. A barra cinza mostra o valor corrigido.' };
-    case 'UNCHECKED':
-      return { tone: 'muted', title: 'Checagem inconclusiva.', text: 'Poucas vizinhas com chuva no mês (FEW_WET_NEIGHBORS). Continua sendo usada.' };
+    case 'UNCHECKED': {
+      // Sem linha de checagem: o mês ainda não foi checado (a checagem roda sobre o mês fechado). Não inventar motivo.
+      if (!c.monthCheck) return { tone: 'muted', title: 'Mês ainda sem checagem.', text: 'A checagem espacial roda sobre o mês fechado. Até lá a estação conta como válida.' };
+      const r = c.monthCheck.reasons ?? [];
+      const text = r.includes('FEW_WET_NEIGHBORS') ? 'Poucas vizinhas com chuva no mês (FEW_WET_NEIGHBORS). Continua sendo usada.'
+        : r.length ? `Motivo: ${r.map((x) => REASON_TEXT[x] ?? x).join(', ')}. Continua sendo usada.` : 'Continua sendo usada.';
+      return { tone: 'muted', title: 'Checagem inconclusiva.', text };
+    }
     case 'NORMAL':
       return null;
   }
@@ -64,7 +70,7 @@ export function nowText(c: StationCardData): { value: string; warn: boolean } {
 export function sourceText(c: StationCardData): string {
   if (c.state === 'NO_RESPONSE' || c.state === 'GAP_NOW' || c.nowSource == null) return '—';
   if (c.pedOnly) return 'PED (única fonte)';
-  return c.nowSource === 'CEMADEN_PED' ? 'PED (consolidada)' : 'ao vivo (PED ainda não chegou)';
+  return c.nowSource === 'CEMADEN_PED' ? 'PED (consolidada)' : c.pedPending ? 'ao vivo (PED ainda não chegou)' : 'ao vivo';
 }
 
 export function liveText(c: StationCardData): string {

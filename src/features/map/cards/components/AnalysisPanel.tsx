@@ -53,7 +53,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, series, rain, now, tab, 
         <RiskBadge level={level} probability={p?.floodProbability} className="self-start" />
         <div>
           <p className="m-0 text-xl font-extrabold leading-[26px]">{point.name}</p>
-          <p className="m-0 text-xs leading-4 text-muted-foreground">{point.municipality ?? 'Recife'} · {unknown ? 'sem previsão válida agora' : `emitida ${formatHoraCurta(p?.issuedAt) ?? '—'} · válida até ${formatHoraCurta(p?.validUntil) ?? '—'}`}</p>
+          <p className="m-0 text-xs leading-4 text-muted-foreground">{point.municipality ?? 'Recife'} · {unknown ? 'sem previsão válida agora' : `emitida ${formatHoraCurta(p?.issuedAt) ?? '—'}${p?.validUntil ? ` · válida até ${formatHoraCurta(p.validUntil)}` : ''}`}</p>
         </div>
         <div role="tablist" aria-label="Seções da análise" className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
           {ANALYSIS_TABS.map((t) => (

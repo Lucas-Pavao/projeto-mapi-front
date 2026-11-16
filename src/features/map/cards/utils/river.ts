@@ -34,3 +34,9 @@ export function trendText(cmH: number | null): string {
   if (r === 0) return 'estável';
   return `${r > 0 ? 'subindo' : 'descendo'} ${Math.abs(r)} cm/h`;
 }
+
+/**
+ * Cota da APAC/ANA em cm (`waterLevel`, cotas de alerta e a série `river` da linha do tempo, que é a média de
+ * `water_level`): o card trabalha em metros. `value` do sensor já vem em metros.
+ */
+export const cmToM = (cm: number | null | undefined): number | null => (cm == null ? null : cm / 100);

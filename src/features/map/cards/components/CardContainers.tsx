@@ -9,7 +9,7 @@ import type { FloodPointResponseDTO, SensorResponseDTO } from '../../types';
 import { useLocationAnalysis } from '../hooks/useLocationAnalysis';
 import { useStationCard } from '../hooks/useStationCard';
 import type { AnalysisTab } from '../utils/analysis';
-import { riverTrendCmH } from '../utils/river';
+import { cmToM, riverTrendCmH } from '../utils/river';
 import { AnalysisPanel } from './AnalysisPanel';
 import { LocationCard } from './LocationCard';
 import { PointCard } from './PointCard';
@@ -62,9 +62,12 @@ export const LocationCardContainer: React.FC<LocationProps> = ({ lat, lon, onClo
 /** Régua do rio a partir do sensor selecionado; a tendência vem da série de 3 h da linha do tempo. */
 export const RiverCardContainer: React.FC<{ sensor: SensorResponseDTO; onClose: () => void }> = ({ sensor, onClose }) => {
   const tl = useTimeline(3, 0);
-  const trend = riverTrendCmH(seriesOf(tl.data, 'rio', seriesKeys(sensor)), tl.now);
+  // A série da linha do tempo vem em cm (média de water_level); a tendência espera metros.
+  const series = seriesOf(tl.data, 'rio', seriesKeys(sensor)).map((p) => ({ ...p, v: cmToM(p.v) }));
+  const trend = riverTrendCmH(series, tl.now);
+  const levelM = sensor.waterLevel != null ? cmToM(sensor.waterLevel) : sensor.value ?? null;
   return (
-    <RiverCard name={sensor.stationName ?? sensor.sensorId} riverName={sensor.riverName} stationId={sensor.sensorId} levelM={sensor.waterLevel ?? sensor.value}
-      trendCmH={trend} levels={{ pre: sensor.riverPreAlertLevel ?? null, alert: sensor.riverAlertLevel ?? null, flood: sensor.riverFloodLevel ?? null }} onClose={onClose} />
+    <RiverCard name={sensor.stationName ?? sensor.sensorId} riverName={sensor.riverName} stationId={sensor.sensorId} levelM={levelM}
+      trendCmH={trend} levels={{ pre: cmToM(sensor.riverPreAlertLevel), alert: cmToM(sensor.riverAlertLevel), flood: cmToM(sensor.riverFloodLevel) }} onClose={onClose} />
   );
 };

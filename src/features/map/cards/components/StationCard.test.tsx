@@ -32,6 +32,13 @@ describe('StationCard: os 8 estados', () => {
     expect(screen.getByTestId('note')).toHaveTextContent('Continua sendo usada');
     expect(screen.getByText(/mês sem checagem \(poucas vizinhas com chuva\)/)).toBeInTheDocument();
   });
+  it('4b mês ainda não checado: não inventa motivo', () => {
+    render(<MemoryRouter><StationCard card={{ ...F.unchecked, monthCheck: null }} /></MemoryRouter>);
+    expect(screen.getByTestId('note')).toHaveTextContent('Mês ainda sem checagem');
+    expect(screen.getByTestId('note')).not.toHaveTextContent('FEW_WET_NEIGHBORS');
+    expect(screen.getByText('Mês sem checagem')).toBeInTheDocument();
+  });
+
   it('5 lacuna agora: "sem dado", blocos tracejados e acumulados incompletos (nunca 0)', () => {
     show('gap');
     expect(screen.getByTestId('now')).toHaveTextContent('sem dado');

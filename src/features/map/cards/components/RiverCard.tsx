@@ -37,7 +37,7 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="river-state" className={cn('inline-flex h-[22px] items-center rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', EDGE[state])}>{RIVER_STATE_LABEL[state]}</span>
-          <p className="m-0 mt-1.5 text-base font-extrabold leading-[22px]">{riverName ? `Rio ${riverName} · ${name}` : name}</p>
+          <p className="m-0 mt-1.5 text-base font-extrabold leading-[22px]">{riverName ? `${/^rio\b/i.test(riverName) ? riverName : `Rio ${riverName}`} · ${name}` : name}</p>
           <p className="m-0 text-xs text-muted-foreground">Régua de nível APAC · <span className="font-mono">{stationId}</span></p>
         </div>
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar card do rio" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-4" aria-hidden="true" /></button>}
@@ -51,7 +51,7 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
           <div className="relative h-3 rounded-full" role="img" aria-label={`Nível ${levelM == null ? 'sem leitura' : `${num(levelM, 2)} m`} na régua: pré-alerta ${num(levels.pre, 2)}, alerta ${num(levels.alert, 2)}, inundação ${num(levels.flood, 2)} m`} style={{ background: `linear-gradient(90deg, ${stops})` }}>
             {levelM != null && <span data-testid="river-marker" className="absolute -inset-y-1 -ml-px w-[3px] rounded-sm bg-foreground" style={{ left: pos(levelM) }} />}
           </div>
-          <div className="flex justify-between font-mono text-[10px] leading-[14px] text-muted-foreground" data-testid="river-cotas">
+          <div className="flex flex-wrap justify-between gap-x-2 font-mono text-[10px] leading-[14px] text-muted-foreground" data-testid="river-cotas">
             <span>pré {num(levels.pre, 2)}</span><span>alerta {num(levels.alert, 2)}</span><span>inundação {num(levels.flood, 2)} m</span>
           </div>
         </>
