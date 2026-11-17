@@ -41,9 +41,20 @@ describe('FloodPointMarkers', () => {
     expect(ring('d')?.className).toContain('border-dashed');
     expect(ring('d')?.className).not.toContain('animate-ping');
     expect(ring('e')).toBeNull(); // sem alerta
-    expect(ring('f')).toBeNull(); // sem leitura do alerta (não-ADMIN)
+    expect(ring('f')).toHaveAttribute('data-alerta-ring', 'SEM_DADO'); // ADMIN, ponto sem registro: sem dado, nunca "sem alerta"
+    const tag = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-tag]');
+    expect(tag('a')).toHaveTextContent('atenção'); // cor não é o único sinal
+    expect(tag('b')).toHaveTextContent('alerta');
+    expect(tag('f')).toHaveTextContent('sem dado');
+    expect(tag('e')).toBeNull();
     expect(container.querySelectorAll('.animate-ping')).toHaveLength(3);
     expect(screen.getByRole('button', { name: /Ponto crítico Ponto b: risco Alto, com alerta ativo/ })).toBeInTheDocument();
+  });
+
+  it('visitante (sem o mapa do alerta): nenhum anel nem rótulo', () => {
+    const { container } = render(<FloodPointMarkers points={[pt(1, 'a', 'HIGH')]} selectedFloodPointId={undefined} selectedRisk={undefined} onSelect={() => {}} />);
+    expect(container.querySelector('[data-alerta-ring]')).toBeNull();
+    expect(container.querySelector('[data-alerta-tag]')).toBeNull();
   });
 
   it('o risco do status em tempo real do ponto selecionado vence o da lista', () => {

@@ -67,6 +67,8 @@ describe('alertChipOf e markerRingOf', () => {
     expect(markerRingOf(ap({ pointFlood: 'PROVAVEL' }))).toBe('ALERTA');
     expect(markerRingOf(ap({ rainAlert: 'SEM_DADO' }))).toBe('SEM_DADO');
     expect(markerRingOf(ap({}))).toBeNull();
-    expect(markerRingOf(undefined)).toBeNull();
+    expect(markerRingOf(undefined)).toBe('SEM_DADO'); // ponto sem registro: sem dado, nunca "sem alerta"
+    expect(markerRingOf(ap({ pointFlood: 'SEM_DADO' }))).toBe('SEM_DADO');
+    expect(alertChipOf(ap({ pointFlood: 'SEM_DADO' }), true).label).toBe('Sem alerta de chuva · nível sem dado');
   });
 });

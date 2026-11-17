@@ -71,13 +71,15 @@ export function ageText(a: AlertaPonto): string | null {
   return `leitura de ${Math.round(a.latestReadingAgeMinutes)} min atrás`;
 }
 
-export type AlertChipKind = 'NENHUM' | 'ATENCAO' | 'ALERTA' | 'PROVAVEL' | 'ALERTA_PROVAVEL' | 'SEM_DADO' | 'NAO_OFICIAL';
+export type AlertChipKind = 'NENHUM' | 'ATENCAO' | 'ALERTA' | 'PROVAVEL' | 'ALERTA_PROVAVEL' | 'SEM_DADO' | 'NENHUM_NIVEL_SEM_DADO' | 'NAO_OFICIAL';
 export type AlertTone = 'ok' | 'warn' | 'danger' | 'muted';
 
 export interface AlertChip { kind: AlertChipKind; label: string; tone: AlertTone; dashed: boolean }
 
 const CHIPS: Record<AlertChipKind, AlertChip> = {
   NENHUM: { kind: 'NENHUM', label: 'Sem alerta de chuva', tone: 'ok', dashed: false },
+  // A chuva foi lida e não pede alerta, mas o nível do ponto está sem dado: o selo diz as duas coisas.
+  NENHUM_NIVEL_SEM_DADO: { kind: 'NENHUM_NIVEL_SEM_DADO', label: 'Sem alerta de chuva · nível sem dado', tone: 'muted', dashed: true },
   ATENCAO: { kind: 'ATENCAO', label: 'Atenção · chuva forte provável', tone: 'warn', dashed: false },
   ALERTA: { kind: 'ALERTA', label: 'Alerta · chuva acima da galeria', tone: 'danger', dashed: false },
   PROVAVEL: { kind: 'PROVAVEL', label: 'Alagamento provável', tone: 'danger', dashed: false },
@@ -97,7 +99,7 @@ export function alertChipOf(a: AlertaPonto | null | undefined, isAdmin: boolean)
   switch (a.rainAlert) {
     case 'ALERTA': return CHIPS.ALERTA;
     case 'ATENCAO': return CHIPS.ATENCAO;
-    case 'NENHUM': return CHIPS.NENHUM;
+    case 'NENHUM': return a.pointFlood === 'SEM_DADO' ? CHIPS.NENHUM_NIVEL_SEM_DADO : CHIPS.NENHUM;
     case 'SEM_DADO': return CHIPS.SEM_DADO;
     default: {
       const never: never = a.rainAlert;
@@ -108,13 +110,17 @@ export function alertChipOf(a: AlertaPonto | null | undefined, isAdmin: boolean)
 
 export type MarkerRing = 'ATENCAO' | 'ALERTA' | 'SEM_DADO';
 
-/** Anel do marcador no mapa: laranja ATENCAO, vermelho ALERTA ou alagamento provável, cinza tracejado SEM_DADO. Sem alerta, sem anel. */
+/**
+ * Anel do marcador no mapa (só ADMIN): laranja ATENCAO, vermelho ALERTA ou alagamento provável, cinza tracejado
+ * SEM_DADO. Ponto sem registro (carregando, falha de leitura, ainda não calculado) também é SEM_DADO: ausência de
+ * dado nunca fica igual a "sem alerta". Sem alerta, sem anel.
+ */
 export function markerRingOf(a: AlertaPonto | null | undefined): MarkerRing | null {
-  if (!a) return null;
+  if (!a) return 'SEM_DADO';
   const k = alertChipOf(a, true).kind;
   if (k === 'ALERTA' || k === 'PROVAVEL' || k === 'ALERTA_PROVAVEL') return 'ALERTA';
   if (k === 'ATENCAO') return 'ATENCAO';
-  if (k === 'SEM_DADO') return 'SEM_DADO';
+  if (k === 'SEM_DADO' || k === 'NENHUM_NIVEL_SEM_DADO') return 'SEM_DADO';
   return null;
 }
 
