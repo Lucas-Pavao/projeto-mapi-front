@@ -5,6 +5,7 @@ import { SourceCard } from '@/features/admin/components/SourceCard';
 import { RunsPanel } from '@/features/admin/components/RunsPanel';
 import { IntegrityPanel } from '@/features/admin/components/IntegrityPanel';
 import { MonthGrid } from '@/features/admin/components/MonthGrid';
+import { AlertaLatencyPanel } from '@/features/alerta/components/AlertaLatencyPanel';
 import { groupSources, isProblem } from '@/features/admin/utils/ingestion';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 
@@ -49,6 +50,7 @@ export const AdminDataPage: React.FC = () => {
               <div ref={runsRef} className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
                 <RunsPanel sources={items.map((s) => s.source)} source={source} onSource={setSource} integrityBusy={integrity.isPending} onCheckIntegrity={check} />
                 <IntegrityPanel data={integrity.data} error={integrity.error} pending={integrity.isPending} checkedAt={checkedAt} names={names} />
+                <AlertaLatencyPanel />
               </div>
               <MonthGrid />
             </>
