@@ -5,6 +5,8 @@ import { renderPage } from '@/test/render';
 import { POINT_CARD_FIXTURES as P } from '@/mocks/cards';
 import { MobilePointSheet } from './MobilePointSheet';
 
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role: 'USER' } }) }));
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => { server.resetHandlers(); cleanup(); });
 afterAll(() => server.close());

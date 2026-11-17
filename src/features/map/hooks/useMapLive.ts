@@ -7,6 +7,8 @@ import { useAlerts } from '@/features/alerts/hooks/useAlerts';
 import { applyLiveAlert } from '@/features/alerts/utils/liveAlerts';
 import { activeAlertSlugs } from '@/features/alerts/utils/activeAlerts';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
+import { ALERTA_PONTOS_KEY } from '@/features/alerta/hooks/useAlertaPontos';
+import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 
 interface Options {
   applyPrediction: (p: PredictionSummary) => void;
@@ -29,6 +31,11 @@ export function useMapLive({ applyPrediction, canSeeAlerts }: Options) {
       if (ev.type === 'risk-summary') qc.setQueryData(RISK_SUMMARY_KEY, ev.data);
       else if (ev.type === 'prediction') applyPrediction(ev.data);
       else if (ev.type === 'alert') applyLiveAlert(qc, ev.data);
+      else if (ev.type === 'alert-state') {
+        const next = ev.data;
+        qc.setQueryData<AlertaPonto[]>(ALERTA_PONTOS_KEY, (prev) =>
+          prev ? (prev.some((a) => a.slug === next.slug) ? prev.map((a) => (a.slug === next.slug ? next : a)) : [...prev, next]) : prev);
+      }
     },
     [qc, applyPrediction],
   );

@@ -9,6 +9,7 @@ import { RISK_MEANING, showsExperimentalLabel, getRiskVisual } from '@/component
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
+import { PointAlertTabs } from '@/features/alerta/components/PointAlertTabs';
 
 interface Props {
   point: FloodPointResponseDTO;
@@ -34,7 +35,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
   return (
     <section aria-label={`Resumo do ponto ${point.name}`} className="box-border flex w-[300px] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
       <div className="flex items-center justify-between gap-2">
-        <RiskBadge level={level} probability={prediction?.floodProbability} />
+        <span className="text-[11px] font-bold text-muted-foreground">Ponto crítico</span>
         <button type="button" onClick={onClose} aria-label="Fechar resumo" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           <X className="size-4" aria-hidden="true" />
         </button>
@@ -46,10 +47,20 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
           {point.description ? ` · ${point.description}` : ''}
         </p>
       </div>
-      {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
-      <PredictionProvenance prediction={prediction} />
-      <RainForecastSummary prediction={prediction} />
-      {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[13px] leading-[18px]" /> : <p className="m-0 text-[13px] leading-[18px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
+      <PointAlertTabs
+        slug={point.slug}
+        pointName={point.name}
+        fallback={<RainForecastSummary prediction={prediction} />}
+        experimental={
+          <>
+            <RiskBadge level={level} probability={prediction?.floodProbability} className="self-start" />
+            {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
+            <PredictionProvenance prediction={prediction} />
+            <RainForecastSummary prediction={prediction} />
+            {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[13px] leading-[18px]" /> : <p className="m-0 text-[13px] leading-[18px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
+          </>
+        }
+      />
       <div className="grid grid-cols-3 gap-1.5">
         <div className={tile}>
           <div className={tileLabel}>Chuva 3 h</div>

@@ -1,0 +1,14 @@
+{
+  "tarefa": "ALERTA-E1 (front) — a tela mostra uma coisa só",
+  "data": "2026-11-17",
+  "branch": "alerta-20min",
+  "feature": "src/features/alerta (schema zod, serviço, useAlertaPontos, alertaText, PointAlertPanel, PointAlertTabs)",
+  "rota": "GET /api/alerta/pontos (ADMIN em modo sombra); SSE alert-state atualiza o cache (useMapLive)",
+  "cartao": "FloodPointPopup e MobilePointSheet: abas Alerta | Experimental; o risco do logreg_v3 foi para a aba Experimental com aviso de rótulo SINTÉTICO",
+  "mensagens": ["ATENCAO: Chuva forte provável nos próximos 20 a 60 min em <ponto>. Chuva agora: <x> mm em 10 min.",
+                "ALERTA: Chuva acima do que a galeria escoa em <ponto>.",
+                "PROVAVEL: Alagamento provável em <ponto>: lâmina estimada de <y> cm <agora | em até <n> min>. + etiqueta do modelo físico + faixa q50/q80"],
+  "sombra": "não ADMIN vê 'O alerta de chuva por ponto está em teste' e a chuva medida; ADMIN vê o alerta marcado 'Em teste'",
+  "nota": "FloodPointDetailCard não é usado por nenhuma tela (só pelo teste); não foi mexido",
+  "testes": {"vitest": "569 passed", "build": "ok", "config": ".claude/** excluído da descoberta (cópias de worktrees)"}
+}
