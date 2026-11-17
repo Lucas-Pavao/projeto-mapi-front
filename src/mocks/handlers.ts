@@ -179,4 +179,13 @@ export const handlers = [
     const p = d.points.find((x) => x.slug === params.slug);
     return p ? HttpResponse.json(p) : HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
   }),
+  http.get('/api/warnings/official/active', () =>
+    HttpResponse.json({
+      source: 'INMET',
+      attribution: 'INMET — Instituto Nacional de Meteorologia (https://avisos.inmet.gov.br)',
+      emissionNote: 'firstSeenAt é proxy posterior à emissão real: a API pública do INMET não publica hora de emissão.',
+      referenceTimeUtc: new Date().toISOString(),
+      warnings: [],
+    }),
+  ),
 ];

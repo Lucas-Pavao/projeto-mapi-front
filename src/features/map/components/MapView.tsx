@@ -51,6 +51,7 @@ import { useMeasuredRainLayer } from '../hooks/useMeasuredRainLayer';
 import { MeasuredRainLayer } from './MeasuredRainLayer';
 import { MeasuredRainLegend } from './MeasuredRainLegend';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
+import { useOfficialWarnings } from '@/features/warnings/hooks/useOfficialWarnings';
 import type { TerrainStatus } from '../utils/terrain';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
@@ -229,6 +230,7 @@ export const MapView: React.FC = () => {
     selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
   };
   const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const officialWarnings = useOfficialWarnings().data?.warnings ?? [];
 
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
@@ -251,6 +253,7 @@ export const MapView: React.FC = () => {
             stations={measuredAll}
             onStationClick={selectStation}
             selectedStationId={cards.state.station}
+            officialWarnings={officialWarnings}
             canSeeDataHealth={isAdmin}
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
