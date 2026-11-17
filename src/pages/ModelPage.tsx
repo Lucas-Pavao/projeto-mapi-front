@@ -5,6 +5,9 @@ import { EvaluationView, ModelHeader } from '@/features/model/components/Evaluat
 import { ModelV2View } from '@/features/model/components/ModelV2View';
 import { CompareV2V3 } from '@/features/model/components/CompareV2V3';
 import { RainForecastView } from '@/features/model/components/RainForecastView';
+import { AlertaConferenciaPanel } from '@/features/alerta/components/AlertaConferenciaPanel';
+import { useAuth } from '@/hooks/useAuth';
+import { hasRole, parseRole } from '@/lib/roles';
 import { loadRainCard } from '@/features/model/schemas/rainForecast.schema';
 import { loadModelCardV3 } from '@/features/model/schemas/modelCardV3.schema';
 import { loadModelCard } from '@/features/model/schemas/modelCard.schema';
@@ -17,17 +20,19 @@ const CARD = loadModelCard();
 const CARD_V3 = loadModelCardV3();
 const RAIN_CARD = loadRainCard();
 
-type Tab = 'v3' | 'chuva' | 'v2' | 'f1';
+type Tab = 'v3' | 'chuva' | 'alerta' | 'v2' | 'f1';
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'v3', label: 'v2 × v3 · rótulo sintético' },
   { id: 'chuva', label: 'Previsão de chuva · dado medido' },
+  { id: 'alerta', label: 'Alerta por ponto · conferência' },
   { id: 'v2', label: 'xgb_v2 · rótulo sintético' },
   { id: 'f1', label: 'F1 · balde × rótulo real' },
 ];
 
-const Tabs: React.FC<{ tab: Tab; onTab: (t: Tab) => void }> = ({ tab, onTab }) => (
+const Tabs: React.FC<{ tab: Tab; onTab: (t: Tab) => void; admin: boolean }> = ({ tab, onTab, admin }) => (
   <div role="tablist" aria-label="Avaliações" className="flex shrink-0 gap-0.5 self-start rounded-[10px] bg-muted p-1 [header_&]:self-center">
-    {TABS.map((t) => (
+    {/* Alerta por ponto em modo sombra: só ADMIN (ADR 0026 da API). */}
+    {TABS.filter((t) => admin || t.id !== 'alerta').map((t) => (
       <button key={t.id} id={`tab-${t.id}`} type="button" role="tab" aria-selected={tab === t.id} aria-controls="model-panel" onClick={() => onTab(t.id)}
         className={cn('h-8 cursor-pointer rounded-lg border-0 px-3 text-xs font-bold', tab === t.id ? 'bg-card text-foreground' : 'bg-transparent text-muted-foreground')}>
         {t.label}
@@ -56,8 +61,10 @@ const F1Tab: React.FC = () => {
 
 export const ModelPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('v3');
-  const title = tab === 'chuva' ? `Previsão de chuva · ${RAIN_CARD?.modelVersion ?? 'rain_v1'}` : tab === 'v3' ? `Modelo em produção · ${CARD_V3?.modelVersion ?? 'v3'}` : `Modelo anterior · ${CARD?.modelVersion ?? 'xgb_v2'}`;
-  const subtitle = tab === 'chuva' ? 'Chuva das próximas 1, 3 e 6 h no ponto · conferida todo dia contra a chuva medida (Cemaden)' : tab === 'v3'
+  const { user } = useAuth();
+  const admin = hasRole(parseRole(user?.role), 'ADMIN');
+  const title = tab === 'alerta' ? 'Alerta por ponto · em teste' : tab === 'chuva' ? `Previsão de chuva · ${RAIN_CARD?.modelVersion ?? 'rain_v1'}` : tab === 'v3' ? `Modelo em produção · ${CARD_V3?.modelVersion ?? 'v3'}` : `Modelo anterior · ${CARD?.modelVersion ?? 'xgb_v2'}`;
+  const subtitle = tab === 'alerta' ? 'Conferência diária dos alertas da véspera contra a chuva medida (Cemaden) · modo sombra' : tab === 'chuva' ? 'Chuva das próximas 1, 3 e 6 h no ponto · conferida todo dia contra a chuva medida (Cemaden)' : tab === 'v3'
     ? `Alagamento nas próximas ${CARD_V3?.horizonHours ?? 6} h · chuva medida (Cemaden) · v2 ao lado para comparar`
     : 'Chuva medida (Cemaden) · limiares escolhidos na validação · dados do cartão do modelo';
   return (
@@ -69,12 +76,13 @@ export const ModelPage: React.FC = () => {
             <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">{subtitle}</p>
           </div>
           {/* Protótipo (ModeloV2): as abas ficam no cabeçalho, à direita. */}
-          <Tabs tab={tab} onTab={setTab} />
+          <Tabs tab={tab} onTab={setTab} admin={admin} />
         </header>
       )}
-      {tab === 'f1' && <Tabs tab={tab} onTab={setTab} />}
+      {tab === 'f1' && <Tabs tab={tab} onTab={setTab} admin={admin} />}
       <div id="model-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4">
         {tab === 'f1' ? <F1Tab />
+          : tab === 'alerta' && admin ? <AlertaConferenciaPanel />
           : tab === 'chuva' ? (RAIN_CARD ? <RainForecastView card={RAIN_CARD} /> : <EmptyState title="Cartão do modelo de chuva inválido." hint="O arquivo rain_v1_card.json não bate com o contrato. Avise a equipe técnica." />)
           : tab === 'v3' ? (CARD && CARD_V3 ? <CompareV2V3 v2={CARD} v3={CARD_V3} /> : <EmptyState title="Cartão do modelo inválido." hint="v3_model_card.json ou xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />)
           : CARD ? <ModelV2View card={CARD} /> : <EmptyState title="Cartão do modelo inválido." hint="O arquivo xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />}

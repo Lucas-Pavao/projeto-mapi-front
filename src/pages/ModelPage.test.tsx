@@ -1,10 +1,13 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, within, fireEvent } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { evaluation } from '@/mocks/data';
 import { renderPage } from '@/test/render';
 import { ModelPage } from './ModelPage';
+
+const auth = vi.hoisted(() => ({ role: 'USER' }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role: auth.role } }) }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
@@ -133,5 +136,24 @@ describe('ModelPage', () => {
     expect(cmp).toHaveTextContent('Alaga nas próximas 6 h');
     expect(within(cmp).getByRole('region', { name: 'Alertas e eventos' })).toHaveTextContent('antecedência mediana 0 h');
     expect(within(cmp).getByRole('region', { name: 'Resultados negativos' })).toHaveTextContent('0,77 → 0,62');
+  });
+
+  it('conferência do alerta: aba só para ADMIN, com a nota de nenhum evento medido', async () => {
+    auth.role = 'USER';
+    renderPage(<ModelPage />);
+    expect(screen.queryByRole('tab', { name: /Alerta por ponto/ })).toBeNull();
+    cleanup();
+    auth.role = 'ADMIN';
+    server.use(http.get('/api/alerta/conferencia', () => HttpResponse.json({
+      days: 30, forteEvents: 0, forteWarned: 0, medianLeadMinutes: null, falsePerEvent: 0, semDadoFraction: 0.6, floodEpisodes: 0,
+      rows: [{ day: '2026-11-17', slug: 'CIN_UFPE', forteEvents: 0, forteWarned: 0, leadMinutes: [], alertEpisodes: 0, falseEpisodes: 0,
+        semDadoMinutes: 864, evaluatedMinutes: 1440, floodEpisodes: [], shadow: true }],
+      note: 'Nenhum evento FORTE medido no período: antecedência e falsos por evento ainda sem medida.' })));
+    renderPage(<ModelPage />);
+    fireEvent.click(screen.getByRole('tab', { name: /Alerta por ponto/ }));
+    expect(await screen.findByText(/Nenhum evento FORTE medido/)).toBeInTheDocument();
+    expect(screen.getByText('CIN_UFPE')).toBeInTheDocument();
+    expect(screen.getAllByText('60%').length).toBe(2);
+    auth.role = 'USER';
   });
 });

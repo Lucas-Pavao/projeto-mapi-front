@@ -22,5 +22,9 @@ RUN npm run build
 FROM nginx:1.27-alpine AS runtime
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
+# Versão do código servido (alerta 20 min, item 8): GET /version.json.
+ARG GIT_COMMIT=unknown-build-without-git
+ARG GIT_DIRTY=unknown
+RUN printf '{"commit":"%s","dirty":"%s"}\n' "$GIT_COMMIT" "$GIT_DIRTY" > /usr/share/nginx/html/version.json
 
 EXPOSE 80

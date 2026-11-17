@@ -14,6 +14,7 @@ import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
 import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
 import { formatRecife } from '../utils/datetime';
+import { PointAlertTabs } from '@/features/alerta/components/PointAlertTabs';
 
 interface Props {
   point: FloodPointResponseDTO;
@@ -67,15 +68,25 @@ export const MobilePointSheet: React.FC<Props> = ({ point, status, isFetchingSta
           <button type="button" onClick={onNext} aria-label="Próximo ponto" className={nav}><ChevronRight className="size-[18px]" aria-hidden="true" /></button>
         </div>
         <div className="flex flex-col gap-1.5">
-          <RiskBadge level={level} probability={prediction?.floodProbability} className="self-start" />
           <h1 id={titleId} className="m-0 text-2xl leading-[30px] font-extrabold">{point.name}</h1>
-          <p className="m-0 text-[13px] text-muted-foreground">{point.municipality ?? 'Recife'}{valid ? ` · válida até ${valid}` : ''}</p>
-          {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
-          <PredictionProvenance prediction={prediction} />
-          <RainForecastSummary prediction={prediction} />
+          <p className="m-0 text-[13px] text-muted-foreground">{point.municipality ?? 'Recife'}</p>
         </div>
-        <MobileProbabilityChart slug={point.slug} />
-        {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[15px] leading-[22px]" /> : <p className="m-0 text-[15px] leading-[22px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
+        <PointAlertTabs
+          slug={point.slug}
+          pointName={point.name}
+          fallback={<RainForecastSummary prediction={prediction} />}
+          experimental={
+            <>
+              <RiskBadge level={level} probability={prediction?.floodProbability} className="self-start" />
+              {valid && <p className="m-0 text-[13px] text-muted-foreground">válida até {valid}</p>}
+              {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
+              <PredictionProvenance prediction={prediction} />
+              <RainForecastSummary prediction={prediction} />
+              <MobileProbabilityChart slug={point.slug} />
+              {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[15px] leading-[22px]" /> : <p className="m-0 text-[15px] leading-[22px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
+            </>
+          }
+        />
         <div className="grid grid-cols-2 gap-2">
           <div className={tile}><div className={tileLabel}>Chuva 3 h</div><div className={tileValue}>{rain3h != null ? `${fmtNum(rain3h)} mm` : isFetchingStatus ? '…' : <span className="text-warning">{missingAccText(usedRain != null)}</span>}</div></div>
           <div className={tile}>
