@@ -3,28 +3,26 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLiveStream } from '@/features/live/hooks/useLiveStream';
 import type { LiveEvent } from '@/features/live/schemas/live-event.schema';
 import { RISK_SUMMARY_KEY, useRiskSummary } from '@/features/points/hooks/useRiskSummary';
-import { useAlerts } from '@/features/alerts/hooks/useAlerts';
 import { applyLiveAlert } from '@/features/alerts/utils/liveAlerts';
-import { activeAlertSlugs } from '@/features/alerts/utils/activeAlerts';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
-import { ALERTA_PONTOS_KEY } from '@/features/alerta/hooks/useAlertaPontos';
+import { ALERTA_PONTOS_KEY, useAlertaPontos } from '@/features/alerta/hooks/useAlertaPontos';
 import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 
 interface Options {
   applyPrediction: (p: PredictionSummary) => void;
-  /** OPERADOR ou ADMIN: só eles recebem e listam alertas (ADR 0010). */
-  canSeeAlerts: boolean;
+  /** Só o ADMIN lê o alerta por ponto enquanto ele está em modo sombra (ADR 0026). */
+  isAdmin: boolean;
 }
 
 /**
  * Ao vivo no mapa (ADR 0012): `risk-summary` e `prediction` atualizam contagem e marcadores;
- * `alert` mantém o conjunto de pontos com alerta ativo, que é o que faz o marcador pulsar (ADR 0011).
+ * `alert-state` mantém o estado do alerta por ponto (GET /api/alerta/pontos), que dá o anel do marcador (só ADMIN).
  * Sem o stream, a contagem e os alertas seguem por consulta periódica.
  */
-export function useMapLive({ applyPrediction, canSeeAlerts }: Options) {
+export function useMapLive({ applyPrediction, isAdmin }: Options) {
   const qc = useQueryClient();
   const summary = useRiskSummary();
-  const alerts = useAlerts('OPEN', { size: 100, enabled: canSeeAlerts });
+  const alertaQuery = useAlertaPontos(isAdmin);
 
   const onEvent = useCallback(
     (ev: LiveEvent) => {
@@ -41,6 +39,6 @@ export function useMapLive({ applyPrediction, canSeeAlerts }: Options) {
   );
   const { status, lastHeartbeatAt } = useLiveStream({ onEvent });
 
-  const alertSlugs = useMemo(() => activeAlertSlugs(alerts.data?.content), [alerts.data]);
-  return { riskSummary: summary.data, riskSummaryFailed: summary.isError, liveStatus: status, lastHeartbeatAt, alertSlugs };
+  const alertaBySlug = useMemo(() => new Map((alertaQuery.data ?? []).map((a) => [a.slug, a] as const)), [alertaQuery.data]);
+  return { riskSummary: summary.data, riskSummaryFailed: summary.isError, liveStatus: status, lastHeartbeatAt, alertaBySlug };
 }

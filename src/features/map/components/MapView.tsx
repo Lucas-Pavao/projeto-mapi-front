@@ -172,9 +172,10 @@ export const MapView: React.FC = () => {
 
   // Ao vivo (ADR 0012): contagem por risco e previsões novas; o pulso do marcador segue o alerta ativo (ADR 0011).
   const overview = useMapOverview();
-  const { riskSummary, riskSummaryFailed, liveStatus, alertSlugs } = useMapLive({
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const { riskSummary, riskSummaryFailed, liveStatus, alertaBySlug } = useMapLive({
     applyPrediction,
-    canSeeAlerts: hasRole(parseRole(user?.role), 'OPERADOR'),
+    isAdmin,
   });
 
   // Lista "Sensores": estações unificadas com a chuva medida, mesmo com a camada de chuva medida desligada no mapa.
@@ -229,7 +230,6 @@ export const MapView: React.FC = () => {
     if (sortedPoints.length === 0) return;
     selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
   };
-  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
   const officialWarnings = useOfficialWarnings().data?.warnings ?? [];
 
   return (
@@ -255,6 +255,7 @@ export const MapView: React.FC = () => {
             selectedStationId={cards.state.station}
             officialWarnings={officialWarnings}
             canSeeDataHealth={isAdmin}
+            alertaBySlug={isAdmin ? alertaBySlug : undefined}
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
               cada uma recolhida num botão. Na mesma coluna para não se sobreporem quando o cartão cresce. */}
@@ -344,7 +345,7 @@ export const MapView: React.FC = () => {
             points={filteredFloodPointsForMap}
             selectedFloodPointId={selectedFloodPointId}
             selectedRisk={selectedRisk}
-            alertSlugs={alertSlugs}
+            alertaBySlug={isAdmin ? alertaBySlug : undefined}
             onSelect={selectFloodPoint}
           />
 

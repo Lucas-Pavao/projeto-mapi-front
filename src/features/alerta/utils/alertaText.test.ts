@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AlertaPonto } from '../schemas/alerta.schema';
-import { floodBand, floodMessage, rainMessage, rainTitle } from './alertaText';
+import { alertChipOf, floodBand, floodMessage, markerRingOf, rainMessage, rainTitle } from './alertaText';
 
 const base: AlertaPonto = {
   slug: 'IBURA', name: 'Ibura', rainAlert: 'NENHUM', pointFlood: 'NAO', shadow: true, rainTeMm: 0.4, hNowCm: 0,
@@ -34,5 +34,39 @@ describe('mensagens do alerta', () => {
   });
   it('faixa com q50 e q80, não número único', () => {
     expect(floodBand(base)).toBe('Projeção em 60 min: 3 cm (chuva prevista mediana) a 7 cm (quantil de 80%).');
+  });
+});
+
+describe('alertChipOf e markerRingOf', () => {
+  const ap = (over: Partial<AlertaPonto>): AlertaPonto => ({ slug: 's', rainAlert: 'NENHUM', pointFlood: 'NAO', shadow: true, ...over });
+  it.each([
+    [{ rainAlert: 'NENHUM' }, 'Sem alerta de chuva', false],
+    [{ rainAlert: 'ATENCAO' }, 'Atenção · chuva forte provável', false],
+    [{ rainAlert: 'ALERTA' }, 'Alerta · chuva acima da galeria', false],
+    [{ pointFlood: 'PROVAVEL' }, 'Alagamento provável', false],
+    [{ rainAlert: 'ATENCAO', pointFlood: 'PROVAVEL' }, 'Alagamento provável', false],
+    [{ rainAlert: 'ALERTA', pointFlood: 'PROVAVEL' }, 'Alerta + alagamento provável', false],
+    [{ rainAlert: 'SEM_DADO' }, 'Alerta sem dado', true],
+  ] as const)('ADMIN %j', (over, label, dashed) => {
+    const c = alertChipOf(ap(over), true);
+    expect(c.label).toBe(label);
+    expect(c.dashed).toBe(dashed);
+  });
+  it('sem leitura (carregando, erro, não calculado) é "Alerta sem dado", nunca "sem alerta"', () => {
+    expect(alertChipOf(null, true).label).toBe('Alerta sem dado');
+    expect(alertChipOf(undefined, true).dashed).toBe(true);
+  });
+  it('não-ADMIN vê "Alerta em teste" tracejado, mesmo com alerta', () => {
+    const c = alertChipOf(ap({ rainAlert: 'ALERTA' }), false);
+    expect(c.label).toBe('Alerta em teste');
+    expect(c.dashed).toBe(true);
+  });
+  it('anel do marcador: laranja, vermelho, cinza ou nenhum', () => {
+    expect(markerRingOf(ap({ rainAlert: 'ATENCAO' }))).toBe('ATENCAO');
+    expect(markerRingOf(ap({ rainAlert: 'ALERTA' }))).toBe('ALERTA');
+    expect(markerRingOf(ap({ pointFlood: 'PROVAVEL' }))).toBe('ALERTA');
+    expect(markerRingOf(ap({ rainAlert: 'SEM_DADO' }))).toBe('SEM_DADO');
+    expect(markerRingOf(ap({}))).toBeNull();
+    expect(markerRingOf(undefined)).toBeNull();
   });
 });

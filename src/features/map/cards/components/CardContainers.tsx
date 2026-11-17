@@ -13,6 +13,9 @@ import { cmToM, riverTrendCmH } from '../utils/river';
 import { AnalysisPanel } from './AnalysisPanel';
 import { LocationCard } from './LocationCard';
 import { PointCard } from './PointCard';
+import { useAuth } from '@/hooks/useAuth';
+import { hasRole, parseRole } from '@/lib/roles';
+import { useAlertaPontos } from '@/features/alerta/hooks/useAlertaPontos';
 import { RiverCard } from './RiverCard';
 import { StationCard } from './StationCard';
 
@@ -39,7 +42,13 @@ export const PointCardContainer: React.FC<PointProps> = ({ point, onClose, onOpe
   const series = usePredictionSeries(point.slug, 24);
   const rain = useRainCandidates(point.slug);
   const [now] = useState(() => Date.now());
-  return <PointCard point={point} series={series.data?.items ?? []} rain={rain.data} now={now} onClose={onClose} onOpenAnalysis={onOpenAnalysis} />;
+  const { user } = useAuth();
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const alertas = useAlertaPontos(isAdmin);
+  return (
+    <PointCard point={point} series={series.data?.items ?? []} rain={rain.data} now={now} onClose={onClose} onOpenAnalysis={onOpenAnalysis}
+      isAdmin={isAdmin} alerta={alertas.data?.find((a) => a.slug === point.slug)} alertaLoading={alertas.isLoading} alertaError={alertas.isError} />
+  );
 };
 
 interface PanelProps { point: FloodPointResponseDTO; tab: AnalysisTab; onTab: (t: AnalysisTab) => void; onClose: () => void; onOpenStation: (id: string) => void }

@@ -16,6 +16,8 @@ import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
 import type { StationAccumulation } from '../schemas/measuredRain.schema';
 import { feedSourceText, liveAliasCodes, stationRowText } from '../utils/measuredRain';
+import { alertChipOf, CHIP_TONE_CLASS } from '@/features/alerta/utils/alertaText';
+import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 import { OfficialWarningBadge } from '@/features/warnings/components/OfficialWarningBadge';
 import type { OfficialWarning } from '@/features/warnings/schemas/officialWarning.schema';
 
@@ -43,6 +45,8 @@ interface Props {
   selectedStationId?: string | null;
   /** Avisos meteorológicos oficiais vigentes do INMET (ADR 0024). */
   officialWarnings?: OfficialWarning[];
+  /** Estado do alerta por ponto (só ADMIN): vira a 1ª linha da lista; o risco de 6 h passa a segundo plano. */
+  alertaBySlug?: ReadonlyMap<string, AlertaPonto>;
   /** Só ADMIN abre "Saúde dos dados" (ADR 0010). */
   canSeeDataHealth: boolean;
   className?: string;
@@ -57,7 +61,7 @@ const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-
 /** Painel esquerdo "Agora na RMR" do mapa (Main.dc.html): contagem, abas Pontos críticos e Sensores, fontes. */
 export const LivePanel: React.FC<Props> = ({
   points, sensors, summary, summaryFailed, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
-  stations = [], onStationClick, selectedStationId, officialWarnings = [],
+  alertaBySlug, stations = [], onStationClick, selectedStationId, officialWarnings = [],
 }) => {
   const [tab, setTab] = useState<Tab>('points');
   const sorted = useMemo(() => sortPoints(points), [points]);
@@ -92,6 +96,7 @@ export const LivePanel: React.FC<Props> = ({
     return rows.sort((a, b) => Number(b.river) - Number(a.river) || a.name.localeCompare(b.name));
   }, [sensors, aliasCodes]);
   const tideRow = overview.tideNow ? 1 : 0;
+  const chip = (slug: string) => alertChipOf(alertaBySlug?.get(slug), true);
 
   const tabBtn = (id: Tab, label: string) => (
     <button
@@ -149,10 +154,14 @@ export const LivePanel: React.FC<Props> = ({
                   <RiskBadge level={level} variant="marker" />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm leading-5 font-bold">{p.name}</span>
-                    <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'} · {v.label}</span>
+                    {alertaBySlug ? (
+                      <span data-testid="point-alert-line" className={cn('truncate text-xs leading-4 font-bold', CHIP_TONE_CLASS[chip(p.slug).tone].split(' ').filter((c) => c.startsWith('text-')).join(' '))}>{chip(p.slug).label}</span>
+                    ) : (
+                      <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'} · {v.label}</span>
+                    )}
                   </span>
-                  <span className={cn('flex flex-col items-end', v.text)}>
-                    <span className="font-mono text-[15px] leading-5 font-bold">{pct ?? '—'}</span>
+                  <span className={cn('flex flex-col items-end', alertaBySlug ? 'text-muted-foreground' : v.text)}>
+                    <span className={cn('font-mono leading-5 font-bold', alertaBySlug ? 'text-xs' : 'text-[15px]')}>{alertaBySlug ? `6 h · ${pct ?? '—'}` : pct ?? '—'}</span>
                     <Sparkline values={overview.probabilities.get(p.slug) ?? []} max={sparkMax(overview.probabilities.get(p.slug) ?? [])} />
                   </span>
                 </button>
