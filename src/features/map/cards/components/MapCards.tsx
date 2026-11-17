@@ -119,6 +119,18 @@ const LocationOverlay: React.FC<{ lat: number; lon: number }> = ({ lat, lon }) =
         const st = lineStyleOf(c, palette);
         return <MapRoute key={c.stationId} id={`location-line-${c.stationId}`} coordinates={[[lon, lat], [c.lon as number, c.lat as number]]} color={st.color} width={st.width} dashArray={st.dash} opacity={0.9} interactive={false} />;
       })}
+      {/* Ponta de cada linha: a estação offline/reprovada não tem marcador no mapa, e a linha não pode terminar no vazio. */}
+      {q.data?.rain.candidates.filter((c) => c.lat != null && c.lon != null).map((c) => {
+        const st = lineStyleOf(c, palette);
+        return (
+          <MapMarker key={`end-${c.stationId}`} longitude={c.lon as number} latitude={c.lat as number}>
+            <MarkerContent>
+              <span data-testid="location-line-end" title={c.name} aria-label={`Estação ${c.name}`}
+                className="block size-[9px] rounded-full border-2 bg-popover" style={{ borderColor: st.color }} />
+            </MarkerContent>
+          </MapMarker>
+        );
+      })}
       <MapMarker longitude={east[0]} latitude={east[1]} offset={[-20, -10]}>
         <MarkerContent><span aria-hidden="true" className="pointer-events-none font-mono text-[11px] font-bold text-primary">5 km</span></MarkerContent>
       </MapMarker>
