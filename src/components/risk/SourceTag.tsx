@@ -23,15 +23,21 @@ const TAGS: Record<SourceKind, Tag> = {
   SYNTHETIC_LABEL: { label: 'rótulo SINTÉTICO', hint: 'Aba Experimental (logreg_v3)', cls: WARN },
 };
 
-interface Props { kind: SourceKind; className?: string; 'data-testid'?: string }
+interface Props {
+  kind: SourceKind;
+  /** Texto mais específico que o padrão da variante (ex.: "sem dado · Cemaden"); a cor e o tracejado continuam os da variante. */
+  label?: string;
+  className?: string;
+  'data-testid'?: string;
+}
 
 /** Etiqueta de origem do dado (12 variantes). Texto sempre visível (cor não é o único sinal); tracejada onde o canvas tracejar. */
-export const SourceTag: React.FC<Props> = ({ kind, className, 'data-testid': testId }) => {
+export const SourceTag: React.FC<Props> = ({ kind, label, className, 'data-testid': testId }) => {
   const t = TAGS[kind];
   return (
     <span title={t.hint} data-source={kind} data-testid={testId} data-dashed={t.dashed ? 'true' : undefined}
       className={cn('inline-flex h-[18px] items-center whitespace-nowrap rounded border px-1.5 text-[10px] font-bold leading-none tracking-wide', t.upper && 'uppercase', t.dashed && 'border-dashed', t.cls, className)}>
-      {t.label}
+      {label ?? t.label}
     </span>
   );
 };

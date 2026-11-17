@@ -96,7 +96,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
         {showRain && (
           <section aria-label="Chuva" data-mode={a.rain.mode} className="flex flex-col gap-2">
             <H3 icon={<CloudRain />} aside={
-              <SourceTag kind={tag.kind} data-testid="rain-source-tag" className="h-5 rounded-md px-[7px] font-mono" />
+              <SourceTag kind={tag.kind} label={tag.label} data-testid="rain-source-tag" className="h-5 rounded-md px-[7px] font-mono" />
             }>Chuva</H3>
             <div className="grid grid-cols-3 gap-2">
               {rainTiles(a).map((t) => (

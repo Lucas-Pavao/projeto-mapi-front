@@ -28,7 +28,7 @@ describe('LocationCard: os 5 estados', () => {
   });
   it('2 lacuna: "sem dado", sem trocar por estimativa e ponto próximo UNKNOWN sem porcentagem', () => {
     show('gap');
-    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado');
+    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado · Cemaden');
     expect(screen.getAllByTestId('rain-tile').every((t) => /sem dado/.test(t.textContent ?? ''))).toBe(true);
     expect(screen.getByTestId('location-banner')).toHaveTextContent('não é trocada por estimativa');
     expect(screen.queryByText(/estimada/)).toBeNull();
