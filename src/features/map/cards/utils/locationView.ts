@@ -1,3 +1,4 @@
+import type { SourceKind } from '@/components/risk/sourceKinds';
 import { num } from '@/features/operacao/utils/format';
 import type { LocationAnalysis, LocationCandidate, RainMode } from '../schemas/locationAnalysis.schema';
 
@@ -23,10 +24,10 @@ export function bannerOf(state: LocationState): Banner | null {
   }
 }
 
-export interface RainSourceTag { text: string; measured: boolean }
+export interface RainSourceTag { kind: SourceKind; measured: boolean }
 
 export function rainSourceTag(mode: RainMode): RainSourceTag {
-  return mode === 'MEASURED' ? { text: 'medida · Cemaden', measured: true } : mode === 'GAP' ? { text: 'sem dado · Cemaden', measured: false } : { text: 'estimada · Open-Meteo', measured: false };
+  return mode === 'MEASURED' ? { kind: 'MEASURED', measured: true } : mode === 'GAP' ? { kind: 'NO_DATA', measured: false } : { kind: 'ESTIMATED', measured: false };
 }
 
 /** Nota sob os números da chuva (protótipo). */

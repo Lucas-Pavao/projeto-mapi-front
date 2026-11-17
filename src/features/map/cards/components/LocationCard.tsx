@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermometer, TriangleAlert, Waves, X } from 'lucide-react';
+import { SourceTag } from '@/components/risk/SourceTag';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { pctTxt } from '@/components/risk/thresholds';
 import { formatRecifeHourMs } from '../../utils/datetime';
@@ -95,8 +96,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
         {showRain && (
           <section aria-label="Chuva" data-mode={a.rain.mode} className="flex flex-col gap-2">
             <H3 icon={<CloudRain />} aside={
-              <span data-testid="rain-source-tag" className={cn('inline-flex h-5 items-center whitespace-nowrap rounded-md border px-[7px] font-mono text-[10px] font-bold',
-                tag.measured ? 'border-primary bg-primary/10 text-primary' : 'border-dashed border-warning text-warning')}>{tag.text}</span>
+              <SourceTag kind={tag.kind} data-testid="rain-source-tag" className="h-5 rounded-md px-[7px] font-mono" />
             }>Chuva</H3>
             <div className="grid grid-cols-3 gap-2">
               {rainTiles(a).map((t) => (
@@ -138,6 +138,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
             <Tile testId="tide-tile" label="Maré prevista"
               sub={`${a.tide?.harbor ?? 'Porto do Recife'}${a.tide?.rising == null ? '' : a.tide.rising ? ' · enchendo' : ' · vazando'}`}>
               {a.tide?.levelM != null ? <>{num(a.tide.levelM, 2)}<Unit>m</Unit></> : '—'}
+              {a.tide?.tideSource === 'HARMONIC' && <div className="mt-1"><SourceTag kind="TIDE_HARMONIC" data-testid="tide-source-tag" /></div>}
             </Tile>
             <Tile testId="river-tile" label="Rio mais próximo" className={cn(!a.river && 'opacity-60')}
               sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do modelo` : 'nenhuma régua a menos de 6 km'}>

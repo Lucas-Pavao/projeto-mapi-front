@@ -15,7 +15,7 @@ describe('RiverCard', () => {
     expect(screen.getByTestId('river-level')).toHaveTextContent('1,20 m');
     expect(screen.getByTestId('river-trend')).toHaveTextContent('subindo 4 cm/h');
     expect(screen.getByTestId('river-cotas')).toHaveTextContent('pré 1,80alerta 2,30inundação 2,80 m');
-    expect(screen.getByText(/Fica fora do modelo xgb_v2/)).toBeInTheDocument();
+    expect(screen.getByText(/Fica fora do logreg_v3 e do alerta por ponto: é mostrado para a operação\./)).toBeInTheDocument();
   });
   it('estados usam >= nas cotas', () => {
     expect(riverState(1.8, levels)).toBe('PRE_ALERT');
@@ -34,6 +34,11 @@ describe('RiverCard', () => {
     expect(screen.queryByTestId('river-cotas')).toBeNull();
     expect(screen.getByText(/não informou as cotas/)).toBeInTheDocument();
     expect(screen.getByTestId('river-trend')).toHaveTextContent('estável');
+  });
+  it.each([[1.0, 'NORMAL', 'Normal'], [1.9, 'PRE_ALERT', 'Pré-alerta'], [2.4, 'ALERT', 'Alerta'], [3, 'FLOOD', 'Inundação']] as const)('estado %s: %s no card', (lvl, st, text) => {
+    show(lvl);
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-state', st);
+    expect(screen.getByTestId('river-state')).toHaveTextContent(text);
   });
   it('tendência em cm/h a partir da série', () => {
     const H = 3_600_000;

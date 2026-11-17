@@ -9,6 +9,9 @@ export const rainModeSchema = z.enum(RAIN_MODES);
 export type RainMode = z.infer<typeof rainModeSchema>;
 
 /** B7 — GET /api/locations/analysis?lat=&lon=&at=. Medido e estimado nunca se misturam: `rain.mode` diz qual é. */
+/** Origem da maré: tábua oficial ou previsão harmônica de reserva. */
+const tideSourceSchema = z.enum(['OFFICIAL', 'HARMONIC']);
+
 export const locationAnalysisSchema = z.object({
   lat: z.number(),
   lon: z.number(),
@@ -29,7 +32,7 @@ export const locationAnalysisSchema = z.object({
   nearestPoint: z.object({
     slug: z.string(), name: z.string(), distanceKm: n, riskLevel: riskLevelSchema, probability: n, degradationReason: z.string().nullable().optional(),
   }).nullable().optional(),
-  tide: z.object({ levelM: n, rising: z.boolean().nullable().optional(), harbor: z.string().nullable().optional(), verticalReference: z.string().nullable().optional() }).nullable().optional(),
+  tide: z.object({ levelM: n, rising: z.boolean().nullable().optional(), harbor: z.string().nullable().optional(), verticalReference: z.string().nullable().optional(), tideSource: tideSourceSchema.nullable().optional() }).nullable().optional(),
   river: z.object({ stationId: z.string(), name: z.string(), levelM: n, distanceKm: n, outsideModel: z.boolean().default(true) }).nullable().optional(),
   terrain: z.object({ elevationM: n, distanceToCoastKm: n }).nullable().optional(),
   weather: z.object({ temperatureC: n, humidityPct: n, windKmh: n, source: z.string().nullable().optional() }).nullable().optional(),

@@ -28,7 +28,7 @@ describe('LocationCard: os 5 estados', () => {
   });
   it('2 lacuna: "sem dado", sem trocar por estimativa e ponto próximo UNKNOWN sem porcentagem', () => {
     show('gap');
-    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado · Cemaden');
+    expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado');
     expect(screen.getAllByTestId('rain-tile').every((t) => /sem dado/.test(t.textContent ?? ''))).toBe(true);
     expect(screen.getByTestId('location-banner')).toHaveTextContent('não é trocada por estimativa');
     expect(screen.queryByText(/estimada/)).toBeNull();
@@ -106,5 +106,17 @@ describe('geometria e URL do local', () => {
     expect(parseCoordParam('abc')).toBeNull();
     expect(parseCoordParam('99,0')).toBeNull();
     expect(parseCoordParam(null)).toBeNull();
+  });
+});
+
+describe('LocationCard: maré de reserva', () => {
+  it('HARMONIC mostra a etiqueta; OFFICIAL e ausente não', () => {
+    const tideOf = (tideSource: 'HARMONIC' | 'OFFICIAL' | null) => ({ ...L.measured, tide: { ...L.measured.tide, levelM: 1.2, tideSource } });
+    const { rerender } = render(<LocationCard analysis={tideOf('HARMONIC')} onClose={() => {}} />);
+    expect(screen.getByTestId('tide-source-tag')).toHaveTextContent('maré · reserva harmônica');
+    rerender(<LocationCard analysis={tideOf('OFFICIAL')} onClose={() => {}} />);
+    expect(screen.queryByTestId('tide-source-tag')).toBeNull();
+    rerender(<LocationCard analysis={tideOf(null)} onClose={() => {}} />);
+    expect(screen.queryByTestId('tide-source-tag')).toBeNull();
   });
 });
