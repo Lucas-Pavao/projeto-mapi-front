@@ -53,7 +53,7 @@ export const PointCard: React.FC<Props> = ({ point, series, rain, now, onClose, 
   const tiles: Array<{ l: string; v: string; s: string; warn: boolean }> = [
     { l: 'Chuva agora', v: rain?.valueMm != null && used ? `${num(rain.valueMm, 1)} mm/h` : '—', s: stationText, warn: rain?.valueMm == null },
     { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: 'medida · Cemaden', warn: agg?.rain3h == null },
-    { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideUnit ?? 'DHN (NR)', warn: false },
+    { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideSource === 'HARMONIC' ? 'maré · reserva harmônica' : point.tideUnit ?? 'DHN (NR)', warn: false },
   ];
   const tilesEl = (
     <div className="grid grid-cols-3 gap-1.5">

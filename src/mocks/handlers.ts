@@ -5,6 +5,7 @@ import type { SensorFreshness, SensorType } from '@/features/sensors/schemas/sen
 import * as d from './data';
 import { gestaoHandlers } from './handlers-gestao';
 import { cenariosHandlers } from './handlers-cenarios';
+import { alertaHandlers } from './alerta';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
@@ -53,6 +54,7 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
 export const handlers = [
   ...gestaoHandlers,
   ...cenariosHandlers,
+  ...alertaHandlers,
   liveStreamHandler(),
   http.get('/api/pontos', () => HttpResponse.json(d.points)),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),

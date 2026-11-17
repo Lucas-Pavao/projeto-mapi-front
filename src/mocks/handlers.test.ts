@@ -7,6 +7,9 @@ import { predictionsService } from '@/features/points/services/predictions.servi
 import { publicRiskService } from '@/features/public-risk/services/public-risk.service';
 import { modelService } from '@/features/model/services/model.service';
 import { RISK_MEANING, formatProbability } from '@/components/risk/risk';
+import { alertaService } from '@/features/alerta/services/alerta.service';
+import { alertaPontoSchema } from '@/features/alerta/schemas/alerta.schema';
+import { ALERTA_FIXTURES } from './alerta';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => server.resetHandlers());
@@ -17,6 +20,13 @@ describe('handlers MSW (dados sintéticos)', () => {
     const page = await alertsService.list();
     expect(page.totalElements).toBe(page.content.length);
     expect(page.content.every((a) => a.title.startsWith('Sintético'))).toBe(true);
+  });
+  it('alerta por ponto: o mock serve um estado da prancha Nível 2 e todas as fixtures passam no schema', async () => {
+    const pts = await alertaService.pontos();
+    expect(pts.length).toBeGreaterThan(0);
+    expect(pts.every((a) => a.shadow)).toBe(true);
+    expect(Object.keys(ALERTA_FIXTURES)).toHaveLength(10);
+    for (const f of Object.values(ALERTA_FIXTURES)) expect(alertaPontoSchema.safeParse({ slug: 'x', ...f }).success).toBe(true);
   });
   it('filtra sensores por tipo', async () => {
     const r = await sensorsService.latest('RIVER_LEVEL');

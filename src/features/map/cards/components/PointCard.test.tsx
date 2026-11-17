@@ -107,6 +107,10 @@ describe('PointCard: alerta por ponto', () => {
     expect(screen.getAllByTestId('tile')).toHaveLength(3);
     expect(screen.queryByTestId('alerta-panel')).toBeNull();
   });
+  it('maré de reserva: o bloco da maré diz "reserva harmônica" quando a API serve a harmônica', () => {
+    card({ ...P.high, tideSource: 'HARMONIC' }, { isAdmin: false });
+    expect(screen.getAllByTestId('tile')[2]).toHaveTextContent('maré · reserva harmônica');
+  });
   it('Experimental: aviso sintético e o conteúdo atual do card, com a borda pelo risco', () => {
     card(P.high, { isAdmin: true, alerta: al() });
     fireEvent.click(screen.getByRole('tab', { name: 'Experimental' }));
