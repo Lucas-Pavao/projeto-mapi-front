@@ -16,6 +16,8 @@ import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
 import type { StationAccumulation } from '../schemas/measuredRain.schema';
 import { feedSourceText, liveAliasCodes, stationRowText } from '../utils/measuredRain';
+import { OfficialWarningBadge } from '@/features/warnings/components/OfficialWarningBadge';
+import type { OfficialWarning } from '@/features/warnings/schemas/officialWarning.schema';
 
 type Overview = ReturnType<typeof useMapOverview>;
 type Tab = 'points' | 'sensors';
@@ -39,6 +41,8 @@ interface Props {
   stations?: StationAccumulation[];
   onStationClick?: (canonicalId: string) => void;
   selectedStationId?: string | null;
+  /** Avisos meteorológicos oficiais vigentes do INMET (ADR 0024). */
+  officialWarnings?: OfficialWarning[];
   /** Só ADMIN abre "Saúde dos dados" (ADR 0010). */
   canSeeDataHealth: boolean;
   className?: string;
@@ -53,7 +57,7 @@ const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-
 /** Painel esquerdo "Agora na RMR" do mapa (Main.dc.html): contagem, abas Pontos críticos e Sensores, fontes. */
 export const LivePanel: React.FC<Props> = ({
   points, sensors, summary, summaryFailed, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
-  stations = [], onStationClick, selectedStationId,
+  stations = [], onStationClick, selectedStationId, officialWarnings = [],
 }) => {
   const [tab, setTab] = useState<Tab>('points');
   const sorted = useMemo(() => sortPoints(points), [points]);
@@ -125,6 +129,7 @@ export const LivePanel: React.FC<Props> = ({
         ) : (
           experimental && <ExperimentalBadge />
         )}
+        <OfficialWarningBadge warnings={officialWarnings} />
         <div role="tablist" aria-label="Tipo de lista" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
           {tabBtn('points', `Pontos críticos · ${points.length}`)}
           {tabBtn('sensors', `Sensores · ${unified.length + sensorRows.length + tideRow}`)}
