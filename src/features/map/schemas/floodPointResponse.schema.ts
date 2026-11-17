@@ -135,6 +135,7 @@ export const floodPointResponseSchema = z
     latitude: z.number(),
     longitude: z.number(),
     active: z.boolean(),
+    tideSource: z.enum(['OFFICIAL', 'HARMONIC']).nullable().optional(),
     liveData: preciseDataSchema.nullable().optional(),
     floodPrediction: floodPredictionSchema.nullable().optional(),
   })

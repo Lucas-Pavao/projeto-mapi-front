@@ -108,3 +108,15 @@ describe('geometria e URL do local', () => {
     expect(parseCoordParam(null)).toBeNull();
   });
 });
+
+describe('LocationCard: maré de reserva', () => {
+  it('HARMONIC mostra a etiqueta; OFFICIAL e ausente não', () => {
+    const tideOf = (tideSource: 'HARMONIC' | 'OFFICIAL' | null) => ({ ...L.measured, tide: { ...L.measured.tide, levelM: 1.2, tideSource } });
+    const { rerender } = render(<LocationCard analysis={tideOf('HARMONIC')} onClose={() => {}} />);
+    expect(screen.getByTestId('tide-source-tag')).toHaveTextContent('maré · reserva harmônica');
+    rerender(<LocationCard analysis={tideOf('OFFICIAL')} onClose={() => {}} />);
+    expect(screen.queryByTestId('tide-source-tag')).toBeNull();
+    rerender(<LocationCard analysis={tideOf(null)} onClose={() => {}} />);
+    expect(screen.queryByTestId('tide-source-tag')).toBeNull();
+  });
+});

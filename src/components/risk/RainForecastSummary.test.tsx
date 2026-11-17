@@ -38,4 +38,11 @@ describe('RainForecastSummary', () => {
     const { container } = render(<RainForecastSummary prediction={{ ...base, rainForecast: null } as unknown as FloodPrediction} />);
     expect(container).toBeEmptyDOMElement();
   });
+
+  it('quando o modelo já usa a previsão, a nota "ainda não recebe" some', () => {
+    const p = { ...base, rainForecast: { ...(base as unknown as { rainForecast: object }).rainForecast, usedByModel: true } } as unknown as FloodPrediction;
+    render(<RainForecastSummary prediction={p} />);
+    expect(screen.getByTestId('rain-forecast')).toBeInTheDocument();
+    expect(screen.queryByTestId('rain-forecast-not-used')).toBeNull();
+  });
 });

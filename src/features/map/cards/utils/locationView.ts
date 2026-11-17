@@ -1,3 +1,4 @@
+import type { SourceKind } from '@/components/risk/sourceKinds';
 import { num } from '@/features/operacao/utils/format';
 import type { LocationAnalysis, LocationCandidate, RainMode } from '../schemas/locationAnalysis.schema';
 
@@ -23,10 +24,13 @@ export function bannerOf(state: LocationState): Banner | null {
   }
 }
 
-export interface RainSourceTag { text: string; measured: boolean }
+export interface RainSourceTag { kind: SourceKind; label: string; measured: boolean }
 
 export function rainSourceTag(mode: RainMode): RainSourceTag {
-  return mode === 'MEASURED' ? { text: 'medida · Cemaden', measured: true } : mode === 'GAP' ? { text: 'sem dado · Cemaden', measured: false } : { text: 'estimada · Open-Meteo', measured: false };
+  // Textos da seção 5.4 do prompt de 17/11: a lacuna diz de qual rede faltou o dado.
+  return mode === 'MEASURED' ? { kind: 'MEASURED', label: 'medida · Cemaden', measured: true }
+    : mode === 'GAP' ? { kind: 'NO_DATA', label: 'sem dado · Cemaden', measured: false }
+    : { kind: 'ESTIMATED', label: 'estimada · Open-Meteo', measured: false };
 }
 
 /** Nota sob os números da chuva (protótipo). */

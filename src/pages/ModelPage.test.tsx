@@ -156,4 +156,19 @@ describe('ModelPage', () => {
     expect(screen.getAllByText('60%').length).toBe(2);
     auth.role = 'USER';
   });
+
+  it('visitante não vê a aba do alerta; admin vê o estado vazio da conferência', async () => {
+    auth.role = 'USER';
+    renderPage(<ModelPage />);
+    expect(screen.queryByRole('tab', { name: /Alerta por ponto/ })).toBeNull();
+    cleanup();
+    auth.role = 'ADMIN';
+    server.use(http.get('/api/alerta/conferencia', () => HttpResponse.json({
+      days: 30, forteEvents: 0, forteWarned: 0, medianLeadMinutes: null, falsePerEvent: 0, semDadoFraction: 0, floodEpisodes: 0, rows: [] })));
+    renderPage(<ModelPage />);
+    fireEvent.click(screen.getByRole('tab', { name: /Alerta por ponto/ }));
+    expect(await screen.findByText('Nenhum dia conferido ainda.')).toBeInTheDocument();
+    expect(screen.getByText('A conferência roda às 03:35 UTC sobre a véspera.')).toBeInTheDocument();
+    auth.role = 'USER';
+  });
 });

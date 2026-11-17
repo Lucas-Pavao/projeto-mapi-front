@@ -1,6 +1,7 @@
 import type { FloodPrediction } from '../schemas/floodPointResponse.schema';
 import type { SensorConfigDTO } from './sensor';
 import type { PreciseData } from './common';
+import type { TideSource } from './tide';
 
 export interface FloodPointResponseDTO {
   id: number;
@@ -20,6 +21,8 @@ export interface FloodPointResponseDTO {
   active: boolean;
   tideHeight: number | null;
   tideUnit: string | null;
+  /** Origem da maré: tábua oficial ou previsão harmônica de reserva. */
+  tideSource?: TideSource | null;
 }
 
 export interface FloodPointRequestDTO {
