@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { LOCATION_FIXTURES, stationCardFor } from './cards';
+import { locationFixture, stationCardFor } from './cards';
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 import type { CanonicalStation, StationHour } from '@/features/sensors/schemas/station.schema';
 
@@ -49,11 +49,11 @@ export const monthChecksMock = () => {
 };
 
 export const cenariosHandlers = [
-  http.get<{ id: string }>('/api/stations/:id/card', ({ params }) => HttpResponse.json(stationCardFor(params.id))),
+  http.get<{ id: string }>('/api/stations/:id/card', ({ params }) => HttpResponse.json(stationCardFor(params.id, new URLSearchParams(window.location.search).get('cardFx')))),
   http.get('/api/locations/analysis', ({ request }) => {
     const u = new URL(request.url);
     // A API devolve a lat/lon pedida.
-    return HttpResponse.json({ ...LOCATION_FIXTURES.measured, lat: Number(u.searchParams.get('lat')), lon: Number(u.searchParams.get('lon')) });
+    return HttpResponse.json({ ...locationFixture(new URLSearchParams(window.location.search).get('locFx')), lat: Number(u.searchParams.get('lat')), lon: Number(u.searchParams.get('lon')) });
   }),
   http.get('/api/admin/stations/month-checks', () => HttpResponse.json(monthChecksMock())),
   http.get('/api/stations/canonical', () => HttpResponse.json(canonicalStations)),

@@ -29,11 +29,11 @@ export function rainMessage(a: AlertaPonto, ponto: string): string {
     case 'ATENCAO':
       return `Chuva forte provável nos próximos 20 a 60 min em ${ponto}. Chuva agora: ${mm(a.rainTeMm)} mm em 10 min.`;
     case 'ALERTA':
-      return `Chuva acima do que a galeria escoa em ${ponto}.`;
+      return `Chuva acima do que a galeria escoa em ${ponto}.${a.rainTeMm != null && a.capacityTeMm != null ? ` Medido: ${mm(a.rainTeMm)} mm em 10 min (limite ${mm(a.capacityTeMm)} mm, IDF TR ${a.trYears ?? 5} anos).` : ''}`;
     case 'NENHUM':
       return `Chuva agora: ${mm(a.rainTeMm)} mm em 10 min.`;
     case 'SEM_DADO':
-      return `Sem dado suficiente agora: ${a.rainReasonText ?? a.rainReason ?? 'motivo não informado'}.`;
+      return `Sem dado suficiente agora: ${a.rainReasonText ?? a.rainReason ?? 'motivo não informado'}. Isto não é "sem alerta".`;
     default: {
       const never: never = a.rainAlert;
       return never;
@@ -52,7 +52,7 @@ export function floodMessage(a: AlertaPonto, ponto: string): string {
     case 'NAO':
       return `Lâmina estimada agora: ${cm(a.hNowCm)} cm (alagamento a partir de 15 cm).`;
     case 'SEM_DADO':
-      return `Nível do ponto sem dado: ${a.floodReasonText ?? a.floodReason ?? 'motivo não informado'}.`;
+      return `Nível do ponto sem dado: ${a.floodReasonText ?? a.floodReason ?? 'motivo não informado'}. Isto não é "não alaga".`;
     default: {
       const never: never = a.pointFlood;
       return never;
