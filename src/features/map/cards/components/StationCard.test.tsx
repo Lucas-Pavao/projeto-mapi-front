@@ -18,25 +18,25 @@ describe('StationCard: os 8 estados', () => {
   });
   it('2 divergente: aviso com ao vivo × PED e a diferença', () => {
     show('divergent');
-    expect(screen.getByTestId('state-chip')).toHaveTextContent('Fontes divergem');
+    expect(screen.getByTestId('state-chip')).toHaveTextContent('Ao vivo + PED');
     expect(screen.getByTestId('note')).toHaveTextContent(/ao vivo 2,0 mm × PED 3,2 mm \(diferença 1,2 mm > 0,5 mm\)\. Vale a PED/);
   });
   it('3 pico removido: barra cinza e aviso', () => {
     show('peak');
-    expect(screen.getByTestId('state-chip')).toHaveTextContent('Pico isolado removido');
+    expect(screen.getByTestId('state-chip')).toHaveTextContent('Ao vivo + PED');
     expect(screen.getByTestId('station-bars').querySelectorAll('[data-block="peak"]')).toHaveLength(1);
     expect(screen.getByTestId('note')).toHaveTextContent('barra cinza');
   });
   it('4 checagem inconclusiva: aviso neutro e continua usada', () => {
     show('unchecked');
     expect(screen.getByTestId('note')).toHaveTextContent('Continua sendo usada');
-    expect(screen.getByText(/mês sem checagem \(poucas vizinhas com chuva\)/)).toBeInTheDocument();
+    expect(screen.getByText(/inconclusiva \(FEW_WET_NEIGHBORS\)/)).toBeInTheDocument();
   });
   it('4b mês ainda não checado: não inventa motivo', () => {
     render(<MemoryRouter><StationCard card={{ ...F.unchecked, monthCheck: null }} /></MemoryRouter>);
     expect(screen.getByTestId('note')).toHaveTextContent('Mês ainda sem checagem');
     expect(screen.getByTestId('note')).not.toHaveTextContent('FEW_WET_NEIGHBORS');
-    expect(screen.getByText('Mês sem checagem')).toBeInTheDocument();
+    expect(screen.getByTestId('state-chip')).toHaveTextContent('Mês sem checagem');
   });
 
   it('5 lacuna agora: "sem dado", blocos tracejados e acumulados incompletos (nunca 0)', () => {

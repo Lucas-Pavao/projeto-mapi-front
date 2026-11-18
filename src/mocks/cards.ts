@@ -41,7 +41,8 @@ export const STATION_CARD_FIXTURES: Record<string, StationCardData> = {
   pedOnly: { ...base, canonicalId: 'SINT-P', name: 'Sintético: Cavaleiro', aliases: ['CEMADEN_PED:SINT-P'], aliasDistanceM: null, sources: ['CEMADEN_PED'], pedOnly: true, liveMmH: null },
 };
 
-export const stationCardFor = (id: string): StationCardData => ({ ...base, canonicalId: id, name: `Sintético: ${id}` });
+/** `?cardFx=<estado>` (normal, divergent, peak, unchecked, gap, noResponse, failMonth, pedOnly) escolhe o estado do card no navegador com MSW. */
+export const stationCardFor = (id: string, fx?: string | null): StationCardData => ({ ...((fx && STATION_CARD_FIXTURES[fx]) || base), canonicalId: id, name: `Sintético: ${id}` });
 
 const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
@@ -102,3 +103,6 @@ export const LOCATION_FIXTURES: Record<'measured' | 'gap' | 'estimated' | 'sea' 
   sea: { ...locBase, lat: -8.06, lon: -34.84, isSea: true, rain: { mode: 'ESTIMATED', nowMmH: null, acc3hMm: null, acc24hMm: null, station: null, candidates: [], nValid: 0 }, terrain: null, river: null },
   outside: { ...locBase, lat: -7.85, lon: -34.9, inArea: false, rain: { mode: 'ESTIMATED', nowMmH: 0, acc3hMm: 0.2, acc24hMm: 2, station: null, candidates: [], nValid: 0 }, terrain: null, river: null, nearestPoint: null },
 };
+
+/** `?locFx=<estado>` (measured, gap, estimated, sea, outside) escolhe o estado do card de local no navegador com MSW. */
+export const locationFixture = (fx?: string | null): LocationAnalysis => (fx && (LOCATION_FIXTURES as Record<string, LocationAnalysis>)[fx]) || LOCATION_FIXTURES.measured;

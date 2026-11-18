@@ -3,8 +3,7 @@ import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermomete
 import { SourceTag } from '@/components/risk/SourceTag';
 import { RiskBadge } from '@/components/risk/RiskBadge';
 import { pctTxt } from '@/components/risk/thresholds';
-import { formatRecifeHourMs } from '../../utils/datetime';
-import { num } from '@/features/operacao/utils/format';
+import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { candidateStatus, candidateValue, distanceText, ROLE_TAG } from '@/features/points/utils/rainCandidates';
 import { getRiskVisual, degradationText } from '@/components/risk/risk';
 import { cn } from '@/lib/utils';
@@ -65,7 +64,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-primary"><MapPin className="size-5" aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="m-0 text-base font-extrabold leading-[22px]">Análise de local</p>
-          <p className="m-0 font-mono text-xs leading-4 text-muted-foreground">{coord}{a.at ? ` · dados das ${formatRecifeHourMs(Date.parse(a.at))}` : ''}</p>
+          <p className="m-0 font-mono text-xs leading-4 text-muted-foreground">{coord}{a.at ? ` · dados das ${formatHoraCurta(a.at)}` : ''}</p>
         </div>
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise de local" className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-[18px]" aria-hidden="true" /></button>}
       </header>
