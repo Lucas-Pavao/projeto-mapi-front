@@ -187,7 +187,12 @@ export const handlers = [
       attribution: 'INMET — Instituto Nacional de Meteorologia (https://avisos.inmet.gov.br)',
       emissionNote: 'firstSeenAt é proxy posterior à emissão real: a API pública do INMET não publica hora de emissão.',
       referenceTimeUtc: new Date().toISOString(),
-      warnings: [],
+      warnings: [{
+        warningId: 1, sequenceId: 1, externalId: 1, source: 'INMET', firstSeenAt: new Date().toISOString(), lastSeenAt: new Date().toISOString(),
+        validFrom: new Date(Date.now() - 6 * 3600e3).toISOString(), validTo: new Date(Date.now() + 18 * 3600e3).toISOString(),
+        severity: 'Perigo Potencial', colorHex: '#FFE600', description: 'Chuvas intensas',
+        risks: ['Chuva entre 20 e 30 mm/h ou até 50 mm/dia, ventos de 40 a 60 km/h.'], instructions: [], geocodes: [], municipalities: 'Recife', altered: false, closed: false,
+      }],
     }),
   ),
 ];

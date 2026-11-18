@@ -39,9 +39,9 @@ import { TerrainLayer } from './TerrainLayer';
 import { LocationInitializer } from './LocationInitializer';
 import { MapLayerPanel } from './MapLayerPanel';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
-import { GeolocateReportButton } from './GeolocateReportButton';
 import { SensorMarkers } from './SensorMarkers';
-import { RiskLegendControl } from './RiskLegendControl';
+import { MapRiskLegend } from './MapRiskLegend';
+import { MeasuredRainLegendControl } from './MeasuredRainLegendControl';
 import { thresholdsOf } from '@/components/risk/thresholds';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
@@ -49,7 +49,6 @@ import { DEFAULT_ACTIVE_LAYERS, MEASURED_RAIN_LAYER, filterFloodPointsForMap, fi
 import { withoutCanonicalDuplicates } from '../utils/measuredRain';
 import { useMeasuredRainLayer } from '../hooks/useMeasuredRainLayer';
 import { MeasuredRainLayer } from './MeasuredRainLayer';
-import { MeasuredRainLegend } from './MeasuredRainLegend';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
 import { useOfficialWarnings } from '@/features/warnings/hooks/useOfficialWarnings';
 import type { TerrainStatus } from '../utils/terrain';
@@ -94,8 +93,8 @@ export const MapView: React.FC = () => {
   const [activeLayers, setActiveLayers] = useState<string[]>([...DEFAULT_ACTIVE_LAYERS]);
   const [showTerrain, setShowTerrain] = useState(false);
   const [terrainStatus, setTerrainStatus] = useState<TerrainStatus>('off');
-  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas, terreno ou níveis de risco).
-  type MapTool = 'layers' | 'terrain' | 'legend';
+  // Ferramentas do mapa (desktop): um painel aberto por vez (camadas, terreno ou legenda da chuva).
+  type MapTool = 'layers' | 'terrain' | 'rain';
   const [openTool, setOpenTool] = useState<MapTool | null>(null);
   const toolProps = (tool: MapTool) => ({
     open: openTool === tool,
@@ -230,6 +229,7 @@ export const MapView: React.FC = () => {
     if (sortedPoints.length === 0) return;
     selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
   };
+  const riskModel = useMemo(() => floodPoints.map((p) => p.floodPrediction).find((fp) => fp?.riskThresholds), [floodPoints]);
   const officialWarnings = useOfficialWarnings().data?.warnings ?? [];
 
   return (
@@ -264,17 +264,23 @@ export const MapView: React.FC = () => {
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
               <TerrainControl enabled={showTerrain} onChange={setShowTerrain} status={terrainStatus} {...toolProps('terrain')} />
-              <RiskLegendControl thresholds={thresholdsOf(floodPoints)} {...toolProps('legend')} />
+              {measuredOn && (
+                <MeasuredRainLegendControl
+                  data={measured.query.data}
+                  isLoading={measured.query.isLoading}
+                  isError={measured.query.isError}
+                  {...toolProps('rain')}
+                />
+              )}
             </div>
-            {measuredOn && (
-              <MeasuredRainLegend
-                data={measured.query.data}
-                isLoading={measured.query.isLoading}
-                isError={measured.query.isError}
-                className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3"
-              />
-            )}
           </div>
+          {/* Legenda de risco sempre à vista, no canto inferior direito, com a nota dos limiares do modelo. */}
+          <MapRiskLegend
+            className="pointer-events-auto absolute bottom-10 right-4 z-20 w-[300px]"
+            thresholds={thresholdsOf(floodPoints)}
+            modelVersion={riskModel?.modelVersion}
+            horizonHours={riskModel?.horizonHours}
+          />
         </>
       )}
 
@@ -388,14 +394,6 @@ export const MapView: React.FC = () => {
           />
         )}
 
-        {/* Com um card aberto o flutuante colide com ele; na análise de local o relato sai pelo botão do próprio card. */}
-        {!isMobile && !anyCardOpen(cards.state) && (
-          <GeolocateReportButton
-            isGettingLocation={reporting.isGettingLocation}
-            hiddenOnSmall={Boolean(location)}
-            onClick={reporting.handleGetGeolocation}
-          />
-        )}
       </main>
 
       {isMobile && (
