@@ -8,12 +8,14 @@ import { exportService } from '@/features/map/services/export.service';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { formatRecife } from '@/features/map/utils/datetime';
 import type { FloodPointResponseDTO } from '@/features/map/types';
+import type { FloodPrediction } from '@/features/map/schemas/floodPointResponse.schema';
+import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
 import type { PredictionSummary } from '../schemas/prediction.schema';
 
 const Mono: React.FC<{ children: React.ReactNode }> = ({ children }) => <dd className="m-0 font-mono text-[16px] font-bold leading-[22px]">{children}</dd>;
 
 /** Cabeçalho do ponto: classe de risco com ícone e rótulo, aviso experimental, nome, metadados da previsão e ações. */
-export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: PredictionSummary | null }> = ({ point, prediction }) => {
+export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: PredictionSummary | null; modelInfo?: Pick<FloodPrediction, 'trainingData' | 'syntheticWarning'> }> = ({ point, prediction, modelInfo }) => {
   const [csv, setCsv] = useState<'idle' | 'busy' | 'ok' | 'erro'>('idle');
   const exportar = async () => {
     setCsv('busy');
@@ -34,12 +36,13 @@ export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: P
   const unknown = prediction?.riskLevel === 'UNKNOWN';
   const sub = [point.municipality, point.description].filter(Boolean).join(' · ');
   return (
-    <section aria-label="Risco atual" className="flex flex-wrap items-center gap-5 rounded-2xl border border-border bg-card px-5 py-[18px]">
+    <section aria-label="Risco atual" className="flex flex-wrap items-start gap-5 rounded-2xl border border-border bg-card px-5 py-[18px]">
       <div className="flex min-w-[260px] flex-1 flex-col gap-1.5">
         <div className="flex flex-wrap items-center gap-2">
           {prediction ? <RiskBadge level={prediction.riskLevel} probability={prediction.probability} className="text-[13px]" /> : <RiskBadge level="UNKNOWN" />}
           {prediction && showsExperimentalLabel(prediction) && <ExperimentalBadge />}
         </div>
+        {modelInfo && <SyntheticWarning prediction={modelInfo} className="max-w-[460px] text-[13px] leading-[18px]" />}
         <h1 className="m-0 text-[28px] font-extrabold leading-[34px] tracking-[-0.015em]">{point.name}</h1>
         <p className="m-0 text-[14px] leading-5 text-muted-foreground">
           {sub && <>{sub} · </>}
@@ -54,7 +57,7 @@ export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: P
           </p>
         )}
       </div>
-      <dl className="m-0 grid grid-cols-[repeat(4,auto)] gap-x-6 gap-y-1 text-[12px] leading-4">
+      <dl className="m-0 grid self-center grid-cols-[repeat(4,auto)] gap-x-6 gap-y-1 text-[12px] leading-4">
         <dt className="text-muted-foreground">Emitida</dt>
         <dt className="text-muted-foreground">Válida até</dt>
         <dt className="text-muted-foreground">Horizonte</dt>
@@ -64,7 +67,7 @@ export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: P
         <Mono>{prediction?.horizonHours != null ? `${prediction.horizonHours} h` : '—'}</Mono>
         <Mono>{prediction?.modelVersion ?? '—'}</Mono>
       </dl>
-      <div className="flex min-w-[220px] flex-col gap-2">
+      <div className="flex min-w-[220px] self-center flex-col gap-2">
         <Link to="/relatos" className="flex h-[38px] items-center justify-center rounded-lg bg-primary px-4 text-[13px] font-bold leading-4 text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">
           Reportar cenário no local
         </Link>

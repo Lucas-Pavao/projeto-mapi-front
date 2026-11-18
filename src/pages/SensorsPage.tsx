@@ -51,7 +51,11 @@ const Content: React.FC<CP> = ({ sensors, tl, filter, setFilter, chosen, setChos
   }, [sensors, stations, rainAcc.data, tl.data, tl.now]);
   const list = all.filter((r) => filter === 'all' || (filter === 'problem' ? r.problem || r.off : r.kind === filter));
   const current = list.find((r) => r.key === chosen) ?? list[0] ?? null;
-  const online = `${all.filter((r) => !r.off).length} de ${all.length} respondendo`;
+  const online = `${all.filter((r) => !r.off).length} de ${all.length} com dado agora`;
+  const counts: Record<Filter, number> = {
+    all: all.length, chuva: all.filter((r) => r.kind === 'chuva').length, rio: all.filter((r) => r.kind === 'rio').length,
+    mare: all.filter((r) => r.kind === 'mare').length, problem: all.filter((r) => r.problem || r.off).length,
+  };
   const station = current ? stations.find((x) => x.canonicalId === current.key) : undefined;
   const hourly = useStationHourly(station?.canonicalId ?? null);
   const sensor = current && !station && current.key !== TIDE_KEY ? sensors.find((s) => s.sensorId === current.key) : undefined;
@@ -60,7 +64,7 @@ const Content: React.FC<CP> = ({ sensors, tl, filter, setFilter, chosen, setChos
   const t1 = tl.now + 6 * HOUR;
   return (
     <>
-      <SensorList items={list} selected={current?.key ?? ''} filter={filter} onFilter={setFilter} onSelect={setChosen} online={online} />
+      <SensorList items={list} selected={current?.key ?? ''} filter={filter} onFilter={setFilter} onSelect={setChosen} online={online} counts={counts} />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr_auto]">
         {station ? <StationDetail station={station} hourly={hourly} /> : sel ? <SensorDetail sel={sel} timeline={tl.data} now={tl.now} t0={t0} t1={t1} /> : <p className="text-body text-muted-foreground lg:col-span-12">Nenhum sensor neste filtro.</p>}
       </div>

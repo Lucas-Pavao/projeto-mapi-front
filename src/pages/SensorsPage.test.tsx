@@ -22,7 +22,7 @@ describe('SensorsPage', () => {
     expect(pluv2).toHaveAttribute('data-stale', 'true');
     expect(within(pluv2).getByText(/sem resposta há/)).toBeInTheDocument();
     expect(within(pluv2).getByText('—')).toBeInTheDocument(); // sem valor: nunca zero
-    expect(await screen.findByText('5 de 6 respondendo')).toBeInTheDocument();
+    expect(await screen.findByText('5 de 6 com dado agora')).toBeInTheDocument();
   });
 
   it('seleciona o sensor e mostra o detalhe; sensor velho vem com aviso', async () => {
@@ -35,12 +35,12 @@ describe('SensorsPage', () => {
 
   it('filtra por tipo na lista', async () => {
     renderPage(<SensorsPage />);
-    const lista = within(await screen.findByRole('complementary', { name: 'Sensores' }));
+    const lista = within(await screen.findByRole('complementary', { name: 'Estações' }));
     await lista.findByText('Sintético: rio 1');
-    fireEvent.click(screen.getByRole('radio', { name: 'Rio' }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Rio/ }));
     await waitFor(() => expect(lista.queryByText('Sintético: pluviômetro 1')).toBeNull());
     expect(lista.getByText('Sintético: rio 1')).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: 'Rio' })).toHaveAttribute('aria-checked', 'true');
+    expect(screen.getByRole('radio', { name: /^Rio/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('vazio', async () => {
@@ -63,14 +63,14 @@ describe('SensorsPage', () => {
 
   it('estação canônica: tags ao vivo/PED e só PED, status do mês e filtro "Com problema"', async () => {
     renderPage(<SensorsPage />);
-    const lista = within(await screen.findByRole('complementary', { name: 'Sensores' }));
+    const lista = within(await screen.findByRole('complementary', { name: 'Estações' }));
     const areias = (await lista.findByText('Sintético: Areias')).closest('li')!;
     expect(within(areias).getByText('ao vivo')).toBeInTheDocument();
     expect(within(areias).getByText('PED')).toBeInTheDocument();
     const boa = lista.getByText('Sintético: Boa Viagem').closest('li')!;
     expect(within(boa).getByText('só PED')).toBeInTheDocument();
     expect(within(boa).getByText('reprovada no mês')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: 'Com problema' }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Com problema/ }));
     await waitFor(() => expect(lista.queryByText('Sintético: rio 1')).toBeNull());
     expect(lista.getByText('Sintético: Boa Viagem')).toBeInTheDocument();
     expect(lista.getByText('Sintético: Areias')).toBeInTheDocument(); // 2 divergências
@@ -87,7 +87,7 @@ describe('SensorsPage', () => {
     expect(chart.querySelectorAll('[data-testid="peak-mark"]')).toHaveLength(1);
     expect(chart).toHaveTextContent('50,3');
     expect(chart).toHaveTextContent('25,15');
-    expect(within(screen.getByTestId('divergences')).getAllByRole('row')).toHaveLength(3); // cabeçalho + 2
+    expect(within(screen.getByTestId('divergences')).getAllByRole('row')).toHaveLength(6); // cabeçalho + as 5 últimas horas com leitura
     expect(screen.getByTestId('aliases')).toHaveTextContent('CEMADEN_PED:SINT-A');
     expect(screen.getByTestId('quarantine')).toHaveTextContent('AFTER_GAP');
   });

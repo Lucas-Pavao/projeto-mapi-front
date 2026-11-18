@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { screen, cleanup, within } from '@testing-library/react';
+import { screen, cleanup, within, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
@@ -31,8 +31,10 @@ describe('PointPage', () => {
 
   it('terreno e maré trazem o aviso da ADR 0009', async () => {
     open();
-    expect(await screen.findByTestId('tide-datum-notice')).toHaveTextContent('não é comparável');
-    expect(await screen.findByTestId('terrain-facts')).toBeInTheDocument();
+    const tiles = await screen.findAllByTestId('water-tile');
+    const cota = tiles.find((t) => t.textContent?.includes('Cota da rua'));
+    await waitFor(() => expect(cota).toHaveTextContent('não comparar com maré'));
+    expect(tiles.map((t) => t.querySelector('dt')?.textContent)).toEqual(['Chuva agora', 'Chuva 3 h', 'Chuva 6 h', 'Chuva 24 h', 'Maré', 'Rio', 'Cota da rua', 'Até o canal']);
   });
 
   it('ponto inexistente (404) mostra estado próprio', async () => {
