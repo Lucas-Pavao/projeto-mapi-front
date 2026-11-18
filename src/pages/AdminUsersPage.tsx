@@ -84,7 +84,7 @@ export const AdminUsersPage: React.FC = () => {
                           <span className="min-w-0">
                             <strong className="block truncate text-sm">{u.name ?? <span className="font-normal text-muted-foreground">Sem nome</span>}</strong>
                             <span className="block break-all text-xs text-muted-foreground">{u.email ?? 'Sem e-mail (conta criada antes do cadastro de e-mail)'}</span>
-                            {self && <span className="block text-xs font-semibold text-foreground">Esta é a sua conta: você não pode mudar o próprio perfil nem desativar a si mesmo.</span>}
+                            {self && <span className="block text-xs text-muted-foreground">Esta é a sua conta: você não pode mudar o próprio perfil nem desativar a si mesmo.</span>}
                           </span>
                         </span>
                         <select value={u.role} disabled={busyId === u.id || self} aria-label={`Perfil de ${label(u)}`} onChange={(e) => apply(u, { role: e.target.value as Role }, `Perfil alterado. ${TAKES_EFFECT}`)} className="h-11 rounded-lg border border-input bg-card px-2 text-[13px] font-semibold text-foreground disabled:opacity-60 md:h-[34px]">

@@ -12,17 +12,19 @@ interface IntegrityPanelProps {
   /** Horário (Recife) da última checagem, já formatado ("14h02"). */
   checkedAt: string | null;
   names: Record<string, string>;
+  /** Dentro do painel com abas: sem cartão próprio. */
+  embedded?: boolean;
 }
 
 /** Integridade por ponto (check-integrity): contagens reais de clima, sensores e alagamentos, com o estado devolvido pela API. */
-export const IntegrityPanel: React.FC<IntegrityPanelProps> = ({ data, error, pending, checkedAt, names }) => {
+export const IntegrityPanel: React.FC<IntegrityPanelProps> = ({ data, error, pending, checkedAt, names, embedded = false }) => {
   const max = {
     w: Math.max(1, ...(data ?? []).map((h) => h.totalWeatherRecords)),
     s: Math.max(1, ...(data ?? []).map((h) => h.totalSensorRecords)),
     f: Math.max(1, ...(data ?? []).map((h) => h.totalFloodEvents)),
   };
   return (
-    <section aria-label="Integridade por ponto" className="flex min-h-80 min-w-0 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-3.5 lg:col-span-4 lg:min-h-0">
+    <section aria-label="Integridade por ponto" className={cn('flex min-w-0 flex-col gap-2.5', !embedded && 'min-h-80 rounded-2xl border border-border bg-card px-[18px] py-3.5')}>
       <div className="flex items-baseline justify-between">
         <h2 className="m-0 text-xs leading-4 font-bold tracking-[0.06em] text-muted-foreground">INTEGRIDADE POR PONTO</h2>
         {checkedAt && <span className="font-mono text-[11px] text-muted-foreground">checado às {checkedAt}</span>}

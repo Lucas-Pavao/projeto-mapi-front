@@ -3,8 +3,7 @@ import { QueryState } from '@/components/ui/query-state';
 import { useIngestionSources, useIntegrityCheck } from '@/features/admin/hooks/useAdminData';
 import { SourceCard } from '@/features/admin/components/SourceCard';
 import { RunsPanel } from '@/features/admin/components/RunsPanel';
-import { IntegrityPanel } from '@/features/admin/components/IntegrityPanel';
-import { MonthGrid } from '@/features/admin/components/MonthGrid';
+import { DataSidePanel } from '@/features/admin/components/DataSidePanel';
 import { AlertaLatencyPanel } from '@/features/alerta/components/AlertaLatencyPanel';
 import { groupSources, isProblem } from '@/features/admin/utils/ingestion';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
@@ -47,12 +46,11 @@ export const AdminDataPage: React.FC = () => {
                   <SourceCard key={s.source} source={s} now={now} onShowRuns={(name) => { setSource(name); runsRef.current?.scrollIntoView?.({ block: 'start' }); }} />
                 ))}
               </ul>
-              <div ref={runsRef} className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
+              <div ref={runsRef} className="grid min-h-96 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
                 <RunsPanel sources={items.map((s) => s.source)} source={source} onSource={setSource} integrityBusy={integrity.isPending} onCheckIntegrity={check} />
-                <IntegrityPanel data={integrity.data} error={integrity.error} pending={integrity.isPending} checkedAt={checkedAt} names={names} />
-                <AlertaLatencyPanel />
+                <DataSidePanel key={integrity.data || integrity.isPending || integrity.error ? 'i' : 'm'} initialTab={integrity.data || integrity.isPending || integrity.error ? 'integridade' : 'meses'} data={integrity.data} error={integrity.error} pending={integrity.isPending} checkedAt={checkedAt} names={names} />
               </div>
-              <MonthGrid />
+              <AlertaLatencyPanel />
             </>
           );
         }}
