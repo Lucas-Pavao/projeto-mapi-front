@@ -10,11 +10,12 @@ import { distanceText, missingAccText } from '@/features/points/utils/rainCandid
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
 import type { FloodPointResponseDTO } from '../../types';
+import { AlertChip } from '@/features/alerta/components/AlertChip';
 import { PointProbabilityChart } from './PointProbabilityChart';
 import { isUnknownState, meaningOf, pointCardState, reasonOf } from '../utils/pointView';
 import { cn } from '@/lib/utils';
 import { PointAlertPanel } from '@/features/alerta/components/PointAlertPanel';
-import { alertChipOf, CHIP_EDGE_CLASS, CHIP_TONE_CLASS } from '@/features/alerta/utils/alertaText';
+import { alertChipOf, CHIP_EDGE_CLASS } from '@/features/alerta/utils/alertaText';
 import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 
 interface Props {
@@ -70,7 +71,7 @@ export const PointCard: React.FC<Props> = ({ point, series, rain, now, onClose, 
     <section role="dialog" aria-label={`Resumo do ponto ${point.name}`} data-state={state}
       className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', tab === 'alerta' ? CHIP_EDGE_CLASS[chip.tone] : TOP[level] ?? TOP.UNKNOWN, (tab === 'alerta' ? chip.dashed : unknown) && '[border-top-style:dashed]')}>
       <div className="flex items-center justify-between gap-2">
-        <span data-testid="alerta-chip" data-chip={chip.kind} className={cn('inline-flex min-h-6 items-center rounded-full border px-2.5 text-xs font-bold', CHIP_TONE_CLASS[chip.tone], chip.dashed && 'border-dashed')}>{chip.label}</span>
+        <AlertChip alerta={alertaLoading || alertaError ? null : alerta} isAdmin={isAdmin} />
         {onClose && <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
       </div>
       <div>
