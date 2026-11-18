@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
-import { formatRecifeHourMs } from '../../utils/datetime';
 import { CEMADEN_ATTRIBUTION } from '@/features/sensors/schemas/station.schema';
 import type { StationCardData } from '../schemas/stationCard.schema';
 import {
@@ -15,7 +14,7 @@ const BAR_H = 50;
 
 const Bars: React.FC<{ blocks: StationCardData['blocks']; name: string }> = ({ blocks, name }) => {
   const slot = BAR_W / Math.max(1, blocks.length);
-  const max = Math.max(10, ...blocks.map((b) => b.mm ?? 0));
+  const max = Math.max(1, ...blocks.map((b) => b.mm ?? 0));
   const withValue = blocks.filter((b) => b.mm != null).length;
   return (
     <svg viewBox={`0 0 ${BAR_W} ${BAR_H + 4}`} role="img" aria-label={`Chuva a cada 10 minutos nas últimas 3 horas em ${name}: ${withValue} de ${blocks.length} blocos com valor`} className="block h-[54px] w-full" data-testid="station-bars">
@@ -55,8 +54,8 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
       className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <span data-testid="state-chip" className={cn('inline-flex h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
-            <span aria-hidden="true" className={cn('size-[7px] rounded-full border-[1.5px]', TONE_BORDER[meta.tone], meta.dashed ? 'bg-transparent' : 'bg-current')} />
+          <span data-testid="state-chip" className={cn('inline-flex min-h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 py-[3px] text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
+            <span aria-hidden="true" className={cn('size-[7px] shrink-0 rounded-full border-[1.5px]', TONE_BORDER[meta.tone], meta.dashed ? 'bg-transparent' : 'bg-current')} />
             {meta.label}
           </span>
           {c.pedOnly && c.state !== 'NORMAL' && <span data-testid="ped-only-tag" className="ml-1.5 inline-flex h-[22px] items-center rounded-full border border-primary px-2 text-[11px] font-bold text-primary">só PED</span>}
@@ -77,7 +76,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <div>
         <Bars blocks={c.blocks} name={name} />
-        <div className="flex justify-between font-mono text-[10px] leading-[14px] text-muted-foreground"><span>{first ? formatRecifeHourMs(Date.parse(first.endUtc)) : '—'}</span><span>últimas 3 h</span><span>{last ? formatRecifeHourMs(Date.parse(last.endUtc)) : '—'}</span></div>
+        <div className="flex justify-between font-mono text-[10px] leading-[14px] text-muted-foreground"><span>{formatHoraCurta(first?.endUtc) ?? '—'}</span><span>últimas 3 h</span><span>{formatHoraCurta(last?.endUtc) ?? '—'}</span></div>
         <div className="mt-0.5 flex gap-2.5 text-[10px] leading-[14px] text-muted-foreground">
           <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-primary" /> PED</span>
           <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-chart-3" /> ao vivo</span>
@@ -114,7 +113,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
         {c.uses.length === 0 && <span className="text-xs text-muted-foreground">Nenhum ponto crítico a até 5 km.</span>}
         {c.uses.map((u) => {
           const tag = roleTag(u);
-          const label = <><span className="font-semibold">{u.name}</span> <span className="font-mono font-normal text-muted-foreground">{u.distanceM < 1000 ? `${Math.round(u.distanceM)} m` : `${(u.distanceM / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`}</span></>;
+          const label = <><span className="font-semibold">{u.name}</span> <span className="whitespace-nowrap font-mono font-normal text-muted-foreground">{u.distanceM < 1000 ? `${Math.round(u.distanceM)} m` : `${(u.distanceM / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km`}</span></>;
           return (
             <div key={u.slug} data-use={u.role} className="flex items-center justify-between gap-2 text-xs leading-4">
               {onOpenPoint ? <button type="button" onClick={() => onOpenPoint(u.slug)} className="cursor-pointer border-0 bg-transparent p-0 text-left text-foreground hover:underline">{label}</button> : <span>{label}</span>}

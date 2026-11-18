@@ -18,7 +18,8 @@ afterAll(() => server.close());
 
 const openF1 = () => {
   const r = renderPage(<ModelPage />);
-  fireEvent.click(screen.getByRole('tab', { name: /F1/ }));
+  fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
+  fireEvent.click(screen.getByRole('button', { name: /F1 · balde/ }));
   return r;
 };
 
@@ -95,7 +96,7 @@ describe('ModelPage', () => {
   it('aba do xgb_v2: aviso de sintético, limiares do cartão e baselines', () => {
     renderPage(<ModelPage />);
     fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
-    expect(screen.getByRole('tab', { name: /^xgb_v2/ })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: /xgb_v2 · rótulo/ })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/DADOS SINTÉTICOS/);
     const limiares = screen.getByRole('region', { name: 'Limiares de risco' });
     expect(limiares).toHaveTextContent('Moderado ≥ 1,6%');
@@ -118,14 +119,17 @@ describe('ModelPage', () => {
     expect(screen.getByTestId('probe-result')).toHaveTextContent('Baixo');
   });
 
-  it('trocar de métrica muda os números e a aba F1 continua acessível', () => {
+  it('trocar de métrica muda os números e a F1 e a volta ao v3 continuam acessíveis', () => {
     renderPage(<ModelPage />);
     fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
     const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
     fireEvent.click(within(base).getByRole('radio', { name: 'Brier' }));
     expect(within(base).getByText('0,037')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('tab', { name: /F1/ }));
-    expect(screen.getByRole('tab', { name: /F1/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /F1 · balde/ }));
+    expect(screen.getByRole('button', { name: /F1 · balde/ })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: /xgb_v2 · rótulo/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Modelo em produção \(v3\)/ }));
+    expect(screen.getByRole('tab', { name: /v2 × v3/ })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('abre no v3 com o v2 ao lado, a etiqueta de sintético, a antecedência e os resultados negativos', () => {

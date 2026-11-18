@@ -1,13 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { TriangleAlert } from 'lucide-react';
 import { Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { useTerrainAttributes } from '@/features/map/hooks/useTerrainAttributes';
-import { fmtPt } from '@/features/map/utils/provenance';
 import type { FloodPointResponseDTO } from '@/features/map/types';
 import { contributorRows, type Contributor } from '../utils/contributors';
 import type { RainCandidates } from '../schemas/rain-candidates.schema';
-import { waterWeatherTiles } from '../utils/waterWeather';
+import { waterWeatherTiles, type TerrainInput } from '../utils/waterWeather';
 
 /** "O que mais pesou agora": as 3 maiores contribuições em pontos percentuais, com o valor e a unidade da feature, e o que foi imputado. */
 export const ContributorsPanel: React.FC<{ contributors: Contributor[] | undefined; imputed?: ReadonlyArray<{ featureId: string; label: string }>; unknown: boolean }> = ({ contributors, imputed, unknown }) => {
@@ -46,52 +43,21 @@ export const ContributorsPanel: React.FC<{ contributors: Contributor[] | undefin
   );
 };
 
-export const WaterWeatherPanel: React.FC<{ point: FloodPointResponseDTO | undefined; rain?: RainCandidates }> = ({ point, rain }) => (
-  <Panel aria-label="Água e tempo agora">
-    <PanelTitle>Água e tempo agora</PanelTitle>
-    <dl className="m-0 grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {waterWeatherTiles(point, rain).map((t) => (
-        <div key={t.label} className="flex flex-col gap-0.5 rounded-xl bg-muted p-2.5" data-testid="water-tile">
-          <dt className="text-[11px] leading-[14px] text-muted-foreground">{t.label}</dt>
-          <dd className={`m-0 font-mono text-[17px] font-bold leading-[22px] ${t.tone ?? 'text-foreground'}`}>{t.value}</dd>
-          <dd className="m-0 text-[11px] leading-[14px] text-muted-foreground">{t.sub}</dd>
-        </div>
-      ))}
-    </dl>
-  </Panel>
-);
-
-/** Terreno do ponto (PE3D, MDT) e o aviso do ADR 0009: a cota não é comparável ao nível da maré. */
-export const TerrainPanel: React.FC<{ slug: string; distanceToChannelM: number | null | undefined }> = ({ slug, distanceToChannelM }) => {
-  const state = useTerrainAttributes(slug);
-  const elev = state.status === 'ready' ? state.data.streetElevationM : null;
+export const WaterWeatherPanel: React.FC<{ point: FloodPointResponseDTO | undefined; rain?: RainCandidates }> = ({ point, rain }) => {
+  const state = useTerrainAttributes(point?.slug ?? '');
+  const terrain: TerrainInput = state.status !== 'ready' ? { status: state.status } : { status: state.data.status === 'NO_DATA' ? 'no_data' : 'ready', streetElevationM: state.data.streetElevationM };
   return (
-    <Panel aria-label="Terreno do ponto" data-testid="terrain-facts">
-      <div className="flex items-baseline justify-between">
-        <PanelTitle>Terreno (PE3D · MDT 1 m)</PanelTitle>
-        <Link to="/modelo/simulador" className="text-[12px] text-primary hover:text-foreground">Simular este ponto</Link>
-      </div>
-      {state.status === 'error' ? (
-        <p className="m-0 text-[12px] leading-4 text-warning">Terreno indisponível (falha ao consultar a API).</p>
-      ) : state.status === 'loading' ? (
-        <p className="m-0 text-[12px] leading-4 text-muted-foreground">Carregando terreno…</p>
-      ) : state.data.status === 'NO_DATA' ? (
-        <p className="m-0 text-[12px] leading-4 text-foreground">Sem dado de terreno para este ponto (fora das folhas do MDT ou sem carga).</p>
-      ) : null}
-      <div className="flex gap-5">
-        <div>
-          <div className="font-mono text-[22px] font-bold leading-[26px]">{elev != null ? `${fmtPt(elev, 2)} m` : '—'}</div>
-          <div className="text-[11px] leading-[14px] text-muted-foreground">cota da rua</div>
-        </div>
-        <div>
-          <div className="font-mono text-[22px] font-bold leading-[26px]">{distanceToChannelM != null ? `${fmtPt(distanceToChannelM, 0)} m` : '—'}</div>
-          <div className="text-[11px] leading-[14px] text-muted-foreground">até o canal</div>
-        </div>
-      </div>
-      <div role="note" data-testid="tide-datum-notice" className="flex gap-2 rounded-[10px] border border-warning p-2.5 text-[12px] leading-4">
-        <TriangleAlert className="mt-px size-4 shrink-0 text-warning" aria-hidden="true" />
-        <span>A cota está no datum vertical do MDT (não confirmado) e não é comparável ao nível da maré (NR/DHN) até haver referência vertical decidida (ADR 0009).</span>
-      </div>
+    <Panel aria-label="Água e tempo agora" data-testid="terrain-facts">
+      <PanelTitle>Água e tempo agora</PanelTitle>
+      <dl className="m-0 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {waterWeatherTiles(point, rain, terrain).map((t) => (
+          <div key={t.label} className="flex flex-col gap-0.5 rounded-xl bg-muted p-2.5" data-testid="water-tile">
+            <dt className="text-[11px] leading-[14px] text-muted-foreground">{t.label}</dt>
+            <dd className={`m-0 font-mono text-[17px] font-bold leading-[22px] ${t.tone ?? 'text-foreground'}`}>{t.value}</dd>
+            <dd className="m-0 text-[11px] leading-[14px] text-muted-foreground">{t.sub}</dd>
+          </div>
+        ))}
+      </dl>
     </Panel>
   );
 };

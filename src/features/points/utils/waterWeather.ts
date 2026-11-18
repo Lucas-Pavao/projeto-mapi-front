@@ -16,7 +16,17 @@ function nowTile(rain: RainCandidates | undefined, fallback: Tile): Tile {
   return { label: 'Chuva agora', value: `${num(rain.valueMm, 1)} mm/h`, sub: `${used.name} · ${distanceText(used.distanceM)}`, tone: rain.valueMm >= 25 ? 'text-risk-moderate-text' : undefined };
 }
 
-export function waterWeatherTiles(point: FloodPointResponseDTO | undefined, rain?: RainCandidates): Tile[] {
+export type TerrainStatus = 'loading' | 'error' | 'no_data' | 'ready';
+export interface TerrainInput { status: TerrainStatus; streetElevationM?: number | null }
+
+const terrainValue = (t: TerrainInput | undefined, elev: number | null, digits: number) => (elev == null ? '—' : `${num(elev, digits)} m`);
+/** A cota está no datum do MDT, não comparável à maré (ADR 0009): o aviso fica no próprio bloco. */
+const terrainSub = (t: TerrainInput | undefined, elev: number | null) =>
+  elev != null ? 'MDT PE3D · não comparar com maré' : t?.status === 'loading' ? 'carregando' : t?.status === 'error' ? 'terreno indisponível' : 'sem dado de terreno';
+
+export function waterWeatherTiles(point: FloodPointResponseDTO | undefined, rain?: RainCandidates, terrain?: TerrainInput): Tile[] {
+  const elev = terrain?.status === 'ready' ? (terrain.streetElevationM ?? null) : null;
+  const dist = point?.distanceToChannelM ?? null;
   const d = point?.liveData;
   const agg = d?.historicalAggregates;
   const rainUnit = d?.unitPrecipitation ?? 'mm';
@@ -30,7 +40,7 @@ export function waterWeatherTiles(point: FloodPointResponseDTO | undefined, rain
     { label: 'Chuva 24 h', value: withUnit(agg?.rain24h, 'mm'), sub: rainSrc },
     { label: 'Maré', value: withUnit(tide, d?.unitTide ?? point?.tideUnit ?? 'm', 2), sub: tide == null ? 'sem leitura' : 'tábua da DHN (NR)' },
     { label: 'Rio', value: withUnit(d?.waterLevel, d?.unitWaterLevel ?? 'm', 2), sub: `${d?.waterLevel == null ? 'sem leitura' : 'nível mais recente'} · fora do modelo` },
-    { label: 'Temperatura', value: withUnit(d?.temperature, '°C'), sub: d?.humidity == null ? 'sem leitura' : `umidade ${Math.round(d.humidity)}%` },
-    { label: 'Ondas', value: withUnit(d?.waveHeight, d?.unitWave ?? 'm'), sub: d?.windSpeed == null ? 'sem leitura' : `vento ${Math.round(d.windSpeed)} ${d.unitWindSpeed ?? 'km/h'}` },
+    { label: 'Cota da rua', value: terrainValue(terrain, elev, 2), sub: terrainSub(terrain, elev) },
+    { label: 'Até o canal', value: dist == null ? '—' : `${num(dist, 0)} m`, sub: dist == null ? 'sem leitura' : 'PE3D' },
   ];
 }

@@ -6,19 +6,20 @@ import { bandsOf, chartWindow, probabilityRuns, toArea, toPoints, VB_H, VB_W, xO
 import type { PredictionSummary } from '../schemas/prediction.schema';
 
 /**
- * Probabilidade das últimas 9 h e das próximas 3 h, em escala de raiz quadrada, com as faixas dos limiares que a API
+ * Probabilidade das últimas 9 h e das próximas X h (horizonHours), em escala de raiz quadrada, com as faixas dos limiares que a API
  * enviou (`riskThresholds`) e a marca "agora". Sem limiares não há faixa nem classe. UNKNOWN quebra a linha: nunca vira 0 %.
  */
-export const ProbabilityChart: React.FC<{ items: PredictionSummary[]; now: number; latest: PredictionSummary | null; thresholds?: RiskThresholds | null }> = ({ items, now, latest, thresholds }) => {
-  const w = chartWindow(now);
+export const ProbabilityChart: React.FC<{ items: PredictionSummary[]; now: number; latest: PredictionSummary | null; thresholds?: RiskThresholds | null; horizonHours?: number | null }> = ({ items, now, latest, thresholds, horizonHours }) => {
+  const fut = horizonHours && horizonHours > 0 ? horizonHours : 3;
+  const w = chartWindow(now, 9, fut);
   const runs = probabilityRuns(items, w).filter((r) => r.points.length > 0);
   const nowX = xOf(now, w);
   const showDot = latest && latest.riskLevel !== 'UNKNOWN' && latest.probability != null;
   const ticks = [0, 1, 2, 3, 4].map((i) => formatHoraCheia(w.t0 + ((w.t1 - w.t0) * i) / 4));
   const b = bandsOf(thresholds);
   const label = thresholds
-    ? `Probabilidade das últimas 9 h e das próximas 3 h, em escala de raiz quadrada, com os limiares do modelo: moderado a partir de ${pctTxt(thresholds.medium)}, alto a partir de ${pctTxt(thresholds.high)}`
-    : 'Probabilidade das últimas 9 h e das próximas 3 h, em escala de raiz quadrada, sem limiares de risco disponíveis';
+    ? `Probabilidade das últimas 9 h e das próximas ${fut} h, em escala de raiz quadrada, com os limiares do modelo: moderado a partir de ${pctTxt(thresholds.medium)}, alto a partir de ${pctTxt(thresholds.high)}`
+    : `Probabilidade das últimas 9 h e das próximas ${fut} h, em escala de raiz quadrada, sem limiares de risco disponíveis`;
   return (
     <div className="relative min-h-[140px] flex-1" data-testid="probability-chart">
       <svg

@@ -84,11 +84,11 @@ export const PointAlertPanel: React.FC<Props> = ({ alerta, pointName, isLoading 
         </p>
       )}
       <div data-testid={`alerta-rain-${alerta.rainAlert}`} className={cn('rounded-lg border p-2.5', tone[alerta.rainAlert])}>
-        <p className="m-0 flex items-center gap-1.5 text-sm font-bold"><CloudRain className="size-4" aria-hidden="true" /> {rainTitle(alerta)}</p>
+        <p className="m-0 flex items-center gap-1.5 text-[13px] font-bold"><CloudRain className="size-4" aria-hidden="true" /> {rainTitle(alerta)}</p>
         <p className="m-0 text-[13px] leading-[18px] text-foreground">{rainMessage(alerta, pointName)}</p>
         <p className="m-0 mt-1 text-[11px] text-muted-foreground">
           Chuva medida nos últimos 10 min: <span className="font-mono">{alerta.rainTeMm != null ? `${alerta.rainTeMm.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mm` : '—'}</span>
-          {age ? ` · ${age}` : ''}
+          {age ? ` · ${age}` : alerta.rainTeMm == null ? ' · nenhuma leitura válida' : ''}
         </p>
         {alerta.probForte1h != null && <ProbBar prob={alerta.probForte1h} probOn={alerta.probOn} />}
       </div>
@@ -98,7 +98,7 @@ export const PointAlertPanel: React.FC<Props> = ({ alerta, pointName, isLoading 
           {alerta.pointFlood === 'PROVAVEL' ? 'Alagamento provável' : 'Nível do ponto'}
         </p>
         <p className="m-0 text-[13px] leading-[18px]">{floodMessage(alerta, pointName)}</p>
-        {alerta.pointFlood !== 'SEM_DADO' && band && <p className="m-0 text-[11px] text-muted-foreground">{band}</p>}
+        {alerta.pointFlood !== 'SEM_DADO' && band && <p className="sr-only">{band}</p>}
         {alerta.pointFlood !== 'SEM_DADO' && alerta.hNowCm != null && <BucketRule a={alerta} hNowCm={alerta.hNowCm} />}
         <p data-testid="alerta-modelo-fisico" className="m-0 mt-1 inline-flex items-center gap-1 rounded border border-warning/50 bg-warning/10 px-1.5 py-0.5 text-[11px] font-bold text-warning">
           {alerta.physicalModelLabel ?? PHYSICAL_MODEL_LABEL}

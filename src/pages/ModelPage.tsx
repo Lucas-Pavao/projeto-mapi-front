@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { EmptyState, QueryState } from '@/components/ui/query-state';
 import { useModelEvaluation } from '@/features/model/hooks/useModelEvaluation';
 import { EvaluationView, ModelHeader } from '@/features/model/components/EvaluationView';
@@ -20,68 +21,85 @@ const CARD = loadModelCard();
 const CARD_V3 = loadModelCardV3();
 const RAIN_CARD = loadRainCard();
 
-type Tab = 'v3' | 'chuva' | 'alerta' | 'v2' | 'f1';
+type Tab = 'v3' | 'chuva' | 'alerta' | 'legacy';
+type Legacy = 'xgb' | 'f1';
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'v3', label: 'v2 × v3 · rótulo sintético' },
   { id: 'chuva', label: 'Previsão de chuva · dado medido' },
   { id: 'alerta', label: 'Alerta por ponto · conferência' },
-  { id: 'v2', label: 'xgb_v2 · rótulo sintético' },
-  { id: 'f1', label: 'F1 · balde × rótulo real' },
+  { id: 'legacy', label: 'xgb_v2 e F1' },
 ];
+const seg = 'h-8 cursor-pointer rounded-lg border-0 px-3 text-xs font-bold';
 
 const Tabs: React.FC<{ tab: Tab; onTab: (t: Tab) => void; admin: boolean }> = ({ tab, onTab, admin }) => (
   <div role="tablist" aria-label="Avaliações" className="flex shrink-0 gap-0.5 self-start rounded-[10px] bg-muted p-1 [header_&]:self-center">
     {/* Alerta por ponto em modo sombra: só ADMIN (ADR 0026 da API). */}
     {TABS.filter((t) => admin || t.id !== 'alerta').map((t) => (
       <button key={t.id} id={`tab-${t.id}`} type="button" role="tab" aria-selected={tab === t.id} aria-controls="model-panel" onClick={() => onTab(t.id)}
-        className={cn('h-8 cursor-pointer rounded-lg border-0 px-3 text-xs font-bold', tab === t.id ? 'bg-card text-foreground' : 'bg-transparent text-muted-foreground')}>
+        className={cn(seg, tab === t.id ? 'bg-card text-foreground' : 'bg-transparent text-muted-foreground')}>
         {t.label}
       </button>
     ))}
   </div>
 );
 
-const F1Tab: React.FC = () => {
+/** Aba "xgb_v2 e F1": no lugar das quatro abas, a volta para o v3 e a troca entre as duas avaliações antigas (como na referência). */
+const LegacyNav: React.FC<{ view: Legacy; onView: (v: Legacy) => void; onBack: () => void }> = ({ view, onView, onBack }) => (
+  <div role="group" aria-label="Modelo anterior" className="flex shrink-0 gap-0.5 self-start rounded-[10px] bg-muted p-1 [header_&]:self-center">
+    {/* Na F1 a referência tira a volta para caber o selo e os conjuntos de positivos na mesma linha; ela volta pelo xgb_v2. */}
+    {view === 'xgb' && <button type="button" onClick={onBack} className={cn(seg, 'inline-flex items-center gap-1 bg-transparent text-muted-foreground')}><ArrowLeft className="size-3.5" aria-hidden="true" />Modelo em produção (v3)</button>}
+    {([['xgb', 'xgb_v2 · rótulo sintético'], ['f1', 'F1 · balde × rótulo real']] as const).map(([id, label]) => (
+      <button key={id} type="button" aria-pressed={view === id} onClick={() => onView(id)} className={cn(seg, view === id ? 'bg-card text-foreground' : 'bg-transparent text-muted-foreground')}>{label}</button>
+    ))}
+  </div>
+);
+
+const F1Tab: React.FC<{ nav: React.ReactNode }> = ({ nav }) => {
   const query = useModelEvaluation();
   const unavailable = query.isError && httpStatus(query.error) === 503;
   const hasContent = query.data !== undefined && Object.keys(query.data.result).length > 0;
   return (
     <>
-      {!hasContent && <ModelHeader subtitle={SUBTITLE} />}
+      {!hasContent && <ModelHeader subtitle={SUBTITLE} nav={nav} />}
       {unavailable ? (
         <EmptyState title="Avaliação indisponível." hint="O servidor não entrega o arquivo quando ele está ausente ou o hash não confere. Avise a equipe técnica." />
       ) : (
         <QueryState query={query} what="a avaliação" isEmpty={(d) => Object.keys(d.result).length === 0} emptyTitle="A avaliação veio vazia.">
-          {(d) => <EvaluationView evaluation={d} result={parseEvaluationResult(d.result)} />}
+          {(d) => <EvaluationView evaluation={d} result={parseEvaluationResult(d.result)} nav={nav} />}
         </QueryState>
       )}
     </>
   );
 };
 
+const LOGISTIC = 'logística';
+
 export const ModelPage: React.FC = () => {
   const [tab, setTab] = useState<Tab>('v3');
+  const [legacy, setLegacy] = useState<Legacy>('xgb');
   const { user } = useAuth();
   const admin = hasRole(parseRole(user?.role), 'ADMIN');
+  const v3Kind = CARD_V3?.model === 'logistica' ? LOGISTIC : (CARD_V3?.model ?? 'modelo');
   const title = tab === 'alerta' ? 'Alerta por ponto · em teste' : tab === 'chuva' ? `Previsão de chuva · ${RAIN_CARD?.modelVersion ?? 'rain_v1'}` : tab === 'v3' ? `Modelo em produção · ${CARD_V3?.modelVersion ?? 'v3'}` : `Modelo anterior · ${CARD?.modelVersion ?? 'xgb_v2'}`;
   const subtitle = tab === 'alerta' ? 'Conferência diária dos alertas da véspera contra a chuva medida (Cemaden) · modo sombra' : tab === 'chuva' ? 'Chuva das próximas 1, 3 e 6 h no ponto · conferida todo dia contra a chuva medida (Cemaden)' : tab === 'v3'
-    ? `Alagamento nas próximas ${CARD_V3?.horizonHours ?? 6} h · chuva medida (Cemaden) · v2 ao lado para comparar`
-    : 'Chuva medida (Cemaden) · limiares escolhidos na validação · dados do cartão do modelo';
+    ? `Risco de alagamento nas próximas ${CARD_V3?.horizonHours ?? 6} h · ${v3Kind}${CARD_V3?.calibration.adopted ? ' calibrada' : ''} · limiares por orçamento de dias de alerta`
+    : 'Em uso até 16/11 · chuva medida (Cemaden) · limiares escolhidos na validação';
+  const nav = tab === 'legacy' ? <LegacyNav view={legacy} onView={setLegacy} onBack={() => setTab('v3')} /> : <Tabs tab={tab} onTab={setTab} admin={admin} />;
+  const f1 = tab === 'legacy' && legacy === 'f1';
   return (
     <div className="flex w-full flex-col gap-4 p-4 lg:min-h-full">
-      {tab !== 'f1' && (
+      {!f1 && (
         <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5">
           <div className="min-w-0 flex-1">
             <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">{title}</h1>
             <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">{subtitle}</p>
           </div>
           {/* Protótipo (ModeloV2): as abas ficam no cabeçalho, à direita. */}
-          <Tabs tab={tab} onTab={setTab} admin={admin} />
+          {nav}
         </header>
       )}
-      {tab === 'f1' && <Tabs tab={tab} onTab={setTab} admin={admin} />}
       <div id="model-panel" role="tabpanel" aria-labelledby={`tab-${tab}`} className="flex min-h-0 flex-1 flex-col gap-4">
-        {tab === 'f1' ? <F1Tab />
+        {f1 ? <F1Tab nav={nav} />
           : tab === 'alerta' && admin ? <AlertaConferenciaPanel />
           : tab === 'chuva' ? (RAIN_CARD ? <RainForecastView card={RAIN_CARD} /> : <EmptyState title="Cartão do modelo de chuva inválido." hint="O arquivo rain_v1_card.json não bate com o contrato. Avise a equipe técnica." />)
           : tab === 'v3' ? (CARD && CARD_V3 ? <CompareV2V3 v2={CARD} v3={CARD_V3} /> : <EmptyState title="Cartão do modelo inválido." hint="v3_model_card.json ou xgb_v2_model_card.json não bate com o contrato. Avise a equipe técnica." />)

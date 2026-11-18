@@ -13,8 +13,7 @@ import { usePoint } from '@/features/points/hooks/usePoint';
 import { PointHeader } from '@/features/points/components/PointHeader';
 import { PointList } from '@/features/points/components/PointList';
 import { ProbabilityChart } from '@/features/points/components/ProbabilityChart';
-import { ContributorsPanel, TerrainPanel, WaterWeatherPanel } from '@/features/points/components/PointPanels';
-import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
+import { ContributorsPanel, WaterWeatherPanel } from '@/features/points/components/PointPanels';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
 import { RainCandidatesPanel } from '@/features/points/components/RainCandidatesPanel';
 import { thresholdReason } from '@/components/risk/provenance';
@@ -55,18 +54,18 @@ export const PointPage: React.FC = () => {
   const thresholds = [...items].reverse().find((i) => i.riskThresholds)?.riskThresholds ?? fp?.riskThresholds ?? null;
   const modelInfo = { trainingData: latest?.trainingData ?? fp?.trainingData, syntheticWarning: latest?.syntheticWarning ?? fp?.syntheticWarning };
   const reason = latest && !unknown ? thresholdReason(latest.riskLevel, latest.probability, thresholds) : null;
+  const horizon = latest?.horizonHours ?? fp?.horizonHours ?? null;
   const pct = latest ? formatProbability(latest.riskLevel, latest.probability) : null;
   return (
     <PageFrame className="lg:flex-row">
       <PointList points={all.data} current={slug} />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr_1fr] lg:overflow-y-auto">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-12 lg:grid-rows-[auto_minmax(0,1fr)_minmax(0,1fr)] lg:overflow-y-auto">
         <div className="lg:col-span-12">
           <QueryState query={point} what="o ponto">
             {(pt) => (
               <>
                 {!pt.active && <p role="status" className="mb-4 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-body text-warning">Ponto desativado: sem previsões novas.</p>}
-                <PointHeader point={pt} prediction={latest} />
-                <SyntheticWarning prediction={modelInfo} className="mt-3 text-[13px] leading-[18px]" />
+                <PointHeader point={pt} prediction={latest} modelInfo={modelInfo} />
               </>
             )}
           </QueryState>
@@ -75,13 +74,13 @@ export const PointPage: React.FC = () => {
           <>
             <Panel aria-label="Probabilidade ao longo do dia" className="min-h-[300px] lg:col-span-7">
               <div className="flex items-baseline justify-between">
-                <PanelTitle>Probabilidade de alagamento (próximas 3 h)</PanelTitle>
+                <PanelTitle>{horizon != null ? `Probabilidade de alagamento (próximas ${horizon} h)` : 'Probabilidade de alagamento'}</PanelTitle>
                 <span className={cn('font-mono text-[28px] font-extrabold leading-8', latest ? getRiskVisual(latest.riskLevel).text : 'text-muted-foreground')}>{pct ?? '—'}</span>
               </div>
               {series.isError ? (
                 <p role="alert" className="m-0 flex-1 text-[13px] text-warning">Não foi possível carregar as previsões. Confira a conexão e recarregue.</p>
               ) : (
-                <ProbabilityChart items={items} now={now} latest={latest} thresholds={thresholds} />
+                <ProbabilityChart items={items} now={now} latest={latest} thresholds={thresholds} horizonHours={horizon} />
               )}
               <p className="m-0 text-[13px] leading-[18px]">
                 {latest ? (
@@ -97,8 +96,7 @@ export const PointPage: React.FC = () => {
             </Panel>
             <div className="flex min-h-0 flex-col lg:col-span-5"><ContributorsPanel contributors={fp?.contributors} imputed={fp?.imputedFeatures} unknown={unknown} /></div>
             <div className="flex flex-col lg:col-span-7"><WaterWeatherPanel point={p} rain={rain.data} /></div>
-            <div className="flex flex-col lg:col-span-5"><TerrainPanel slug={p.slug} distanceToChannelM={p.distanceToChannelM} /></div>
-            <div className="flex flex-col lg:col-span-12"><RainCandidatesPanel query={rain} /></div>
+            <div className="flex flex-col lg:col-span-5"><RainCandidatesPanel query={rain} /></div>
             {items.length > 0 && <HistoricoAcessivel items={items} />}
           </>
         )}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
@@ -17,7 +17,9 @@ vi.mock('@/components/ui/map', () => ({
 }));
 import { MyStreetPage } from './MyStreetPage';
 
+const pontos = http.get('/api/pontos', () => HttpResponse.json([]));
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeEach(() => server.use(pontos));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
@@ -30,7 +32,7 @@ type Fail = (e: { code: number; PERMISSION_DENIED: 1; POSITION_UNAVAILABLE: 2; T
 const geo = (impl: (ok: Ok, fail: Fail) => void) => vi.stubGlobal('navigator', { geolocation: { getCurrentPosition: impl } });
 const here = () => geo((ok) => ok({ coords: { latitude: -8.057384, longitude: -34.8771999 } }));
 const denied = (code: number) => geo((_ok, fail) => fail({ code, PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 }));
-const go = () => fireEvent.click(screen.getByRole('button', { name: 'Usar minha localização' }));
+const go = () => fireEvent.click(screen.getByRole('button', { name: 'Onde estou' }));
 const risk = (nearestPoint: unknown, extra: Record<string, unknown> = {}) => http.get('/api/public/risk', () => HttpResponse.json({ nearestPoint, rainLastHourMm: 3.2, rainStationId: 'P1', modelValidationStatus: 'NOT_VALIDATED', meaning: RISK_MEANING.MEDIUM, ...extra }));
 const pt = (over: Record<string, unknown>) => ({ slug: 's', name: 'Sintético: ponto', distanceM: 300, riskLevel: 'MEDIUM', issuedAt: '2026-10-21T15:00:00Z', validUntil: null, degradationReason: null, ...over });
 
@@ -44,6 +46,12 @@ describe('aviso público (pergunta 52)', () => {
 });
 
 describe('MyStreetPage', () => {
+  it('traz os atalhos de emergência e de relato, sem prometer busca por endereço', () => {
+    renderPage(<MyStreetPage />);
+    expect(screen.getByRole('link', { name: 'Emergência: 199' })).toHaveAttribute('href', 'tel:199');
+    expect(screen.getByRole('link', { name: 'Está alagado aqui? Avise' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
   it('estado inicial traz o aviso fixo e não consulta nada', () => {
     renderPage(<MyStreetPage />);
     expect(screen.getByText('Informe onde você está.')).toBeInTheDocument();

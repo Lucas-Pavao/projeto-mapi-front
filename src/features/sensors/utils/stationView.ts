@@ -99,3 +99,14 @@ export const sourceLabel = (s: StationHour['usedSource']): string => (s === 'CEM
 export function hourlyCsv(hours: readonly StationHour[]): string {
   return ['hora_fim_utc;valor_mm;fonte_usada;ped_mm;ao_vivo_mm;divergente', ...hours.map((h) => [h.hourEndUtc, h.valueMm ?? '', h.usedSource ?? '', h.pedMm ?? '', h.liveMm ?? '', h.divergent ? 'sim' : 'nao'].join(';'))].join('\n');
 }
+
+/** Últimas horas com valor ao vivo ou PED (as mais recentes primeiro), para a tabela "ao vivo × PED". */
+export function recentComparedHours(hours: readonly StationHour[], max = 5): StationHour[] {
+  return hours.filter((h) => h.liveMm != null || h.pedMm != null).slice(-max).reverse();
+}
+
+/** Soma das horas com valor usado; null quando nenhuma hora tem valor (nunca 0 inventado). */
+export function accumulated(hours: readonly StationHour[]): number | null {
+  const v = hours.filter((h) => h.valueMm != null);
+  return v.length === 0 ? null : v.reduce((a, h) => a + (h.valueMm as number), 0);
+}

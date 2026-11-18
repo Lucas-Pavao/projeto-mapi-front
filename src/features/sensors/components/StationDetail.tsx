@@ -9,8 +9,15 @@ import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { MONTH_STATUS_TEXT } from '@/features/points/utils/rainCandidates';
 import { cn } from '@/lib/utils';
 import { CEMADEN_ATTRIBUTION, type CanonicalStation, type StationHourly } from '../schemas/station.schema';
-import { REASON_LONG, divergentHours, hourlyCsv, quarantineTotal, sourceLabel } from '../utils/stationView';
+import { REASON_LONG, accumulated, recentComparedHours, hourlyCsv, quarantineTotal, sourceLabel } from '../utils/stationView';
 import { StationHourlyChart } from './StationHourlyChart';
+
+const Card: React.FC<{ title: string; sub: string; value: string; tone?: string; strong?: boolean; muted?: boolean }> = ({ title, sub, value, tone, strong, muted }) => (
+  <div className={cn('flex items-center justify-between gap-3 rounded-[10px] border px-3 py-2.5', tone ?? (strong ? 'border-primary' : 'border-border'), muted && 'bg-muted')}>
+    <span className="flex min-w-0 flex-col"><span className="text-[13px] font-semibold leading-[18px]">{title}</span><span className="text-[11px] leading-[14px] text-muted-foreground">{sub}</span></span>
+    <span className="shrink-0 font-mono text-[15px] font-bold">{value}</span>
+  </div>
+);
 
 const MONTH_TONE = { OK: 'border-success', UNCHECKED: 'border-warning', FAIL: 'border-destructive', OFFLINE: 'border-border' } as const;
 
@@ -20,7 +27,8 @@ export const StationDetail: React.FC<{ station: CanonicalStation; hourly: UseQue
   const last = hours[hours.length - 1];
   const kinds = sourceKindsOf(st.sources);
   const month = st.monthCheck;
-  const divs = divergentHours(hours);
+  const rows = recentComparedHours(hours);
+  const acc24 = accumulated(hours);
   const tol = hourly.data?.toleranceMm ?? 0.5;
   const valueText = !last ? '—' : last.valueMm == null ? 'sem dado' : `${num(last.valueMm)} mm/h`;
   const dim = month?.status === 'FAIL' || month?.status === 'OFFLINE';
@@ -74,27 +82,35 @@ export const StationDetail: React.FC<{ station: CanonicalStation; hourly: UseQue
       </Panel>
       <Panel aria-label="Resumo" className="lg:col-span-5 lg:min-h-0 lg:overflow-y-auto">
         <PanelTitle>Duas fontes, uma estação</PanelTitle>
-        {month && <p className="m-0 rounded-[10px] border border-border px-3 py-2 text-[12px] leading-4">{month.reasons.length > 0 ? month.reasons.map((r) => REASON_LONG[r] ?? r).join('. ') : month.status === 'OK' ? 'Aprovada na checagem espacial do mês' : month.status === 'OFFLINE' ? 'Sem nenhuma hora com valor no mês' : 'Sem checagem neste mês'}{month.ruleVersion ? ` (${month.ruleVersion})` : ''}</p>}
-        <div className="flex items-center justify-between rounded-[10px] border border-border px-3 py-2.5"><span className="text-[13px] font-semibold">Divergências</span><span className="font-mono text-[15px] font-bold">{st.divergenceCount ?? '—'}</span></div>
-        <div className="rounded-[10px] border border-border px-3 py-2.5" data-testid="quarantine">
-          <div className="flex items-center justify-between"><span className="text-[13px] font-semibold">Quarentena</span><span className="font-mono text-[15px] font-bold">{quarantineTotal(st)}</span></div>
+        <Card title="Ao vivo agora" sub="CEMADEN · leitura ao vivo" value={last?.liveMm != null ? `${num(last.liveMm)} mm/h` : 'sem dado'} strong={last?.usedSource === 'CEMADEN'} />
+        <Card title="PED agora" sub="CEMADEN_PED · bloco de 10 min" value={last?.pedMm != null ? `${num(last.pedMm)} mm/h` : 'ainda não chegou'} strong={last?.usedSource === 'CEMADEN_PED'} />
+        {month && (
+          <Card title="Checagem do mês" sub={`${month.reasons.length > 0 ? month.reasons.map((r) => REASON_LONG[r] ?? r).join('. ') : month.status === 'OK' ? 'Aprovada na checagem espacial do mês' : month.status === 'OFFLINE' ? 'Sem nenhuma hora com valor no mês' : 'Sem checagem neste mês'}${month.ruleVersion ? ` (${month.ruleVersion})` : ''}`} value={month.status === 'OK' ? 'OK' : MONTH_STATUS_TEXT[month.status]} tone={MONTH_TONE[month.status]} />
+        )}
+        <div className="rounded-[10px] border border-warning px-3 py-2.5" data-testid="quarantine">
+          <div className="flex items-center justify-between"><span className="text-[13px] font-semibold">Quarentena hoje</span><span className="font-mono text-[15px] font-bold">{quarantineTotal(st)}</span></div>
           {Object.entries(st.quarantine).map(([k, v]) => <div key={k} className="flex justify-between text-[11px] text-muted-foreground"><span className="font-mono">{k}</span><span className="font-mono">{v}</span></div>)}
         </div>
-        {divs.length > 0 && (
+        <Card title="Acumulado 24 h" sub="soma das leituras usadas" value={acc24 == null ? '—' : `${num(acc24)} mm`} muted />
+        <PanelTitle className="mt-1.5">Diferença por hora (ao vivo × PED)</PanelTitle>
+        {rows.length === 0 ? <p className="m-0 text-[12px] text-muted-foreground">Sem horas com leitura ao vivo ou PED.</p> : (
           <>
-            <PanelTitle className="mt-1.5">Diferença por hora (ao vivo × PED)</PanelTitle>
             <table className="w-full border-collapse text-[12px]" data-testid="divergences">
-              <thead><tr className="text-muted-foreground"><th className="text-left font-bold">Hora</th><th className="text-right font-bold">Ao vivo</th><th className="text-right font-bold">PED</th><th className="text-right font-bold">Diferença</th></tr></thead>
+              <thead><tr className="text-muted-foreground"><th className="text-left font-bold">Hora</th><th className="text-right font-bold">Ao vivo</th><th className="text-right font-bold">PED</th><th className="text-right font-bold">Dif.</th></tr></thead>
               <tbody>
-                {divs.map((h) => (
-                  <tr key={h.hourEndUtc} className="font-mono">
-                    <td>{formatHoraCurta(h.hourEndUtc)}</td><td className="text-right">{num(h.liveMm)} mm</td><td className="text-right">{num(h.pedMm)} mm</td>
-                    <td className="text-right font-bold text-warning">{num(Math.abs((h.pedMm ?? 0) - (h.liveMm ?? 0)), 2)}</td>
-                  </tr>
-                ))}
+                {rows.map((h) => {
+                  const d = h.pedMm != null && h.liveMm != null ? Math.abs(h.pedMm - h.liveMm) : null;
+                  return (
+                    <tr key={h.hourEndUtc} className="font-mono">
+                      <td>{formatHoraCurta(new Date(Date.parse(h.hourEndUtc) - 3_600_000).toISOString())}–{formatHoraCurta(h.hourEndUtc)}</td>
+                      <td className="text-right">{h.liveMm != null ? `${num(h.liveMm)} mm` : '—'}</td><td className="text-right">{h.pedMm != null ? `${num(h.pedMm)} mm` : '—'}</td>
+                      <td className={cn('text-right font-bold', d != null && d > tol && 'text-warning')}>{d != null ? num(d, 2) : '—'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
-            <p className="m-0 text-[11px] leading-[15px] text-muted-foreground">Na mesma hora vale a PED. Diferença acima de {num(tol, 1)} mm vai para station_hour_divergence.</p>
+            <p className="m-0 text-[11px] leading-[15px] text-muted-foreground">Na mesma hora vale a PED. Diferença acima de {num(tol, 1)} mm vai para station_hour_divergence{st.divergenceCount != null ? ` (${st.divergenceCount} no total)` : ''}.</p>
           </>
         )}
       </Panel>

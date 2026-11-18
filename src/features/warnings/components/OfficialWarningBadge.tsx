@@ -1,6 +1,5 @@
 import React from 'react';
 import { AlertTriangle, ExternalLink } from 'lucide-react';
-import { formatRecife } from '@/features/map/utils/datetime';
 import { cn } from '@/lib/utils';
 import type { OfficialWarning } from '../schemas/officialWarning.schema';
 
@@ -14,9 +13,17 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const safeHex = (hex: string | null | undefined): string | undefined =>
   hex && HEX_COLOR.test(hex.trim()) ? hex.trim() : undefined;
 
+/** "17/11 09h00": dia/mês e hora de Recife, sem ano, como no selo da referência. */
+const stamp = (iso: string): string | null => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Recife', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d).map((x) => [x.type, x.value]));
+  return `${parts.day}/${parts.month} ${parts.hour}h${parts.minute}`;
+};
+
 const formatWindow = (fromIso: string, toIso: string): string | null => {
-  const from = formatRecife(fromIso);
-  const to = formatRecife(toIso);
+  const from = stamp(fromIso);
+  const to = stamp(toIso);
   if (!from || !to) return null;
   return `${from} → ${to}`;
 };
@@ -46,8 +53,8 @@ export const OfficialWarningBadge: React.FC<Props> = ({ warnings, className }) =
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 font-bold">
+      <div className="flex items-start justify-between gap-2">
+        <span className="inline-flex min-w-0 items-center gap-1.5 text-[13px] leading-[18px] font-bold">
           <span
             aria-hidden="true"
             className="inline-block size-2.5 shrink-0 rounded-full border border-border"
@@ -56,7 +63,7 @@ export const OfficialWarningBadge: React.FC<Props> = ({ warnings, className }) =
           <AlertTriangle className="size-3.5 shrink-0 text-warning" aria-hidden="true" />
           <span>Aviso oficial do INMET vigente</span>
         </span>
-        <span className="rounded bg-card px-1.5 py-0.5 font-semibold text-foreground">
+        <span className="max-w-[38%] shrink-0 rounded-md bg-card px-2 py-1 text-[13px] leading-[18px] font-semibold text-foreground">
           {primary.severity}
           {extraCount > 0 && ` (+${extraCount})`}
         </span>

@@ -7,7 +7,7 @@ import type { Kind, ListItem } from '../utils/sensorView';
 export type Filter = Kind | 'all' | 'problem';
 
 export const FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
-  { value: 'all', label: 'Todos' },
+  { value: 'all', label: 'Todas' },
   { value: 'chuva', label: 'Chuva' },
   { value: 'rio', label: 'Rio' },
   { value: 'mare', label: 'Maré' },
@@ -21,14 +21,16 @@ interface Props {
   onFilter: (f: Filter) => void;
   onSelect: (key: string) => void;
   online: string;
+  /** Quantas estações cada filtro mostra (o rótulo leva o número). */
+  counts?: Record<Filter, number>;
 }
 
 /** Lista lateral: filtros em pílula e uma linha por estação (ponto tracejado e texto âmbar quando sem resposta). */
-export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter, onSelect, online }) => (
-  <aside aria-label="Sensores" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:w-[340px]">
+export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter, onSelect, online, counts }) => (
+  <aside aria-label="Estações" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:w-[340px]">
     <div className="flex flex-col gap-2.5 border-b border-border p-3.5">
       <div className="flex items-baseline justify-between">
-        <h1 className="m-0 text-[20px] font-extrabold leading-[26px]">Sensores</h1>
+        <h1 className="m-0 text-[20px] font-extrabold leading-[26px]">Estações</h1>
         <span className="text-[12px] text-muted-foreground" aria-live="polite">{online}</span>
       </div>
       <div role="radiogroup" aria-label="Filtrar por tipo" className="flex flex-wrap gap-1.5">
@@ -43,7 +45,7 @@ export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter,
               onClick={() => onFilter(f.value)}
               className={cn('h-11 cursor-pointer rounded-full border px-3 text-[12px] font-bold leading-4 md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-transparent text-foreground')}
             >
-              {f.label}
+              {f.label}{counts ? ` ${counts[f.value]}` : ''}
             </button>
           );
         })}

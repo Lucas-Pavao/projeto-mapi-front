@@ -18,10 +18,10 @@ const CELL: Record<MonthStatus, { Icon: ComponentType<{ className?: string }>; c
 const monthLabel = (iso: string) => new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' }).format(new Date(iso)).replace('.', '');
 
 /** Grade estação × mês da checagem espacial (regra vigente do ADR 0022). Ícone e texto acompanham a cor. */
-export const MonthGrid: React.FC = () => {
+export const MonthGrid: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const query = useMonthChecks();
   return (
-    <section aria-label="Checagem das estações por mês" className="flex min-w-0 flex-col gap-2 rounded-2xl border border-border bg-card p-4" data-testid="month-grid">
+    <section aria-label="Checagem das estações por mês" className={cn('flex min-w-0 flex-col gap-2', !embedded && 'rounded-2xl border border-border bg-card p-4')} data-testid="month-grid">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="m-0 text-[12px] font-bold uppercase leading-4 tracking-[0.06em] text-muted-foreground">Estações Cemaden PED × mês</h2>
         {query.data?.ruleVersion && <span className="font-mono text-[11px] text-muted-foreground">regra {query.data.ruleVersion}</span>}

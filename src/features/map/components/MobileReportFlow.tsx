@@ -137,7 +137,9 @@ export const MobileReportFlow: React.FC<Props> = ({ fallbackPoint, points, send,
               ) : (
                 <div className="flex h-full items-center justify-center bg-muted text-sm text-muted-foreground">{gps === 'locating' ? 'Obtendo localização…' : 'Mapa indisponível sem localização'}</div>
               )}
-              {pos && <span aria-hidden="true" className="absolute left-1/2 top-1/2 -ml-2.5 -mt-2.5 size-5 rounded-full border-4 border-card bg-primary" />}
+              {pos && <span aria-hidden="true" className="absolute left-1/2 top-1/2 -ml-[17px] -mt-[17px] flex size-[34px] items-center justify-center rounded-full border-2 border-primary bg-primary/20">
+                  <span className="size-5 rounded-full border-4 border-card bg-primary" />
+                </span>}
             </div>
             <div role="status" className="flex items-center gap-2.5 rounded-xl bg-muted p-3 text-sm">
               <span aria-hidden="true" className={cn('size-2.5 flex-none rounded-full', gpsDot)} />

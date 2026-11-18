@@ -13,9 +13,11 @@ export function stateMeta(c: Pick<StationCardData, 'state' | 'pedOnly' | 'monthC
     case 'NO_RESPONSE': return { label: 'Sem resposta', tone: 'warning', dashed: true };
     case 'GAP_NOW': return { label: 'Lacuna agora', tone: 'warning', dashed: true };
     case 'FAIL_MONTH': return { label: 'Reprovada no mês · fora da chuva do ponto', tone: 'destructive', dashed: false };
-    case 'DIVERGENT': return { label: 'Fontes divergem', tone: 'warning', dashed: false };
-    case 'PEAK_REMOVED': return { label: 'Pico isolado removido', tone: 'warning', dashed: false };
-    case 'UNCHECKED': return { label: c.monthCheck ? 'Checagem inconclusiva' : 'Mês sem checagem', tone: 'muted', dashed: false };
+    // Divergência, pico removido e checagem inconclusiva não tiram a estação da chuva do ponto: o selo segue dizendo as fontes e o aviso (abaixo) diz o que houve.
+    case 'UNCHECKED': if (!c.monthCheck) return { label: 'Mês sem checagem', tone: 'muted', dashed: false };
+    // fallthrough
+    case 'DIVERGENT':
+    case 'PEAK_REMOVED':
     case 'NORMAL': return c.pedOnly ? { label: 'Só PED · sem ao vivo', tone: 'primary', dashed: false } : { label: 'Ao vivo + PED', tone: 'success', dashed: false };
   }
 }
@@ -91,9 +93,10 @@ export const accText = (v: number | null | undefined): string => (v == null ? 'i
 export function monthText(c: StationCardData): { text: string; tone: Tone } {
   const m = c.monthCheck;
   if (!m) return { text: 'sem checagem', tone: 'muted' };
-  const reasons = m.reasons.length ? ` (${m.reasons.map((r) => REASON_TEXT[r] ?? r).join(', ')})` : '';
+  const reasons = m.reasons.length ? ` (${m.reasons.join(', ')})` : '';
   const tone: Tone = m.status === 'OK' ? 'success' : m.status === 'FAIL' ? 'destructive' : m.status === 'OFFLINE' ? 'muted' : 'warning';
-  return { text: `${MONTH_STATUS_TEXT[m.status]}${reasons}`, tone };
+  const text = { OK: 'OK', UNCHECKED: 'inconclusiva', FAIL: 'reprovada', OFFLINE: MONTH_STATUS_TEXT.OFFLINE }[m.status];
+  return { text: `${text}${reasons}`, tone };
 }
 
 export function quarantineText(q: Record<string, number>): string {
