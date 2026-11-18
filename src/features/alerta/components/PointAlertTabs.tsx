@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { hasRole, parseRole } from '@/lib/roles';
 import { useAlertaPontos } from '../hooks/useAlertaPontos';
 import { PointAlertPanel } from './PointAlertPanel';
+import { AlertChip } from './AlertChip';
 
 interface Props {
   slug: string;
@@ -16,7 +17,8 @@ interface Props {
 
 /**
  * Cartão do ponto com uma coisa só em destaque (ADR 0026): aba "Alerta" (rain_alert e point_flood) e aba
- * "Experimental" (risco do logreg_v3, rótulo sintético). Em modo sombra o alerta aparece só para ADMIN, "em teste".
+ * "Experimental" (risco do logreg_v3, rótulo sintético), com o selo do alerta em cima (o mesmo do card do mapa).
+ * Em modo sombra o alerta aparece só para ADMIN, "em teste"; visitante vê o selo "Alerta em teste".
  */
 export const PointAlertTabs: React.FC<Props> = ({ slug, pointName, experimental, fallback }) => {
   const { user } = useAuth();
@@ -28,6 +30,7 @@ export const PointAlertTabs: React.FC<Props> = ({ slug, pointName, experimental,
   const tabCls = (on: boolean) => cn('h-7 rounded-md px-2.5 text-xs font-bold', on ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted');
   return (
     <div className="flex flex-col gap-2">
+      <AlertChip alerta={q.isLoading || q.isError ? null : alerta} isAdmin={isAdmin} className="self-start" />
       <div role="tablist" aria-label="Alerta ou experimental" className="flex gap-1 self-start rounded-lg border border-border p-0.5">
         <button type="button" role="tab" id={`${id}-a`} aria-selected={tab === 'alerta'} aria-controls={`${id}-pa`} className={tabCls(tab === 'alerta')} onClick={() => setTab('alerta')}>Alerta</button>
         <button type="button" role="tab" id={`${id}-e`} aria-selected={tab === 'experimental'} aria-controls={`${id}-pe`} className={tabCls(tab === 'experimental')} onClick={() => setTab('experimental')}>Experimental</button>
@@ -39,7 +42,7 @@ export const PointAlertTabs: React.FC<Props> = ({ slug, pointName, experimental,
           ) : (
             <div data-testid="alerta-oculto" className="flex flex-col gap-2">
               <p className="m-0 rounded-lg border border-dashed border-border bg-muted p-2.5 text-xs text-muted-foreground">
-                O alerta de chuva por ponto está em teste e ainda não é oficial.
+                O alerta de chuva por ponto está em teste e ainda não é oficial. Enquanto isso, veja a chuva medida e o aviso oficial do INMET no painel "Agora na RMR".
               </p>
               {fallback}
             </div>

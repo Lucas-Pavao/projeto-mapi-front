@@ -15,6 +15,7 @@ import { MapLayerPanel } from './MapLayerPanel';
 import { MapUserIsland } from './MapUserIsland';
 import { RiskLegendControl } from './RiskLegendControl';
 import type { FloodPointResponseDTO } from '../types';
+import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 
 afterEach(cleanup);
 
@@ -22,14 +23,38 @@ const pt = (id: number, slug: string, risk: 'LOW' | 'HIGH' | 'UNKNOWN'): FloodPo
   ({ id, slug, name: `Ponto ${slug}`, latitude: -8, longitude: -34, floodPrediction: { riskLevel: risk, floodProbability: risk === 'UNKNOWN' ? null : 0.5 } }) as FloodPointResponseDTO;
 
 describe('FloodPointMarkers', () => {
-  it('mostra o risco com ícone e rótulo e pulsa só o ponto com alerta ativo', () => {
+  it('anel pelo estado do alerta: laranja ATENCAO, vermelho ALERTA e alagamento provável, cinza tracejado SEM_DADO, nenhum sem alerta', () => {
+    const al = (slug: string, over: Partial<AlertaPonto>): [string, AlertaPonto] => [slug, { slug, rainAlert: 'NENHUM', pointFlood: 'NAO', shadow: true, ...over }];
+    const alertaBySlug = new Map([
+      al('a', { rainAlert: 'ATENCAO' }), al('b', { rainAlert: 'ALERTA' }), al('c', { pointFlood: 'PROVAVEL' }), al('d', { rainAlert: 'SEM_DADO' }), al('e', {}),
+    ]);
     const { container } = render(
-      <FloodPointMarkers points={[pt(1, 'a', 'HIGH'), pt(2, 'b', 'HIGH')]} selectedFloodPointId={undefined} selectedRisk={undefined} alertSlugs={new Set(['b'])} onSelect={() => {}} />,
+      <FloodPointMarkers points={['a', 'b', 'c', 'd', 'e', 'f'].map((s, i) => pt(i + 1, s, 'HIGH'))} selectedFloodPointId={undefined} selectedRisk={undefined} alertaBySlug={alertaBySlug} onSelect={() => {}} />,
     );
-    expect(screen.getAllByRole('img', { name: 'Risco Alto' })).toHaveLength(2);
+    expect(screen.getAllByRole('img', { name: 'Risco Alto' })).toHaveLength(6);
+    const ring = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-ring]');
+    expect(ring('a')).toHaveAttribute('data-alerta-ring', 'ATENCAO');
+    expect(ring('a')?.className).toContain('border-warning');
+    expect(ring('b')?.className).toContain('border-destructive');
+    expect(ring('c')).toHaveAttribute('data-alerta-ring', 'ALERTA');
+    expect(ring('d')).toHaveAttribute('data-alerta-ring', 'SEM_DADO');
+    expect(ring('d')?.className).toContain('border-dashed');
+    expect(ring('d')?.className).not.toContain('animate-ping');
+    expect(ring('e')).toBeNull(); // sem alerta
+    expect(ring('f')).toHaveAttribute('data-alerta-ring', 'SEM_DADO'); // ADMIN, ponto sem registro: sem dado, nunca "sem alerta"
+    const tag = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-tag]');
+    expect(tag('a')).toHaveTextContent('atenção'); // cor não é o único sinal
+    expect(tag('b')).toHaveTextContent('alerta');
+    expect(tag('f')).toHaveTextContent('sem dado');
+    expect(tag('e')).toBeNull();
+    expect(container.querySelectorAll('.animate-ping')).toHaveLength(3);
     expect(screen.getByRole('button', { name: /Ponto crítico Ponto b: risco Alto, com alerta ativo/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Ponto crítico Ponto a: risco Alto\. Pressione/ })).toBeInTheDocument();
-    expect(container.querySelectorAll('.animate-ping')).toHaveLength(1);
+  });
+
+  it('visitante (sem o mapa do alerta): nenhum anel nem rótulo', () => {
+    const { container } = render(<FloodPointMarkers points={[pt(1, 'a', 'HIGH')]} selectedFloodPointId={undefined} selectedRisk={undefined} onSelect={() => {}} />);
+    expect(container.querySelector('[data-alerta-ring]')).toBeNull();
+    expect(container.querySelector('[data-alerta-tag]')).toBeNull();
   });
 
   it('o risco do status em tempo real do ponto selecionado vence o da lista', () => {

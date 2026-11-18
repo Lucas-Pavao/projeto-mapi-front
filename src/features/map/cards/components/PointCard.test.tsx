@@ -1,13 +1,19 @@
+import React from 'react';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { POINT_CARD_FIXTURES as P, pointRain, pointSeries } from '@/mocks/cards';
 import { PointCard } from './PointCard';
+import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 
 afterEach(cleanup);
 const now = Date.now();
-const show = (k: keyof typeof P, opts: { gap?: boolean; rain?: ReturnType<typeof pointRain> } = {}, onOpenAnalysis?: () => void) =>
-  render(<MemoryRouter><PointCard point={P[k]} series={pointSeries(opts.gap)} rain={opts.rain ?? pointRain()} now={now} onClose={() => {}} onOpenAnalysis={onOpenAnalysis} /></MemoryRouter>);
+/** Os testes dos 5 estados olham a aba Experimental (o risco do logreg_v3); a aba Alerta é a padrão. */
+const show = (k: keyof typeof P, opts: { gap?: boolean; rain?: ReturnType<typeof pointRain>; alerta?: boolean } = {}, onOpenAnalysis?: () => void) => {
+  const r = render(<MemoryRouter><PointCard point={P[k]} series={pointSeries(opts.gap)} rain={opts.rain ?? pointRain()} now={now} onClose={() => {}} onOpenAnalysis={onOpenAnalysis} /></MemoryRouter>);
+  if (!opts.alerta) fireEvent.click(screen.getByRole('tab', { name: 'Experimental' }));
+  return r;
+};
 
 describe('PointCard: os 5 estados', () => {
   it('1 alto: selo com porcentagem de 1 casa, por quê com limiar, o que mais pesou e aviso de sintético', () => {
@@ -70,5 +76,53 @@ describe('PointCard: os 5 estados', () => {
     show('high', {}, open);
     fireEvent.click(screen.getByRole('button', { name: 'Análise completa' }));
     expect(open).toHaveBeenCalled();
+  });
+});
+
+const al = (over: Partial<AlertaPonto> = {}): AlertaPonto => ({ slug: P.high.slug, rainAlert: 'NENHUM', pointFlood: 'NAO', shadow: true, rainTeMm: 0, hNowCm: 1, probForte1h: 0.1, probOn: 0.2, ...over });
+const card = (point: typeof P.high, extra: Partial<React.ComponentProps<typeof PointCard>> = {}) =>
+  render(<MemoryRouter><PointCard point={point} series={pointSeries()} rain={pointRain()} now={now} {...extra} /></MemoryRouter>);
+
+describe('PointCard: alerta por ponto', () => {
+  it('ADMIN: abre na aba Alerta com o chip, o painel e a borda pela cor do alerta', () => {
+    card(P.high, { isAdmin: true, alerta: al({ rainAlert: 'ATENCAO' }) });
+    expect(screen.getByRole('tab', { name: 'Alerta' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Atenção · chuva forte provável');
+    expect(screen.getByTestId('alerta-panel')).toBeInTheDocument();
+    expect(screen.getByRole('dialog').className).toContain('border-t-warning');
+    expect(screen.queryByTestId('rotulo-sintetico')).toBeNull();
+  });
+  it('ADMIN com erro ou carregando: "Alerta sem dado" tracejado, nunca "sem alerta"', () => {
+    card(P.high, { isAdmin: true, alertaError: true });
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Alerta sem dado');
+    expect(screen.getByRole('dialog').className).toContain('[border-top-style:dashed]');
+    cleanup();
+    card(P.high, { isAdmin: true, alertaLoading: true });
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Alerta sem dado');
+  });
+  it('visitante: chip "Alerta em teste", a nota do painel Agora na RMR e os 3 blocos; sem o alerta', () => {
+    card(P.high, { isAdmin: false, alerta: al({ rainAlert: 'ALERTA' }) });
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Alerta em teste');
+    expect(screen.getByTestId('alerta-oculto')).toHaveTextContent('O alerta de chuva por ponto está em teste e ainda não é oficial. Enquanto isso, veja a chuva medida e o aviso oficial do INMET no painel "Agora na RMR".');
+    expect(screen.getAllByTestId('tile')).toHaveLength(3);
+    expect(screen.queryByTestId('alerta-panel')).toBeNull();
+  });
+  it('maré de reserva: o bloco da maré diz "reserva harmônica" quando a API serve a harmônica', () => {
+    card({ ...P.high, tideSource: 'HARMONIC' }, { isAdmin: false });
+    expect(screen.getAllByTestId('tile')[2]).toHaveTextContent('maré · reserva harmônica');
+  });
+  it('Experimental: aviso sintético e o conteúdo atual do card, com a borda pelo risco', () => {
+    card(P.high, { isAdmin: true, alerta: al() });
+    fireEvent.click(screen.getByRole('tab', { name: 'Experimental' }));
+    expect(screen.getByTestId('rotulo-sintetico')).toHaveTextContent('SINTÉTICO');
+    expect(screen.getByTestId('point-reason')).toBeInTheDocument();
+    expect(screen.getByRole('dialog').className).toContain('border-t-risk-high');
+  });
+  it('UNKNOWN na aba Experimental: sem porcentagem e sem aviso sintético', () => {
+    card(P.unavailable, { isAdmin: true, alerta: al() });
+    fireEvent.click(screen.getByRole('tab', { name: 'Experimental' }));
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-state', 'UNAVAILABLE');
+    expect(screen.getByTestId('point-reason').textContent).not.toMatch(/\d%/);
+    expect(screen.queryByTestId('synthetic-warning')).toBeNull();
   });
 });

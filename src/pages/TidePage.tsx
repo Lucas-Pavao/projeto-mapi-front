@@ -7,6 +7,7 @@ import { useTideTable } from '@/features/tide/hooks/useTideTable';
 import { TideCalendar } from '@/features/tide/components/TideCalendar';
 import { TideDay } from '@/features/tide/components/TideDay';
 import { dayCurve, dayExtremes, dayPoints, daySummary, findDay, recifeParts } from '@/features/tide/utils/tideTable';
+import { SourceTag } from '@/components/risk/SourceTag';
 import { cn } from '@/lib/utils';
 
 const HARBOR = 'pe02';
@@ -51,6 +52,9 @@ export const TidePage: React.FC = () => {
         <div className="min-w-0 flex-1">
           <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Tábua de maré · Porto do Recife</h1>
           <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Porto {HARBOR} · DHN via TabuaMare · altura sobre o nível de redução · sincronizada 1× por dia</p>
+          {(table.data?.tideSource === 'HARMONIC' || table.data?.months.some((m) => m.days.some((d) => d.hours.some((h) => h.source === 'HARMONIC')))) && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-2"><SourceTag kind="TIDE_HARMONIC" data-testid="tide-source-tag" /><span className="text-xs text-muted-foreground">Sem tábua oficial do ano: previsão harmônica de reserva.</span></div>
+          )}
         </div>
         <div className="text-right">
           <div data-testid="tide-now" className={cn('font-mono text-[30px] leading-9 font-extrabold', tideNow && tideNow.v >= 2 ? 'text-warning' : 'text-foreground')}>

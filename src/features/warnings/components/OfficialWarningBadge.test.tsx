@@ -45,4 +45,19 @@ describe('OfficialWarningBadge', () => {
     const link = screen.getByRole('link', { name: /INMET/i });
     expect(link).toHaveAttribute('href', 'https://avisos.inmet.gov.br/56423');
   });
+
+  it('amarelo: severidade Perigo potencial', () => {
+    render(<OfficialWarningBadge warnings={[{ ...warning, severity: 'Perigo Potencial', colorHex: '#FFFF00' }]} />);
+    expect(screen.getByTestId('inmet-official-warning')).toHaveTextContent('Perigo Potencial');
+    expect(screen.queryByText(/\(\+/)).toBeNull();
+  });
+  it('laranja: severidade Perigo, sem "+n"', () => {
+    render(<OfficialWarningBadge warnings={[warning]} />);
+    expect(screen.getByTestId('inmet-official-warning')).toHaveTextContent(/^.*Perigo(?!.*\(\+)/);
+    expect(screen.queryByText(/\(\+/)).toBeNull();
+  });
+  it('mais de um aviso: o primeiro com (+n)', () => {
+    render(<OfficialWarningBadge warnings={[warning, { ...warning, warningId: 2 }, { ...warning, warningId: 3 }]} />);
+    expect(screen.getByTestId('inmet-official-warning')).toHaveTextContent('Perigo (+2)');
+  });
 });

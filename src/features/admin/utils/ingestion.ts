@@ -28,6 +28,9 @@ export const SOURCE_GROUPS: { id: string; name: string; what: string; members: s
     members: ['OPEN_METEO_CURRENT', 'OPEN_METEO_ARCHIVE', 'OPEN_METEO_ERA5LAND', 'OPEN_METEO_MARINE', 'OPEN_METEO'],
   },
   { id: 'TABUA', name: 'TabuaMare / DHN', what: 'Maré prevista (pe02)', members: ['TABUAMARE_PE02', 'DHN_TABUA_PE02', 'TIDE_PE02_HOURLY', 'TABUA_MARE', 'TABUA'] },
+  { id: 'INMET', name: 'INMET · avisos', what: 'Avisos oficiais vigentes', members: ['INMET_AVISOS'] },
+  { id: 'APAC_RADAR', name: 'APAC · radar', what: 'Chuva por radar', members: ['APAC_RADAR'] },
+  { id: 'TIDE_HARMONIC', name: 'Maré de reserva', what: 'Previsão harmônica (sem tábua oficial)', members: ['TIDE_HARMONIC_F41'] },
   { id: 'CKAN_RECIFE', name: 'CKAN Dados Recife', what: 'Ocorrências da Defesa Civil', members: ['CKAN_RECIFE'] },
 ];
 

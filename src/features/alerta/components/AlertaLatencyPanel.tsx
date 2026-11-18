@@ -17,7 +17,14 @@ const fmt = (s: number | null) => (s == null ? '—' : s >= 120 ? `${(s / 60).to
 
 const Table: React.FC<{ data: Latency; wet: boolean }> = ({ data, wet }) => {
   const rows = ORDER.map((k) => data.segments.find((s) => s.segment === k && s.wetHour === wet)).filter(Boolean);
-  if (rows.length === 0) return <p className="m-0 text-xs text-muted-foreground">Sem medida {wet ? 'em hora com chuva' : 'em hora seca'} no período.</p>;
+  if (rows.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground" data-testid={wet ? 'latencia-sem-chuva' : undefined}>
+        <p className="m-0">Sem medida {wet ? 'em hora com chuva' : 'em hora seca'} no período.</p>
+        {wet && <p className="m-0 mt-1">Não choveu desde a implantação: o orçamento ainda não foi medido.</p>}
+      </div>
+    );
+  }
   return (
     <table className="w-full text-xs">
       <thead><tr className="text-left text-muted-foreground"><th className="py-1">Trecho</th><th>n</th><th>Mediana</th><th>p90</th><th>Máximo</th></tr></thead>
@@ -44,14 +51,15 @@ export const AlertaLatencyPanel: React.FC = () => {
         {(d) => (
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="m-0 mb-1 text-xs font-bold">Hora com chuva (≥ 0,2 mm) · orçamento p90 &lt; {d.budgetP90Minutes} min{' '}
-                {d.withinBudgetWet == null ? '' : d.withinBudgetWet ? '· dentro' : '· FORA'}</p>
+              <p className="m-0 mb-1 text-xs font-bold">Hora com chuva · orçamento p90 &lt; {d.budgetP90Minutes} min{' '}
+                {d.withinBudgetWet == null ? '' : d.withinBudgetWet ? <span data-testid="latencia-orcamento" className="text-success">· dentro</span> : <span data-testid="latencia-orcamento" className="text-destructive">· FORA</span>}</p>
               <Table data={d} wet />
               {d.note && <p className="m-0 mt-1 text-[11px] text-warning" data-testid="latencia-nota">{d.note}</p>}
             </div>
             <div>
               <p className="m-0 mb-1 text-xs font-bold">Hora seca</p>
               <Table data={d} wet={false} />
+              <p className="m-0 mt-1 text-[11px] text-muted-foreground" data-testid="latencia-apac">O atraso está na chegada pela APAC (estação → coleta), não no MAPi.</p>
             </div>
           </div>
         )}

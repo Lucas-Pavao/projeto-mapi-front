@@ -35,6 +35,7 @@ export const SourceCard: React.FC<Props> = ({ source: s, now, onShowRuns }) => {
         <span className="flex flex-wrap justify-between gap-x-2 font-mono text-[11px] leading-[14px] text-muted-foreground"><span>última {agoText(s.lastSuccessAt, now)}</span><span>{everyText(s.expectedEveryMinutes)}</span></span>
         {fresh && <span data-testid="freshness" className={cn('block text-[11px] leading-[14px]', s.status === 'STALE' ? 'text-destructive' : 'text-muted-foreground')}>{fresh}</span>}
         {s.status === 'STALE' && <span className="block text-[11px] leading-[14px] text-destructive">A coleta pode rodar sem erro e ainda assim não aceitar nada (quarentena): o que conta é a leitura aceita.</span>}
+        {s.status === 'STALE' && <span data-testid="stale-alert-note" className="block text-[11px] leading-[14px] text-destructive">O alerta por ponto fica SEM_DADO (FONTE_PARADA), nunca "sem alerta".</span>}
         {s.status === 'QUARANTINED' && !s.lastError && <span className="block text-[11px] leading-[14px] text-destructive">A última coleta ficou toda na quarentena.</span>}
         {s.lastError && <span className="block break-words text-[11px] leading-[14px] text-destructive">Último erro: {s.lastError}</span>}
         {s.lastRunId && <span className="sr-only">Última execução {s.lastRunId.slice(0, 8)}</span>}

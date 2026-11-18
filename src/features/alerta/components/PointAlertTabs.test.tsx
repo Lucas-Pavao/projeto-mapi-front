@@ -24,6 +24,7 @@ describe('PointAlertTabs', () => {
     server.use(http.get('/api/alerta/pontos', () => HttpResponse.json(estado)));
     renderPage(<PointAlertTabs slug="IBURA" pointName="Ibura" experimental={<p>risco v3</p>} />);
     expect(await screen.findByTestId('alerta-rain-ATENCAO')).toBeInTheDocument();
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Atenção · chuva forte provável');
     expect(screen.getByTestId('alerta-em-teste')).toBeInTheDocument();
     expect(screen.queryByText('risco v3')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Experimental' }));
@@ -40,8 +41,19 @@ describe('PointAlertTabs', () => {
     }));
     renderPage(<PointAlertTabs slug="IBURA" pointName="Ibura" experimental={<p>risco v3</p>} fallback={<p>chuva medida</p>} />);
     expect(screen.getByTestId('alerta-oculto')).toHaveTextContent('em teste');
+    expect(screen.getByTestId('alerta-chip')).toHaveTextContent('Alerta em teste');
     expect(screen.getByText('chuva medida')).toBeInTheDocument();
     expect(screen.queryByTestId('alerta-panel')).not.toBeInTheDocument();
     expect(pedido).not.toHaveBeenCalled();
+  });
+
+  it('ADMIN com falha ao ler o alerta: selo "Alerta sem dado" tracejado, nunca "sem alerta"', async () => {
+    auth.role = 'ADMIN';
+    server.use(http.get('/api/alerta/pontos', () => HttpResponse.json({ message: 'erro' }, { status: 500 })));
+    renderPage(<PointAlertTabs slug="IBURA" pointName="Ibura" experimental={<p>risco v3</p>} />);
+    expect(await screen.findByTestId('alerta-sem-dado')).toBeInTheDocument();
+    const chip = screen.getByTestId('alerta-chip');
+    expect(chip).toHaveTextContent('Alerta sem dado');
+    expect(chip.className).toContain('border-dashed');
   });
 });

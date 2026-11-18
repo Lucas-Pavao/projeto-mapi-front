@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+afterEach(cleanup);
 import { SourceTag } from './SourceTag';
-import { sourceKindsOf } from './sourceKinds';
+import { sourceKindsOf, type SourceKind } from './sourceKinds';
 import { SyntheticWarning } from './SyntheticWarning';
 
 describe('SourceTag', () => {
@@ -13,6 +14,22 @@ describe('SourceTag', () => {
     expect(sourceKindsOf(['CEMADEN_PED'])).toEqual(['PED_ONLY']);
     expect(sourceKindsOf(['CEMADEN', 'CEMADEN_PED'])).toEqual(['LIVE', 'PED']);
     expect(sourceKindsOf(['CEMADEN'])).toEqual(['LIVE']);
+  });
+});
+
+describe('SourceTag: 12 variantes', () => {
+  const V: [SourceKind, string, boolean][] = [
+    ['MEASURED', 'medida · Cemaden', false], ['LIVE', 'ao vivo', false], ['PED', 'PED', false], ['PED_ONLY', 'só PED', true],
+    ['ESTIMATED', 'estimada · Open-Meteo', true], ['NO_DATA', 'sem dado', true], ['FORECAST', 'prevista · estimativa', true],
+    ['TIDE_HARMONIC', 'maré · reserva harmônica', false], ['OFFICIAL_INMET', 'oficial · INMET', false],
+    ['PHYSICAL_MODEL', 'modelo físico · não validado', false], ['TESTING', 'Em teste: não é alerta oficial', false], ['SYNTHETIC_LABEL', 'rótulo SINTÉTICO', false],
+  ];
+  it.each(V)('%s: texto visível e tracejado=%s', (kind, text, dashed) => {
+    render(<SourceTag kind={kind} />);
+    const el = screen.getByText(text);
+    expect(el).toBeVisible();
+    expect(el).toHaveAttribute('data-source', kind);
+    expect(el.classList.contains('border-dashed')).toBe(dashed);
   });
 });
 

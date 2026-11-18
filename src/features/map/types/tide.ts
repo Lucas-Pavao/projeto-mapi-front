@@ -1,6 +1,10 @@
+export type TideSource = 'OFFICIAL' | 'HARMONIC';
+
 export interface HourDataDTO {
   hour: string;
   level: number;
+  /** Origem deste extremo; ausente = oficial. */
+  source?: TideSource | null;
 }
 
 export interface DayDataDTO {
@@ -36,6 +40,8 @@ export interface TideTableResponseDTO {
   geoLocations: GeoLocationDTO[];
   months: MonthDataDTO[];
   currentTideHeight: number;
+  /** Origem da tábua: oficial ou reserva harmônica (quando a oficial do ano falta). */
+  tideSource?: TideSource | null;
 }
 
 export interface TabuaMareError {
