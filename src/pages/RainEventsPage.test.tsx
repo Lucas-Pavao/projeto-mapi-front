@@ -28,7 +28,7 @@ describe('RainEventsPage (JSON estático dos 5 anos)', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'ANA' }));
     expect(screen.getByRole('region', { name: 'Resumo da fonte' })).toHaveTextContent('41,0');
     expect(screen.getByText('Nenhum evento completo passou da capacidade na janela.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('radio', { name: 'Reanálise (Open-Meteo)' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Reanálise' }));
     expect(screen.getByRole('region', { name: 'Resumo da fonte' })).toHaveTextContent('21,1');
   });
 

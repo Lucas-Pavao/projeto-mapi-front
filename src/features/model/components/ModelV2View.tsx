@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { RiskBadge } from '@/components/risk/RiskBadge';
-import { bandText, pctTxt, riskOf } from '@/components/risk/thresholds';
+import { pctTxt, riskOf } from '@/components/risk/thresholds';
 import { cn } from '@/lib/utils';
 import type { ModelCard } from '../schemas/modelCard.schema';
 import { thresholdReason } from '@/components/risk/provenance';
@@ -15,23 +15,19 @@ const sg = (v: number, d = 3) => `${v >= 0 ? '+' : '−'}${n(Math.abs(v), d)}`;
 
 type Metric = 'prAuc' | 'rocAuc' | 'brier';
 const METRICS: ReadonlyArray<{ id: Metric; label: string; name: string; note: string }> = [
-  { id: 'prAuc', label: 'PR-AUC', name: 'PR-AUC (maior é melhor)', note: 'Com poucos positivos, "nunca alaga" já tem PR-AUC próxima da taxa de base: compare sempre com os baselines.' },
-  { id: 'rocAuc', label: 'ROC-AUC', name: 'ROC-AUC (maior é melhor)', note: '0,5 é o acaso. Mede a ordenação, não a calibração das probabilidades.' },
-  { id: 'brier', label: 'Brier', name: 'Brier (menor é melhor)', note: 'Erro quadrático da probabilidade. A versão calibrada só muda o Brier, não a ordenação.' },
+  { id: 'prAuc', label: 'PR-AUC', name: 'PR-AUC (maior é melhor)', note: 'Maior é melhor. Com poucos positivos, "nunca alaga" já tem PR-AUC próxima da taxa de base: compare sempre com os baselines.' },
+  { id: 'rocAuc', label: 'ROC-AUC', name: 'ROC-AUC (maior é melhor)', note: 'Maior é melhor. 0,5 é o acaso. Mede a ordenação, não a calibração das probabilidades.' },
+  { id: 'brier', label: 'Brier', name: 'Brier (menor é melhor)', note: 'Menor é melhor. Erro quadrático da probabilidade. A versão calibrada só muda o Brier, não a ordenação.' },
 ];
 
-/** Campos da resposta da previsão (ADR 0007, emenda 2), com o que cada um diz: chave e descrição, como no protótipo. */
-const FIELDS: ReadonlyArray<[string, string]> = [
-  ['modelVersion', 'versão do artefato (antes: unversioned)'],
-  ['riskLevel', 'LOW | MEDIUM | HIGH; UNKNOWN só na degradação'],
-  ['floodProbability', 'probabilidade bruta do modelo'],
-  ['riskThresholds', 'medium e high, lidos do metadata'],
-  ['rainSource', 'fonte da chuva com que o modelo foi treinado'],
-  ['trainingData', 'SYNTHETIC enquanto o rótulo for sintético'],
+/** Campos da resposta da previsão (ADR 0007, emenda 2) que a tela do modelo anterior mostra: chave e valor, como na referência. Valores do cartão. */
+const fields = (card: ModelCard): ReadonlyArray<[string, string]> => [
+  ['modelVersion', `${card.modelVersion} (antes: unversioned)`],
+  ['riskThresholds', `{medium: ${n(card.thresholds.medium, 4)}, high: ${n(card.thresholds.high, 4)}, source: metadata}`],
+  ['rainSource', card.rainSource ?? '—'],
+  ['trainingData', card.trainingData],
   ['syntheticWarning', 'texto obrigatório na tela quando o treino é sintético'],
-  ['contributors', 'maiores contribuições SHAP, em p.p., com valor e unidade'],
-  ['imputedFeatures', 'entradas que chegaram vazias e foram preenchidas'],
-  ['degradationReason', 'por que o risco ficou indisponível'],
+  ['contributors', '3 maiores SHAP, em p.p., com value e unit'],
 ];
 
 const Baselines: React.FC<{ card: ModelCard }> = ({ card }) => {
@@ -41,7 +37,7 @@ const Baselines: React.FC<{ card: ModelCard }> = ({ card }) => {
   return (
     <section aria-label="Comparação com os baselines" className={cn(panel, 'lg:col-span-7')}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className={overline}>Teste · {m.name}</h2>
+        <h2 className={overline}>Teste · {m.label}</h2>
         <div role="radiogroup" aria-label="Métrica" className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
           {METRICS.map((x) => (
             <button key={x.id} type="button" role="radio" aria-checked={metric === x.id} onClick={() => setMetric(x.id)} className={cn('h-7 cursor-pointer rounded-lg border-0 px-2.5 text-xs font-bold text-foreground', metric === x.id ? 'bg-card' : 'bg-transparent')}>{x.label}</button>
@@ -49,7 +45,7 @@ const Baselines: React.FC<{ card: ModelCard }> = ({ card }) => {
         </div>
       </div>
       <div className="flex flex-1 flex-col justify-around gap-1.5">
-        {card.rows.map((r) => {
+        {[...card.rows].sort((x, y) => (metric === 'brier' ? x[metric] - y[metric] : y[metric] - x[metric])).map((r) => {
           const prod = r.id === 'xgb_v2';
           return (
             <div key={r.id} data-row={r.id} className="grid grid-cols-[minmax(0,190px)_1fr_56px] items-center gap-2.5">
@@ -99,7 +95,6 @@ const Probe: React.FC<{ card: ModelCard }> = ({ card }) => {
         <dt className="font-bold">Alto ≥ {pctTxt(t.high)}</dt><dd className="m-0 text-muted-foreground">{t.criteria?.high ?? '—'}</dd>
         <dt className="font-bold">Calibração</dt>
         <dd className="m-0 text-muted-foreground">{card.calibration.used ? 'aplicada' : 'não aplicada'}{card.calibration.valEceRaw != null ? `: ECE de validação ${n(card.calibration.valEceRaw)}` : ''}{card.calibration.criterion ? ` (critério: ${card.calibration.criterion})` : ''}</dd>
-        <dt className="font-bold">Faixas</dt><dd className="m-0 text-muted-foreground">baixo {bandText('LOW', t)}; moderado {bandText('MEDIUM', t)}; alto {bandText('HIGH', t)}</dd>
       </dl>
     </section>
   );
@@ -139,7 +134,7 @@ const Xai: React.FC<{ card: ModelCard }> = ({ card }) => {
   return (
     <section aria-label="Explicações" className={cn(panel, 'lg:col-span-4')}>
       <h2 className={overline}>Explicações (SHAP × LIME)</h2>
-      <ol className="m-0 list-decimal pl-[22px] text-[13px] leading-5 marker:font-mono marker:text-muted-foreground">{x.top5.map((t) => <li key={t}>{t}</li>)}</ol>
+      <ol className="m-0 list-none p-0 pl-2 text-[13px] leading-5">{x.top5.map((t) => <li key={t}>{t}</li>)}</ol>
       <div className="grid grid-cols-2 gap-2">
         {tiles.map(([v, l]) => <div key={l} className="rounded-[10px] bg-muted px-2.5 py-2"><div className="font-mono text-base font-bold leading-5">{v}</div><div className="text-[11px] leading-[14px] text-muted-foreground">{l}</div></div>)}
       </div>
@@ -162,9 +157,10 @@ export const ModelV2View: React.FC<{ card: ModelCard }> = ({ card }) => (
       <section aria-label="Contrato da previsão" className={cn(panel, 'lg:col-span-4')}>
         <h2 className={overline}>O que a previsão traz agora</h2>
         <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs leading-4">
-          {FIELDS.map(([k, v]) => <React.Fragment key={k}><dt className="font-mono text-primary">{k}</dt><dd className="m-0 text-muted-foreground">{v}</dd></React.Fragment>)}
+          {fields(card).map(([k, v]) => <React.Fragment key={k}><dt className="font-mono text-primary">{k}</dt><dd className="m-0 text-muted-foreground">{v}</dd></React.Fragment>)}
         </dl>
-        {card.sources && <p className="m-0 mt-auto text-[11px] leading-[15px] text-muted-foreground">Origem: {Object.keys(card.sources).length} arquivos com SHA-256 registrado em <span className="font-mono">model_card.json</span>.{card.attribution ? ` ${card.attribution}.` : ''}</p>}
+        <p className="m-0 mt-auto text-[11px] leading-[15px] text-muted-foreground">ADR 0007 emenda 2: a proveniência é gravada em flood_predictions.model_info (V26), então o GET nunca devolve risco sintético sem etiqueta.</p>
+        {card.sources && <p className="m-0 text-[11px] leading-[15px] text-muted-foreground">Origem: {Object.keys(card.sources).length} arquivos com SHA-256 registrado em <span className="font-mono">model_card.json</span>.{card.attribution ? ` ${card.attribution}.` : ''}</p>}
       </section>
     </div>
   </div>
