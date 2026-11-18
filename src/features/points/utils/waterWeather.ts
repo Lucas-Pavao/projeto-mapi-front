@@ -19,7 +19,7 @@ function nowTile(rain: RainCandidates | undefined, fallback: Tile): Tile {
 export type TerrainStatus = 'loading' | 'error' | 'no_data' | 'ready';
 export interface TerrainInput { status: TerrainStatus; streetElevationM?: number | null }
 
-const terrainValue = (t: TerrainInput | undefined, elev: number | null, digits: number) => (elev == null ? '—' : `${num(elev, digits)} m`);
+const terrainValue = (elev: number | null, digits: number) => (elev == null ? '—' : `${num(elev, digits)} m`);
 /** A cota está no datum do MDT, não comparável à maré (ADR 0009): o aviso fica no próprio bloco. */
 const terrainSub = (t: TerrainInput | undefined, elev: number | null) =>
   elev != null ? 'MDT PE3D · não comparar com maré' : t?.status === 'loading' ? 'carregando' : t?.status === 'error' ? 'terreno indisponível' : 'sem dado de terreno';
@@ -40,7 +40,7 @@ export function waterWeatherTiles(point: FloodPointResponseDTO | undefined, rain
     { label: 'Chuva 24 h', value: withUnit(agg?.rain24h, 'mm'), sub: rainSrc },
     { label: 'Maré', value: withUnit(tide, d?.unitTide ?? point?.tideUnit ?? 'm', 2), sub: tide == null ? 'sem leitura' : 'tábua da DHN (NR)' },
     { label: 'Rio', value: withUnit(d?.waterLevel, d?.unitWaterLevel ?? 'm', 2), sub: `${d?.waterLevel == null ? 'sem leitura' : 'nível mais recente'} · fora do modelo` },
-    { label: 'Cota da rua', value: terrainValue(terrain, elev, 2), sub: terrainSub(terrain, elev) },
+    { label: 'Cota da rua', value: terrainValue(elev, 2), sub: terrainSub(terrain, elev) },
     { label: 'Até o canal', value: dist == null ? '—' : `${num(dist, 0)} m`, sub: dist == null ? 'sem leitura' : 'PE3D' },
   ];
 }

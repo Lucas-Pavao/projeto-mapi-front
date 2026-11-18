@@ -14,11 +14,12 @@ export function stateMeta(c: Pick<StationCardData, 'state' | 'pedOnly' | 'monthC
     case 'GAP_NOW': return { label: 'Lacuna agora', tone: 'warning', dashed: true };
     case 'FAIL_MONTH': return { label: 'Reprovada no mês · fora da chuva do ponto', tone: 'destructive', dashed: false };
     // Divergência, pico removido e checagem inconclusiva não tiram a estação da chuva do ponto: o selo segue dizendo as fontes e o aviso (abaixo) diz o que houve.
-    case 'UNCHECKED': if (!c.monthCheck) return { label: 'Mês sem checagem', tone: 'muted', dashed: false };
-    // fallthrough
+    case 'UNCHECKED':
     case 'DIVERGENT':
     case 'PEAK_REMOVED':
-    case 'NORMAL': return c.pedOnly ? { label: 'Só PED · sem ao vivo', tone: 'primary', dashed: false } : { label: 'Ao vivo + PED', tone: 'success', dashed: false };
+    case 'NORMAL':
+      if (c.state === 'UNCHECKED' && !c.monthCheck) return { label: 'Mês sem checagem', tone: 'muted', dashed: false };
+      return c.pedOnly ? { label: 'Só PED · sem ao vivo', tone: 'primary', dashed: false } : { label: 'Ao vivo + PED', tone: 'success', dashed: false };
   }
 }
 
