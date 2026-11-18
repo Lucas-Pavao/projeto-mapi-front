@@ -155,13 +155,16 @@ export const LivePanel: React.FC<Props> = ({
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm leading-5 font-bold">{p.name}</span>
                     {alertaBySlug ? (
-                      <span data-testid="point-alert-line" className={cn('truncate text-xs leading-4 font-bold', CHIP_TONE_CLASS[chip(p.slug).tone].split(' ').filter((c) => c.startsWith('text-')).join(' '))}>{chip(p.slug).label}</span>
+                      <span data-testid="point-alert-line" className="truncate text-xs leading-4 text-muted-foreground">
+                        <span className={cn('font-bold', CHIP_TONE_CLASS[chip(p.slug).tone].split(' ').filter((c) => c.startsWith('text-')).join(' '))}>{chip(p.slug).label}</span>
+                        {` · risco${(p.floodPrediction?.horizonHours ?? horizon) != null ? ` ${p.floodPrediction?.horizonHours ?? horizon} h` : ''}: ${v.label}`}
+                      </span>
                     ) : (
                       <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'} · {v.label}</span>
                     )}
                   </span>
-                  <span className={cn('flex flex-col items-end', alertaBySlug ? 'text-muted-foreground' : v.text)}>
-                    <span className={cn('font-mono leading-5 font-bold', alertaBySlug ? 'text-xs' : 'text-[15px]')}>{alertaBySlug ? `6 h · ${pct ?? '—'}` : pct ?? '—'}</span>
+                  <span className={cn('flex flex-col items-end', v.text)}>
+                    <span className="font-mono text-[15px] leading-5 font-bold">{pct ?? '—'}</span>
                     <Sparkline values={overview.probabilities.get(p.slug) ?? []} max={sparkMax(overview.probabilities.get(p.slug) ?? [])} />
                   </span>
                 </button>
