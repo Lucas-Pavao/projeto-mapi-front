@@ -1,8 +1,9 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
 import { MapRiskLegend } from './MapRiskLegend';
 
 describe('MapRiskLegend', () => {
+  afterEach(cleanup);
   it('mostra os quatro estados e a nota com os limiares da API', () => {
     render(<MapRiskLegend thresholds={{ medium: 0.049, high: 0.928, source: 'orçamento de dias de alerta' }} modelVersion="logreg_v3" horizonHours={6} />);
     expect(screen.getByText('Previsão indisponível')).toBeInTheDocument();
