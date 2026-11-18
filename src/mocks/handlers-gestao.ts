@@ -24,4 +24,17 @@ export function tideTableSintetica(now = new Date()): TideTableResponseDTO {
 /** Handlers das telas de gestão (tábua de maré etc.). Registrados em handlers.ts com uma linha. */
 export const gestaoHandlers = [
   http.get('/api/tide/:harbor', () => HttpResponse.json(tideTableSintetica())),
+  // DADOS SINTÉTICOS: atraso do alerta por trecho (item 2.1), para fotografar a tela Dados.
+  http.get('/api/alerta/latencia', () => {
+    const seg = (segment: string, wetHour: boolean, n: number, medianS: number, p90S: number, maxS: number) => ({ segment, wetHour, n, medianS, p90S, maxS });
+    return HttpResponse.json({
+      from: '2026-11-10T00:00:00Z', to: '2026-11-17T00:00:00Z', budgetP90Minutes: 5, withinBudgetWet: true, withinBudgetDry: null, note: null,
+      segments: [
+        seg('estacao_coleta', true, 40, 95, 180, 240), seg('coleta_banco', true, 40, 2.1, 4.8, 9), seg('banco_ciclo', true, 40, 31, 58, 70),
+        seg('ciclo_ia', true, 40, 3.2, 6.5, 11), seg('ia_estado', true, 40, 0.4, 0.9, 1.4), seg('estado_sse', true, 40, 0.2, 0.5, 0.8), seg('total', true, 40, 140, 250, 330),
+        seg('total', false, 120, 160, 290, 410),
+      ],
+    });
+  }),
+  http.get('/api/alerta/latencia/relatorios', () => HttpResponse.json([])),
 ];
