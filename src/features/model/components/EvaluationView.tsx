@@ -20,12 +20,13 @@ const COLORS = ['var(--chart-2)', 'var(--chart-4)', 'var(--chart-5)'];
 type Set = 'principal' | 'secundaria';
 
 /** Cabeçalho da tela: título, origem e, com dados, a conclusão registrada e o conjunto de positivos. */
-export const ModelHeader: React.FC<{ subtitle: string; badge?: string; children?: React.ReactNode }> = ({ subtitle, badge, children }) => (
-  <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5 lg:h-[72px] lg:py-0">
-    <div className="min-w-0 flex-1">
+export const ModelHeader: React.FC<{ subtitle: string; badge?: string; nav?: React.ReactNode; children?: React.ReactNode }> = ({ subtitle, badge, nav, children }) => (
+  <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5 lg:min-h-[72px] lg:py-2">
+    <div className="min-w-[17rem] flex-1">
       <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Desempenho do modelo</h1>
       <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">{subtitle}</p>
     </div>
+    {nav}
     {badge && <span className="inline-flex h-[30px] items-center rounded-full border-[1.5px] border-warning px-3 text-xs font-bold text-warning">{badge}</span>}
     {children}
   </header>
@@ -35,7 +36,7 @@ export const ModelHeader: React.FC<{ subtitle: string; badge?: string; children?
  * Mostra `result` de /api/model/evaluation. Cada número vem do JSON; os rótulos são os nomes do arquivo.
  * Nada é recalculado, arredondado para "melhor" nem completado.
  */
-export const EvaluationView: React.FC<{ evaluation: ModelEvaluation & { headerSha256?: string | null }; result: EvaluationResult | null }> = ({ evaluation, result: r }) => {
+export const EvaluationView: React.FC<{ evaluation: ModelEvaluation & { headerSha256?: string | null }; result: EvaluationResult | null; nav?: React.ReactNode }> = ({ evaluation, result: r, nav }) => {
   const shaMismatch = evaluation.headerSha256 != null && evaluation.headerSha256 !== evaluation.sha256;
   const [set, setSet] = useState<Set>('principal');
   const [sel, setSel] = useState<string>('');
@@ -59,7 +60,7 @@ export const EvaluationView: React.FC<{ evaluation: ModelEvaluation & { headerSh
   if (!r) {
     return (
       <>
-        <ModelHeader subtitle="Avaliação F1 pré-registrada · formato do arquivo não reconhecido" />
+        <ModelHeader subtitle="Avaliação F1 pré-registrada · formato do arquivo não reconhecido" nav={nav} />
         <section aria-label="Conteúdo (formato não reconhecido)" className={panel}>
           <h2 className={overline}>CONTEÚDO (FORMATO NÃO RECONHECIDO)</h2>
           <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">O resultado não tem o formato esperado; aqui está o JSON como chegou.</p>
@@ -93,6 +94,7 @@ export const EvaluationView: React.FC<{ evaluation: ModelEvaluation & { headerSh
     <>
       <ModelHeader
         subtitle="Avaliação F1 pré-registrada · números exatamente como no arquivo congelado, sem recálculo"
+        nav={nav}
         badge={h1 || h2 ? [h1 ? `H1 ${h1}` : null, h2 ? `H2 ${h2}` : null].filter(Boolean).join(' · ') : undefined}
       >
         {rows.length > 0 && (

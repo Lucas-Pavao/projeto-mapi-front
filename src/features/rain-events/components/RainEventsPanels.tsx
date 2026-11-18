@@ -8,10 +8,10 @@ const panel = 'flex min-h-0 min-w-0 flex-col gap-2.5 rounded-2xl border border-b
 const overline = 'm-0 text-xs leading-4 font-bold uppercase tracking-[0.06em] text-muted-foreground';
 
 export const KpiRow: React.FC<{ kpis: Kpi[] }> = ({ kpis }) => (
-  <section aria-label="Resumo da fonte" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+  <section aria-label="Resumo da fonte" className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
     {kpis.map((k) => (
       <div key={k.label} className="rounded-[14px] border border-border bg-card px-4 py-3.5">
-        <div className={cn('font-mono text-2xl font-extrabold leading-[30px]', k.tone === 'high' ? 'text-risk-high-text' : k.tone === 'muted' ? 'text-muted-foreground' : 'text-foreground')}>{k.value}</div>
+        <div data-testid={k.testid} className={cn('font-mono text-2xl font-extrabold leading-[30px]', k.tone === 'high' ? 'text-risk-high-text' : 'text-foreground')}>{k.value}</div>
         <div className="text-xs leading-4 text-muted-foreground">{k.label}</div>
       </div>
     ))}
@@ -35,7 +35,7 @@ export const OverCapacityList: React.FC<OverProps> = ({ events, capacity, select
         : top.map((e) => (
           <button key={eventKey(e)} type="button" aria-pressed={eventKey(e) === selected} onClick={() => onSelect(eventKey(e))} data-event={eventKey(e)}
             className={cn('grid grid-cols-[minmax(0,220px)_1fr_70px] items-center gap-3 rounded-xl border-[1.5px] bg-transparent px-3 py-2.5 text-left text-foreground', eventKey(e) === selected ? 'border-primary' : 'border-border')}>
-            <span><span className="block text-[13px] font-bold">{e.slug}</span><span className="block text-[11px] text-muted-foreground">{formatHoraCurta(e.startUtc) ?? '—'}{e.stationId ? ` · ${e.stationId}` : ''}</span></span>
+            <span><span className="block text-[13px] font-bold">{e.slug}</span><span className="block text-[11px] text-muted-foreground">{formatHoraCurta(e.startUtc) ?? '—'}{e.stationId ? ` · ${e.stationId}${e.stationDistanceM != null ? `, ${num(e.stationDistanceM / 1000, 2)} km` : ''}` : ''}</span></span>
             <span className="relative h-4 rounded-full bg-muted">
               <span className="absolute inset-y-0 left-0 rounded-full bg-risk-high" style={{ width: `${(((e.maxHourlyMmH ?? 0) / max) * 100).toFixed(1)}%` }} />
               <span className="absolute -inset-y-[3px] w-0.5 bg-foreground" style={{ left: `${((capacity / max) * 100).toFixed(1)}%` }} />
@@ -44,7 +44,7 @@ export const OverCapacityList: React.FC<OverProps> = ({ events, capacity, select
           </button>
         ))}
       <p className="m-0 mt-auto text-xs leading-[17px] text-muted-foreground" data-testid="event-detail">
-        {sel ? `${sel.slug}: ${num(sel.totalMm, 1)} mm em ${sel.durationMin ?? '—'} min, pico de ${num(sel.maxHourlyMmH, 1)} mm/h; ${num(sel.excessOverCapacityMm, 1)} mm acima da capacidade${sel.hasGap ? '; com lacuna na série' : ''}.` : 'Escolha um evento para ver o detalhe. Pico = maior chuva horária; hora sem dado quebra o evento, lacuna não vira zero.'}
+        {sel ? `${sel.slug}: ${num(sel.totalMm, 1)} mm em ${sel.durationMin ?? '—'} min, pico de ${num(sel.maxHourlyMmH, 1)} mm/h; ${num(sel.excessOverCapacityMm, 1)} mm acima da capacidade${sel.hasGap ? '; com lacuna na série' : ''}.${sel.stationId ? ` Estação usada: ${sel.stationId}${sel.stationDistanceM != null ? `, ${num(sel.stationDistanceM / 1000, 2)} km` : ''}.` : ''}` : 'Escolha um evento para ver o detalhe. Pico = maior chuva horária; hora sem dado quebra o evento, lacuna não vira zero.'}
       </p>
     </section>
   );
@@ -61,7 +61,7 @@ export const SensitivityPanel: React.FC<SweepProps> = ({ events, capacity, frac,
     <section aria-label="Sensibilidade à capacidade" className={cn(panel, 'lg:col-span-5')}>
       <h2 className={overline}>E se a rede drenar menos? · eventos acima da capacidade</h2>
       <label className="flex flex-col gap-1">
-        <span className="flex justify-between text-[13px] font-bold">Fração da capacidade<span className="font-mono" data-testid="frac-text">{num(capacity * f, 1)} mm/h</span></span>
+        <span className="flex justify-between text-[13px] font-bold">Fração da capacidade<span className="font-mono" data-testid="frac-text">{Math.round(f * 100)}% ({num(capacity * f, 1)} mm/h)</span></span>
         <input type="range" min={0} max={SWEEP.length - 1} step={1} value={frac} onChange={(e) => onFrac(Number(e.target.value))} className="m-0 w-full" aria-label="Fração da capacidade" />
       </label>
       <div className="flex flex-1 flex-col justify-center gap-2.5">

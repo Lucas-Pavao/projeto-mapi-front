@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { hasRole, parseRole } from '@/lib/roles';
@@ -62,7 +61,7 @@ export const ReportPage: React.FC = () => {
   const kpis = [
     { label: `pico de chuva (média)${peak ? ` · ${formatHoraCurta(new Date(peak.t).toISOString(), t1)}` : ''}`, value: peak ? `${num(peak.v)} mm/h` : '—' },
     { label: 'pontos que chegaram a alto', value: `${reached} de ${rows.length}`, tone: reached > 0 ? 'text-risk-high-text' : undefined },
-    { label: 'alertas na janela', value: alertsIn ? String(alertsIn.length) : 'sem acesso' },
+    { label: 'alertas disparados', value: alertsIn ? String(alertsIn.length) : 'sem acesso' },
     // A série do rio na linha do tempo vem do sensor_data, em cm (como na tela Eventos).
     { label: `${riverName ?? 'rio'} (máximo)`, value: riverMax != null ? `${num(riverMax, 0)} cm` : '—' },
   ];
@@ -121,7 +120,6 @@ export const ReportPage: React.FC = () => {
             <Button type="button" size="lg" className="h-11 flex-1 md:h-9" onClick={() => window.print()}>Gerar PDF</Button>
             <Button type="button" variant="outline" size="lg" className="h-11 text-foreground md:h-9" disabled={rows.length === 0} onClick={csv}>CSV dos dados</Button>
           </div>
-          <Link to="/eventos" className="text-[12px] text-primary hover:underline">Voltar à linha do tempo do evento</Link>
         </div>
       </aside>
       <div className="flex min-h-0 min-w-0 flex-1 justify-center overflow-auto rounded-2xl bg-muted p-3 lg:pt-5 print:block print:overflow-visible print:bg-transparent print:p-0">

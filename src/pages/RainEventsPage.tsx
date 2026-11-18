@@ -3,7 +3,7 @@ import { QueryState } from '@/components/ui/query-state';
 import { useRainData } from '@/features/rain-events/hooks/useRainEvents';
 import { KpiRow, OverCapacityList, SensitivityPanel } from '@/features/rain-events/components/RainEventsPanels';
 import { RAIN_SOURCES, type RainData, type RainSource } from '@/features/rain-events/schemas/rain-events.schema';
-import { SOURCE_LABEL, aboveCapacity, eventsOf, monthYear, slugsOf, sourceKpis } from '@/features/rain-events/utils/rainEvents';
+import { SOURCE_LABEL, aboveCapacity, eventKey, eventsOf, monthYear, slugsOf, sourceKpis } from '@/features/rain-events/utils/rainEvents';
 import { cn } from '@/lib/utils';
 
 const Content: React.FC<{ data: RainData }> = ({ data }) => {
@@ -20,8 +20,8 @@ const Content: React.FC<{ data: RainData }> = ({ data }) => {
     <div className="flex w-full flex-col gap-4 p-4 lg:h-full">
       <header className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card px-5 py-3.5">
         <div className="min-w-0 flex-1">
-          <h1 className="m-0 text-[22px] leading-7 font-extrabold">Eventos de chuva</h1>
-          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground" data-testid="rain-period">{monthYear(d.periodFrom)} → {monthYear(d.periodTo)} · horas rotuladas pelo fim, em UTC · chuva medida × reanálise · ADR 0017</p>
+          <h1 className="m-0 text-[22px] leading-7 font-extrabold">Eventos de chuva por ponto</h1>
+          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground" data-testid="rain-period">{monthYear(d.periodFrom)} → {monthYear(d.periodTo)} · evento = horas com chuva separadas por menos de {String(d.params.dryGapHours ?? 6)} h secas · {slugsOf(d).length} pontos críticos</p>
         </div>
         <label className="flex items-center gap-2 text-xs font-bold">Ponto
           <select value={slug} onChange={(e) => { setSlug(e.target.value); setSel(null); }} className="h-8 rounded-lg border border-input bg-background px-2 text-xs font-normal text-foreground">
@@ -38,11 +38,11 @@ const Content: React.FC<{ data: RainData }> = ({ data }) => {
       </header>
       <KpiRow kpis={sourceKpis(d, slug)} />
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-3.5 lg:grid-cols-12">
-        <OverCapacityList events={over} capacity={capacity} selected={sel} onSelect={setSel} sourceLabel={SOURCE_LABEL[source]} />
+        <OverCapacityList events={over} capacity={capacity} selected={sel ?? (over[0] ? eventKey(over[0]) : null)} onSelect={setSel} sourceLabel={SOURCE_LABEL[source]} />
         <SensitivityPanel events={bySource} capacity={capacity} frac={frac} onFrac={setFrac} active={RAIN_SOURCES.indexOf(source)} />
       </div>
       <p className="m-0 text-[11px] leading-[15px] text-muted-foreground" data-testid="rain-sources">
-        Fonte: arquivo estático gerado de /api/analise/eventos-chuva ({d.params.methodVersion as string | undefined ?? 'eventos-chuva'}); o cálculo ao vivo de 5 anos é lento demais para a tela.
+        Horas rotuladas pelo fim, em UTC (ADR 0017). Fonte: arquivo estático gerado de /api/analise/eventos-chuva ({d.params.methodVersion as string | undefined ?? 'eventos-chuva'}); o cálculo ao vivo de 5 anos é lento demais para a tela.
         {shas.map(([name, h]) => <span key={name}> · {name} SHA-256 <span className="font-mono">{h}</span></span>)}
         {source === 'CEMADEN_PED' && data.attribution ? ` ${data.attribution}.` : ''}
       </p>
