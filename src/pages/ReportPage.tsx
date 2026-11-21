@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -91,8 +93,8 @@ export const ReportPage: React.FC = () => {
     <PageFrame className="print:static print:block print:p-0 lg:flex-row">
       <aside aria-label="Opções do relatório" className="no-print flex w-full shrink-0 flex-col gap-4 overflow-y-auto rounded-2xl border border-border bg-card p-[18px] lg:w-[380px]">
         <div>
-          <h1 className="m-0 text-[22px] font-extrabold leading-7">Relatório do evento</h1>
-          <p className="m-0 mt-1 text-[13px] text-muted-foreground">Monta um resumo para a coordenação a partir do que o MAPi registrou.</p>
+          <h1 className="m-0 flex items-center gap-2 text-[22px] font-extrabold leading-7">Relatório do evento<LeanTip text="Monta um resumo para a coordenação a partir do que o MAPi registrou." /></h1>
+          <OnlyInDetail><p className="m-0 mt-1 text-[13px] text-muted-foreground">Monta um resumo para a coordenação a partir do que o MAPi registrou.</p></OnlyInDetail>
         </div>
         <label className="flex flex-col gap-1.5">
           <span className="flex justify-between text-[13px] font-bold">Janela do relatório<span className="font-mono">últimas {shown} h</span></span>

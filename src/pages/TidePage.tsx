@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toTimePts } from '@/components/charts/chartMath';
@@ -50,8 +52,8 @@ export const TidePage: React.FC = () => {
     <div className="flex w-full flex-col gap-4 p-4 lg:h-full">
       <section className="flex flex-wrap items-center gap-6 rounded-2xl border border-border bg-card px-5 py-4">
         <div className="min-w-0 flex-1">
-          <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Tábua de maré · Porto do Recife</h1>
-          <p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Porto {HARBOR} · DHN via TabuaMare · altura sobre o nível de redução · sincronizada 1× por dia</p>
+          <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Tábua de maré · Porto do Recife<LeanTip text="Tábua da Marinha (DHN) via TabuaMare. Altura sobre o nível de redução: não comparar com a altitude do terreno. Sincronizada uma vez por dia." /></h1>
+          <OnlyInDetail><p className="m-0 text-[13px] leading-[18px] text-muted-foreground">Porto {HARBOR} · DHN via TabuaMare · altura sobre o nível de redução · sincronizada 1× por dia</p></OnlyInDetail>
           {(table.data?.tideSource === 'HARMONIC' || table.data?.months.some((m) => m.days.some((d) => d.hours.some((h) => h.source === 'HARMONIC')))) && (
             <div className="mt-1.5 flex flex-wrap items-center gap-2"><SourceTag kind="TIDE_HARMONIC" data-testid="tide-source-tag" /><span className="text-xs text-muted-foreground">Sem tábua oficial do ano: previsão harmônica de reserva.</span></div>
           )}

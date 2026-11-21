@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useMemo, useState } from 'react';
 import { QueryState } from '@/components/ui/query-state';
 import { NoticeRegion } from '@/components/ui/notice-region';
@@ -75,8 +77,8 @@ export const ReportsPage: React.FC = () => {
     <PageFrame className="lg:grid lg:grid-cols-12 lg:grid-rows-[auto_1fr]">
       <div className="grid grid-cols-2 gap-3 lg:col-span-12 lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))]">
         <div className="col-span-2 flex flex-col justify-center lg:col-span-1">
-          <h1 className="m-0 text-[24px] font-extrabold leading-[30px]">Relatos para confirmar</h1>
-          <p className="m-0 text-[13px] text-muted-foreground">Confirmar cria um evento de alagamento no ponto, assinado por você; descartar exige um motivo.</p>
+          <h1 className="m-0 flex items-center gap-2 text-[24px] font-extrabold leading-[30px]">Relatos para confirmar<LeanTip text="Confirmar cria um evento de alagamento no ponto, assinado por você; descartar exige um motivo." /></h1>
+          <OnlyInDetail><p className="m-0 text-[13px] text-muted-foreground">Confirmar cria um evento de alagamento no ponto, assinado por você; descartar exige um motivo.</p></OnlyInDetail>
         </div>
         {stats.map((k) => (
           <div key={k.label} className="rounded-2xl border border-border bg-card px-3.5 py-3">

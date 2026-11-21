@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useState } from 'react';
 import { QueryState } from '@/components/ui/query-state';
 import { NoticeRegion } from '@/components/ui/notice-region';
@@ -61,8 +63,8 @@ export const AdminPointsPage: React.FC = () => {
       <section aria-label="Pontos cadastrados" className="flex min-h-80 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:min-h-0 lg:w-[560px] lg:shrink-0">
         <div className="flex items-center gap-3 border-b border-border px-[18px] py-4">
           <div className="min-w-0 flex-1">
-            <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Pontos críticos</h1>
-            <p className="m-0 text-xs text-muted-foreground">GET /api/pontos · {points.length} cadastrados · {activeCount} ativos no ciclo de previsão</p>
+            <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Pontos críticos<LeanTip text="Os pontos ativos entram no ciclo do alerta por ponto a cada coleta." /></h1>
+            <p className="m-0 text-xs text-muted-foreground"><OnlyInDetail><span>GET /api/pontos · </span></OnlyInDetail>{points.length} cadastrados · {activeCount} ativos no ciclo do alerta</p>
           </div>
           <Button type="button" className="h-11 px-3 md:h-9" onClick={() => pick('new')}>Novo ponto</Button>
         </div>

@@ -73,7 +73,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
     </section>
   );
   return (
-    <aside role="dialog" aria-label={`Análise completa de ${point.name}`} data-testid="analysis-panel" data-level={a?.level ?? (isAdmin ? 'SEM_DADO' : 'VISITOR')}
+    <section role="dialog" aria-label={`Análise completa de ${point.name}`} data-testid="analysis-panel" data-level={a?.level ?? (isAdmin ? 'SEM_DADO' : 'VISITOR')}
       className={cn('flex h-full w-[480px] max-w-full flex-col border-l border-t-4 border-border bg-card text-foreground shadow-elevation-overlay', chip ? EDGE_CLASS[chip.tone] : 'border-t-muted-foreground [border-top-style:dashed]')}>
       <header className="flex flex-col gap-2 border-b border-border px-[18px] pb-3 pt-4">
         <div className="flex items-center justify-between gap-2">
@@ -167,6 +167,6 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
         <Link to="/relatos" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Relatos</Link>
         <Link to="/relatorio" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Relatório</Link>
       </footer>
-    </aside>
+    </section>
   );
 };

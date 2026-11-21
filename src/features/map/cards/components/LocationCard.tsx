@@ -57,7 +57,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
     void navigator.clipboard?.writeText(`${a.lat.toFixed(5)}, ${a.lon.toFixed(5)}`).then(() => setCopied(true), () => undefined);
   };
   return (
-    <aside role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
+    <section role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
       className="flex max-h-full w-[400px] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-elevation-overlay">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-primary"><MapPin className="size-5" aria-hidden="true" /></span>
@@ -198,6 +198,6 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
         </button>
       </footer>
-    </aside>
+    </section>
   );
 };
