@@ -33,7 +33,7 @@ describe('ModelPage', () => {
     expect(within(table).getByText('[0,402; 0,803]')).toBeInTheDocument();
     expect(screen.getByText('H1 inconclusivo · H2 inconclusivo')).toBeInTheDocument(); // class_h1 e class_h2 do arquivo
     expect(screen.getByRole('region', { name: 'Amostra e origem' })).toHaveTextContent('101'); // n_neg_bruto
-    expect(screen.getByText('Previsão experimental — modelo não validado')).toBeInTheDocument();
+    expect(screen.getByText('Experimental · não validado')).toBeInTheDocument();
   });
 
   it('nada inventado: números reais da avaliação F1 não aparecem quando o payload é outro', async () => {

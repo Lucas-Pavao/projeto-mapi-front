@@ -38,81 +38,6 @@ export const modelValidationStatusSchema = z.enum(MODEL_VALIDATION_STATUSES).opt
 export const degradationReasonSchema = z.enum(DEGRADATION_REASONS);
 
 /** Limiares de probabilidade do modelo (vêm do metadata da IA, escolhidos na validação). */
-export const riskThresholdsSchema = z.object({
-  medium: z.number(),
-  high: z.number(),
-  source: z.string().nullable().optional(),
-});
-export type RiskThresholds = z.infer<typeof riskThresholdsSchema>;
-
-const floodPredictionSchema = z
-  .object({
-    riskLevel: riskLevelSchema,
-    floodProbability: z.number().nullable(),
-    estimatedTimeToEvent: z.string().nullable().optional(),
-    message: z.string().nullable().optional(),
-    modelValidationStatus: modelValidationStatusSchema,
-    modelVersion: z.string().nullable().optional(),
-    issuedAt: z.string().nullable().optional(),
-    horizonHours: z.number().nullable().optional(),
-    validUntil: z.string().nullable().optional(),
-    degradationReason: degradationReasonSchema.nullable().optional(),
-    lastValidIssuedAt: z.string().nullable().optional(),
-    contributors: z
-      .array(
-        z.object({
-          featureId: z.string(),
-          label: z.string(),
-          contribution: z.number(),
-          // Etapa 8 do IN1165: valor da feature em unidade física (modelo v2); ausente em previsões antigas.
-          value: z.number().nullable().optional(),
-          unit: z.string().nullable().optional(),
-        }),
-      )
-      .optional(),
-    imputedFeatures: z.array(z.object({ featureId: z.string(), label: z.string() })).optional(),
-    // Etapa 8 do IN1165 (por adição): limiares que produziram a faixa, fonte da chuva do treino e aviso de sintético.
-    riskThresholds: riskThresholdsSchema.nullable().optional(),
-    rainSource: z.string().nullable().optional(),
-    trainingData: z.string().nullable().optional(),
-    syntheticWarning: z.string().nullable().optional(),
-    // Modelo v3 (C1/C2), por adição: chuva que ENTROU na previsão, com estações e idade; e que probabilidade é.
-    rainInput: z.object({
-      source: z.string().nullable().optional(),
-      hourEndUtc: z.string().nullable().optional(),
-      latestReadingUtc: z.string().nullable().optional(),
-      ageMinutes: z.number().nullable().optional(),
-      validStations: z.number().nullable().optional(),
-      values: z.array(z.object({
-        featureId: z.string(),
-        valueMm: z.number().nullable().optional(),
-        hours: z.number().nullable().optional(),
-        hoursWithValue: z.number().nullable().optional(),
-        stations: z.array(z.object({ stationId: z.string(), name: z.string().nullable().optional(), source: z.string().nullable().optional() })).optional(),
-      })).optional(),
-    }).nullable().optional(),
-    probabilityKind: z.string().nullable().optional(),
-    floodProbabilityUncorrected: z.number().nullable().optional(),
-    // Plano de 16/11, fase 4, por adição: previsão de chuva do ponto no mesmo ciclo (quantis em mm por horizonte).
-    rainForecast: z.object({
-      issuedAt: z.string().nullable().optional(),
-      modelVersion: z.string().nullable().optional(),
-      sources: z.array(z.string()).optional(),
-      usedByModel: z.boolean().optional(),
-      horizons: z.array(z.object({
-        horizonHours: z.number(),
-        q50Mm: z.number(),
-        q80Mm: z.number(),
-        q95Mm: z.number(),
-        probMedia: z.number().nullable().optional(),
-        probForte: z.number().nullable().optional(),
-      })).optional(),
-    }).nullable().optional(),
-  })
-  .passthrough();
-
-export { floodPredictionSchema };
-export type FloodPrediction = z.infer<typeof floodPredictionSchema>;
 export type RiskLevel = (typeof RISK_LEVELS)[number];
 export type ModelValidationStatus = (typeof MODEL_VALIDATION_STATUSES)[number];
 export type DegradationReason = (typeof DEGRADATION_REASONS)[number];
@@ -137,14 +62,13 @@ export const floodPointResponseSchema = z
     active: z.boolean(),
     tideSource: z.enum(['OFFICIAL', 'HARMONIC']).nullable().optional(),
     liveData: preciseDataSchema.nullable().optional(),
-    floodPrediction: floodPredictionSchema.nullable().optional(),
   })
   .passthrough();
 
 /**
  * Valida um ponto crítico vindo da API. Em caso de divergência de contrato, loga um erro
  * detalhado e devolve o dado como veio (sem lançar, para não travar o mapa). Em caso de
- * sucesso devolve o resultado do parse (F1-F2-02), com `riskLevel` já normalizado.
+ * sucesso devolve o resultado do parse (F1-F2-02).
  */
 export function validateFloodPoint<T>(raw: T): T {
   const result = floodPointResponseSchema.safeParse(raw);
@@ -158,20 +82,5 @@ export function validateFloodPoint<T>(raw: T): T {
     return raw;
   }
   // passthrough preserva os campos não declarados, então o parse é um superconjunto de T.
-  return result.data as unknown as T;
-}
-
-/** Valida a resposta de POST /api/flood-predictions; em divergência loga e devolve o bruto. */
-export function validateFloodPrediction<T>(raw: T): T {
-  const result = floodPredictionSchema.safeParse(raw);
-  if (!result.success) {
-    console.error(
-      '[floodService] Predição não bate com o contrato esperado:',
-      z.treeifyError(result.error),
-      'payload recebido:',
-      raw,
-    );
-    return raw;
-  }
   return result.data as unknown as T;
 }

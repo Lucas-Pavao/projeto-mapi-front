@@ -19,7 +19,7 @@ const RAIN_CARD = loadRainCard();
 const REG_CARD = loadRegressaoCard();
 
 type Tab = 'regressao' | 'chuva' | 'alerta' | 'f1';
-/** Abas da tela Modelo (5.7). Saíram "v2 × v3 · rótulo sintético" e "xgb_v2 · rótulo sintético" (decisão de 20/11). */
+/** Abas da tela Modelo (5.7). Saíram as abas do classificador com rótulo sintético (decisão de 20/11). */
 const TABS: ReadonlyArray<{ id: Tab; label: string }> = [
   { id: 'regressao', label: 'Alagamento por regressão' },
   { id: 'chuva', label: 'Previsão de chuva · dado medido' },

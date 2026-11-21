@@ -3,7 +3,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } 
 import { screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
-import { HEADLINE } from '@/features/public-risk/components/PublicRiskResult';
+import { HEADLINE } from '@/features/public-risk/utils/headlines';
 import { renderPage } from '@/test/render';
 // O mapa precisa de WebGL: aqui vira um botão que "clica" em coordenadas escolhidas pelo teste.
 let clickAt: { lat: number; lng: number } = { lat: -8.0476, lng: -34.877 };
@@ -38,7 +38,7 @@ const pt = (over: Record<string, unknown>) => ({ slug: 's', name: 'Sintético: p
 
 describe('aviso público (pergunta 52)', () => {
   it('sem telefone enquanto o número oficial não for informado (TODO F3-PUBLICO-TELEFONE)', async () => {
-    const { PUBLIC_WARNING } = await import('@/features/public-risk/components/PublicRiskResult');
+    const { PUBLIC_WARNING } = await import('@/features/public-risk/utils/headlines');
     expect(PUBLIC_WARNING).not.toMatch(/\d{3,}/);
     expect(PUBLIC_WARNING).not.toMatch(/\(\d{2}\)|0800|tel/i);
     expect(PUBLIC_WARNING).toContain('Defesa Civil');

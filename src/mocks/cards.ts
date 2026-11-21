@@ -1,6 +1,5 @@
 import type { StationCardData } from '@/features/map/cards/schemas/stationCard.schema';
 import type { FloodPointResponseDTO } from '@/features/map/types';
-import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
 import type { LocationAnalysis } from '@/features/map/cards/schemas/locationAnalysis.schema';
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 
@@ -44,7 +43,6 @@ export const STATION_CARD_FIXTURES: Record<string, StationCardData> = {
 /** `?cardFx=<estado>` (normal, divergent, peak, unchecked, gap, noResponse, failMonth, pedOnly) escolhe o estado do card no navegador com MSW. */
 export const stationCardFor = (id: string, fx?: string | null): StationCardData => ({ ...((fx && STATION_CARD_FIXTURES[fx]) || base), canonicalId: id, name: `Sintético: ${id}` });
 
-const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
 
 const pointBase = {
@@ -52,22 +50,11 @@ const pointBase = {
   basinName: null, sensorConfig: null, active: true, tideHeight: 1.4, tideUnit: 'DHN (NR)', liveData: { historicalAggregates: { rain3h: 12.4 } },
 } as unknown as FloodPointResponseDTO;
 
-const pred = (over: Record<string, unknown>) => ({ modelValidationStatus: 'NOT_VALIDATED', modelVersion: 'xgb_v2', rainSource: 'MEASURED', trainingData: 'SYNTHETIC', riskThresholds: TH, issuedAt: ago(10), validUntil: ago(-50),
-  contributors: [{ featureId: 'rain_3h', label: 'Chuva acumulada em 3 horas', contribution: 0.21, value: 12.4, unit: 'mm' }], ...over });
-
-/** Os 5 estados do card do ponto. */
-export const POINT_CARD_FIXTURES: Record<'high' | 'medium' | 'low' | 'insufficient' | 'unavailable', FloodPointResponseDTO> = {
-  high: { ...pointBase, floodPrediction: pred({ riskLevel: 'HIGH', floodProbability: 0.31 }) } as FloodPointResponseDTO,
-  medium: { ...pointBase, floodPrediction: pred({ riskLevel: 'MEDIUM', floodProbability: 0.12 }) } as FloodPointResponseDTO,
-  low: { ...pointBase, floodPrediction: pred({ riskLevel: 'LOW', floodProbability: 0.004 }) } as FloodPointResponseDTO,
-  insufficient: { ...pointBase, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'INSUFFICIENT_DATA', modelValidationStatus: 'NOT_VALIDATED', modelVersion: 'xgb_v2' } } as FloodPointResponseDTO,
-  unavailable: { ...pointBase, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_UNAVAILABLE', modelValidationStatus: 'NOT_VALIDATED', lastValidIssuedAt: ago(90) } } as FloodPointResponseDTO,
+/** Pontos do card (dados sintéticos). O nível vem do alerta por regressão (mocks/alagamento). */
+export const POINT_CARD_FIXTURES: Record<'high' | 'medium', FloodPointResponseDTO> = {
+  high: { ...pointBase } as FloodPointResponseDTO,
+  medium: { ...pointBase, id: 2, slug: 'AGAMENON_DERBY_2', name: 'Av. Agamenon - Derby 2' } as FloodPointResponseDTO,
 };
-
-/** Série de 12 h: probabilidades válidas e, quando `gap`, as 3 últimas horas sem previsão (UNKNOWN). */
-export const pointSeries = (gap = false): PredictionSummary[] =>
-  [0.01, 0.02, 0.05, 0.12, 0.31, 0.2].map((probability, i) => ({ slug: 'AGAMENON_DERBY', riskLevel: 'LOW', probability, issuedAt: ago(660 - i * 120), modelValidationStatus: 'NOT_VALIDATED', riskThresholds: TH } as PredictionSummary))
-    .concat(gap ? [{ slug: 'AGAMENON_DERBY', riskLevel: 'UNKNOWN', probability: null, issuedAt: ago(30), degradationReason: 'INSUFFICIENT_DATA', modelValidationStatus: 'NOT_VALIDATED' } as PredictionSummary] : []);
 
 export const pointRain = (over: Partial<RainCandidates> = {}): RainCandidates => ({
   slug: 'AGAMENON_DERBY', hourEndUtc: ago(10), radiusM: 5000, ruleVersion: 'chuva-ponto-v4', valueMm: 3.2, usedStationId: 'SINT-A',

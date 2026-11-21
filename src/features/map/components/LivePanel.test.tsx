@@ -8,15 +8,15 @@ import type { FloodPointResponseDTO, SensorResponseDTO } from '../types';
 
 afterEach(cleanup);
 
-const pt = (id: number, name: string, level: string, p: number | null) =>
-  ({ id, slug: `p${id}`, name, municipality: 'Recife', latitude: 0, longitude: 0, floodPrediction: { riskLevel: level, floodProbability: p, horizonHours: 3, modelValidationStatus: 'NOT_VALIDATED' } }) as unknown as FloodPointResponseDTO;
+const pt = (id: number, name: string) =>
+  ({ id, slug: `p${id}`, name, municipality: 'Recife', latitude: 0, longitude: 0 }) as unknown as FloodPointResponseDTO;
 const overview = { isError: false, from: 0, to: 1, now: 0, rain: [], tide: [], rainNow: null, tideNow: { v: 0.22, rising: false }, probabilities: new Map() } as never;
 const sensor = { id: 1, sensorId: 'S1', stationName: 'Várzea', value: 0.4, unit: 'mm/h', source: 'CEMADEN', type: 'Pluviômetro', timestamp: new Date().toISOString() } as unknown as SensorResponseDTO;
 
 const renderPanel = (over: Partial<React.ComponentProps<typeof LivePanel>> = {}) =>
   render(
     <MemoryRouter>
-      <LivePanel points={[pt(1, 'Baixo A', 'LOW', 0.1), pt(2, 'Alto B', 'HIGH', 0.8), pt(3, 'Sem C', 'UNKNOWN', null)]} sensors={[sensor]}
+      <LivePanel points={[pt(1, 'Baixo A'), pt(2, 'Alto B'), pt(3, 'Sem C')]} sensors={[sensor]}
         liveStatus="open" lastSuccessAt={null} overview={overview} onFloodPointClick={vi.fn()} onSensorClick={vi.fn()} canSeeDataHealth={false} {...over} />
     </MemoryRouter>,
   );

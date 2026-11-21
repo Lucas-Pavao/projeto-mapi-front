@@ -27,7 +27,7 @@ export const RegressaoView: React.FC<{ card: RegressaoCard }> = ({ card }) => (
   <div className="flex flex-col gap-4">
     <p data-testid="regressao-banner" className="m-0 flex items-center gap-2 rounded-xl border border-warning/50 bg-warning/10 px-3 py-2 text-[13px] font-bold text-warning">
       Experimental · nenhum modelo aprende com rótulo de alagamento
-      <InfoTip text="Proposta de 20/11, experimental: os rótulos saem do treino. A previsão passa a ser a chuva medida prevista pelo rain_v1, passada pelo balde do ponto, com uma regra fixa de 15 cm. O classificador anterior (logreg_v3, rótulo sintético) saiu do serviço." />
+      <InfoTip text="Proposta de 20/11, experimental: os rótulos saem do treino. A previsão passa a ser a chuva medida prevista pelo rain_v1, passada pelo balde do ponto, com uma regra fixa de 15 cm. O classificador anterior (rótulo sintético) saiu do serviço." />
     </p>
 
     <Section title="Caminho" info={`${card.rule} Cada bloco diz o estado dele: dado medido, modelo validado, física sem calibração e regra fixada antes do teste.`}>

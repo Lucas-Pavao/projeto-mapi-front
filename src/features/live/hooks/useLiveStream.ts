@@ -18,7 +18,7 @@ const BACKOFF_MAX_MS = 30_000;
 /**
  * Conecta ao /api/stream (SSE, ADR 0012) com cookie de sessão. Reconecta sozinho (a biblioteca
  * reenvia Last-Event-ID) com espera crescente (1 s até 30 s); 401/403/429 encerram sem insistir.
- * Usado pelo Mapa (risk-summary, prediction) e por Alertas (alert).
+ * Usado pelo Mapa (flood-forecast) e por Alertas (alert).
  */
 export function useLiveStream({ enabled = true, onEvent }: Options = {}) {
   const [status, setStatus] = useState<LiveStatus>('closed');

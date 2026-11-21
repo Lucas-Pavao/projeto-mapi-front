@@ -3,7 +3,6 @@ import { cleanup, render, screen } from '@testing-library/react';
 afterEach(cleanup);
 import { SourceTag } from './SourceTag';
 import { sourceKindsOf, type SourceKind } from './sourceKinds';
-import { SyntheticWarning } from './SyntheticWarning';
 
 describe('SourceTag', () => {
   it('mostra o texto da fonte', () => {
@@ -22,7 +21,7 @@ describe('SourceTag: 12 variantes', () => {
     ['MEASURED', 'medida · Cemaden', false], ['LIVE', 'ao vivo', false], ['PED', 'PED', false], ['PED_ONLY', 'só PED', true],
     ['ESTIMATED', 'estimada · Open-Meteo', true], ['NO_DATA', 'sem dado', true], ['FORECAST', 'prevista · estimativa', true],
     ['TIDE_HARMONIC', 'maré · reserva harmônica', false], ['OFFICIAL_INMET', 'oficial · INMET', false],
-    ['PHYSICAL_MODEL', 'modelo físico · não validado', false], ['TESTING', 'Em teste: não é alerta oficial', false], ['SYNTHETIC_LABEL', 'rótulo SINTÉTICO', false],
+    ['PHYSICAL_MODEL', 'modelo físico · não validado', false], ['TESTING', 'Em teste: não é alerta oficial', false],
   ];
   it.each(V)('%s: texto visível e tracejado=%s', (kind, text, dashed) => {
     render(<SourceTag kind={kind} />);
@@ -30,14 +29,5 @@ describe('SourceTag: 12 variantes', () => {
     expect(el).toBeVisible();
     expect(el).toHaveAttribute('data-source', kind);
     expect(el.classList.contains('border-dashed')).toBe(dashed);
-  });
-});
-
-describe('SyntheticWarning', () => {
-  it('aparece para modelo sintético e some caso contrário', () => {
-    const { rerender } = render(<SyntheticWarning prediction={{ trainingData: 'SYNTHETIC' }} />);
-    expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/SINTÉTICO/);
-    rerender(<SyntheticWarning prediction={{ trainingData: 'REAL' }} />);
-    expect(screen.queryByTestId('synthetic-warning')).toBeNull();
   });
 });

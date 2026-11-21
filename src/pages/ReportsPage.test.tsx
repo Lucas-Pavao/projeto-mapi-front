@@ -1,14 +1,19 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, within, fireEvent, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
 import { ReportsPage } from './ReportsPage';
+import { ALAGAMENTO_FIXTURES } from '@/mocks/alagamento';
+
+const auth = vi.hoisted(() => ({ role: 'ADMIN' }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role: auth.role } }) }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  auth.role = 'ADMIN';
 });
 afterAll(() => server.close());
 
@@ -47,11 +52,21 @@ describe('ReportsPage', () => {
     expect(await screen.findByText(/Relato confirmado e evento de alagamento criado/)).toBeInTheDocument();
   });
 
-  it('previsão atual do ponto vem com risco rotulado e aviso experimental', async () => {
+  it('alerta do ponto agora: selo do nível da regressão (ADMIN); sem alerta vira aviso de que o relato contradiz', async () => {
+    server.use(http.get('/api/alagamento/pontos', () => HttpResponse.json([{ ...ALAGAMENTO_FIXTURES.sem_alerta_seco, slug: 'sintetico-1' }])));
     renderPage(<ReportsPage />);
     const d = await detalhe();
-    expect(await d.findByText(/Previsão experimental/)).toBeInTheDocument();
-    expect(d.getByText('Previsão atual do ponto')).toBeInTheDocument();
+    expect(d.getByText('Alerta do ponto agora')).toBeInTheDocument();
+    expect(await d.findByTestId('flood-chip')).toHaveTextContent('Sem alerta em 6 h');
+    expect(d.getByText(/contradiz o alerta experimental/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/%|Previsão experimental/);
+  });
+
+  it('visitante (não ADMIN): o alerta está em teste', async () => {
+    auth.role = 'OPERADOR';
+    renderPage(<ReportsPage />);
+    const d = await detalhe();
+    expect(await d.findByText('em teste')).toBeInTheDocument();
   });
 
   it('confirmar sem ponto sugerido abre o formulário e bloqueia sem ponto', async () => {

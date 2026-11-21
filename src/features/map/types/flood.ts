@@ -1,4 +1,3 @@
-import type { FloodPrediction } from '../schemas/floodPointResponse.schema';
 import type { SensorConfigDTO } from './sensor';
 import type { PreciseData } from './common';
 import type { TideSource } from './tide';
@@ -17,7 +16,6 @@ export interface FloodPointResponseDTO {
   sensorConfig: SensorConfigDTO | null;
   nearbySensorIds?: string[];
   liveData?: PreciseData;
-  floodPrediction?: FloodPredictionResponseDTO;
   active: boolean;
   tideHeight: number | null;
   tideUnit: string | null;
@@ -58,4 +56,3 @@ export interface ScraperEventDTO {
 }
 
 /** Derivado do schema zod (ADR 0007): fonte única do contrato de predição. */
-export type FloodPredictionResponseDTO = FloodPrediction;

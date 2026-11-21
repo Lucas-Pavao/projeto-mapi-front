@@ -1,6 +1,5 @@
 import type { SensorResponseDTO, SensorReadingDTO } from './sensor';
 import type { WeatherResponseDTO } from './weather';
-import type { FloodPredictionResponseDTO } from './flood';
 
 export interface Aggregates {
   rain3h: number | null;
@@ -60,7 +59,6 @@ export interface MapiResponseDTO {
   /** Altitude do local: cota do MDT do PE3D (5 m, relativa) ou, fora da área do MDT, Open-Meteo (90 m, aproximada). */
   localElevation?: LocalElevation | null;
   distanceToNearestSensorKm: number | null;
-  floodPrediction?: FloodPredictionResponseDTO;
 }
 
 export interface IngestionAcceptedDTO {

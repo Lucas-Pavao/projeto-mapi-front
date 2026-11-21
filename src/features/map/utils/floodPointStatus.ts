@@ -28,7 +28,6 @@ export async function loadFloodPointStatus(point: StatusTarget, isActive: () => 
   const data: PreciseDataResponse = {
     ...preciseAnalysis,
     preciseData: pointData.liveData || preciseAnalysis.preciseData,
-    floodPrediction: pointData.floodPrediction || preciseAnalysis.floodPrediction,
     // Keep nearestSensor and openMeteoData from preciseAnalysis as they are useful fallbacks
   };
 

@@ -2,7 +2,6 @@
  * DADOS SINTÉTICOS. Nada aqui é medição, previsão ou ocorrência real: servem só para desenhar
  * e testar telas. Todo nome começa com "Sintético" para ninguém confundir com o ponto real.
  */
-import type { PredictionSummary, RiskSummary } from '@/features/points/schemas/prediction.schema';
 import type { SensorFreshness } from '@/features/sensors/schemas/sensor.schema';
 import type { Alert, AlertRule } from '@/features/alerts/schemas/alert.schema';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
@@ -16,19 +15,11 @@ const ago = (minutes: number) => new Date(Date.now() - minutes * MIN).toISOStrin
 
 export const SYNTHETIC_SLUG = 'sintetico-1';
 
-const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
 
-export const predictions = (slug: string): PredictionSummary[] => [
-  { slug, riskLevel: 'LOW', probability: 0.012, issuedAt: ago(180), validUntil: ago(120), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED', riskThresholds: TH },
-  { slug, riskLevel: 'MEDIUM', probability: 0.41, issuedAt: ago(120), validUntil: ago(60), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
-  { slug, riskLevel: 'HIGH', probability: 0.78, issuedAt: ago(60), validUntil: ago(0), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
-  // UNKNOWN: sem probabilidade, com motivo da degradação.
-  { slug, riskLevel: 'UNKNOWN', probability: null, issuedAt: ago(5), validUntil: null, horizonHours: null, modelVersion: null, degradationReason: 'AI_UNAVAILABLE', lastValidIssuedAt: ago(60), modelValidationStatus: 'NOT_VALIDATED' },
-];
 
 export const points = [
-  { id: 1, slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', municipality: 'Recife', description: 'Ponto sintético para desenho de tela.', latitude: -8.05, longitude: -34.9, altitudeM: 3, distanceToChannelM: 100, basinName: 'Sintético', sensorConfig: { pluviometerStationIds: ['SINTETICO-PLUV-01'], riverLevelStationIds: ['SINTETICO-RIO-01'] }, active: true, tideHeight: 1.4, tideUnit: 'm (NR da DHN)', floodPrediction: { riskLevel: 'HIGH', floodProbability: 0.78, modelValidationStatus: 'NOT_VALIDATED', issuedAt: ago(10) } },
-  { id: 2, slug: 'sintetico-2', name: 'Sintético: ponto sem previsão', municipality: 'Jaboatão', description: null, latitude: -8.1, longitude: -34.95, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, active: false, tideHeight: null, tideUnit: null, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_UNAVAILABLE', modelValidationStatus: 'NOT_VALIDATED' } },
+  { id: 1, slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', municipality: 'Recife', description: 'Ponto sintético para desenho de tela.', latitude: -8.05, longitude: -34.9, altitudeM: 3, distanceToChannelM: 100, basinName: 'Sintético', sensorConfig: { pluviometerStationIds: ['SINTETICO-PLUV-01'], riverLevelStationIds: ['SINTETICO-RIO-01'] }, active: true, tideHeight: 1.4, tideUnit: 'm (NR da DHN)' },
+  { id: 2, slug: 'sintetico-2', name: 'Sintético: ponto sem previsão', municipality: 'Jaboatão', description: null, latitude: -8.1, longitude: -34.95, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, active: false, tideHeight: null, tideUnit: null },
 ];
 export const terrain = (slug: string) => ({
   floodPointSlug: slug, status: 'OK', streetElevationM: 2.31, contributingAreaM2: 18450,
@@ -36,7 +27,6 @@ export const terrain = (slug: string) => ({
   provenance: { flightYear: 2016, verticalReference: 'datum do MDT' },
 });
 
-export const riskSummary = (): RiskSummary => ({ LOW: 5, MEDIUM: 2, HIGH: 1, UNKNOWN: 1, computedAt: ago(1) });
 
 export const sensors: SensorFreshness[] = [
   { sensorId: 'SINTETICO-PLUV-01', type: 'PRECIPITATION', value: 2.4, unit: 'mm', stationName: 'Sintético: pluviômetro 1', municipality: 'Recife', source: 'CEMADEN', observedAt: ago(8), ageSeconds: 480, stale: false },
