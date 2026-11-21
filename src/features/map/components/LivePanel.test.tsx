@@ -40,7 +40,10 @@ describe('LivePanel', () => {
     const counts = screen.getByTestId('flood-counts');
     expect(Array.from(counts.children).map((c) => c.textContent)).toEqual(['1Alerta', '0Atenção', '1Sem alerta', '1Sem dado']);
     const lines = screen.getAllByTestId('point-alert-line').map((l) => l.textContent);
-    expect(lines).toEqual(['Alerta em 1 h · lâmina 17,7 cm agora', 'Alerta sem dado · sem dado', 'Sem alerta em 6 h · lâmina 0,0 cm agora']);
+    expect(lines).toEqual(['Alerta em 1 h · lâmina 17,7 cm agora', 'Alerta sem dado · lâmina sem dado', 'Sem alerta em 6 h · lâmina 0,0 cm agora']);
+    // prancha: ícone do nível (forma distinta) e lâmina agora à direita; sem linha = traço
+    expect(screen.getAllByTestId('point-sheet-now').map((l) => l.textContent)).toEqual(['17,7 cm', '—', '0,0 cm']);
+    expect(Array.from(document.querySelectorAll('[data-flood-badge]')).map((b) => b.getAttribute('data-flood-badge'))).toEqual(['ALERTA', 'SEM_DADO', 'SEM_ALERTA']);
   });
 
   it('ADMIN com falha de leitura: contadores em traço, nunca zero', () => {

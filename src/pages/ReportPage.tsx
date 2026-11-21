@@ -91,7 +91,7 @@ export const ReportPage: React.FC = () => {
 
   return (
     <PageFrame className="print:static print:block print:p-0 lg:flex-row">
-      <aside aria-label="Opções do relatório" className="no-print flex w-full shrink-0 flex-col gap-4 overflow-y-auto rounded-2xl border border-border bg-card p-[18px] lg:w-[380px]">
+      <aside aria-label="Opções do relatório" className="no-print flex w-full shrink-0 flex-col gap-4 overflow-y-auto rounded-2xl border border-border bg-card p-[18px] lg:w-[23.75rem]">
         <div>
           <h1 className="m-0 flex items-center gap-2 text-[22px] font-extrabold leading-7">Relatório do evento<LeanTip text="Monta um resumo para a coordenação a partir do que o MAPi registrou." /></h1>
           <OnlyInDetail><p className="m-0 mt-1 text-[13px] text-muted-foreground">Monta um resumo para a coordenação a partir do que o MAPi registrou.</p></OnlyInDetail>

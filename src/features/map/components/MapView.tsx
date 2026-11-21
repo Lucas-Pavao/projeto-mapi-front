@@ -229,7 +229,7 @@ export const MapView: React.FC = () => {
       {!isMobile && (
         <>
           <LivePanel
-            className="absolute bottom-4 left-4 top-4 z-20 w-[360px]"
+            className="absolute bottom-4 left-4 top-4 z-20 w-[22.5rem]"
             points={floodPoints}
             sensors={sensors}
             liveStatus={liveStatus}
@@ -249,7 +249,7 @@ export const MapView: React.FC = () => {
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
               cada uma recolhida num botão. Na mesma coluna para não se sobreporem quando o cartão cresce. */}
-          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
+          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[18.75rem] flex-col items-end gap-3">
             <RainTideCard overview={overview} className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3.5" />
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />

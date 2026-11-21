@@ -24,7 +24,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
   const now = precise?.precipitation;
   const dash = isFetchingStatus ? '…' : '—';
   return (
-    <section aria-label={`Resumo do ponto ${point.name}`} className="box-border flex w-[300px] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
+    <section aria-label={`Resumo do ponto ${point.name}`} className="box-border flex w-[18.75rem] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold text-muted-foreground">Ponto crítico</span>
         <button type="button" onClick={onClose} aria-label="Fechar resumo" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">

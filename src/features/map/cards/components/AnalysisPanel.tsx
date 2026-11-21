@@ -8,11 +8,13 @@ import { candidateStatus, candidateValue, distanceText, ROLE_TAG } from '@/featu
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 import { cn } from '@/lib/utils';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
-import { FloodChip, HorizonBars } from '@/features/alagamento/components/AlertaRegressao';
+import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import { BaldeChart } from '@/features/alagamento/components/BaldeChart';
 import { VisitorChip } from '@/features/alagamento/components/PointRegressaoBlock';
-import { EDGE_CLASS, floodChipOf } from '@/features/alagamento/utils/alagamentoText';
+import { BAR_CLASS, EDGE_CLASS, HCRIT_CM, fmt1, floodChipOf, pctOfBar, rangeCm } from '@/features/alagamento/utils/alagamentoText';
+import type { FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
+import { titleCasePlace } from '../../utils/overview';
 import type { FloodPointResponseDTO } from '../../types';
 import { ANALYSIS_INFO, ANALYSIS_TABS, TAB_LABEL, type AnalysisTab } from '../utils/analysis';
 
@@ -38,6 +40,51 @@ const H3: React.FC<{ title: string; info: string }> = ({ title, info }) => (
   </h3>
 );
 
+
+const LEVEL_LABEL: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };
+const BOX_CLASS: Record<FloodLevel, string> = {
+  ALERTA: 'border-destructive', ATENCAO: 'border-warning', SEM_ALERTA: 'border-border', SEM_DADO: 'border-dashed border-muted-foreground',
+};
+const LABEL_CLASS: Record<FloodLevel, string> = {
+  ALERTA: 'text-destructive', ATENCAO: 'text-warning', SEM_ALERTA: 'text-success', SEM_DADO: 'text-muted-foreground',
+};
+
+/** Prancha "PainelAnalise": uma caixa por prazo, com o prazo e o nível à esquerda, a barra e "17–33 cm · até 16h30" à direita. */
+const HorizonBoxes: React.FC<{ horizons: AlagamentoPonto['horizons'] }> = ({ horizons }) => (
+  <ul className="m-0 flex list-none flex-col gap-2 p-0">
+    {horizons.map((h) => {
+      const c = BAR_CLASS[h.level];
+      return (
+        <li key={h.hours} data-testid={`horizonte-${h.hours}`} data-level={h.level}
+          className={cn('grid grid-cols-[64px_1fr] items-center gap-2.5 rounded-[10px] border px-2.5 py-2', BOX_CLASS[h.level])}>
+          <div>
+            <div className="font-mono text-[15px] leading-5 font-extrabold">{h.hours} h</div>
+            <div className={cn('whitespace-nowrap text-[11px] font-bold', LABEL_CLASS[h.level])}>{LEVEL_LABEL[h.level]}</div>
+          </div>
+          <div className="flex min-w-0 flex-col gap-[3px]">
+            <span className="relative my-[5px] h-2 rounded-full bg-muted" role="img"
+              aria-label={`${h.hours} h: lâmina provável ${fmt1(h.sheetQ50Cm) ?? 'sem dado'} cm, pessimista ${fmt1(h.sheetQ95Cm) ?? 'sem dado'} cm; alagamento a partir de ${HCRIT_CM} cm`}>
+              <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q95)} style={{ width: `${pctOfBar(h.sheetQ95Cm)}%` }} />
+              <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q50)} style={{ width: `${pctOfBar(h.sheetQ50Cm)}%` }} />
+              <span aria-hidden="true" className="absolute -inset-y-[5px] w-0.5 bg-risk-high-edge" style={{ left: `${pctOfBar(HCRIT_CM)}%` }} />
+            </span>
+            <span className="font-mono text-[11px] leading-[15px] text-muted-foreground">
+              {rangeCm(h.sheetQ50Cm, h.sheetQ95Cm)}{h.validUntil ? ` · até ${formatHoraCurta(h.validUntil)}` : ''}
+            </span>
+          </div>
+        </li>
+      );
+    })}
+  </ul>
+);
+
+/** "chuva no ponto (até 5 km) nos últimos 10 min: 0,0 mm (−0,2 mm na previsão)" → rótulo à esquerda, valor à direita. */
+const splitShap = (text: string): { label: string; value: string } => {
+  const i = text.lastIndexOf(': ');
+  if (i < 0) return { label: text, value: '' };
+  const label = text.slice(0, i);
+  return { label: label.charAt(0).toUpperCase() + label.slice(1), value: text.slice(i + 2) };
+};
 
 const LIMITS = [
   'Nenhum modelo é treinado com rótulo de alagamento: a chuva prevista vem do rain_v1 (alvo medido) e o resto é física.',
@@ -74,10 +121,10 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
   );
   return (
     <section role="dialog" aria-label={`Análise completa de ${point.name}`} data-testid="analysis-panel" data-level={a?.level ?? (isAdmin ? 'SEM_DADO' : 'VISITOR')}
-      className={cn('flex h-full w-[480px] max-w-full flex-col border-l border-t-4 border-border bg-card text-foreground shadow-elevation-overlay', chip ? EDGE_CLASS[chip.tone] : 'border-t-muted-foreground [border-top-style:dashed]')}>
+      className={cn('flex h-full w-[30rem] max-w-full flex-col border-l border-t-4 border-border bg-card text-foreground shadow-elevation-overlay', chip ? EDGE_CLASS[chip.tone] : 'border-t-muted-foreground [border-top-style:dashed]')}>
       <header className="flex flex-col gap-2 border-b border-border px-[18px] pb-3 pt-4">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">ANÁLISE COMPLETA</span>
+          <span className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">ANÁLISE COMPLETA{a?.evaluatedAt ? <> · <span className="font-mono">{formatHoraCurta(a.evaluatedAt)}</span></> : null}</span>
           {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-4" aria-hidden="true" /></button>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -86,7 +133,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
         </div>
         <div>
           <p className="m-0 text-xl font-extrabold leading-[26px]">{point.name}</p>
-          <p className="m-0 text-xs leading-4 text-muted-foreground">{point.municipality ?? 'Recife'}{a?.issuedAt ? ` · emitido ${formatHoraCurta(a.issuedAt)}` : ''}</p>
+          <p className="m-0 text-xs leading-4 text-muted-foreground">{titleCasePlace(point.municipality ?? 'Recife')}{a?.issuedAt ? ` · ${formatHoraCurta(a.issuedAt)}` : ''}</p>
         </div>
         <div role="tablist" aria-label="Seções da análise" className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
           {ANALYSIS_TABS.map((t) => (
@@ -101,19 +148,30 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
           <>
             <section className="flex flex-col gap-2">
               <H3 title="Nível por prazo" info={ANALYSIS_INFO.level} />
-              <HorizonBars horizons={a.horizons} withValidity />
+              <HorizonBoxes horizons={a.horizons} />
             </section>
             <section className="flex flex-col gap-2">
               <H3 title="O que mais pesou" info={ANALYSIS_INFO.shap} />
               {e && e.shapTop3.length > 0 ? (
-                <ol className="m-0 flex list-decimal flex-col gap-1 pl-5 text-[13px] leading-[18px]">
-                  {e.shapTop3.map((s) => <li key={s.text} data-testid="analysis-shap">{s.text}</li>)}
-                </ol>
+                <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[13px] leading-[18px]">
+                  {e.shapTop3.map((s) => {
+                    const { label, value } = splitShap(s.text);
+                    return (
+                      <li key={s.text} data-testid="analysis-shap" className="flex justify-between gap-2">
+                        <span>{label}</span>
+                        <span className="shrink-0 text-right">
+                          <span className="block font-mono font-bold">{value.split(' (')[0]}</span>
+                          {value.includes(' (') && <span className="block font-mono text-[11px] leading-[14px] text-muted-foreground">{value.slice(value.indexOf(' (') + 2).replace(/\)$/, '')}</span>}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               ) : <p className="m-0 text-xs text-muted-foreground">sem explicação neste ciclo</p>}
             </section>
             <section className="flex flex-col gap-1.5">
               <H3 title="Para chegar a 15 cm" info={ANALYSIS_INFO.cf} />
-              <p data-testid="analysis-cf" className="m-0 text-[13px] leading-[18px]">{e?.counterfactualText ?? 'sem cálculo neste ciclo'}</p>
+              <p data-testid="analysis-cf" className="m-0 rounded-lg bg-muted px-2.5 py-2 text-[13px] leading-[18px]">{e?.counterfactualText ?? 'sem cálculo neste ciclo'}</p>
             </section>
           </>
         ))}
@@ -147,7 +205,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
                     ['Fontes', a.sources.length ? a.sources.join(' · ') : '—'],
                     ['Ausências', a.level === 'SEM_DADO' ? a.reasonText ?? '—' : a.missingInputs.length ? a.missingInputs.join(', ') : 'nenhuma'],
                     ['Status', 'experimental · não validado'],
-                  ] as const).map(([k, v]) => <React.Fragment key={k}><dt className="text-muted-foreground">{k}</dt><dd className="m-0 font-mono">{v}</dd></React.Fragment>)}
+                  ] as const).map(([k, v]) => <React.Fragment key={k}><dt className="font-mono text-primary">{k}</dt><dd className="m-0 break-words">{v}</dd></React.Fragment>)}
                 </dl>
                 <p className="m-0 text-[11px] text-muted-foreground">{a.attribution}</p>
               </section>
@@ -165,7 +223,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
       <footer className="flex gap-2 border-t border-border px-[18px] py-3">
         <Link to={`/pontos/${point.slug}`} className="flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Abrir página do ponto</Link>
         <Link to="/relatos" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Relatos</Link>
-        <Link to="/relatorio" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Relatório</Link>
+        <Link to="/modelo" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Validação</Link>
       </footer>
     </section>
   );

@@ -12,7 +12,7 @@ import { DOT_CLASS, TEXT_CLASS, listLineOf } from '@/features/alagamento/utils/a
  * de agora. Sem porcentagem. Visitante: só nome e bairro.
  */
 export const PointList: React.FC<{ points: FloodPointResponseDTO[] | undefined; current: string; alagamentoBySlug?: ReadonlyMap<string, AlagamentoPonto> }> = ({ points, current, alagamentoBySlug }) => (
-  <aside aria-label="Pontos críticos" className="flex min-h-0 w-full shrink-0 flex-col gap-1 rounded-2xl border border-border bg-card p-3 lg:w-[280px]">
+  <aside aria-label="Pontos críticos" className="flex min-h-0 w-full shrink-0 flex-col gap-1 rounded-2xl border border-border bg-card p-3 lg:w-[17.5rem]">
     <Link to="/map" className="flex items-center gap-1.5 px-1.5 pb-2.5 pt-1 text-[13px] text-primary no-underline hover:text-foreground">
       <ChevronLeft className="size-4" aria-hidden="true" />Voltar ao mapa
     </Link>

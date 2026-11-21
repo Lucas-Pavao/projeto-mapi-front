@@ -63,3 +63,8 @@ export function riverState(level: number | null, s: { riverPreAlertLevel?: numbe
   if (pre != null && level >= pre) return 'Pré-alerta';
   return 'normal';
 }
+
+/** "JABOATAO DOS GUARARAPES" → "Jaboatao dos Guararapes" (o cadastro vem em caixa alta; a prancha mostra "Derby, Recife"). */
+const LOWER = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+export const titleCasePlace = (s: string) => s.toLowerCase().split(/\s+/).filter(Boolean)
+  .map((w, i) => (i > 0 && LOWER.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
