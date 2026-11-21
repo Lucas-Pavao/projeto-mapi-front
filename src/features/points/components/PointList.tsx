@@ -5,7 +5,10 @@ import { cn } from '@/lib/utils';
 import { PanelTitle } from '@/features/operacao/components/Panel';
 import type { FloodPointResponseDTO } from '@/features/map/types';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
-import { DOT_CLASS, TEXT_CLASS, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { TEXT_CLASS, fmt1, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { FloodLevelBadge } from '@/features/alagamento/components/FloodLevelBadge';
+
+const SHEET_CLASS = { ALERTA: 'text-risk-high-text', ATENCAO: 'text-risk-moderate-text', SEM_ALERTA: 'text-risk-low-text', SEM_DADO: 'text-risk-unknown-text' } as const;
 
 /**
  * Lista lateral de pontos críticos (5.5, 5.10): nome, bairro e, para o ADMIN, o nível do alerta por regressão com a lâmina
@@ -19,7 +22,8 @@ export const PointList: React.FC<{ points: FloodPointResponseDTO[] | undefined; 
     <PanelTitle className="mx-1.5 mb-1.5">Pontos críticos</PanelTitle>
     <ul className="m-0 flex min-h-0 list-none flex-col gap-1 overflow-y-auto p-0 max-lg:max-h-72">
       {(points ?? []).filter((p) => p.active).map((p) => {
-        const line = alagamentoBySlug ? listLineOf(alagamentoBySlug.get(p.slug)) : null;
+        const a = alagamentoBySlug?.get(p.slug);
+        const line = alagamentoBySlug ? listLineOf(a) : null;
         const on = p.slug === current;
         return (
           <li key={p.slug}>
@@ -28,13 +32,16 @@ export const PointList: React.FC<{ points: FloodPointResponseDTO[] | undefined; 
               aria-current={on ? 'page' : undefined}
               className={cn('flex items-center gap-2.5 rounded-[10px] p-2 text-left text-foreground no-underline hover:bg-muted', on && 'bg-secondary')}
             >
-              <span aria-hidden="true" className={cn('box-border size-3 flex-none rounded-full', line ? DOT_CLASS[line.tone] : 'bg-muted-foreground', line?.tone === 'muted' && 'border-2 border-dashed border-muted-foreground bg-transparent')} />
+              <FloodLevelBadge level={alagamentoBySlug ? (a?.level ?? 'SEM_DADO') : null} />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[13px] font-bold leading-[18px]">{p.name}</span>
-                <span className="truncate text-[12px] leading-4 text-muted-foreground">
-                  {line ? <><span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span> · {line.sheet}</> : p.basinName ?? p.municipality ?? ''}
+                <span className="text-[13px] font-bold leading-[18px]">{p.name}</span>
+                <span className="text-[12px] leading-4 text-muted-foreground">
+                  {line ? <span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span> : p.basinName ?? p.municipality ?? ''}
                 </span>
               </span>
+              {alagamentoBySlug && (
+                <span data-testid="point-sheet-now" className={cn('flex-none font-mono text-sm font-bold', SHEET_CLASS[a?.level ?? 'SEM_DADO'])}>{a?.hNowCm == null ? '—' : `${fmt1(a.hNowCm)} cm`}</span>
+              )}
             </Link>
           </li>
         );

@@ -68,3 +68,11 @@ export function riverState(level: number | null, s: { riverPreAlertLevel?: numbe
 const LOWER = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
 export const titleCasePlace = (s: string) => s.toLowerCase().split(/\s+/).filter(Boolean)
   .map((w, i) => (i > 0 && LOWER.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+
+/** "[CEMADEN] ENGENHO VELHO [H]" → "Engenho Velho": tira as marcas de fonte/tipo entre colchetes; caixa alta vira normal. */
+export const cleanStationName = (s: string | null | undefined): string | null => {
+  if (!s) return null;
+  const t = s.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  return t === t.toUpperCase() ? titleCasePlace(t) : t;
+};

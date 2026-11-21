@@ -44,7 +44,7 @@ export const AdminDataPage: React.FC = () => {
           const now = sources.dataUpdatedAt;
           return (
             <>
-              <ul aria-label="Fontes de dados" className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:[grid-template-columns:repeat(auto-fit,minmax(190px,1fr))]">
+              <ul aria-label="Fontes de dados" className="m-0 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 lg:[grid-template-columns:repeat(auto-fill,minmax(13rem,1fr))]">
                 {groupSources(items).map((s) => (
                   <SourceCard key={s.source} source={s} now={now} onShowRuns={(name) => { setSource(name); runsRef.current?.scrollIntoView?.({ block: 'start' }); }} />
                 ))}

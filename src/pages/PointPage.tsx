@@ -16,9 +16,9 @@ import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
 import { RainCandidatesPanel } from '@/features/points/components/RainCandidatesPanel';
 import { PageFrame, Panel, PanelTitle } from '@/features/operacao/components/Panel';
 import { useAlagamentoPontos } from '@/features/alagamento/hooks/useAlagamentoPontos';
-import { HorizonBars } from '@/features/alagamento/components/AlertaRegressao';
-import { BaldeChart } from '@/features/alagamento/components/BaldeChart';
-import { LEGEND_RULE } from '@/features/alagamento/utils/alagamentoText';
+import { HorizonBoxes } from '@/features/alagamento/components/HorizonBoxes';
+import { SheetSparkline } from '@/features/alagamento/components/SheetSparkline';
+import { LEGEND_RULE, splitShap } from '@/features/alagamento/utils/alagamentoText';
 import { httpStatus } from '@/lib/apiError';
 
 const MapLink: React.FC = () => (
@@ -81,20 +81,31 @@ export const PointPage: React.FC = () => {
           <>
             <Panel aria-label="Alagamento previsto" className="min-h-[300px] lg:col-span-7">
               <Title info={INFO.forecast}>Alagamento previsto · chuva prevista pelo balde</Title>
-              {empty ? <p data-testid="point-empty" className="m-0 text-[13px] text-muted-foreground">{empty}</p> : a && (
+              {empty ? (
                 <>
-                  <HorizonBars horizons={a.horizons} withValidity />
-                  <BaldeChart steps={e?.decomposition ?? []} capacityM3H={e?.capacityM3H} only="sheet" />
+                  {a && a.level === 'SEM_DADO' && <HorizonBoxes variant="plain" horizons={[1, 3, 6].map((h) => ({ hours: h, level: 'SEM_DADO' as const, sheetQ50Cm: null, sheetQ95Cm: null, validUntil: null, rainQ50Mm: null, rainQ95Mm: null }))} />}
+                  <p data-testid="point-empty" className="m-0 rounded-[10px] border border-dashed border-muted-foreground p-2.5 text-[13px]"><strong>Sem dado suficiente agora:</strong> {empty.replace(/^Sem dado: /, '')}</p>
+                </>
+              ) : a && (
+                <>
+                  <HorizonBoxes variant="plain" horizons={a.horizons} />
+                  <SheetSparkline steps={e?.decomposition ?? []} />
                 </>
               )}
             </Panel>
             <Panel aria-label="Por que este nível" className="lg:col-span-5">
               <Title info={INFO.why}>Por que este nível</Title>
               {empty || !e ? <p className="m-0 text-[13px] text-muted-foreground">{empty ?? 'sem explicação neste ciclo'}</p> : (
-                <div className="flex flex-col gap-3 text-[13px] leading-[18px]">
-                  <ol data-testid="point-shap" className="m-0 flex list-decimal flex-col gap-1 pl-5">{e.shapTop3.map((s) => <li key={s.text}>{s.text}</li>)}</ol>
-                  <p data-testid="point-cf" className="m-0"><span className="text-muted-foreground">Para chegar a 15 cm: </span>{e.counterfactualText ?? '—'}</p>
-                  <p data-testid="point-sens" className="m-0"><span className="text-muted-foreground">Sensibilidade: </span>{e.sensitivity?.text ?? '—'}</p>
+                <div className="flex flex-col gap-2.5 text-[13px] leading-[18px]">
+                  <p className="m-0 text-xs font-bold">O que mais pesou na chuva prevista (SHAP local)</p>
+                  <ul data-testid="point-shap" className="m-0 flex list-none flex-col gap-1 p-0">
+                    {e.shapTop3.map((s) => {
+                      const { label, value } = splitShap(s.text);
+                      return <li key={s.text} className="flex justify-between gap-2"><span>{label}</span><strong className="shrink-0 text-right font-mono">{value.split(' (')[0]}</strong></li>;
+                    })}
+                  </ul>
+                  <p data-testid="point-cf" className="m-0 rounded-lg bg-muted px-2.5 py-2"><span className="text-muted-foreground">Para chegar a 15 cm: </span>{e.counterfactualText ?? '—'}</p>
+                  <p data-testid="point-sens" className="m-0"><strong>Sensibilidade:</strong> {e.sensitivity?.text ?? '—'}</p>
                   <OnlyInDetail>
                     <p className="m-0 text-xs text-muted-foreground">Parâmetro que mais pesa: {e.sensitivity?.heaviestParameter ?? '—'} · cenário servido {e.servedScenario ?? '—'} em {e.servedHorizonHours ?? '—'} h</p>
                   </OnlyInDetail>

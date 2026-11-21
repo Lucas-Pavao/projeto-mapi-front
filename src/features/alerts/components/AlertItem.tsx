@@ -31,17 +31,22 @@ interface Props {
   acking: boolean;
   isNew?: boolean;
   onAck: (id: number) => void;
+  /** Nome do ponto pelo slug (cadastro), para não mostrar 'Ponto AGAMENON_DERBY'. */
+  pointName?: string | null;
 }
 
+/** Valor observado só onde o detalhe não traz o número: rio e maré (m). Chuva e sensor parado já dizem no texto. */
+const OBSERVED_UNIT: Partial<Record<AlertKind, string>> = { RIVER_STAGE: 'm', TIDE_ABOVE: 'm' };
+
 /** Linha da Central de alertas: ícone por tipo, título, detalhe, hora e "Ciente". Lido fica sem destaque. */
-export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = false, onAck }) => {
+export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = false, onAck, pointName }) => {
   const sev = SEVERITY[a.severity];
   const Icon = ICON[a.kind];
   const open = !a.acknowledgedAt;
   const detail = [
     a.detail,
     a.riskLevel === 'SEM_DADO' && a.degradationReason ? `Motivo: ${REASON_SHORT[a.degradationReason as FloodReason] ?? a.degradationReason}.` : null,
-    a.observedValue != null ? `valor observado ${a.observedValue.toLocaleString('pt-BR')}` : null,
+    a.observedValue != null && OBSERVED_UNIT[a.kind] ? `observado ${a.observedValue.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${OBSERVED_UNIT[a.kind]}` : null,
   ].filter(Boolean).join(' · ');
   return (
     <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3', open ? 'bg-muted' : 'bg-transparent')}>
@@ -60,7 +65,7 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
         </div>
         <div className="text-[12px] leading-4 text-muted-foreground">
           {detail}
-          {a.floodPointSlug && <>{detail ? ' · ' : ''}<Link to={`/pontos/${a.floodPointSlug}`} className="text-primary hover:underline">Ponto {a.floodPointSlug}</Link></>}
+          {a.floodPointSlug && <>{detail ? ' · ' : ''}<Link to={`/pontos/${a.floodPointSlug}`} className="text-primary hover:underline">{pointName ?? `Ponto ${a.floodPointSlug}`}</Link></>}
           {a.stationId && <>{detail || a.floodPointSlug ? ' · ' : ''}Estação <span className="font-mono">{a.stationId}</span></>}
           {!open && <>{' · '}Reconhecido por {a.acknowledgedBy ?? 'operador'} às {formatHoraCurta(a.acknowledgedAt) ?? '—'}</>}
         </div>

@@ -83,7 +83,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
   const tide = point.tideHeight ?? point.liveData?.tideHeight ?? null;
   const tiles: Array<{ l: string; v: string; s: string; warn: boolean }> = [
     { l: 'Chuva agora', v: rain?.valueMm != null && used ? `${num(rain.valueMm, 1)} mm/h` : 'sem dado', s: used && rain?.valueMm != null ? `${used.name} · ${distanceText(used.distanceM)}` : 'nenhuma estação', warn: rain?.valueMm == null },
-    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: 'medida · Cemaden', warn: agg?.rain3h == null },
+    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: agg?.rainSource ? 'estimada · Open-Meteo' : 'sem leitura', warn: agg?.rain3h == null },
     { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideSource === 'HARMONIC' ? 'maré · reserva harmônica' : point.tideUnit ?? 'DHN (NR)', warn: false },
   ];
   return (

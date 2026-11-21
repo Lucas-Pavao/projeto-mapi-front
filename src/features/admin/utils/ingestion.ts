@@ -32,6 +32,10 @@ export const SOURCE_GROUPS: { id: string; name: string; what: string; members: s
   { id: 'APAC_RADAR', name: 'APAC · radar', what: 'Chuva por radar', members: ['APAC_RADAR'] },
   { id: 'TIDE_HARMONIC', name: 'Maré de reserva', what: 'Previsão harmônica (sem tábua oficial)', members: ['TIDE_HARMONIC_F41'] },
   { id: 'CKAN_RECIFE', name: 'CKAN Dados Recife', what: 'Ocorrências da Defesa Civil', members: ['CKAN_RECIFE'] },
+  // Chaves que a tela mostrava com o código cru (revisão de 21/11).
+  { id: 'APAC_HIST_DIARIO', name: 'APAC · histórico diário', what: 'Chuva diária (carga de 5 anos)', members: ['APAC_HIST_DIARIO'] },
+  { id: 'OPEN_METEO_FORECAST', name: 'Open-Meteo · previsão', what: 'Rodada da véspera (entrada do rain_v1)', members: ['OPEN_METEO_FORECAST'] },
+  { id: 'MAPI_ALERTA', name: 'Ciclo do alerta', what: 'Alerta por ponto a cada coleta', members: ['MAPI_ALERTA'] },
 ];
 
 /** Uma fonte da tela: o agregado das chaves que a compõem. `runSource` é a chave usada no filtro de execuções. */

@@ -59,7 +59,7 @@ describe('AlertsPage: alertas', () => {
   it('filtros em pílula mostram a contagem e filtram a lista', async () => {
     renderPage(<AlertsPage />);
     await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm');
-    expect(screen.getByRole('radio', { name: /Risco 2/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /Alagamento 2/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Sensores 1/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: /Sensores/ }));
     expect((await lista()).queryByText('Sintético: alerta em 1 h · lâmina 17,7 cm')).toBeNull();

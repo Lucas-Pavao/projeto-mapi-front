@@ -6,7 +6,8 @@ const ARIA = ['convidado', 'usuário', 'operador', 'administrador'];
 
 /** Ação × perfil, na mesma regra de perfil mínimo das telas (ADR 0010). */
 const PERMS: Array<[string, [boolean, boolean, boolean, boolean]]> = [
-  ['Ver mapa de risco e sensores', [true, true, true, true]],
+  ['Ver mapa, chuva, maré e sensores', [true, true, true, true]],
+  ['Ver alerta de alagamento (experimental, modo sombra)', [false, false, false, true]],
   ['Enviar relato de alagamento', [true, true, true, true]],
   ['Ver detalhe do ponto e histórico', [false, true, true, true]],
   ['Exportar dados (CSV)', [false, true, true, true]],

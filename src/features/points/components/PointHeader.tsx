@@ -9,6 +9,8 @@ import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.s
 import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import { VisitorChip } from '@/features/alagamento/components/PointRegressaoBlock';
+import { titleCasePlace } from '@/features/map/utils/overview';
+import { OnlyInDetail } from '@/lib/detailMode';
 
 const Mono: React.FC<{ children: React.ReactNode }> = ({ children }) => <dd className="m-0 font-mono text-[16px] font-bold leading-[22px]">{children}</dd>;
 
@@ -40,7 +42,8 @@ export const PointHeader: React.FC<Props> = ({ point, alagamento, isAdmin = fals
       setCsv('erro');
     }
   };
-  const sub = [point.municipality, point.description].filter(Boolean).join(' · ');
+  const sub = [point.municipality ? titleCasePlace(point.municipality) : null, point.description].filter(Boolean).join(' · ');
+  const validUntil = alagamento?.horizons.map((h) => h.validUntil).filter(Boolean).sort().pop() ?? null;
   const chip = !isAdmin ? <VisitorChip />
     : alagamento ? <FloodChip ponto={alagamento} />
       : (
@@ -55,15 +58,17 @@ export const PointHeader: React.FC<Props> = ({ point, alagamento, isAdmin = fals
         <div className="flex flex-wrap items-center gap-2">{chip}<ExperimentalTag /></div>
         <h1 className="m-0 text-[28px] font-extrabold leading-[34px] tracking-[-0.015em]">{point.name}</h1>
         <p className="m-0 text-[14px] leading-5 text-muted-foreground">
-          {sub && <>{sub} · </>}
-          <span className="font-mono">{point.slug}</span>
+          {sub}
+          <OnlyInDetail><> · <span className="font-mono">{point.slug}</span></></OnlyInDetail>
         </p>
       </div>
-      <dl className="m-0 grid self-center grid-cols-[repeat(3,auto)] gap-x-6 gap-y-1 text-[12px] leading-4">
+      <dl className="m-0 grid self-center grid-cols-[repeat(4,auto)] gap-x-6 gap-y-1 text-[12px] leading-4">
         <dt className="text-muted-foreground">Emitido</dt>
+        <dt className="text-muted-foreground">Válida até</dt>
         <dt className="text-muted-foreground">Horizonte</dt>
         <dt className="text-muted-foreground">Modelo · chuva</dt>
         <Mono>{formatHoraCurta(alagamento?.issuedAt) ?? '—'}</Mono>
+        <Mono>{formatHoraCurta(validUntil) ?? '—'}</Mono>
         <Mono>1, 3 e 6 h</Mono>
         <Mono>rain_v1 + balde</Mono>
       </dl>

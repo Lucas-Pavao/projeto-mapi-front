@@ -12,8 +12,8 @@ import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import { BaldeChart } from '@/features/alagamento/components/BaldeChart';
 import { VisitorChip } from '@/features/alagamento/components/PointRegressaoBlock';
-import { BAR_CLASS, EDGE_CLASS, HCRIT_CM, fmt1, floodChipOf, pctOfBar, rangeCm } from '@/features/alagamento/utils/alagamentoText';
-import type { FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
+import { EDGE_CLASS, floodChipOf, splitShap } from '@/features/alagamento/utils/alagamentoText';
+import { HorizonBoxes } from '@/features/alagamento/components/HorizonBoxes';
 import { titleCasePlace } from '../../utils/overview';
 import type { FloodPointResponseDTO } from '../../types';
 import { ANALYSIS_INFO, ANALYSIS_TABS, TAB_LABEL, type AnalysisTab } from '../utils/analysis';
@@ -40,51 +40,6 @@ const H3: React.FC<{ title: string; info: string }> = ({ title, info }) => (
   </h3>
 );
 
-
-const LEVEL_LABEL: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };
-const BOX_CLASS: Record<FloodLevel, string> = {
-  ALERTA: 'border-destructive', ATENCAO: 'border-warning', SEM_ALERTA: 'border-border', SEM_DADO: 'border-dashed border-muted-foreground',
-};
-const LABEL_CLASS: Record<FloodLevel, string> = {
-  ALERTA: 'text-destructive', ATENCAO: 'text-warning', SEM_ALERTA: 'text-success', SEM_DADO: 'text-muted-foreground',
-};
-
-/** Prancha "PainelAnalise": uma caixa por prazo, com o prazo e o nível à esquerda, a barra e "17–33 cm · até 16h30" à direita. */
-const HorizonBoxes: React.FC<{ horizons: AlagamentoPonto['horizons'] }> = ({ horizons }) => (
-  <ul className="m-0 flex list-none flex-col gap-2 p-0">
-    {horizons.map((h) => {
-      const c = BAR_CLASS[h.level];
-      return (
-        <li key={h.hours} data-testid={`horizonte-${h.hours}`} data-level={h.level}
-          className={cn('grid grid-cols-[64px_1fr] items-center gap-2.5 rounded-[10px] border px-2.5 py-2', BOX_CLASS[h.level])}>
-          <div>
-            <div className="font-mono text-[15px] leading-5 font-extrabold">{h.hours} h</div>
-            <div className={cn('whitespace-nowrap text-[11px] font-bold', LABEL_CLASS[h.level])}>{LEVEL_LABEL[h.level]}</div>
-          </div>
-          <div className="flex min-w-0 flex-col gap-[3px]">
-            <span className="relative my-[5px] h-2 rounded-full bg-muted" role="img"
-              aria-label={`${h.hours} h: lâmina provável ${fmt1(h.sheetQ50Cm) ?? 'sem dado'} cm, pessimista ${fmt1(h.sheetQ95Cm) ?? 'sem dado'} cm; alagamento a partir de ${HCRIT_CM} cm`}>
-              <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q95)} style={{ width: `${pctOfBar(h.sheetQ95Cm)}%` }} />
-              <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q50)} style={{ width: `${pctOfBar(h.sheetQ50Cm)}%` }} />
-              <span aria-hidden="true" className="absolute -inset-y-[5px] w-0.5 bg-risk-high-edge" style={{ left: `${pctOfBar(HCRIT_CM)}%` }} />
-            </span>
-            <span className="font-mono text-[11px] leading-[15px] text-muted-foreground">
-              {rangeCm(h.sheetQ50Cm, h.sheetQ95Cm)}{h.validUntil ? ` · até ${formatHoraCurta(h.validUntil)}` : ''}
-            </span>
-          </div>
-        </li>
-      );
-    })}
-  </ul>
-);
-
-/** "chuva no ponto (até 5 km) nos últimos 10 min: 0,0 mm (−0,2 mm na previsão)" → rótulo à esquerda, valor à direita. */
-const splitShap = (text: string): { label: string; value: string } => {
-  const i = text.lastIndexOf(': ');
-  if (i < 0) return { label: text, value: '' };
-  const label = text.slice(0, i);
-  return { label: label.charAt(0).toUpperCase() + label.slice(1), value: text.slice(i + 2) };
-};
 
 const LIMITS = [
   'Nenhum modelo é treinado com rótulo de alagamento: a chuva prevista vem do rain_v1 (alvo medido) e o resto é física.',

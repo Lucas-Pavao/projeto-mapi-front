@@ -3,7 +3,10 @@ import { MapPin, Moon, Sun } from 'lucide-react';
 import { FloodCountTiles } from '@/features/alagamento/components/FloodCountTiles';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
-import { DOT_CLASS, TEXT_CLASS, countByLevel, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { TEXT_CLASS, countByLevel, fmt1, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { FloodLevelBadge } from '@/features/alagamento/components/FloodLevelBadge';
+
+const SHEET_CLASS = { ALERTA: 'text-risk-high-text', ATENCAO: 'text-risk-moderate-text', SEM_ALERTA: 'text-risk-low-text', SEM_DADO: 'text-risk-unknown-text' } as const;
 import { MobileMenu } from '@/components/layout/MobileMenu';
 import { useTheme } from '@/hooks/useTheme';
 import { ACCENT_LABEL } from '@/lib/theme';
@@ -116,19 +119,21 @@ export const MobileMapa: React.FC<Props> = ({ points, alagamentoBySlug, alagamen
             <ul className="scroll m-0 flex min-h-0 flex-1 list-none flex-col gap-1.5 p-0">
               {rows.length === 0 && <li className="py-4 text-center text-xs text-muted-foreground">{q ? 'Nenhum ponto com esse nome.' : 'Nenhum ponto crítico retornado pela API.'}</li>}
               {rows.map((p) => {
-                const line = alagamentoBySlug ? listLineOf(alagamentoBySlug.get(p.slug)) : null;
+                const a = alagamentoBySlug?.get(p.slug);
+                const line = alagamentoBySlug ? listLineOf(a) : null;
                 return (
                   <li key={p.id}>
                     <button type="button" onClick={() => onSelect(p)} className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-muted p-2.5 text-left text-foreground">
-                      <span aria-hidden="true" className={cn('box-border size-3 flex-none rounded-full', line ? DOT_CLASS[line.tone] : 'bg-muted-foreground', line?.tone === 'muted' && 'border-2 border-dashed border-muted-foreground bg-transparent')} />
+                      <FloodLevelBadge level={alagamentoBySlug ? (a?.level ?? 'SEM_DADO') : null} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] leading-5 font-extrabold">{p.name}</span>
                         {line ? (
-                          <span data-testid="point-alert-line" className="block truncate text-xs text-muted-foreground"><span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span> · {line.sheet}</span>
+                          <span data-testid="point-alert-line" className="block truncate text-xs text-muted-foreground"><span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span></span>
                         ) : (
                           <span className="block truncate text-xs text-muted-foreground">{p.municipality ?? 'Recife'}</span>
                         )}
                       </span>
+                      {alagamentoBySlug && <span className={cn('flex-none font-mono text-sm font-bold', SHEET_CLASS[a?.level ?? 'SEM_DADO'])}>{a?.hNowCm == null ? '—' : `${fmt1(a.hNowCm)} cm`}</span>}
                     </button>
                   </li>
                 );
