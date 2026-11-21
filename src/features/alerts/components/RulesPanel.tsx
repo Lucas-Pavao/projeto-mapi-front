@@ -21,7 +21,7 @@ const targetText = (r: AlertRule, names: Map<string, string>): string => {
 
 const limitText = (r: AlertRule): string => {
   const info = RULE_KINDS[r.kind];
-  if (info.usesMinRisk) return r.minRisk === 'MEDIUM' ? 'Moderado ou acima' : r.minRisk === 'HIGH' ? 'Alto' : '—';
+  if (info.usesMinRisk) return r.minRisk === 'MEDIUM' ? 'Atenção ou alerta' : r.minRisk === 'HIGH' ? 'Só alerta' : '—';
   if (info.unit) return r.threshold != null ? `${r.threshold.toLocaleString('pt-BR')} ${info.unit}` : '—';
   return '—';
 };

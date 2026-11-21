@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { CloudRain, OctagonAlert, TriangleAlert, WifiOff, Waves, type LucideIcon, DatabaseZap } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
+import { CHIP_CLASS, REASON_SHORT, toneOf } from '@/features/alagamento/utils/alagamentoText';
+import type { FloodLevel, FloodReason } from '@/features/alagamento/schemas/alagamento.schema';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { cn } from '@/lib/utils';
 import type { Alert, AlertKind, AlertSeverity } from '../schemas/alert.schema';
@@ -24,6 +23,8 @@ const ICON: Record<AlertKind, LucideIcon> = {
   SOURCE_STALE: DatabaseZap,
 };
 
+const LEVEL_TEXT: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };
+
 interface Props {
   alert: Alert;
   canAck: boolean;
@@ -39,7 +40,7 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
   const open = !a.acknowledgedAt;
   const detail = [
     a.detail,
-    a.riskLevel === 'UNKNOWN' ? `Motivo: ${degradationText(a.degradationReason)}. Isto não é queda de risco.` : null,
+    a.riskLevel === 'SEM_DADO' && a.degradationReason ? `Motivo: ${REASON_SHORT[a.degradationReason as FloodReason] ?? a.degradationReason}.` : null,
     a.observedValue != null ? `valor observado ${a.observedValue.toLocaleString('pt-BR')}` : null,
   ].filter(Boolean).join(' · ');
   return (
@@ -52,8 +53,10 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className={cn('text-[14px] leading-5', open ? 'font-extrabold' : 'font-semibold')}>{a.title}</span>
           {isNew && open && <span className="h-[18px] rounded-full bg-primary px-1.5 text-[10px] font-bold leading-[18px] text-primary-foreground">NOVO</span>}
-          {a.riskLevel && <RiskBadge level={a.riskLevel} />}
-          {a.riskLevel && showsExperimentalLabel({ riskLevel: a.riskLevel, modelValidationStatus: a.modelValidationStatus }) && <ExperimentalBadge />}
+          {a.riskLevel && a.riskLevel in LEVEL_TEXT && (
+            <span data-testid="alert-level" className={cn('inline-flex h-5 items-center rounded-full border px-2 text-[11px] font-bold', CHIP_CLASS[toneOf(a.riskLevel as FloodLevel)])}>{LEVEL_TEXT[a.riskLevel as FloodLevel]}</span>
+          )}
+          {a.riskLevel && a.riskLevel in LEVEL_TEXT && <span className="inline-flex h-5 items-center rounded-md border border-warning/70 px-1.5 text-[10px] font-bold text-warning">Experimental</span>}
         </div>
         <div className="text-[12px] leading-4 text-muted-foreground">
           {detail}

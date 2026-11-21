@@ -1,11 +1,9 @@
+import { InfoTip } from '@/components/InfoTip';
 import React, { useEffect, useState } from 'react';
 import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermometer, TriangleAlert, Waves, X } from 'lucide-react';
 import { SourceTag } from '@/components/risk/SourceTag';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { pctTxt } from '@/components/risk/thresholds';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { candidateStatus, candidateValue, distanceText, ROLE_TAG } from '@/features/points/utils/rainCandidates';
-import { getRiskVisual, degradationText } from '@/components/risk/risk';
 import { cn } from '@/lib/utils';
 import type { LocationAnalysis } from '../schemas/locationAnalysis.schema';
 import { CANDIDATE_TAG_CLASS, bannerOf, locationState, rainNote, rainSourceTag, rainTiles } from '../utils/locationView';
@@ -42,7 +40,6 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
   const tag = rainSourceTag(a.rain.mode);
   const estimated = a.rain.mode === 'ESTIMATED';
   const np = a.nearestPoint;
-  const nearLevel = np?.riskLevel ?? 'UNKNOWN';
   const coord = `${a.lat.toFixed(4)}, ${a.lon.toFixed(4)}`.replace(/\./g, ',');
   const showRain = state !== 'SEA';
   const showLand = state !== 'SEA' && state !== 'OUTSIDE';
@@ -77,17 +74,14 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           </div>
         )}
 
-        <section aria-label="Risco perto daqui" className="flex flex-col gap-2">
-          <H3 icon={<ShieldCheck />}>Risco perto daqui</H3>
-          <p className="m-0 text-xs leading-[17px] text-muted-foreground">O modelo só calcula risco nos pontos críticos. Este local não tem previsão própria.</p>
+        <section aria-label="Ponto crítico mais próximo" className="flex flex-col gap-2">
+          <H3 icon={<ShieldCheck />}>Ponto crítico mais próximo<InfoTip text="O alerta de alagamento só existe nos 5 pontos críticos. Este local não tem alerta próprio: abra o ponto mais próximo para ver o nível." /></H3>
           {np ? (
             <button type="button" data-testid="nearest-point" onClick={() => onOpenPoint?.(np.slug)} className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-transparent px-3 py-2.5 text-left text-foreground hover:bg-muted">
-              <RiskBadge level={nearLevel} variant="marker" />
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-bold leading-[18px]">{np.name}</span>
-                <span className="block text-xs leading-4 text-muted-foreground">ponto crítico mais próximo{np.distanceKm != null ? ` · ${num(np.distanceKm, 1)} km` : ''} · {getRiskVisual(nearLevel).label.toLowerCase()}{nearLevel === 'UNKNOWN' ? ` (${degradationText(np.degradationReason as never)})` : ''}</span>
+                <span className="block text-xs leading-4 text-muted-foreground">ponto crítico mais próximo{np.distanceKm != null ? ` · ${num(np.distanceKm, 1)} km` : ''}</span>
               </span>
-              <span className="font-mono text-[13px] font-bold">{nearLevel === 'UNKNOWN' ? '—' : pctTxt(np.probability)}</span>
             </button>
           ) : <p className="m-0 text-xs text-muted-foreground">Nenhum ponto crítico por perto.</p>}
         </section>

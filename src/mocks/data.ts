@@ -45,8 +45,8 @@ export const sensors: SensorFreshness[] = [
 ];
 
 export const alerts: Alert[] = [
-  { id: 1, ruleId: 1, kind: 'RISK_LEVEL', severity: 'CRITICAL', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: risco alto no ponto de teste', detail: 'Dado sintético para desenho de tela.', riskLevel: 'HIGH', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(20), acknowledgedAt: null, acknowledgedBy: null },
-  { id: 2, ruleId: 2, kind: 'PREDICTION_UNAVAILABLE', severity: 'WARNING', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: previsão indisponível', detail: 'O modelo não respondeu.', riskLevel: 'UNKNOWN', degradationReason: 'AI_TIMEOUT', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(45), acknowledgedAt: null, acknowledgedBy: null },
+  { id: 1, ruleId: 1, kind: 'RISK_LEVEL', severity: 'CRITICAL', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: alerta em 1 h · lâmina 17,7 cm', detail: 'Alerta experimental (chuva prevista + balde), não validado.', observedValue: 17.7, riskLevel: 'ALERTA', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(20), acknowledgedAt: null, acknowledgedBy: null },
+  { id: 2, ruleId: 2, kind: 'PREDICTION_UNAVAILABLE', severity: 'WARNING', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: alerta sem dado', detail: 'Sem dado (previsão de chuva (rain_v1) fora do ar). Sem dado não é sem alerta.', riskLevel: 'SEM_DADO', degradationReason: 'PREVISAO_INDISPONIVEL', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(45), acknowledgedAt: null, acknowledgedBy: null },
 ];
 
 export const acknowledgedAlert: Alert = { id: 3, ruleId: 3, kind: 'SENSOR_STALE', severity: 'INFO', stationId: 'SINTETICO-PLUV-02', title: 'Sintético: pluviômetro sem resposta', detail: null, triggeredAt: ago(200), acknowledgedAt: ago(150), acknowledgedBy: 'sintetico.operador' };

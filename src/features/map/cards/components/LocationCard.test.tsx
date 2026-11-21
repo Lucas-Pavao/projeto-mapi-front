@@ -22,18 +22,19 @@ describe('LocationCard: os 5 estados', () => {
     expect(document.querySelector('[data-role="EXCLUDED"]')).toHaveTextContent('reprovada no mês (zero travado)');
     fireEvent.click(document.querySelector('[data-role="USED"]') as HTMLElement);
     expect(onStation).toHaveBeenCalledWith('SINT-A');
-    expect(screen.getByTestId('nearest-point')).toHaveTextContent('0,2%');
+    expect(screen.getByTestId('nearest-point')).toHaveTextContent('1,8 km');
+    expect(screen.getByTestId('nearest-point').textContent).not.toMatch(/%|risco/i);
     fireEvent.click(screen.getByTestId('nearest-point'));
     expect(onPoint).toHaveBeenCalledWith('AV_RECIFE_IBURA');
   });
-  it('2 lacuna: "sem dado", sem trocar por estimativa e ponto próximo UNKNOWN sem porcentagem', () => {
+  it('2 lacuna: "sem dado", sem trocar por estimativa e ponto próximo sem porcentagem, com ⓘ', () => {
     show('gap');
     expect(screen.getByTestId('rain-source-tag')).toHaveTextContent('sem dado · Cemaden');
     expect(screen.getAllByTestId('rain-tile').every((t) => /sem dado/.test(t.textContent ?? ''))).toBe(true);
     expect(screen.getByTestId('location-banner')).toHaveTextContent('não é trocada por estimativa');
     expect(screen.queryByText(/estimada/)).toBeNull();
     expect(screen.getByTestId('nearest-point').textContent).not.toMatch(/\d%/);
-    expect(screen.getByTestId('nearest-point')).toHaveTextContent('sem dado suficiente');
+    expect(screen.getAllByTestId('info-tip').some((t) => /só existe nos 5 pontos/.test(t.getAttribute('aria-label') ?? ''))).toBe(true);
   });
   it('3 estimada: etiqueta "estimada · Open-Meteo" só neste modo, borda tracejada e sem candidatas', () => {
     show('estimated');

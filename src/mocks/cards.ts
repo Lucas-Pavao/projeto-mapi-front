@@ -86,7 +86,7 @@ const locBase: LocationAnalysis = {
   lat: -8.1039, lon: -34.9509, at: ago(10), inArea: true, isSea: false,
   rain: { mode: 'MEASURED', nowMmH: 3.2, acc3hMm: 5.0, acc24hMm: null, station: { stationId: 'SINT-A', name: 'Sintético: Ibura', distanceM: 2400 },
     candidates: [cand('SINT-A', 'Sintético: Ibura', 2400, 3.2, 'USED'), cand('SINT-B', 'Sintético: Areias', 3100, 1.1, 'LOWER', 'UNCHECKED'), cand('SINT-C', 'Sintético: Boa Viagem', 4200, null, 'EXCLUDED', 'FAIL', ['STUCK_ZERO'])], nValid: 2 },
-  nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8, riskLevel: 'LOW', probability: 0.002, degradationReason: null },
+  nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8 },
   tide: { levelM: 1.81, rising: true, harbor: 'Porto do Recife', verticalReference: 'NR DHN' },
   river: { stationId: '260790119H', name: 'Duas Unas', levelM: 1.2, distanceKm: 2.4, outsideModel: true },
   terrain: { elevationM: 4.2, distanceToCoastKm: 3.1 },
@@ -98,7 +98,7 @@ const locBase: LocationAnalysis = {
 export const LOCATION_FIXTURES: Record<'measured' | 'gap' | 'estimated' | 'sea' | 'outside', LocationAnalysis> = {
   measured: locBase,
   gap: { ...locBase, rain: { ...locBase.rain, mode: 'GAP', nowMmH: null, acc3hMm: null, acc24hMm: null, station: null, candidates: [cand('SINT-A', 'Sintético: Ibura', 2400, null, 'NO_VALUE'), cand('SINT-B', 'Sintético: Areias', 3100, null, 'NO_VALUE')] },
-    nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8, riskLevel: 'UNKNOWN', probability: null, degradationReason: 'INSUFFICIENT_DATA' } },
+    nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8 } },
   estimated: { ...locBase, rain: { mode: 'ESTIMATED', nowMmH: 0.4, acc3hMm: 1.1, acc24hMm: 6.0, station: null, candidates: [], nValid: 0 }, river: null },
   sea: { ...locBase, lat: -8.06, lon: -34.84, isSea: true, rain: { mode: 'ESTIMATED', nowMmH: null, acc3hMm: null, acc24hMm: null, station: null, candidates: [], nValid: 0 }, terrain: null, river: null },
   outside: { ...locBase, lat: -7.85, lon: -34.9, inArea: false, rain: { mode: 'ESTIMATED', nowMmH: 0, acc3hMm: 0.2, acc24hMm: 2, station: null, candidates: [], nValid: 0 }, terrain: null, river: null, nearestPoint: null },
