@@ -3,7 +3,6 @@ import { meanRainSeries, rainNow, riverState, sortPoints, tideNow, fmtNum, proba
 import type { FloodPointResponseDTO } from '../types';
 
 const T = (min: number) => new Date(Date.UTC(2026, 9, 21, 12, min)).toISOString();
-const pt = (name: string, riskLevel: string, p: number | null) => ({ name, floodPrediction: { riskLevel, floodProbability: p } }) as unknown as FloodPointResponseDTO;
 
 describe('overview', () => {
   it('chuva média por instante ignora nulos; sem nenhum fica nulo', () => {
@@ -20,9 +19,12 @@ describe('overview', () => {
     expect(tideNow(series, Date.parse(T(300)))).toBeNull();
     expect(tideNow([...series].reverse().map((p, i) => ({ t: series[i].t, v: p.v })), Date.parse(T(0)))?.rising).toBe(false);
   });
-  it('ordena Alto, Moderado, Indisponível, Baixo e, no nível, por probabilidade', () => {
-    const out = sortPoints([pt('b', 'LOW', 0.1), pt('c', 'UNKNOWN', null), pt('a', 'LOW', 0.2), pt('d', 'HIGH', 0.7), pt('e', 'MEDIUM', 0.4)]);
-    expect(out.map((p) => p.name)).toEqual(['d', 'e', 'c', 'a', 'b']);
+  it('ordena pelo alerta por regressão: Alerta, Atenção, Sem dado (inclusive sem linha), Sem alerta; no nível, pela lâmina de agora', () => {
+    const P = (name: string) => ({ name, slug: name }) as unknown as FloodPointResponseDTO;
+    const by = new Map([['b', { level: 'SEM_ALERTA', hNowCm: 0 }], ['c', { level: 'SEM_DADO', hNowCm: null }], ['a', { level: 'ALERTA', hNowCm: 16 }],
+      ['d', { level: 'ALERTA', hNowCm: 22 }], ['e', { level: 'ATENCAO', hNowCm: 3 }]] as const) as never;
+    expect(sortPoints(['b', 'c', 'a', 'd', 'e', 'f'].map(P), by).map((p) => p.name)).toEqual(['d', 'a', 'e', 'c', 'f', 'b']);
+    expect(sortPoints(['b', 'a'].map(P)).map((p) => p.name)).toEqual(['a', 'b']); // visitante: por nome
   });
   it('probabilidade por ponto: UNKNOWN vira buraco', () => {
     const m = probabilityByPoint([{ slug: 'x', items: [{ slug: 'x', riskLevel: 'LOW', probability: 0.2, issuedAt: T(10) }, { slug: 'x', riskLevel: 'UNKNOWN', probability: 0.9, issuedAt: T(0) }] as never }]);

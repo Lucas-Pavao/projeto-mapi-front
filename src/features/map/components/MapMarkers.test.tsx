@@ -15,59 +15,49 @@ import { MapLayerPanel } from './MapLayerPanel';
 import { MapUserIsland } from './MapUserIsland';
 import { RiskLegendControl } from './RiskLegendControl';
 import type { FloodPointResponseDTO } from '../types';
-import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
+import { alagamentoPontoSchema, type AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
+import { ALAGAMENTO_FIXTURES } from '@/mocks/alagamento';
 
 afterEach(cleanup);
 
-const pt = (id: number, slug: string, risk: 'LOW' | 'HIGH' | 'UNKNOWN'): FloodPointResponseDTO =>
-  ({ id, slug, name: `Ponto ${slug}`, latitude: -8, longitude: -34, floodPrediction: { riskLevel: risk, floodProbability: risk === 'UNKNOWN' ? null : 0.5 } }) as FloodPointResponseDTO;
+const pt = (id: number, slug: string): FloodPointResponseDTO =>
+  ({ id, slug, name: `Ponto ${slug}`, latitude: -8, longitude: -34 }) as FloodPointResponseDTO;
+const fl = (slug: string, level: AlagamentoPonto['level'], hNowCm: number | null = 0): [string, AlagamentoPonto] =>
+  [slug, alagamentoPontoSchema.parse({ ...ALAGAMENTO_FIXTURES.sem_alerta_seco, slug, level, hNowCm, worstHorizonHours: level === 'SEM_DADO' ? null : 1, reason: level === 'SEM_DADO' ? 'SEM_TERRENO' : null })];
 
 describe('FloodPointMarkers', () => {
-  it('anel pelo estado do alerta: laranja ATENCAO, vermelho ALERTA e alagamento provável, cinza tracejado SEM_DADO, nenhum sem alerta', () => {
-    const al = (slug: string, over: Partial<AlertaPonto>): [string, AlertaPonto] => [slug, { slug, rainAlert: 'NENHUM', pointFlood: 'NAO', shadow: true, ...over }];
-    const alertaBySlug = new Map([
-      al('a', { rainAlert: 'ATENCAO' }), al('b', { rainAlert: 'ALERTA' }), al('c', { pointFlood: 'PROVAVEL' }), al('d', { rainAlert: 'SEM_DADO' }), al('e', {}),
-    ]);
+  it('anel pelo nível do alerta por regressão: vermelho ALERTA, laranja ATENCAO, cinza tracejado SEM_DADO, nenhum sem alerta', () => {
+    const by = new Map([fl('a', 'ATENCAO'), fl('b', 'ALERTA'), fl('d', 'SEM_DADO'), fl('e', 'SEM_ALERTA')]);
     const { container } = render(
-      <FloodPointMarkers points={['a', 'b', 'c', 'd', 'e', 'f'].map((s, i) => pt(i + 1, s, 'HIGH'))} selectedFloodPointId={undefined} selectedRisk={undefined} alertaBySlug={alertaBySlug} onSelect={() => {}} />,
+      <FloodPointMarkers points={['a', 'b', 'd', 'e', 'f'].map((s, i) => pt(i + 1, s))} selectedFloodPointId={undefined} alagamentoBySlug={by} onSelect={() => {}} />,
     );
-    expect(screen.getAllByRole('img', { name: 'Risco Alto' })).toHaveLength(6);
     const ring = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-ring]');
     expect(ring('a')).toHaveAttribute('data-alerta-ring', 'ATENCAO');
     expect(ring('a')?.className).toContain('border-warning');
     expect(ring('b')?.className).toContain('border-destructive');
-    expect(ring('c')).toHaveAttribute('data-alerta-ring', 'ALERTA');
     expect(ring('d')).toHaveAttribute('data-alerta-ring', 'SEM_DADO');
     expect(ring('d')?.className).toContain('border-dashed');
     expect(ring('d')?.className).not.toContain('animate-ping');
     expect(ring('e')).toBeNull(); // sem alerta
-    expect(ring('f')).toHaveAttribute('data-alerta-ring', 'SEM_DADO'); // ADMIN, ponto sem registro: sem dado, nunca "sem alerta"
+    expect(ring('f')).toHaveAttribute('data-alerta-ring', 'SEM_DADO'); // ADMIN, ponto sem linha: sem dado, nunca "sem alerta"
     const tag = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-tag]');
     expect(tag('a')).toHaveTextContent('atenção'); // cor não é o único sinal
     expect(tag('b')).toHaveTextContent('alerta');
     expect(tag('f')).toHaveTextContent('sem dado');
-    expect(tag('e')).toBeNull();
-    expect(container.querySelectorAll('.animate-ping')).toHaveLength(3);
-    expect(screen.getByRole('button', { name: /Ponto crítico Ponto b: risco Alto, com alerta ativo/ })).toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-ping')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: /Ponto crítico Ponto b: alerta em 1 h/ })).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/%|Risco/);
   });
 
   it('visitante (sem o mapa do alerta): nenhum anel nem rótulo', () => {
-    const { container } = render(<FloodPointMarkers points={[pt(1, 'a', 'HIGH')]} selectedFloodPointId={undefined} selectedRisk={undefined} onSelect={() => {}} />);
+    const { container } = render(<FloodPointMarkers points={[pt(1, 'a')]} selectedFloodPointId={undefined} onSelect={() => {}} />);
     expect(container.querySelector('[data-alerta-ring]')).toBeNull();
-    expect(container.querySelector('[data-alerta-tag]')).toBeNull();
-  });
-
-  it('o risco do status em tempo real do ponto selecionado vence o da lista', () => {
-    render(
-      <FloodPointMarkers points={[pt(1, 'a', 'LOW'), pt(2, 'b', 'LOW')]} selectedFloodPointId={2} selectedRisk="HIGH" onSelect={() => {}} />,
-    );
-    expect(screen.getByRole('img', { name: 'Risco Alto' })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'Risco Baixo' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /alerta experimental/ })).toBeInTheDocument();
   });
 
   it('clique seleciona o ponto', () => {
     const onSelect = vi.fn();
-    render(<FloodPointMarkers points={[pt(1, 'a', 'LOW')]} selectedFloodPointId={undefined} selectedRisk={undefined} onSelect={onSelect} />);
+    render(<FloodPointMarkers points={[pt(1, 'a')]} selectedFloodPointId={undefined} onSelect={onSelect} />);
     fireEvent.click(screen.getByRole('button', { name: /Ponto crítico/ }));
     expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ slug: 'a' }));
   });
@@ -84,24 +74,18 @@ describe('MapLayerPanel', () => {
   });
 });
 
-describe('RiskLegendControl', () => {
-  it('fica recolhida no botão e abre com os quatro níveis', () => {
+describe('RiskLegendControl (Legenda do alerta)', () => {
+  it('fica recolhida no botão "Legenda" e abre com os quatro níveis; a regra fica no ⓘ', () => {
     const onOpenChange = vi.fn();
     const { rerender } = render(<RiskLegendControl open={false} onOpenChange={onOpenChange} />);
-    expect(screen.queryByRole('region', { name: 'Níveis de risco' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Níveis de risco' }));
+    expect(screen.queryByRole('region', { name: 'Legenda' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Legenda' }));
     expect(onOpenChange).toHaveBeenCalledWith(true);
     rerender(<RiskLegendControl open onOpenChange={onOpenChange} />);
-    const panel = screen.getByRole('region', { name: 'Níveis de risco' });
-    expect(panel.querySelectorAll('[data-risk]')).toHaveLength(4);
-    expect(screen.queryByTestId('legend-band')).toBeNull(); // sem limiares, sem faixa inventada
-  });
-
-  it('com limiares do metadata mostra a faixa de cada classe (sem 50 % nem 80 %)', () => {
-    render(<RiskLegendControl open onOpenChange={vi.fn()} thresholds={{ medium: 0.0159, high: 0.2441, source: 'metadata' }} />);
-    const bands = screen.getAllByTestId('legend-band').map((b) => b.textContent);
-    expect(bands).toEqual(['abaixo de 1,6%', 'de 1,6% até abaixo de 24,4%', '24,4% ou mais']);
-    expect(screen.getByTestId('legend-source')).toHaveTextContent('metadata');
+    const panel = screen.getByRole('region', { name: 'Legenda' });
+    expect(panel.querySelectorAll('[data-legend]')).toHaveLength(4);
+    expect(screen.getByTestId('info-tip')).toHaveAttribute('aria-label', expect.stringMatching(/^Alerta se a lâmina provável/));
+    expect(panel.textContent).not.toMatch(/%/);
   });
 });
 

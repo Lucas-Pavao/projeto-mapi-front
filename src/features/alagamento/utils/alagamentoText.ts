@@ -101,3 +101,29 @@ export const INFO = {
   forecast: 'Lâmina máxima prevista em 1, 3 e 6 h. Barra cheia: cenário provável (chuva q50 do rain_v1). Barra clara: cenário pessimista (q95). Traço vermelho: 15 cm. Alerta se a provável chega a 15 cm; Atenção se só a pessimista chega.',
   experimental: 'Experimental: nenhum modelo aprende com rótulo de alagamento; o balde não está calibrado e, na validação de 5 anos, o alerta nunca disparou. Fica assim até a validação ser aprovada pelo orientador.',
 };
+
+/** Anel do marcador e ponto da lista pelo nível (5.3). Sem alerta: sem anel. Ponto sem linha na resposta: sem dado. */
+export type FloodRing = 'ALERTA' | 'ATENCAO' | 'SEM_DADO' | null;
+export const floodRingOf = (p: AlagamentoPonto | undefined): FloodRing => {
+  if (!p) return 'SEM_DADO';
+  return p.level === 'SEM_ALERTA' ? null : p.level;
+};
+
+/** Linha da lista "Pontos críticos": "Alerta em 1 h", "Atenção em 3 h", "Sem alerta em 6 h", "Alerta sem dado". */
+export const listLineOf = (p: AlagamentoPonto | undefined): { label: string; tone: FloodTone; sheet: string } => {
+  if (!p || p.level === 'SEM_DADO') return { label: 'Alerta sem dado', tone: 'muted', sheet: p?.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'sem dado' };
+  return { label: floodChipOf(p).label, tone: toneOf(p.level), sheet: p.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'sem dado' };
+};
+
+/** Contagem do painel "Agora na RMR": Alerta / Atenção / Sem alerta / Sem dado (ponto sem linha conta como sem dado). */
+export const countByLevel = (slugs: readonly string[], by: ReadonlyMap<string, AlagamentoPonto>): Record<FloodLevel, number> => {
+  const c: Record<FloodLevel, number> = { ALERTA: 0, ATENCAO: 0, SEM_ALERTA: 0, SEM_DADO: 0 };
+  for (const s of slugs) c[by.get(s)?.level ?? 'SEM_DADO'] += 1;
+  return c;
+};
+
+export const TEXT_CLASS: Record<FloodTone, string> = {
+  danger: 'text-destructive', warn: 'text-warning', ok: 'text-success', muted: 'text-muted-foreground',
+};
+
+export const LEGEND_RULE = 'Alerta se a lâmina provável (q50) chega a 15 cm; Atenção se só a pessimista (q95). Experimental.';

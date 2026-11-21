@@ -4,6 +4,7 @@ import { predictionSummarySchema, riskSummarySchema, type PredictionSummary, typ
 import { alertSchema, type Alert } from '@/features/alerts/schemas/alert.schema';
 import { sensorReadingEventSchema, type SensorReadingEvent } from '@/features/sensors/schemas/sensor.schema';
 import { alertaPontoSchema, type AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
+import { alagamentoPontoSchema, type AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
 
 /** Eventos do /api/stream (ADR 0012). `alert` só chega para OPERADOR e ADMIN (ADR 0010). */
 export const heartbeatSchema = z.object({ at: isoSchema.optional() }).passthrough();
@@ -14,6 +15,7 @@ export type LiveEvent =
   | { type: 'sensor'; data: SensorReadingEvent }
   | { type: 'alert'; data: Alert }
   | { type: 'alert-state'; data: AlertaPonto }
+  | { type: 'flood-forecast'; data: AlagamentoPonto }
   | { type: 'heartbeat'; at: string | null };
 
 const PAYLOADS = {
@@ -23,6 +25,8 @@ const PAYLOADS = {
   alert: alertSchema,
   // Alerta por ponto (ADR 0026). Em modo sombra só chega a ADMIN.
   'alert-state': alertaPontoSchema,
+  // Alerta de alagamento por regressão (V38). Em modo sombra só chega a ADMIN.
+  'flood-forecast': alagamentoPontoSchema,
 } as const;
 
 /** Converte uma mensagem SSE em evento tipado. Tipo desconhecido ou payload fora do contrato vira null. */
