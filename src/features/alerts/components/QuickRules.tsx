@@ -72,7 +72,7 @@ export const QuickRules: React.FC<{ notify: NoticeFn; latest: Alert | undefined;
       <div className="flex flex-col gap-1.5">
         <span className="text-[13px] font-bold leading-[18px]">Avisar quando um ponto passar para</span>
         <div role="radiogroup" aria-label="Nível mínimo" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
-          {([['MEDIUM', 'Moderado ou alto'], ['HIGH', 'Só alto']] as const).map(([v, label]) => (
+          {([['MEDIUM', 'Atenção ou alerta'], ['HIGH', 'Só alerta']] as const).map(([v, label]) => (
             <button
               key={v} type="button" role="radio" aria-checked={minRisk === v} disabled={save.isPending}
               onClick={() => minRisk !== v && put('RISK_LEVEL', risk, { minRisk: v }, 'Nível mínimo atualizado.')}
@@ -113,7 +113,7 @@ export const QuickRules: React.FC<{ notify: NoticeFn; latest: Alert | undefined;
           <div className="mb-1 flex justify-between text-[11px] text-muted-foreground"><span>MAPi · Defesa Civil</span><span className="font-mono">{latest ? formatHoraCurta(latest.triggeredAt) : ''}</span></div>
           <strong>{latest ? latest.title : 'Sem alertas ainda'}</strong><br />
           {latest ? latest.detail : 'Quando uma regra disparar, a mensagem aparece aqui.'}{latest?.detail && <br />}
-          <span className="text-muted-foreground">Previsão experimental, modelo não validado. Confira no mapa antes de mobilizar equipe.</span>
+          <span className="text-muted-foreground">Alerta experimental (chuva prevista + balde), não validado. Confira no mapa antes de mobilizar equipe.</span>
         </div>
       </div>
       <p className="m-0 mt-auto flex flex-wrap items-center justify-between gap-2 text-[12px] leading-4 text-muted-foreground">

@@ -1,28 +1,13 @@
 import React from 'react';
 import { MapPinOff } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
 import { formatRecife } from '@/features/map/utils/datetime';
-import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
+import type { FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
+import { CHIP_CLASS, DOT_CLASS, toneOf } from '@/features/alagamento/utils/alagamentoText';
+import { cn } from '@/lib/utils';
 import type { PublicRisk } from '../schemas/public-risk.schema';
+import { HEADLINE, NO_POINT_TEXT, PUBLIC_WARNING } from '../utils/headlines';
 
-/**
- * Texto fixo de aviso (ADR 0013): o modelo não está validado e a classe não é garantia.
- * TODO(F3-PUBLICO-TELEFONE): acrescentar o telefone oficial da Defesa Civil quando for informado (pergunta 52).
- * Até lá o texto não traz número nenhum, de propósito.
- */
-export const PUBLIC_WARNING =
-  'Esta é uma estimativa experimental de um modelo que ainda não foi validado. A classe de risco não confirma nem descarta alagamento no local. Em caso de chuva forte, siga as orientações da Defesa Civil.';
-
-export const NO_POINT_TEXT = 'Não há ponto monitorado perto deste endereço.';
-
-const HEADLINE: Record<RiskLevel, string> = {
-  LOW: 'Risco baixo de alagamento perto de você.',
-  MEDIUM: 'Risco moderado de alagamento perto de você.',
-  HIGH: 'Risco alto de alagamento perto de você.',
-  UNKNOWN: 'Sem previsão para este local agora.',
-};
+const CHIP: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };
 
 const Tile: React.FC<{ label: string; value: string; sub?: string | null }> = ({ label, value, sub }) => (
   <div className="rounded-xl bg-muted p-3">
@@ -32,43 +17,42 @@ const Tile: React.FC<{ label: string; value: string; sub?: string | null }> = ({
   </div>
 );
 
-const hhmm = (iso: string) => (formatRecife(iso) ?? '—').split(' ').at(-1) ?? '—';
+const hhmm = (iso: string | null | undefined) => (iso ? (formatRecife(iso) ?? '—').split(' ').at(-1) ?? '—' : '—');
 
-/** Resultado da consulta pública. Classe sempre com ícone, rótulo e selo experimental; UNKNOWN sem %, com motivo. */
+/** Resultado da consulta pública pelo alerta por regressão. Sem probabilidade; sem dado e em teste nunca viram "sem alerta". */
 export const PublicRiskResult: React.FC<{ risk: PublicRisk }> = ({ risk }) => {
   const p = risk.nearestPoint;
   const rain = risk.rainLastHourMm != null ? `${risk.rainLastHourMm.toLocaleString('pt-BR')} mm` : '—';
   const rainSub = risk.rainLastHourMm != null ? (risk.rainStationId ? `pluviômetro ${risk.rainStationId}` : null) : 'Sem leitura de chuva da última hora num pluviômetro próximo.';
+  const tone = p ? toneOf(p.level) : 'muted';
+  const headline = !p ? NO_POINT_TEXT : risk.inTest ? 'O alerta de alagamento ainda está em teste.' : HEADLINE[p.level];
   return (
     <div className="flex flex-col gap-3.5">
       {p === null ? (
         <section aria-label="Sem ponto por perto" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px]">
           <MapPinOff className="size-5 text-muted-foreground" aria-hidden="true" />
           <p className="m-0 text-[22px] leading-[30px] font-extrabold text-foreground">{NO_POINT_TEXT}</p>
-          <p className="m-0 text-[15px] leading-[22px]">Isto não significa risco baixo: sem ponto por perto, o MAPi não tem previsão para este local.</p>
+          <p className="m-0 text-[15px] leading-[22px]">Sem ponto monitorado por perto, o MAPi não tem alerta para este local. Isto não quer dizer que está seguro.</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3"><Tile label="Chuva na última hora" value={rain} sub={rainSub} /></div>
         </section>
       ) : (
-        <section aria-label="Risco perto de você" aria-live="polite" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px]">
+        <section aria-label="Alerta perto de você" aria-live="polite" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px]">
           <div className="flex flex-wrap items-center gap-3">
-            {/* A resposta pública não traz probabilidade: só a classe (ADR 0013). */}
-            <RiskBadge level={p.riskLevel} className="text-sm" />
+            {!risk.inTest && (
+              <span data-testid="public-chip" data-level={p.level} className={cn('inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-sm font-bold', CHIP_CLASS[tone], p.level === 'SEM_DADO' && 'border-dashed')}>
+                <span aria-hidden="true" className={cn('size-2 rounded-full', DOT_CLASS[tone])} />{CHIP[p.level]}
+              </span>
+            )}
             <span className="text-[13px] text-muted-foreground">ponto monitorado mais perto: <strong className="text-foreground">{p.name}</strong> · a cerca de {p.distanceM} m do ponto consultado</span>
           </div>
-          <p className="m-0 text-[22px] leading-[30px] font-extrabold text-foreground">{HEADLINE[p.riskLevel]}</p>
-          <p className="m-0 text-[15px] leading-[22px] text-foreground">{risk.meaning}</p>
-          {p.riskLevel === 'UNKNOWN' && (
-            <p data-testid="unknown-reason" className="m-0 rounded-lg border border-dashed border-border p-3 text-body text-muted-foreground">
-              Motivo: {degradationText(p.degradationReason)}.
-            </p>
-          )}
+          <p data-testid="public-headline" className="m-0 text-[22px] leading-[30px] font-extrabold text-foreground">{headline}</p>
+          {risk.inTest && <p className="m-0 text-[15px] leading-[22px]">Enquanto isso, fique de olho na chuva e no aviso oficial do INMET. Isto não quer dizer que está seguro.</p>}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Tile label="Chuva na última hora" value={rain} sub={rainSub} />
             <Tile label="Distância do ponto" value={`${p.distanceM.toLocaleString('pt-BR')} m`} />
-            <Tile label="Previsão emitida" value={hhmm(p.issuedAt)} sub={p.validUntil ? `válida até ${hhmm(p.validUntil)}` : null} />
+            {!risk.inTest && <Tile label="Alerta emitido" value={hhmm(p.issuedAt)} />}
           </div>
-          {showsExperimentalLabel({ riskLevel: p.riskLevel, modelValidationStatus: risk.modelValidationStatus }) && <ExperimentalBadge className="w-full" />}
-          <p className="sr-only">Previsão emitida em {formatRecife(p.issuedAt) ?? '—'}{p.validUntil ? `, válida até ${formatRecife(p.validUntil)}` : ''}.</p>
+          <span className="w-fit rounded-md border border-warning/70 px-2 text-xs font-bold text-warning">Experimental</span>
         </section>
       )}
       <p role="note" className="m-0 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-[13px] leading-[18px] text-warning">{PUBLIC_WARNING}</p>

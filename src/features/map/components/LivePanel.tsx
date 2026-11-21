@@ -1,13 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Panel } from '@/components/ui/panel';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { RiskCountTiles } from '@/components/risk/RiskCountTiles';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { Sparkline } from '@/components/charts/Sparkline';
-import { degradationText, formatProbability, getRiskVisual, showsExperimentalLabel } from '@/components/risk/risk';
+import { InfoTip } from '@/components/InfoTip';
 import { cn } from '@/lib/utils';
-import type { RiskSummary } from '@/features/points/schemas/prediction.schema';
+import { FloodCountTiles } from '@/features/alagamento/components/FloodCountTiles';
+import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
+import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
+import { DOT_CLASS, TEXT_CLASS, countByLevel, listLineOf } from '@/features/alagamento/utils/alagamentoText';
 import type { LiveStatus } from '@/features/live/hooks/useLiveStream';
 import type { FloodPointResponseDTO, SensorResponseDTO } from '../types';
 import { getDataFreshness, getSensorConfig } from '../utils/sensor';
@@ -16,8 +15,6 @@ import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
 import type { StationAccumulation } from '../schemas/measuredRain.schema';
 import { feedSourceText, liveAliasCodes, stationRowText } from '../utils/measuredRain';
-import { alertChipOf, CHIP_TONE_CLASS } from '@/features/alerta/utils/alertaText';
-import type { AlertaPonto } from '@/features/alerta/schemas/alerta.schema';
 import { OfficialWarningBadge } from '@/features/warnings/components/OfficialWarningBadge';
 import type { OfficialWarning } from '@/features/warnings/schemas/officialWarning.schema';
 
@@ -27,8 +24,6 @@ type Tab = 'points' | 'sensors';
 interface Props {
   points: FloodPointResponseDTO[];
   sensors: SensorResponseDTO[];
-  summary: RiskSummary | undefined;
-  summaryFailed: boolean;
   liveStatus: LiveStatus;
   lastSuccessAt: string | null;
   overview: Overview;
@@ -45,31 +40,31 @@ interface Props {
   selectedStationId?: string | null;
   /** Avisos meteorológicos oficiais vigentes do INMET (ADR 0024). */
   officialWarnings?: OfficialWarning[];
-  /** Estado do alerta por ponto (só ADMIN): vira a 1ª linha da lista; o risco de 6 h passa a segundo plano. */
-  alertaBySlug?: ReadonlyMap<string, AlertaPonto>;
+  /** Alerta por regressão de cada ponto (só ADMIN, modo sombra): contagem, linha da lista e versões do rodapé. */
+  alagamentoBySlug?: ReadonlyMap<string, AlagamentoPonto>;
+  /** Leitura do alerta falhou: contagem em traço, nunca zero. */
+  alagamentoFailed?: boolean;
   /** Só ADMIN abre "Saúde dos dados" (ADR 0010). */
   canSeeDataHealth: boolean;
   className?: string;
 }
 
-/** Escala da minilinha: 0 a 25% no mínimo, para que probabilidades baixas mostrem a tendência em vez de uma linha reta. */
-const sparkMax = (v: Array<number | null>) => Math.min(1, Math.max(0.25, ...v.map((x) => x ?? 0)));
 const row = 'row-hover flex w-full items-center gap-3 rounded-[10px] text-left text-foreground hover:bg-muted';
 const ageText = (min: number | null) => (min == null ? 'sem dados' : min < 60 ? `há ${min} min` : `há ${Math.round(min / 60)} h`);
 const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-5).replace(':', 'h') ?? null;
 
 /** Painel esquerdo "Agora na RMR" do mapa (Main.dc.html): contagem, abas Pontos críticos e Sensores, fontes. */
 export const LivePanel: React.FC<Props> = ({
-  points, sensors, summary, summaryFailed, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
-  alertaBySlug, stations = [], onStationClick, selectedStationId, officialWarnings = [],
+  points, sensors, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
+  alagamentoBySlug, alagamentoFailed = false, stations = [], onStationClick, selectedStationId, officialWarnings = [],
 }) => {
   const [tab, setTab] = useState<Tab>('points');
-  const sorted = useMemo(() => sortPoints(points), [points]);
-  const horizon = points.map((p) => p.floodPrediction?.horizonHours).find((h): h is number => h != null);
-  const allUnknown = points.length > 0 && points.every((p) => (p.floodPrediction?.riskLevel ?? 'UNKNOWN') === 'UNKNOWN');
-  const experimental = points.some((p) => showsExperimentalLabel(p.floodPrediction));
-  const reason = points.map((p) => p.floodPrediction?.degradationReason).find(Boolean);
-  const time = clockText(summary?.computedAt ?? lastSuccessAt);
+  const sorted = useMemo(() => sortPoints(points, alagamentoBySlug), [points, alagamentoBySlug]);
+  const any = alagamentoBySlug ? [...alagamentoBySlug.values()][0] : undefined;
+  const lastEval = alagamentoBySlug ? [...alagamentoBySlug.values()].map((a) => a.evaluatedAt).filter(Boolean).sort().pop() : null;
+  const time = clockText(lastEval ?? lastSuccessAt);
+  const counts = alagamentoBySlug && !alagamentoFailed ? countByLevel(points.map((p) => p.slug), alagamentoBySlug) : null;
+  const versions = any ? `${Object.entries(any.modelVersions).filter(([, v]) => v).map(([k, v]) => `${k} ${v}`).join(' · ')}${any.codeVersion ? ` · commit ${any.codeVersion.slice(0, 7)}` : ''}` : null;
 
   const [now] = useState(() => Date.now());
   const unified = useMemo(() => stations.filter((s) => s.canonicalId != null)
@@ -96,7 +91,6 @@ export const LivePanel: React.FC<Props> = ({
     return rows.sort((a, b) => Number(b.river) - Number(a.river) || a.name.localeCompare(b.name));
   }, [sensors, aliasCodes]);
   const tideRow = overview.tideNow ? 1 : 0;
-  const chip = (slug: string) => alertChipOf(alertaBySlug?.get(slug), true);
 
   const tabBtn = (id: Tab, label: string) => (
     <button
@@ -118,22 +112,15 @@ export const LivePanel: React.FC<Props> = ({
         <div className="flex items-baseline justify-between gap-2">
           <h1 className="m-0 whitespace-nowrap text-xl leading-[26px] font-extrabold tracking-[-0.01em]">Agora na RMR</h1>
           <span className="text-xs leading-4 text-muted-foreground" data-live-status={liveStatus}>
-            {horizon != null ? `previsão para ${horizon} h` : 'previsão'}
+            alerta em 1, 3 e 6 h
             {time && <> · <span className="font-mono">{time}</span></>}
           </span>
         </div>
-        <RiskCountTiles summary={summary} failed={summaryFailed} />
+        {alagamentoBySlug && <FloodCountTiles counts={counts} />}
         {(liveStatus === 'error' || liveStatus === 'closed') && (
           <p role="status" className="m-0 text-xs leading-4 text-warning">Sem atualização ao vivo: os números podem estar atrasados.</p>
         )}
-        {allUnknown ? (
-          <div role="status" className="flex gap-2 rounded-[10px] border-2 border-dashed border-risk-unknown-edge p-2.5 text-[13px] leading-[18px]">
-            <strong className="flex-none">Previsão indisponível.</strong>
-            <span className="text-muted-foreground">Motivo: {degradationText(reason)}. Isto não significa risco baixo.</span>
-          </div>
-        ) : (
-          experimental && <ExperimentalBadge />
-        )}
+        <ExperimentalTag className="self-start" />
         <OfficialWarningBadge warnings={officialWarnings} />
         <div role="tablist" aria-label="Tipo de lista" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
           {tabBtn('points', `Pontos críticos · ${points.length}`)}
@@ -145,27 +132,20 @@ export const LivePanel: React.FC<Props> = ({
         <ul id="painel-points" role="tabpanel" aria-labelledby="tab-points" className="scroll m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 p-2">
           {sorted.length === 0 && <li className="p-4 text-center text-xs text-muted-foreground">Nenhum ponto crítico retornado pela API.</li>}
           {sorted.map((p) => {
-            const level = p.floodPrediction?.riskLevel;
-            const v = getRiskVisual(level);
-            const pct = formatProbability(level, p.floodPrediction?.floodProbability);
+            const line = alagamentoBySlug ? listLineOf(alagamentoBySlug.get(p.slug)) : null;
             return (
               <li key={p.id}>
                 <button type="button" onClick={() => onFloodPointClick(p)} aria-pressed={selectedFloodPointId === p.id} className={cn(row, 'p-2', selectedFloodPointId === p.id && 'bg-secondary')}>
-                  <RiskBadge level={level} variant="marker" />
+                  <span aria-hidden="true" className={cn('box-border size-3 flex-none rounded-full', line ? DOT_CLASS[line.tone] : 'bg-muted-foreground', line?.tone === 'muted' && 'border-2 border-dashed border-muted-foreground bg-transparent')} />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm leading-5 font-bold">{p.name}</span>
-                    {alertaBySlug ? (
+                    {line ? (
                       <span data-testid="point-alert-line" className="truncate text-xs leading-4 text-muted-foreground">
-                        <span className={cn('font-bold', CHIP_TONE_CLASS[chip(p.slug).tone].split(' ').filter((c) => c.startsWith('text-')).join(' '))}>{chip(p.slug).label}</span>
-                        {` · risco${(p.floodPrediction?.horizonHours ?? horizon) != null ? ` ${p.floodPrediction?.horizonHours ?? horizon} h` : ''}: ${v.label}`}
+                        <span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span>{` · ${line.sheet}`}
                       </span>
                     ) : (
-                      <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'} · {v.label}</span>
+                      <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'}</span>
                     )}
-                  </span>
-                  <span className={cn('flex flex-col items-end', v.text)}>
-                    <span className="font-mono text-[15px] leading-5 font-bold">{pct ?? '—'}</span>
-                    <Sparkline values={overview.probabilities.get(p.slug) ?? []} max={sparkMax(overview.probabilities.get(p.slug) ?? [])} />
                   </span>
                 </button>
               </li>
@@ -217,7 +197,10 @@ export const LivePanel: React.FC<Props> = ({
       )}
 
       <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-xs leading-4 text-muted-foreground">
-        <span>APAC · ANA · Cemaden · Open-Meteo · DHN</span>
+        <span className="flex items-center gap-1.5">
+          APAC · Cemaden/MCTIC · DHN · Open-Meteo
+          <InfoTip text={`DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC. ANA (rios), DHN (maré), Open-Meteo (tempo).${versions ? ` Alerta: ${versions}.` : ''}`} />
+        </span>
         {canSeeDataHealth && <Link to="/admin/dados" className="shrink-0 text-primary hover:text-foreground">Saúde dos dados</Link>}
       </div>
     </Panel>

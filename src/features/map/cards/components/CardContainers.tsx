@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
-import { usePredictionSeries } from '@/features/points/hooks/usePredictionSeries';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
 import { seriesKeys, seriesOf } from '@/features/sensors/utils/sensorView';
 import { httpStatus } from '@/lib/apiError';
@@ -15,7 +14,7 @@ import { LocationCard } from './LocationCard';
 import { PointCard } from './PointCard';
 import { useAuth } from '@/hooks/useAuth';
 import { hasRole, parseRole } from '@/lib/roles';
-import { useAlertaPontos } from '@/features/alerta/hooks/useAlertaPontos';
+import { useAlagamentoPontos } from '@/features/alagamento/hooks/useAlagamentoPontos';
 import { RiverCard } from './RiverCard';
 import { StationCard } from './StationCard';
 
@@ -37,27 +36,29 @@ export const StationCardContainer: React.FC<StationProps> = ({ id, onClose, onOp
 
 interface PointProps { point: FloodPointResponseDTO; onClose: () => void; onOpenAnalysis: () => void }
 
-/** Resumo do ponto: série das últimas horas (GET /api/pontos/{slug}/predictions) e a chuva do ponto (B3). */
+/** Resumo do ponto: alerta por regressão (GET /api/alagamento/pontos, só ADMIN em modo sombra) e a chuva do ponto (B3). */
 export const PointCardContainer: React.FC<PointProps> = ({ point, onClose, onOpenAnalysis }) => {
-  const series = usePredictionSeries(point.slug, 24);
   const rain = useRainCandidates(point.slug);
-  const [now] = useState(() => Date.now());
   const { user } = useAuth();
   const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
-  const alertas = useAlertaPontos(isAdmin);
+  const al = useAlagamentoPontos(isAdmin);
   return (
-    <PointCard point={point} series={series.data?.items ?? []} rain={rain.data} now={now} onClose={onClose} onOpenAnalysis={onOpenAnalysis}
-      isAdmin={isAdmin} alerta={alertas.data?.find((a) => a.slug === point.slug)} alertaLoading={alertas.isLoading} alertaError={alertas.isError} />
+    <PointCard point={point} rain={rain.data} onClose={onClose} onOpenAnalysis={onOpenAnalysis} isAdmin={isAdmin}
+      alagamento={al.data?.find((a) => a.slug === point.slug)} alagamentoLoading={al.isLoading} alagamentoError={al.isError} />
   );
 };
 
 interface PanelProps { point: FloodPointResponseDTO; tab: AnalysisTab; onTab: (t: AnalysisTab) => void; onClose: () => void; onOpenStation: (id: string) => void }
 
 export const AnalysisPanelContainer: React.FC<PanelProps> = ({ point, tab, onTab, onClose, onOpenStation }) => {
-  const series = usePredictionSeries(point.slug, 24);
   const rain = useRainCandidates(point.slug);
-  const [now] = useState(() => Date.now());
-  return <AnalysisPanel point={point} series={series.data?.items ?? []} rain={rain.data} now={now} tab={tab} onTab={onTab} onClose={onClose} onOpenStation={onOpenStation} />;
+  const { user } = useAuth();
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const al = useAlagamentoPontos(isAdmin);
+  return (
+    <AnalysisPanel point={point} rain={rain.data} isAdmin={isAdmin} alagamento={al.data?.find((a) => a.slug === point.slug)}
+      alagamentoLoading={al.isLoading} alagamentoError={al.isError} tab={tab} onTab={onTab} onClose={onClose} onOpenStation={onOpenStation} />
+  );
 };
 
 interface LocationProps { lat: number; lon: number; onClose: () => void; onOpenPoint: (slug: string) => void; onOpenStation: (id: string) => void; onReport?: () => void }

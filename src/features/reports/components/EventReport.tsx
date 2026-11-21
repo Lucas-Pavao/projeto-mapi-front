@@ -1,16 +1,12 @@
 import React from 'react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { getRiskVisual } from '@/components/risk/risk';
-import { bandText, pctTxt, thresholdsOf } from '@/components/risk/thresholds';
-import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
 import type { TimePt } from '@/components/charts/chartMath';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import type { Alert } from '@/features/alerts/schemas/alert.schema';
 import type { FloodPointResponseDTO } from '@/features/map/types';
 import type { FloodReport } from '../schemas/report.schema';
 import { WATER_DEPTH_LABEL } from '../utils/labels';
-import type { PointRow } from '../utils/eventReport';
+import { worstText, type PointRow } from '../utils/eventReport';
+import { TEXT_CLASS, toneOf } from '@/features/alagamento/utils/alagamentoText';
 import logo from '@/assets/mapi-logo-on-light.svg';
 import { cn } from '@/lib/utils';
 
@@ -31,7 +27,8 @@ interface Props {
   tide: TimePt[];
   river: TimePt[];
   riverName: string | null;
-  rows: PointRow[];
+  /** null = o alerta por regressão está em teste e o perfil não o vê (modo sombra). */
+  rows: PointRow[] | null;
   points: FloodPointResponseDTO[];
   /** undefined = o perfil não acessa; [] = nada na janela. */
   alerts: Alert[] | undefined;
@@ -54,13 +51,11 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
   const rainMax = Math.max(10, ...rain.map((p) => p.v ?? 0));
   const lvMax = Math.max(3.4, ...tide.map((p) => p.v ?? 0), ...river.map((p) => p.v ?? 0));
   const line = (pts: TimePt[], max: number) => pts.filter((p) => p.v != null && p.t >= from && p.t <= to).map((p) => `${sx(p.t, from, to).toFixed(1)},${sy(p.v as number, max).toFixed(1)}`).join(' ');
+  const byslug = new Map(points.map((p) => [p.slug, p]));
   const area = (() => {
     const v = rain.filter((p) => p.v != null && p.t >= from && p.t <= to);
     return v.length ? `${sx(v[0].t, from, to).toFixed(1)},${HT} ${v.map((p) => `${sx(p.t, from, to).toFixed(1)},${sy(p.v as number, rainMax).toFixed(1)}`).join(' ')} ${sx(v[v.length - 1].t, from, to).toFixed(1)},${HT}` : '';
   })();
-  const byslug = new Map(points.map((p) => [p.slug, p]));
-  const thresholds = thresholdsOf(points);
-  const synthetic = points.map((p) => p.floodPrediction).find((f) => f?.trainingData === 'SYNTHETIC' || f?.syntheticWarning);
   return (
     <article
       data-theme="light" data-accent="capibaribe" aria-label="Relatório de situação"
@@ -73,8 +68,7 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
       <div>
         <h2 className="m-0 text-[22px] font-extrabold leading-7">Relatório de situação</h2>
         <p className="m-0 mt-0.5 text-[12px] text-muted-foreground">Região Metropolitana do Recife · {H(from, generatedAt)}–{H(to, generatedAt)} (últimas {hours} h, America/Recife){author ? ` · por ${author}` : ''}</p>
-        <ExperimentalBadge className="mt-1.5 w-fit" />
-        <p className="m-0 mt-1 text-[10px] leading-[13px] text-muted-foreground">Toda classe de risco deste relatório é experimental enquanto o modelo for NOT_VALIDATED. A classe não confirma alagamento no local.</p>
+        <span className="mt-1.5 inline-flex w-fit rounded-md border border-warning/70 px-2 text-[11px] font-bold text-warning">Alerta experimental</span>
       </div>
 
       {show.resumo && (
@@ -113,40 +107,26 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
 
       {show.pontos && (
         <section aria-label="Pontos críticos">
-          {failed.timeline || failed.points ? <Warn what="os pontos" /> : rows.length === 0 ? <p className="m-0 text-[11px] text-muted-foreground">Nenhuma previsão na janela.</p> : (
+          {failed.timeline || failed.points ? <Warn what="os pontos" /> : rows == null ? <p className="m-0 text-[11px] text-muted-foreground">O alerta de alagamento por regressão está em teste: só o administrador vê o nível dos pontos.</p> : rows.length === 0 ? <p className="m-0 text-[11px] text-muted-foreground">Sem histórico do alerta na janela.</p> : (
             <table className="w-full border-collapse text-left text-[11px]">
-              <caption className="sr-only">Pontos críticos pela maior probabilidade na janela</caption>
+              <caption className="sr-only">Pontos críticos pelo pior nível do alerta na janela</caption>
               <thead>
                 <tr className="text-muted-foreground">
-                  {['Ponto', 'Prob. máx.', 'Quando', 'Tempo em alto', 'Risco agora'].map((h) => <th key={h} scope="col" className="border-b border-border py-1 pr-2 font-semibold">{h}</th>)}
+                  {['Ponto', 'Pior nível · lâmina máx.', 'Quando', 'Tempo em alerta'].map((h) => <th key={h} scope="col" className="border-b border-border py-1 pr-2 font-semibold">{h}</th>)}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((r) => {
-                  const pred = byslug.get(r.slug)?.floodPrediction;
-                  return (
-                    <tr key={r.slug} data-slug={r.slug}>
-                      <td className="border-b border-border py-[5px] pr-2 font-bold">{r.name}</td>
-                      <td className={cn('border-b border-border pr-2 font-mono font-bold', r.maxLevel ? getRiskVisual(r.maxLevel).text : 'text-muted-foreground')}>{r.maxProb != null ? pctTxt(r.maxProb) : '—'}</td>
-                      <td className="border-b border-border pr-2 font-mono">{r.maxAt != null ? H(r.maxAt, generatedAt) : '—'}</td>
-                      <td className="border-b border-border pr-2 font-mono">{r.highMin ? `${r.highMin} min` : '—'}</td>
-                      <td className="border-b border-border py-[3px]">
-                        <RiskBadge level={pred?.riskLevel} probability={pred?.floodProbability} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                {rows.map((r) => (
+                  <tr key={r.slug} data-slug={r.slug} data-level={r.worst ?? 'NONE'}>
+                    <td className="border-b border-border py-[5px] pr-2 font-bold">{r.name}</td>
+                    <td className={cn('border-b border-border pr-2 font-mono font-bold', r.worst ? TEXT_CLASS[toneOf(r.worst)] : 'text-muted-foreground')}>{worstText(r)}</td>
+                    <td className="border-b border-border pr-2 font-mono">{r.worstAt != null ? H(r.worstAt, generatedAt) : '—'}</td>
+                    <td className="border-b border-border pr-2 font-mono">{r.alertMin ? `${r.alertMin} min` : '—'}</td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           )}
-          {!failed.timeline && !failed.points && rows.length > 0 && (
-            <p data-testid="report-thresholds" className="m-0 mt-1.5 text-[10px] leading-[14px] text-muted-foreground">
-              {thresholds
-                ? `Classes pelos limiares do modelo (probabilidade bruta): moderado ${bandText('MEDIUM', thresholds)}; alto ${bandText('HIGH', thresholds)}. "Tempo em alto" conta a partir do limiar alto, inclusive.`
-                : 'Limiares do modelo indisponíveis: a classe é a enviada pela API.'}
-            </p>
-          )}
-          <SyntheticWarning prediction={synthetic} className="mt-1.5 text-[10px] leading-[14px]" />
         </section>
       )}
 
@@ -172,7 +152,7 @@ export const EventReport: React.FC<Props> = ({ show, generatedAt, from, to, hour
       )}
 
       <p className="m-0 mt-auto border-t border-border pt-2 text-[9px] leading-[13px] text-muted-foreground">
-        Previsão experimental, modelo não validado (ADR 0007). Probabilidades não confirmam alagamento no local. “Previsão indisponível” não é risco baixo. Fontes: APAC, Cemaden, ANA, Open-Meteo, DHN/TabuaMare, CKAN Recife. DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC.
+        Alerta experimental (chuva prevista + balde), não validado: nenhum modelo aprende com rótulo de alagamento e o nível não confirma alagamento no local. “Sem dado” não é sem alerta. Fontes: APAC, Cemaden, ANA, Open-Meteo, DHN/TabuaMare, CKAN Recife. DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC.
       </p>
     </article>
   );

@@ -1,15 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
-import { RainForecastSummary } from '@/components/risk/RainForecastSummary';
-import { RISK_MEANING, showsExperimentalLabel, getRiskVisual } from '@/components/risk/risk';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
-import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
-import { PointAlertTabs } from '@/features/alerta/components/PointAlertTabs';
+import { PointRegressaoBlock } from '@/features/alagamento/components/PointRegressaoBlock';
 
 interface Props {
   point: FloodPointResponseDTO;
@@ -24,10 +18,7 @@ const tileValue = 'whitespace-nowrap font-mono text-sm leading-5 font-semibold';
 
 /** Resumo do ponto crítico selecionado (popup do mapa, 300 px; Main.dc.html). Os números vêm do status em tempo real do ponto. */
 export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStatus = false, onClose }) => {
-  const prediction = status?.floodPrediction ?? point.floodPrediction;
   const precise = status?.preciseData;
-  const level = prediction?.riskLevel;
-  const unknown = !getRiskVisual(level).showsProbability;
   const rain3h = precise?.historicalAggregates?.rain3h;
   const tide = precise?.tideHeightTabuaMare;
   const now = precise?.precipitation;
@@ -47,20 +38,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
           {point.description ? ` · ${point.description}` : ''}
         </p>
       </div>
-      <PointAlertTabs
-        slug={point.slug}
-        pointName={point.name}
-        fallback={<RainForecastSummary prediction={prediction} />}
-        experimental={
-          <>
-            <RiskBadge level={level} probability={prediction?.floodProbability} className="self-start" />
-            {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
-            <PredictionProvenance prediction={prediction} />
-            <RainForecastSummary prediction={prediction} />
-            {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[13px] leading-[18px]" /> : <p className="m-0 text-[13px] leading-[18px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
-          </>
-        }
-      />
+      <PointRegressaoBlock slug={point.slug} />
       <div className="grid grid-cols-3 gap-1.5">
         <div className={tile}>
           <div className={tileLabel}>Chuva 3 h</div>

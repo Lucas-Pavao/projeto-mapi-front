@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { QueryState } from '@/components/ui/query-state';
@@ -55,8 +57,8 @@ export const AdminUsersPage: React.FC = () => {
       <section aria-label="Usuários" className="flex min-h-96 min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:col-span-7 lg:min-h-0">
         <div className="flex flex-wrap items-center gap-3 border-b border-border px-[18px] py-4">
           <div className="min-w-0 flex-1 basis-64">
-            <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Usuários e perfis</h1>
-            <p className="m-0 text-xs text-muted-foreground">A API tem os perfis USER, OPERADOR e ADMIN (JWT + refresh). Convidado não faz login. Desativar bloqueia o login.</p>
+            <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Usuários e perfis<LeanTip text="Perfis USER, OPERADOR e ADMIN. Convidado não faz login. Desativar bloqueia o login." /></h1>
+            <OnlyInDetail><p className="m-0 text-xs text-muted-foreground">A API tem os perfis USER, OPERADOR e ADMIN (JWT + refresh). Convidado não faz login. Desativar bloqueia o login.</p></OnlyInDetail>
           </div>
           <label className="flex w-full sm:w-[220px]">
             <span className="sr-only">Buscar usuário</span>

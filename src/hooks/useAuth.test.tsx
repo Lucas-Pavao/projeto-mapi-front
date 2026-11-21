@@ -85,7 +85,7 @@ describe('sessão e perfil (TOKEN_REVOKED)', () => {
       </MemoryRouter>,
     );
     fireEvent.click(await screen.findByRole('button', { name: 'carregar' }));
-    await waitFor(() => expect(screen.getAllByRole('link', { name: /Dados/ }).length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByRole('button', { name: /^Gestão/ }).length).toBeGreaterThan(0)); // navegação em grupos (5.11): Dados fica em Gestão
     expect(screen.getByText('tela do mapa')).toBeInTheDocument();
     expect(screen.queryByText('Seu perfil mudou.')).toBeNull();
   });

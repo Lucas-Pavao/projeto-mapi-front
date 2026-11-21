@@ -2,7 +2,6 @@
  * DADOS SINTÉTICOS. Nada aqui é medição, previsão ou ocorrência real: servem só para desenhar
  * e testar telas. Todo nome começa com "Sintético" para ninguém confundir com o ponto real.
  */
-import type { PredictionSummary, RiskSummary } from '@/features/points/schemas/prediction.schema';
 import type { SensorFreshness } from '@/features/sensors/schemas/sensor.schema';
 import type { Alert, AlertRule } from '@/features/alerts/schemas/alert.schema';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
@@ -10,26 +9,17 @@ import type { ModelEvaluation } from '@/features/model/schemas/model.schema';
 import type { FloodReport } from '@/features/reports/schemas/report.schema';
 import type { IngestionSource, UserSummary } from '@/features/admin/schemas/admin.schema';
 import type { PublicRisk } from '@/features/public-risk/schemas/public-risk.schema';
-import { RISK_MEANING } from '@/components/risk/risk';
 
 const MIN = 60_000;
 const ago = (minutes: number) => new Date(Date.now() - minutes * MIN).toISOString();
 
 export const SYNTHETIC_SLUG = 'sintetico-1';
 
-const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
 
-export const predictions = (slug: string): PredictionSummary[] => [
-  { slug, riskLevel: 'LOW', probability: 0.012, issuedAt: ago(180), validUntil: ago(120), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED', riskThresholds: TH },
-  { slug, riskLevel: 'MEDIUM', probability: 0.41, issuedAt: ago(120), validUntil: ago(60), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
-  { slug, riskLevel: 'HIGH', probability: 0.78, issuedAt: ago(60), validUntil: ago(0), horizonHours: 1, modelVersion: 'sintetico-0', degradationReason: null, modelValidationStatus: 'NOT_VALIDATED' },
-  // UNKNOWN: sem probabilidade, com motivo da degradação.
-  { slug, riskLevel: 'UNKNOWN', probability: null, issuedAt: ago(5), validUntil: null, horizonHours: null, modelVersion: null, degradationReason: 'AI_UNAVAILABLE', lastValidIssuedAt: ago(60), modelValidationStatus: 'NOT_VALIDATED' },
-];
 
 export const points = [
-  { id: 1, slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', municipality: 'Recife', description: 'Ponto sintético para desenho de tela.', latitude: -8.05, longitude: -34.9, altitudeM: 3, distanceToChannelM: 100, basinName: 'Sintético', sensorConfig: { pluviometerStationIds: ['SINTETICO-PLUV-01'], riverLevelStationIds: ['SINTETICO-RIO-01'] }, active: true, tideHeight: 1.4, tideUnit: 'm (NR da DHN)', floodPrediction: { riskLevel: 'HIGH', floodProbability: 0.78, modelValidationStatus: 'NOT_VALIDATED', issuedAt: ago(10) } },
-  { id: 2, slug: 'sintetico-2', name: 'Sintético: ponto sem previsão', municipality: 'Jaboatão', description: null, latitude: -8.1, longitude: -34.95, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, active: false, tideHeight: null, tideUnit: null, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_UNAVAILABLE', modelValidationStatus: 'NOT_VALIDATED' } },
+  { id: 1, slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', municipality: 'Recife', description: 'Ponto sintético para desenho de tela.', latitude: -8.05, longitude: -34.9, altitudeM: 3, distanceToChannelM: 100, basinName: 'Sintético', sensorConfig: { pluviometerStationIds: ['SINTETICO-PLUV-01'], riverLevelStationIds: ['SINTETICO-RIO-01'] }, active: true, tideHeight: 1.4, tideUnit: 'm (NR da DHN)' },
+  { id: 2, slug: 'sintetico-2', name: 'Sintético: ponto sem previsão', municipality: 'Jaboatão', description: null, latitude: -8.1, longitude: -34.95, altitudeM: null, distanceToChannelM: null, basinName: null, sensorConfig: null, active: false, tideHeight: null, tideUnit: null },
 ];
 export const terrain = (slug: string) => ({
   floodPointSlug: slug, status: 'OK', streetElevationM: 2.31, contributingAreaM2: 18450,
@@ -37,7 +27,6 @@ export const terrain = (slug: string) => ({
   provenance: { flightYear: 2016, verticalReference: 'datum do MDT' },
 });
 
-export const riskSummary = (): RiskSummary => ({ LOW: 5, MEDIUM: 2, HIGH: 1, UNKNOWN: 1, computedAt: ago(1) });
 
 export const sensors: SensorFreshness[] = [
   { sensorId: 'SINTETICO-PLUV-01', type: 'PRECIPITATION', value: 2.4, unit: 'mm', stationName: 'Sintético: pluviômetro 1', municipality: 'Recife', source: 'CEMADEN', observedAt: ago(8), ageSeconds: 480, stale: false },
@@ -46,8 +35,8 @@ export const sensors: SensorFreshness[] = [
 ];
 
 export const alerts: Alert[] = [
-  { id: 1, ruleId: 1, kind: 'RISK_LEVEL', severity: 'CRITICAL', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: risco alto no ponto de teste', detail: 'Dado sintético para desenho de tela.', riskLevel: 'HIGH', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(20), acknowledgedAt: null, acknowledgedBy: null },
-  { id: 2, ruleId: 2, kind: 'PREDICTION_UNAVAILABLE', severity: 'WARNING', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: previsão indisponível', detail: 'O modelo não respondeu.', riskLevel: 'UNKNOWN', degradationReason: 'AI_TIMEOUT', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(45), acknowledgedAt: null, acknowledgedBy: null },
+  { id: 1, ruleId: 1, kind: 'RISK_LEVEL', severity: 'CRITICAL', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: alerta em 1 h · lâmina 17,7 cm', detail: 'Alerta experimental (chuva prevista + balde), não validado.', observedValue: 17.7, riskLevel: 'ALERTA', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(20), acknowledgedAt: null, acknowledgedBy: null },
+  { id: 2, ruleId: 2, kind: 'PREDICTION_UNAVAILABLE', severity: 'WARNING', floodPointSlug: SYNTHETIC_SLUG, title: 'Sintético: alerta sem dado', detail: 'Sem dado (previsão de chuva (rain_v1) fora do ar). Sem dado não é sem alerta.', riskLevel: 'SEM_DADO', degradationReason: 'PREVISAO_INDISPONIVEL', modelValidationStatus: 'NOT_VALIDATED', triggeredAt: ago(45), acknowledgedAt: null, acknowledgedBy: null },
 ];
 
 export const acknowledgedAlert: Alert = { id: 3, ruleId: 3, kind: 'SENSOR_STALE', severity: 'INFO', stationId: 'SINTETICO-PLUV-02', title: 'Sintético: pluviômetro sem resposta', detail: null, triggeredAt: ago(200), acknowledgedAt: ago(150), acknowledgedBy: 'sintetico.operador' };
@@ -75,7 +64,6 @@ export const timeline = (from: string, to: string): Timeline => {
     rain: [{ stationId: 'SINTETICO-PLUV-01', points: rain }],
     tide: { harbor: 'pe02', points: tide },
     river: [{ stationId: 'SINTETICO-RIO-01', points: river }],
-    risk: [{ slug: SYNTHETIC_SLUG, items: predictions(SYNTHETIC_SLUG) }],
     floodEvents: [{ id: 1, slug: SYNTHETIC_SLUG, startTime: ago(90), severity: 'MEDIUM' }],
   };
 };
@@ -119,12 +107,14 @@ export const users: UserSummary[] = [
   { id: 4, name: null, email: null, role: 'USER', active: true, lastLoginAt: null }, // criado antes da V19: sem e-mail nem nome
 ];
 
+/** DADOS SINTÉTICOS de GET /api/public/risk: modo sombra (o alerta está em teste), como no serviço hoje. */
 export const publicRisk = (): PublicRisk => ({
-  nearestPoint: { slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', distanceM: 300, riskLevel: 'MEDIUM', issuedAt: ago(10), validUntil: null, degradationReason: null },
+  nearestPoint: { slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', distanceM: 300, level: 'SEM_DADO', worstHorizonHours: null, issuedAt: null, reason: 'EM_TESTE' },
   rainLastHourMm: 3.2,
   rainStationId: 'SINTETICO-PLUV-01',
-  modelValidationStatus: 'NOT_VALIDATED',
-  meaning: RISK_MEANING.MEDIUM,
+  experimental: true,
+  inTest: true,
+  meaning: 'O alerta de alagamento ainda está em teste. Fique de olho na chuva e siga as orientações da Defesa Civil.',
 });
 
 export const ingestionRuns = [

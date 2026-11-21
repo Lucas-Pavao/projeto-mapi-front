@@ -1,22 +1,20 @@
 import React, { useMemo, useState } from 'react';
 import { MapPin, Moon, Sun } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { RiskCountTiles } from '@/components/risk/RiskCountTiles';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
+import { FloodCountTiles } from '@/features/alagamento/components/FloodCountTiles';
+import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
+import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
+import { DOT_CLASS, TEXT_CLASS, countByLevel, listLineOf } from '@/features/alagamento/utils/alagamentoText';
 import { MobileMenu } from '@/components/layout/MobileMenu';
-import { formatProbability, getRiskVisual, showsExperimentalLabel } from '@/components/risk/risk';
 import { useTheme } from '@/hooks/useTheme';
 import { ACCENT_LABEL } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import logoDark from '@/assets/mapi-symbol-on-dark.svg';
 import logoLight from '@/assets/mapi-symbol-on-light.svg';
-import type { RiskSummary } from '@/features/points/schemas/prediction.schema';
 import type { FloodPointResponseDTO } from '../types';
 import { fmtNum, sortPoints } from '../utils/overview';
 import { formatRecife } from '../utils/datetime';
 import type { useMapOverview } from '../hooks/useMapOverview';
 import { RiskLegendControl } from './RiskLegendControl';
-import { thresholdsOf } from '@/components/risk/thresholds';
 
 type Overview = ReturnType<typeof useMapOverview>;
 
@@ -26,8 +24,9 @@ export const MOBILE_SHEET_EXPANDED = 560;
 
 interface Props {
   points: FloodPointResponseDTO[];
-  summary: RiskSummary | undefined;
-  summaryFailed: boolean;
+  /** Alerta por regressão de cada ponto (só ADMIN, modo sombra). */
+  alagamentoBySlug?: ReadonlyMap<string, AlagamentoPonto>;
+  alagamentoFailed?: boolean;
   overview: Overview;
   lastSuccessAt: string | null;
   onSelect: (p: FloodPointResponseDTO) => void;
@@ -39,18 +38,17 @@ interface Props {
 const chip = 'flex h-8 items-center rounded-full border bg-popover font-mono text-xs leading-4 font-bold';
 
 /** Mapa no celular (MobileMapa.dc.html): barra de busca com o logotipo (abre o menu), chips, botão Reportar e folha de pontos. */
-export const MobileMapa: React.FC<Props> = ({ points, summary, summaryFailed, overview, lastSuccessAt, onSelect, onReport, hidden }) => {
+export const MobileMapa: React.FC<Props> = ({ points, alagamentoBySlug, alagamentoFailed = false, overview, lastSuccessAt, onSelect, onReport, hidden }) => {
   const { theme, accent, toggleTheme, cycleAccent } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState('');
   const sheetH = expanded ? MOBILE_SHEET_EXPANDED : MOBILE_SHEET_COLLAPSED;
-  const sorted = useMemo(() => sortPoints(points), [points]);
+  const sorted = useMemo(() => sortPoints(points, alagamentoBySlug), [points, alagamentoBySlug]);
   const q = query.trim().toLowerCase();
   const rows = q ? sorted.filter((p) => `${p.name} ${p.municipality ?? ''} ${p.slug}`.toLowerCase().includes(q)) : sorted;
-  const horizon = points.map((p) => p.floodPrediction?.horizonHours).find((h): h is number => h != null);
-  const time = formatRecife(summary?.computedAt ?? lastSuccessAt)?.slice(-5).replace(':', 'h');
-  const experimental = points.some((p) => showsExperimentalLabel(p.floodPrediction));
+  const time = formatRecife(lastSuccessAt)?.slice(-5).replace(':', 'h');
+  const counts = alagamentoBySlug && !alagamentoFailed ? countByLevel(points.map((p) => p.slug), alagamentoBySlug) : null;
   const themeLabel = theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro';
 
   return (
@@ -86,7 +84,7 @@ export const MobileMapa: React.FC<Props> = ({ points, summary, summaryFailed, ov
             </span>
           </button>
           {/* Níveis de risco recolhidos, como no desktop; o painel para acima do botão Reportar e da folha de pontos. */}
-          <RiskLegendControl thresholds={thresholdsOf(points)} className="-my-2 ml-auto" bottomReserve={sheetH + 12 + 52 + 8} />
+          <RiskLegendControl className="-my-2 ml-auto" bottomReserve={sheetH + 12 + 52 + 8} />
         </div>
       </div>}
 
@@ -111,25 +109,26 @@ export const MobileMapa: React.FC<Props> = ({ points, summary, summaryFailed, ov
             </button>
             <div className="flex items-baseline justify-between">
               <h2 className="m-0 text-lg leading-6 font-extrabold">Agora na RMR</h2>
-              <span className="text-xs text-muted-foreground">{horizon != null ? `próximas ${horizon} h` : 'previsão'}</span>
+              <span className="text-xs text-muted-foreground">alerta em 1, 3 e 6 h</span>
             </div>
-            <RiskCountTiles summary={summary} failed={summaryFailed} size="sm" />
-            {experimental && <ExperimentalBadge className="self-start" />}
+            {alagamentoBySlug && <FloodCountTiles counts={counts} size="sm" />}
+            <ExperimentalTag className="self-start" />
             <ul className="scroll m-0 flex min-h-0 flex-1 list-none flex-col gap-1.5 p-0">
               {rows.length === 0 && <li className="py-4 text-center text-xs text-muted-foreground">{q ? 'Nenhum ponto com esse nome.' : 'Nenhum ponto crítico retornado pela API.'}</li>}
               {rows.map((p) => {
-                const level = p.floodPrediction?.riskLevel;
-                const v = getRiskVisual(level);
-                const pct = formatProbability(level, p.floodPrediction?.floodProbability);
+                const line = alagamentoBySlug ? listLineOf(alagamentoBySlug.get(p.slug)) : null;
                 return (
                   <li key={p.id}>
                     <button type="button" onClick={() => onSelect(p)} className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-muted p-2.5 text-left text-foreground">
-                      <RiskBadge level={level} variant="marker" />
+                      <span aria-hidden="true" className={cn('box-border size-3 flex-none rounded-full', line ? DOT_CLASS[line.tone] : 'bg-muted-foreground', line?.tone === 'muted' && 'border-2 border-dashed border-muted-foreground bg-transparent')} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] leading-5 font-extrabold">{p.name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">{p.municipality ?? 'Recife'} · {v.label}</span>
+                        {line ? (
+                          <span data-testid="point-alert-line" className="block truncate text-xs text-muted-foreground"><span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span> · {line.sheet}</span>
+                        ) : (
+                          <span className="block truncate text-xs text-muted-foreground">{p.municipality ?? 'Recife'}</span>
+                        )}
                       </span>
-                      <span className={cn('font-mono text-base font-extrabold', v.text)}>{pct ?? '—'}</span>
                     </button>
                   </li>
                 );

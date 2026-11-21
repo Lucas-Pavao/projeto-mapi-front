@@ -20,7 +20,6 @@ const TAGS: Record<SourceKind, Tag> = {
   OFFICIAL_INMET: { label: 'oficial · INMET', hint: 'Aviso vigente; não é previsão do MAPi', cls: WARN },
   PHYSICAL_MODEL: { label: 'modelo físico · não validado', hint: 'Nível do ponto pelo modelo físico', cls: WARN },
   TESTING: { label: 'Em teste: não é alerta oficial', hint: 'Modo sombra do alerta', cls: WARN },
-  SYNTHETIC_LABEL: { label: 'rótulo SINTÉTICO', hint: 'Aba Experimental (logreg_v3)', cls: WARN },
 };
 
 interface Props {

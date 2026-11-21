@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { candidateRoleSchema, monthStatusSchema } from '@/features/points/schemas/rain-candidates.schema';
-import { riskLevelSchema } from '@/features/map/schemas/floodPointResponse.schema';
 
 const n = z.number().nullable().optional();
 
@@ -30,7 +29,7 @@ export const locationAnalysisSchema = z.object({
     nValid: z.number().nullable().optional(),
   }),
   nearestPoint: z.object({
-    slug: z.string(), name: z.string(), distanceKm: n, riskLevel: riskLevelSchema, probability: n, degradationReason: z.string().nullable().optional(),
+    slug: z.string(), name: z.string(), distanceKm: n,
   }).nullable().optional(),
   tide: z.object({ levelM: n, rising: z.boolean().nullable().optional(), harbor: z.string().nullable().optional(), verticalReference: z.string().nullable().optional(), tideSource: tideSourceSchema.nullable().optional() }).nullable().optional(),
   river: z.object({ stationId: z.string(), name: z.string(), levelM: n, distanceKm: n, outsideModel: z.boolean().default(true) }).nullable().optional(),

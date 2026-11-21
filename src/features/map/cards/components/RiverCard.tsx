@@ -19,7 +19,7 @@ interface Props {
   onClose?: () => void;
 }
 
-/** Card da régua do rio (APAC): nível, tendência e as cotas oficiais. O rio fica fora do logreg_v3 e do alerta por ponto. */
+/** Card da régua do rio (APAC): nível, tendência e as cotas oficiais. O rio fica fora do alerta de alagamento por regressão. */
 export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM, trendCmH, levels, onClose }) => {
   const state = riverState(levelM, levels);
   const hasLevels = levels.pre != null || levels.alert != null || levels.flood != null;
@@ -56,7 +56,7 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
           </div>
         </>
       ) : <p className="m-0 text-xs text-muted-foreground">A APAC não informou as cotas desta régua: só o nível é mostrado.</p>}
-      <p className="m-0 text-xs leading-[17px] text-muted-foreground">Fica fora do logreg_v3 e do alerta por ponto: é mostrado para a operação.</p>
+      <p className="m-0 text-xs leading-[17px] text-muted-foreground">Fica fora do alerta de alagamento: é mostrado para a operação.</p>
       <Link to="/sensores" className="flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Ver série do rio</Link>
     </section>
   );

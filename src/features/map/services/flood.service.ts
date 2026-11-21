@@ -1,12 +1,11 @@
 import api from '@/lib/api';
-import { validateFloodPoint, validateFloodPrediction } from '../schemas/floodPointResponse.schema';
+import { validateFloodPoint } from '../schemas/floodPointResponse.schema';
 import type {
   FloodPointResponseDTO,
   FloodPointRequestDTO,
   FloodEventDTO,
   ScraperEventDTO,
-  MapiResponseDTO,
-  FloodPredictionResponseDTO
+  MapiResponseDTO
 } from '../types';
 
 export const floodService = {
@@ -36,30 +35,10 @@ export const floodService = {
     return response.data;
   },
 
-  // Roda uma nova avaliação de risco de alagamento pra uma coordenada (chama a MAPI AI e grava
-  // auditoria em flood_predictions no backend). POST porque não é idempotente nem "seguro" no
-  // sentido HTTP — cada chamada cria um novo registro de predição.
-  async createFloodPrediction(latitude: number, longitude: number): Promise<FloodPredictionResponseDTO> {
-    const response = await api.post<FloodPredictionResponseDTO>('/api/flood-predictions', null, {
-      params: { latitude, longitude }
-    });
-    return validateFloodPrediction(response.data);
-  },
-
-  // Conveniência client-side: busca dado ambiental + predição juntos, pro card de detalhe (clique
-  // no mapa/sensor) que sempre mostra os dois lado a lado hoje. Substitui o antigo GET
-  // /api/precise-data (removido do backend) — a composição que antes acontecia no servidor agora
-  // acontece aqui, chamando os dois endpoints dedicados em paralelo. Se a predição falhar (IA
-  // fora do ar), o dado ambiental ainda é exibido — só o card de risco fica vazio.
+  // Dado ambiental do ponto/local (o antigo GET /api/precise-data). A previsão do classificador saiu em 21/11/2026;
+  // o nível do ponto vem de GET /api/alagamento/pontos.
   async getPreciseData(latitude: number, longitude: number): Promise<MapiResponseDTO> {
-    const [environmentalData, floodPrediction] = await Promise.all([
-      this.getEnvironmentalData(latitude, longitude),
-      this.createFloodPrediction(latitude, longitude).catch((error) => {
-        console.error('[floodService] Falha ao obter predição de risco:', error);
-        return undefined;
-      }),
-    ]);
-    return { ...environmentalData, floodPrediction };
+    return this.getEnvironmentalData(latitude, longitude);
   },
 
 

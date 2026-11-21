@@ -10,9 +10,8 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 describe('parseLiveEvent', () => {
-  it('risk-summary válido e heartbeat', () => {
-    const rs = { LOW: 1, MEDIUM: 0, HIGH: 0, UNKNOWN: 2, computedAt: '2026-10-21T17:00:00Z' };
-    expect(parseLiveEvent({ event: 'risk-summary', data: JSON.stringify(rs) })).toEqual({ type: 'risk-summary', data: rs });
+  it('heartbeat; risk-summary (classificador retirado) vira null', () => {
+    expect(parseLiveEvent({ event: 'risk-summary', data: JSON.stringify({ LOW: 1 }) })).toBeNull();
     expect(parseLiveEvent({ event: 'heartbeat', data: '' })).toEqual({ type: 'heartbeat', at: null });
   });
   it('payload inválido, JSON quebrado e evento desconhecido viram null', () => {
@@ -23,12 +22,12 @@ describe('parseLiveEvent', () => {
 });
 
 describe('useLiveStream (MSW)', () => {
-  it('abre, recebe risk-summary e heartbeat', async () => {
+  it('abre e recebe heartbeat', async () => {
     server.use(liveStreamHandler({ heartbeatMs: 1000, maxBeats: 1 }));
     const events: LiveEvent[] = [];
     const { result } = renderHook(() => useLiveStream({ onEvent: (e) => events.push(e) }));
     await waitFor(() => expect(result.current.lastHeartbeatAt).not.toBeNull());
-    expect(events.map((e) => e.type)).toEqual(['risk-summary', 'heartbeat']);
+    expect(events.map((e) => e.type)).toEqual(['heartbeat']);
   });
   it('enabled=false não conecta', () => {
     const { result } = renderHook(() => useLiveStream({ enabled: false }));

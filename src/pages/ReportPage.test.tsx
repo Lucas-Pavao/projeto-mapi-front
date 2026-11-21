@@ -17,21 +17,26 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('ReportPage', () => {
-  it('monta a folha com resumo, pontos por probabilidade, gráficos e alertas', async () => {
+  it('monta a folha com resumo, pontos pelo pior nível do alerta, gráficos e alertas', async () => {
     renderPage(<ReportPage />);
     const sheet = await screen.findByRole('article', { name: 'Relatório de situação' });
-    expect(sheet).toHaveTextContent('Previsão experimental — modelo não validado');
+    expect(sheet).toHaveTextContent('Alerta experimental');
+    expect(sheet).toHaveTextContent('Alerta experimental (chuva prevista + balde), não validado');
     expect(sheet).toHaveTextContent('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC');
     expect(sheet.closest('[data-theme="light"]')).not.toBeNull(); // folha sempre no tema claro
     const resumo = await within(sheet).findByRole('region', { name: 'Resumo' });
-    expect(resumo).toHaveTextContent(/O ponto com maior probabilidade na janela foi Sintético: ponto de teste, com 78,0%/);
+    expect(await within(resumo).findByText(/O pior nível na janela foi em Sintético: ponto de teste: alerta em 1 h · 17,7 cm/)).toBeInTheDocument();
     const pts = await within(sheet).findByRole('region', { name: 'Pontos críticos' });
+    const head = within(pts).getAllByRole('columnheader').map((h) => h.textContent);
+    expect(head).toEqual(['Ponto', 'Pior nível · lâmina máx.', 'Quando', 'Tempo em alerta']);
     const rows = await within(pts).findAllByRole('row');
     expect(rows[1]).toHaveTextContent('Sintético: ponto de teste');
-    expect(within(pts).queryByText('Sintético: ponto sem previsão')).toBeNull(); // só pontos com previsão na janela
+    expect(rows[1]).toHaveTextContent('alerta em 1 h · 17,7 cm');
+    expect(rows[1]).toHaveTextContent(/\d+ min/);
     expect(within(sheet).getByRole('img', { name: 'Chuva, maré e rio no período' })).toBeInTheDocument();
-    expect(await within(sheet).findByText('Sintético: risco alto no ponto de teste')).toBeInTheDocument();
+    expect(sheet).toHaveTextContent('pontos que chegaram a alerta');
     expect(sheet).toHaveTextContent(/1 sem resposta recente/);
+    expect(sheet.textContent).not.toMatch(/Prob\. máx|Tempo em alto|ADR 0007|%/);
   });
 
   it('USER não recebe alertas nem relatos e a página não consulta essas rotas', async () => {
@@ -41,8 +46,10 @@ describe('ReportPage', () => {
     renderPage(<ReportPage />);
     expect(await screen.findByText(/Seu perfil não lista alertas/)).toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /Alertas disparados/ })).toBeDisabled();
-    await screen.findByRole('region', { name: 'Resumo' });
+    const resumo = await screen.findByRole('region', { name: 'Resumo' });
     expect(called).toBe(0);
+    expect(resumo).toHaveTextContent(/está em teste/);
+    expect(screen.getByText(/só o administrador vê o nível dos pontos/)).toBeInTheDocument();
   });
 
   it('uma parte que falha não derruba o relatório', async () => {

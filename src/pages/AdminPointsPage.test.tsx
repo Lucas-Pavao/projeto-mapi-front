@@ -32,7 +32,7 @@ describe('AdminPointsPage', () => {
     expect(li).toHaveAttribute('data-active', 'true');
     expect(li).toHaveTextContent('sintetico-1');
     expect(screen.getByRole('switch', { name: 'Sintético: ponto sem previsão: ponto ativo' })).not.toBeChecked();
-    expect(screen.getByText(/cadastrados · \d+ ativos no ciclo de previsão/)).toBeInTheDocument();
+    expect(screen.getByText(/cadastrados · \d+ ativos no ciclo do alerta/)).toBeInTheDocument();
     expect(within(form()).getByText(/Editar · Sintético: ponto de teste/)).toBeInTheDocument();
     expect(within(form()).getByLabelText(/Slug/)).toHaveAttribute('readonly');
   });

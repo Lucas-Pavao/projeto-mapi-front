@@ -1,11 +1,10 @@
+import { InfoTip } from '@/components/InfoTip';
+import { OnlyInDetail, OnlyInLean, useDetailMode } from '@/lib/detailMode';
 import React, { useEffect, useState } from 'react';
 import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermometer, TriangleAlert, Waves, X } from 'lucide-react';
 import { SourceTag } from '@/components/risk/SourceTag';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { pctTxt } from '@/components/risk/thresholds';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { candidateStatus, candidateValue, distanceText, ROLE_TAG } from '@/features/points/utils/rainCandidates';
-import { getRiskVisual, degradationText } from '@/components/risk/risk';
 import { cn } from '@/lib/utils';
 import type { LocationAnalysis } from '../schemas/locationAnalysis.schema';
 import { CANDIDATE_TAG_CLASS, bannerOf, locationState, rainNote, rainSourceTag, rainTiles } from '../utils/locationView';
@@ -42,13 +41,13 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
   const tag = rainSourceTag(a.rain.mode);
   const estimated = a.rain.mode === 'ESTIMATED';
   const np = a.nearestPoint;
-  const nearLevel = np?.riskLevel ?? 'UNKNOWN';
   const coord = `${a.lat.toFixed(4)}, ${a.lon.toFixed(4)}`.replace(/\./g, ',');
   const showRain = state !== 'SEA';
   const showLand = state !== 'SEA' && state !== 'OUTSIDE';
   const canReport = showLand && Boolean(onReport);
   const citesCemaden = !estimated || a.rain.candidates.length > 0;
   const [copied, setCopied] = useState(false);
+  const { detail } = useDetailMode();
   useEffect(() => {
     if (!copied) return;
     const t = setTimeout(() => setCopied(false), 1500);
@@ -58,7 +57,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
     void navigator.clipboard?.writeText(`${a.lat.toFixed(5)}, ${a.lon.toFixed(5)}`).then(() => setCopied(true), () => undefined);
   };
   return (
-    <aside role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
+    <section role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
       className="flex max-h-full w-[400px] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-elevation-overlay">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-primary"><MapPin className="size-5" aria-hidden="true" /></span>
@@ -71,23 +70,29 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain scroll px-4 py-3.5">
         {banner && (
+          <OnlyInLean>
+            <p data-testid="location-banner-short" className={cn('m-0 flex items-center gap-1.5 text-xs font-bold', TONE_TEXT[banner.tone])}>
+              {banner.title}<InfoTip text={banner.text} />
+            </p>
+          </OnlyInLean>
+        )}
+        {banner && (
+          <OnlyInDetail>
           <div role="status" data-testid="location-banner" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-3 py-2.5 text-xs leading-[17px]', TONE_BORDER[banner.tone], TONE_TINT[banner.tone], banner.dashed && 'border-dashed')}>
             <Info className={cn('mt-px size-4 shrink-0', TONE_TEXT[banner.tone])} aria-hidden="true" />
             <span><strong>{banner.title}</strong> {banner.text}</span>
           </div>
+          </OnlyInDetail>
         )}
 
-        <section aria-label="Risco perto daqui" className="flex flex-col gap-2">
-          <H3 icon={<ShieldCheck />}>Risco perto daqui</H3>
-          <p className="m-0 text-xs leading-[17px] text-muted-foreground">O modelo só calcula risco nos pontos críticos. Este local não tem previsão própria.</p>
+        <section aria-label="Ponto crítico mais próximo" className="flex flex-col gap-2">
+          <H3 icon={<ShieldCheck />}>Ponto crítico mais próximo<InfoTip text="O alerta de alagamento só existe nos 5 pontos críticos. Este local não tem alerta próprio: abra o ponto mais próximo para ver o nível." /></H3>
           {np ? (
             <button type="button" data-testid="nearest-point" onClick={() => onOpenPoint?.(np.slug)} className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-transparent px-3 py-2.5 text-left text-foreground hover:bg-muted">
-              <RiskBadge level={nearLevel} variant="marker" />
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-bold leading-[18px]">{np.name}</span>
-                <span className="block text-xs leading-4 text-muted-foreground">ponto crítico mais próximo{np.distanceKm != null ? ` · ${num(np.distanceKm, 1)} km` : ''} · {getRiskVisual(nearLevel).label.toLowerCase()}{nearLevel === 'UNKNOWN' ? ` (${degradationText(np.degradationReason as never)})` : ''}</span>
+                <span className="block text-xs leading-4 text-muted-foreground">ponto crítico mais próximo{np.distanceKm != null ? ` · ${num(np.distanceKm, 1)} km` : ''}</span>
               </span>
-              <span className="font-mono text-[13px] font-bold">{nearLevel === 'UNKNOWN' ? '—' : pctTxt(np.probability)}</span>
             </button>
           ) : <p className="m-0 text-xs text-muted-foreground">Nenhum ponto crítico por perto.</p>}
         </section>
@@ -96,7 +101,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           <section aria-label="Chuva" data-mode={a.rain.mode} className="flex flex-col gap-2">
             <H3 icon={<CloudRain />} aside={
               <SourceTag kind={tag.kind} label={tag.label} data-testid="rain-source-tag" className="h-5 rounded-md px-[7px] font-mono" />
-            }>Chuva</H3>
+            }>Chuva<InfoTip text={rainNote(a.rain.mode)} /></H3>
             <div className="grid grid-cols-3 gap-2">
               {rainTiles(a).map((t) => (
                 <div key={t.label} data-testid="rain-tile" className={cn('rounded-xl border p-2.5',
@@ -106,8 +111,8 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
                 </div>
               ))}
             </div>
-            <p className="m-0 text-xs leading-[17px] text-muted-foreground">{rainNote(a.rain.mode)}</p>
             {a.rain.candidates.length > 0 && (
+              <OnlyInDetail>
               <div className="flex flex-col gap-1">
                 <span data-testid="candidates-title" className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">
                   {estimated ? 'PLUVIÔMETROS NO RAIO (NENHUM VÁLIDO)' : `PLUVIÔMETROS ATÉ 5 KM · ${a.rain.candidates.length}${a.rain.nValid != null ? ` (${a.rain.nValid} VÁLIDOS)` : ''}`}
@@ -127,12 +132,13 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
                   </button>
                 ))}
               </div>
+              </OnlyInDetail>
             )}
           </section>
         )}
 
         <section aria-label="Água lá fora" className="flex flex-col gap-2">
-          <H3 icon={<Waves />}>Água lá fora</H3>
+          <H3 icon={<Waves />}>Água lá fora<InfoTip text="Maré sobre o nível de redução da Marinha: não comparar com a altitude do terreno. O rio é mostrado para a operação e fica fora do alerta." /></H3>
           <div className="grid grid-cols-2 gap-2">
             <Tile testId="tide-tile" label="Maré prevista"
               sub={`${a.tide?.harbor ?? 'Porto do Recife'}${a.tide?.rising == null ? '' : a.tide.rising ? ' · enchendo' : ' · vazando'}`}>
@@ -140,18 +146,17 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
               {a.tide?.tideSource === 'HARMONIC' && <div className="mt-1"><SourceTag kind="TIDE_HARMONIC" data-testid="tide-source-tag" /></div>}
             </Tile>
             <Tile testId="river-tile" label="Rio mais próximo" className={cn(!a.river && 'opacity-60')}
-              sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do modelo` : 'nenhuma régua a menos de 6 km'}>
+              sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do alerta` : 'nenhuma régua a menos de 6 km'}>
               {a.river?.levelM != null ? <>{num(a.river.levelM, 2)}<Unit>m</Unit></> : '—'}
             </Tile>
           </div>
-          <p className="m-0 text-xs leading-[17px] text-muted-foreground">Maré sobre o nível de redução da Marinha: não comparar com a altitude do terreno.</p>
         </section>
 
         {showLand && (
           <section aria-label="Terreno" className="flex flex-col gap-2">
             <H3 icon={<Mountain />}>Terreno</H3>
             <div className="grid grid-cols-2 gap-2" data-testid="terrain">
-              <Tile label="Altitude" sub={a.terrain ? 'PE3D (MDT 1 m) · cota relativa' : 'fora da cobertura do PE3D'}>
+              <Tile label="Altitude" sub={a.terrain ? (detail ? 'PE3D (MDT 1 m) · cota relativa' : 'cota relativa') : 'fora da cobertura do PE3D'}>
                 {a.terrain?.elevationM != null ? <>{num(a.terrain.elevationM, 1)}<Unit>m</Unit></> : '—'}
               </Tile>
               <Tile label="Até a costa" sub={a.terrain?.distanceToCoastKm != null ? 'distância em linha reta' : 'sem linha de costa no MAPi'}>
@@ -176,9 +181,11 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           </section>
         )}
 
-        <p className="m-0 text-[9px] leading-3 text-muted-foreground">
+        <OnlyInDetail>
+        <p data-testid="location-attribution" className="m-0 text-[9px] leading-3 text-muted-foreground">
           {citesCemaden ? `${a.attribution ?? CEMADEN} · maré DHN/TabuaMare · terreno PE3D · tempo Open-Meteo` : 'Chuva e tempo Open-Meteo (reanálise) · maré DHN/TabuaMare · terreno PE3D'}
         </p>
+        </OnlyInDetail>
       </div>
 
       <footer className="flex gap-2 border-t border-border px-4 py-3">
@@ -191,6 +198,6 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
         </button>
       </footer>
-    </aside>
+    </section>
   );
 };

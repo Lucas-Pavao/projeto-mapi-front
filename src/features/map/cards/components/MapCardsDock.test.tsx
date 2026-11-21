@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, fireEvent, within, waitFor } from '@testing-library/react';
 import { useEffect } from 'react';
 import { http, HttpResponse } from 'msw';
@@ -8,6 +8,8 @@ import { POINT_CARD_FIXTURES as P } from '@/mocks/cards';
 import { useMapCards } from '../hooks/useMapCards';
 import { MapCardsDock } from './MapCards';
 import type { FloodPointResponseDTO } from '../../types';
+
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role: 'ADMIN' } }) }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => { server.resetHandlers(); cleanup(); });
@@ -36,9 +38,9 @@ const open = (url: string, mobile = false) => renderPage(<Harness mobile={mobile
 
 describe('MapCardsDock (painel, estação ao lado e card de local)', () => {
   it('?ponto&aba abre o painel na aba pedida; candidata abre o card da estação ao lado; Esc fecha a estação e depois o painel', async () => {
-    open('/map?ponto=sintetico-1&aba=inputs');
+    open('/map?ponto=sintetico-1&aba=prov');
     const panel = await screen.findByTestId('analysis-panel');
-    expect(screen.getByRole('tab', { name: 'Entradas' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Origem' })).toHaveAttribute('aria-selected', 'true');
     fireEvent.click(await within(panel).findByText(/Sintético: Ibura/)); // candidata do ponto
     expect(await screen.findByRole('dialog', { name: /Pluviômetro Sintético: SINT-A/ })).toBeInTheDocument();
     expect(screen.getByTestId('analysis-panel')).toBeInTheDocument();
@@ -73,7 +75,7 @@ describe('MapCardsDock (painel, estação ao lado e card de local)', () => {
 
   it('estação inexistente (404) mostra "não encontrada"', async () => {
     server.use(http.get('/api/stations/:id/card', () => HttpResponse.json({}, { status: 404 })));
-    open('/map?ponto=sintetico-1&aba=inputs');
+    open('/map?ponto=sintetico-1&aba=prov');
     fireEvent.click(await screen.findByText(/Sintético: Ibura/));
     expect(await screen.findByText('Estação não encontrada.')).toBeInTheDocument();
   });
@@ -81,7 +83,7 @@ describe('MapCardsDock (painel, estação ao lado e card de local)', () => {
   it('celular: a análise abre em folha com as 3 abas e, ao fechar, volta ao resumo do ponto', async () => {
     open('/map?ponto=sintetico-1&aba=why', true);
     const sheet = (await screen.findByTestId('analysis-panel')).parentElement as HTMLElement;
-    expect(within(sheet).getAllByRole('tab').map((t) => t.textContent)).toEqual(['Por quê', 'Entradas', 'Origem']);
+    expect(within(sheet).getAllByRole('tab').map((t) => t.textContent)).toEqual(['Por quê', 'Balde', 'Origem']);
     fireEvent.click(within(sheet).getByRole('button', { name: 'Fechar análise' }));
     await waitFor(() => expect(JSON.parse(screen.getByTestId('state').textContent as string)).toMatchObject({ analysis: null, point: 'sintetico-1' }));
   });

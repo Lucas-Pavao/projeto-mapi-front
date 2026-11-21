@@ -9,13 +9,13 @@ const levels: RiverLevels = { pre: 1.8, alert: 2.3, flood: 2.8 };
 const show = (levelM: number | null, trendCmH: number | null = 4, l = levels) => render(<MemoryRouter><RiverCard name="Engenho Velho" riverName="Duas Unas" stationId="260790119H" levelM={levelM} trendCmH={trendCmH} levels={l} /></MemoryRouter>);
 
 describe('RiverCard', () => {
-  it('normal: nível, tendência, cotas da APAC e "fora do modelo"', () => {
+  it('normal: nível, tendência, cotas da APAC e "fora do alerta"', () => {
     show(1.2);
     expect(screen.getByTestId('river-state')).toHaveTextContent('Normal');
     expect(screen.getByTestId('river-level')).toHaveTextContent('1,20 m');
     expect(screen.getByTestId('river-trend')).toHaveTextContent('subindo 4 cm/h');
     expect(screen.getByTestId('river-cotas')).toHaveTextContent('pré 1,80alerta 2,30inundação 2,80 m');
-    expect(screen.getByText(/Fica fora do logreg_v3 e do alerta por ponto: é mostrado para a operação\./)).toBeInTheDocument();
+    expect(screen.getByText(/Fica fora do alerta de alagamento: é mostrado para a operação\./)).toBeInTheDocument();
   });
   it('estados usam >= nas cotas', () => {
     expect(riverState(1.8, levels)).toBe('PRE_ALERT');

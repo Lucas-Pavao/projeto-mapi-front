@@ -1,0 +1,31 @@
+{
+ "floodPointId": 5,
+ "slug": "MASCARENHAS_IMBIRIBEIRA",
+ "name": "Av. Mascarenhas de Morais",
+ "level": "SEM_DADO",
+ "worstHorizonHours": null,
+ "reason": "PREVISAO_INDISPONIVEL",
+ "reasonText": "previsão de chuva (rain_v1) fora do ar",
+ "hNowCm": 0.0,
+ "rainLastHourMm": 45.0,
+ "horizons": [],
+ "explanation": null,
+ "rainStation": "261160609A",
+ "rainStationName": "Imbiribeira",
+ "rainStationDistanceKm": 1.1,
+ "latestReadingAgeMinutes": null,
+ "modelVersions": {
+  "flood": "flood_reg_v1",
+  "rain": "rain_v1",
+  "bucket": "balde-M1a-10min"
+ },
+ "sources": [],
+ "missingInputs": [],
+ "codeVersion": null,
+ "issuedAt": null,
+ "evaluatedAt": "2026-11-20T17:00:00Z",
+ "experimental": true,
+ "shadow": true,
+ "rule": "ALERTA se a lâmina provável (q50) chega a 15 cm; ATENÇÃO se só a pessimista (q95) chega. Experimental.",
+ "attribution": "DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC"
+}

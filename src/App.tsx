@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/hooks/useAuth';
+import { DetailModeProvider } from '@/lib/detailMode';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { RequireRole } from '@/components/layout/RequireRole';
@@ -50,6 +51,7 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
+        <DetailModeProvider>
           <Router>
             <Suspense fallback={<RouteFallback />}>
               <Routes>
@@ -95,6 +97,7 @@ function App() {
               </Routes>
             </Suspense>
           </Router>
+        </DetailModeProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

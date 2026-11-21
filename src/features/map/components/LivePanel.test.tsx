@@ -2,35 +2,56 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { LivePanel } from './LivePanel';
+import { ALAGAMENTO_FIXTURES } from '@/mocks/alagamento';
+import { alagamentoPontoSchema } from '@/features/alagamento/schemas/alagamento.schema';
 import type { FloodPointResponseDTO, SensorResponseDTO } from '../types';
 
 afterEach(cleanup);
 
-const pt = (id: number, name: string, level: string, p: number | null) =>
-  ({ id, slug: `p${id}`, name, municipality: 'Recife', latitude: 0, longitude: 0, floodPrediction: { riskLevel: level, floodProbability: p, horizonHours: 3, modelValidationStatus: 'NOT_VALIDATED' } }) as unknown as FloodPointResponseDTO;
+const pt = (id: number, name: string) =>
+  ({ id, slug: `p${id}`, name, municipality: 'Recife', latitude: 0, longitude: 0 }) as unknown as FloodPointResponseDTO;
 const overview = { isError: false, from: 0, to: 1, now: 0, rain: [], tide: [], rainNow: null, tideNow: { v: 0.22, rising: false }, probabilities: new Map() } as never;
 const sensor = { id: 1, sensorId: 'S1', stationName: 'Várzea', value: 0.4, unit: 'mm/h', source: 'CEMADEN', type: 'Pluviômetro', timestamp: new Date().toISOString() } as unknown as SensorResponseDTO;
 
 const renderPanel = (over: Partial<React.ComponentProps<typeof LivePanel>> = {}) =>
   render(
     <MemoryRouter>
-      <LivePanel points={[pt(1, 'Baixo A', 'LOW', 0.1), pt(2, 'Alto B', 'HIGH', 0.8), pt(3, 'Sem C', 'UNKNOWN', null)]} sensors={[sensor]} summary={{ LOW: 1, MEDIUM: 0, HIGH: 1, UNKNOWN: 1, computedAt: '2026-10-21T18:00:00Z' }}
-        summaryFailed={false} liveStatus="open" lastSuccessAt={null} overview={overview} onFloodPointClick={vi.fn()} onSensorClick={vi.fn()} canSeeDataHealth={false} {...over} />
+      <LivePanel points={[pt(1, 'Baixo A'), pt(2, 'Alto B'), pt(3, 'Sem C')]} sensors={[sensor]}
+        liveStatus="open" lastSuccessAt={null} overview={overview} onFloodPointClick={vi.fn()} onSensorClick={vi.fn()} canSeeDataHealth={false} {...over} />
     </MemoryRouter>,
   );
 
 describe('LivePanel', () => {
-  it('abas com contagem, lista por risco (alto primeiro) e UNKNOWN sem porcentagem', () => {
+  it('visitante: abas com contagem, lista por nome, sem contadores nem porcentagem; um selo Experimental', () => {
     renderPanel();
     expect(screen.getByRole('tab', { name: 'Pontos críticos · 3' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: 'Sensores · 2' })).toBeInTheDocument(); // sensor + maré
     const rows = within(screen.getByRole('tabpanel')).getAllByRole('button');
-    expect(rows[0].textContent).toContain('Alto B');
-    expect(rows[1].textContent).toContain('Sem C');
-    expect(rows[2].textContent).toContain('Baixo A');
-    expect(rows[0].textContent).toContain('80,0%');
-    expect(rows[1].textContent).not.toMatch(/%/);
-    expect(screen.getByTestId('experimental-label')).toBeInTheDocument();
+    expect(rows.map((r) => r.textContent?.slice(0, 7))).toEqual(['Alto BR', 'Baixo A', 'Sem CRe']);
+    expect(screen.queryByTestId('flood-counts')).toBeNull();
+    expect(screen.getAllByTestId('selo-experimental')).toHaveLength(1);
+    expect(document.body.textContent).not.toMatch(/%|previsão para|risco baixo|seguro/i);
+    expect(screen.getByText(/alerta em 1, 3 e 6 h/)).toBeInTheDocument();
+  });
+
+  it('ADMIN: contadores Alerta/Atenção/Sem alerta/Sem dado, lista pelo nível e "lâmina x cm agora"; ponto sem linha = sem dado', () => {
+    const f = (slug: string, level: string, hNowCm: number | null) => [slug, alagamentoPontoSchema.parse({ ...ALAGAMENTO_FIXTURES.sem_alerta_seco, slug, level, hNowCm, worstHorizonHours: level === 'SEM_DADO' ? null : level === 'ALERTA' ? 1 : 6, reason: level === 'SEM_DADO' ? 'SEM_TERRENO' : null })] as const;
+    renderPanel({ alagamentoBySlug: new Map([f('p1', 'SEM_ALERTA', 0), f('p2', 'ALERTA', 17.7)]) });
+    const counts = screen.getByTestId('flood-counts');
+    expect(Array.from(counts.children).map((c) => c.textContent)).toEqual(['1Alerta', '0Atenção', '1Sem alerta', '1Sem dado']);
+    const lines = screen.getAllByTestId('point-alert-line').map((l) => l.textContent);
+    expect(lines).toEqual(['Alerta em 1 h · lâmina 17,7 cm agora', 'Alerta sem dado · sem dado', 'Sem alerta em 6 h · lâmina 0,0 cm agora']);
+  });
+
+  it('ADMIN com falha de leitura: contadores em traço, nunca zero', () => {
+    renderPanel({ alagamentoBySlug: new Map(), alagamentoFailed: true });
+    expect(Array.from(screen.getByTestId('flood-counts').children).map((c) => c.firstElementChild?.textContent)).toEqual(['—', '—', '—', '—']);
+  });
+
+  it('rodapé: fontes uma vez, com ⓘ da atribuição', () => {
+    renderPanel();
+    expect(screen.getByText(/APAC · Cemaden\/MCTIC · DHN · Open-Meteo/)).toBeInTheDocument();
+    expect(screen.getAllByTestId('info-tip').some((t) => /DADOS DA REDE OBSERVACIONAL DO CEMADEN\/MCTIC/.test(t.getAttribute('aria-label') ?? ''))).toBe(true);
   });
   it('aba Sensores lista a maré e o sensor; link Saúde dos dados só para ADMIN', () => {
     renderPanel();
@@ -42,12 +63,6 @@ describe('LivePanel', () => {
     renderPanel({ canSeeDataHealth: true });
     expect(screen.getByRole('link', { name: 'Saúde dos dados' })).toHaveAttribute('href', '/admin/dados');
   });
-  it('todos UNKNOWN: aviso "Previsão indisponível" e nada de "experimental"', () => {
-    renderPanel({ points: [pt(1, 'Sem C', 'UNKNOWN', null)] });
-    expect(screen.getByText('Previsão indisponível.')).toBeInTheDocument();
-    expect(screen.queryByTestId('experimental-label')).toBeNull();
-  });
-
   it('lista unificada: a estação aparece uma vez, com janela e fonte; ausente não vira zero; o feed declara a fonte', () => {
     const feed = { id: 9, sensorId: 'APAC-CEM-1', code: '261160618A', stationName: '[CEMADEN] Torreão', source: 'APAC/Cemaden',
       type: 'PRECIPITATION', value: 0, unit: 'mm', timestamp: new Date().toISOString() } as unknown as SensorResponseDTO;
