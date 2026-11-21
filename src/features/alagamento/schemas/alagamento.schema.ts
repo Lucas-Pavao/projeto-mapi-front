@@ -62,6 +62,8 @@ export const alagamentoPontoSchema = z.object({
   rainStationDistanceKm: num,
   latestReadingAgeMinutes: num,
   modelVersions: z.record(z.string(), z.string().nullable()),
+  sources: z.array(z.string()).default([]),
+  missingInputs: z.array(z.string()).default([]),
   codeVersion: z.string().nullable().optional(),
   issuedAt: isoSchema.nullable().optional(),
   evaluatedAt: isoSchema.nullable().optional(),

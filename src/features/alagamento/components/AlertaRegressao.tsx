@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { InfoTip } from '@/components/InfoTip';
+import { formatHoraCurta } from '@/features/operacao/utils/format';
 import type { AlagamentoPonto } from '../schemas/alagamento.schema';
 import {
   BAR_CLASS, CHIP_CLASS, DOT_CLASS, HCRIT_CM, INFO, fmt1, floodChipOf, pctOfBar, rainSourceLine, rangeCm,
@@ -26,6 +27,29 @@ const Metric: React.FC<{ label: string; info: string; value: React.ReactNode; su
     <div className="mt-1 whitespace-nowrap font-mono text-2xl font-bold tabular-nums leading-tight">{value}</div>
     {sub && <div className="mt-1 truncate text-xs text-muted-foreground">{sub}</div>}
   </div>
+);
+
+/** As 3 linhas "1 h / 3 h / 6 h": barra q50 cheia, q95 clara, traço de 15 cm e "17–33 cm" (com "· até 17h20" se pedido). */
+export const HorizonBars: React.FC<{ horizons: AlagamentoPonto['horizons']; withValidity?: boolean; className?: string }> = ({ horizons, withValidity = false, className }) => (
+  <ul className={cn('m-0 list-none space-y-2 p-0', className)}>
+    {horizons.map((h) => {
+      const c = BAR_CLASS[h.level];
+      return (
+        <li key={h.hours} data-testid={`horizonte-${h.hours}`} data-level={h.level} className={cn('grid items-center gap-3', withValidity ? 'grid-cols-[2.5rem_1fr_9.5rem]' : 'grid-cols-[2.5rem_1fr_5.5rem]')}>
+          <span className="font-mono text-sm font-bold">{h.hours} h</span>
+          <span className="relative h-3 rounded-full bg-secondary" role="img"
+            aria-label={`${h.hours} h: lâmina provável ${fmt1(h.sheetQ50Cm) ?? 'sem dado'} cm, pessimista ${fmt1(h.sheetQ95Cm) ?? 'sem dado'} cm; alagamento a partir de ${HCRIT_CM} cm`}>
+            <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q95)} style={{ width: `${pctOfBar(h.sheetQ95Cm)}%` }} />
+            <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q50)} style={{ width: `${pctOfBar(h.sheetQ50Cm)}%` }} />
+            <span aria-hidden="true" className="absolute -inset-y-1 w-0.5 bg-destructive" style={{ left: `${pctOfBar(HCRIT_CM)}%` }} />
+          </span>
+          <span className={cn('text-right font-mono text-sm font-bold tabular-nums', c.text)}>
+            {rangeCm(h.sheetQ50Cm, h.sheetQ95Cm)}{withValidity && h.validUntil ? <span className="font-normal text-muted-foreground"> · até {formatHoraCurta(h.validUntil)}</span> : null}
+          </span>
+        </li>
+      );
+    })}
+  </ul>
 );
 
 /**
@@ -56,23 +80,7 @@ export const AlertaRegressao: React.FC<{ ponto: AlagamentoPonto; showChip?: bool
         {semDado ? (
           <p className="mt-2 text-sm text-muted-foreground">sem previsão neste ciclo</p>
         ) : (
-          <ul className="mt-2 space-y-2">
-            {ponto.horizons.map((h) => {
-              const c = BAR_CLASS[h.level];
-              return (
-                <li key={h.hours} data-testid={`horizonte-${h.hours}`} data-level={h.level} className="grid grid-cols-[2.5rem_1fr_5.5rem] items-center gap-3">
-                  <span className="font-mono text-sm font-bold">{h.hours} h</span>
-                  <span className="relative h-3 rounded-full bg-secondary" role="img"
-                    aria-label={`${h.hours} h: lâmina provável ${fmt1(h.sheetQ50Cm) ?? 'sem dado'} cm, pessimista ${fmt1(h.sheetQ95Cm) ?? 'sem dado'} cm; alagamento a partir de ${HCRIT_CM} cm`}>
-                    <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q95)} style={{ width: `${pctOfBar(h.sheetQ95Cm)}%` }} />
-                    <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q50)} style={{ width: `${pctOfBar(h.sheetQ50Cm)}%` }} />
-                    <span aria-hidden="true" className="absolute -inset-y-1 w-0.5 bg-destructive" style={{ left: `${pctOfBar(HCRIT_CM)}%` }} />
-                  </span>
-                  <span className={cn('text-right font-mono text-sm font-bold tabular-nums', c.text)}>{rangeCm(h.sheetQ50Cm, h.sheetQ95Cm)}</span>
-                </li>
-              );
-            })}
-          </ul>
+          <HorizonBars horizons={ponto.horizons} className="mt-2" />
         )}
       </div>
     </section>

@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
-import { usePredictionSeries } from '@/features/points/hooks/usePredictionSeries';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
 import { seriesKeys, seriesOf } from '@/features/sensors/utils/sensorView';
 import { httpStatus } from '@/lib/apiError';
@@ -52,10 +51,14 @@ export const PointCardContainer: React.FC<PointProps> = ({ point, onClose, onOpe
 interface PanelProps { point: FloodPointResponseDTO; tab: AnalysisTab; onTab: (t: AnalysisTab) => void; onClose: () => void; onOpenStation: (id: string) => void }
 
 export const AnalysisPanelContainer: React.FC<PanelProps> = ({ point, tab, onTab, onClose, onOpenStation }) => {
-  const series = usePredictionSeries(point.slug, 24);
   const rain = useRainCandidates(point.slug);
-  const [now] = useState(() => Date.now());
-  return <AnalysisPanel point={point} series={series.data?.items ?? []} rain={rain.data} now={now} tab={tab} onTab={onTab} onClose={onClose} onOpenStation={onOpenStation} />;
+  const { user } = useAuth();
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const al = useAlagamentoPontos(isAdmin);
+  return (
+    <AnalysisPanel point={point} rain={rain.data} isAdmin={isAdmin} alagamento={al.data?.find((a) => a.slug === point.slug)}
+      alagamentoLoading={al.isLoading} alagamentoError={al.isError} tab={tab} onTab={onTab} onClose={onClose} onOpenStation={onOpenStation} />
+  );
 };
 
 interface LocationProps { lat: number; lon: number; onClose: () => void; onOpenPoint: (slug: string) => void; onOpenStation: (id: string) => void; onReport?: () => void }
