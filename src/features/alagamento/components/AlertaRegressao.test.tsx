@@ -58,7 +58,7 @@ describe('AlertaRegressao: 10 estados', () => {
     render(<AlertaRegressao ponto={fx('alerta_agora')} />);
     expect(screen.getByTestId('lamina-agora')).toHaveTextContent('21,3 cm');
     expect(screen.getByTestId('chuva-agora')).toHaveTextContent('180,0 mm/h');
-    expect(screen.getByTestId('chuva-agora')).toHaveTextContent('260960001A · 1,1 km');
+    expect(screen.getByTestId('chuva-agora')).toHaveTextContent('Imbiribeira · 1,1 km');
     cleanup();
     render(<AlertaRegressao ponto={fx('sem_dado_chuva_ausente')} />);
     expect(within(screen.getByTestId('chuva-agora')).getByText('sem dado')).toHaveClass('text-warning');

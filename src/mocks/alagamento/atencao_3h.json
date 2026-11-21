@@ -427,7 +427,8 @@
   ],
   "capacityM3H": 2156.84
  },
- "rainStation": "260960001A",
+ "rainStation": "261160609A",
+ "rainStationName": "Imbiribeira",
  "rainStationDistanceKm": 1.1,
  "latestReadingAgeMinutes": 0.0,
  "modelVersions": {

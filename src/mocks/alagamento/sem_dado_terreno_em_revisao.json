@@ -10,7 +10,8 @@
  "rainLastHourMm": 0.0,
  "horizons": [],
  "explanation": null,
- "rainStation": "260960001A",
+ "rainStation": "261160609A",
+ "rainStationName": "Imbiribeira",
  "rainStationDistanceKm": 1.1,
  "latestReadingAgeMinutes": null,
  "modelVersions": {

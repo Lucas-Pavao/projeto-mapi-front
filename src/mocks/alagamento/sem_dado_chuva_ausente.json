@@ -11,6 +11,7 @@
  "horizons": [],
  "explanation": null,
  "rainStation": null,
+ "rainStationName": null,
  "rainStationDistanceKm": null,
  "latestReadingAgeMinutes": null,
  "modelVersions": {

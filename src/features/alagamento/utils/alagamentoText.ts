@@ -83,10 +83,11 @@ export const fmt1 = (v: number | null | undefined) => (v == null ? null : nf1.fo
 export const rangeCm = (q50: number | null | undefined, q95: number | null | undefined) =>
   q50 == null || q95 == null ? 'sem dado' : `${nf0.format(Math.round(q50))}–${nf0.format(Math.round(q95))} cm`;
 
-/** "260960001A · 1,1 km · 4 min" (estação, distância, idade da leitura). */
-export const rainSourceLine = (p: Pick<AlagamentoPonto, 'rainStation' | 'rainStationDistanceKm' | 'latestReadingAgeMinutes'>) => {
+/** "Imbiribeira · 1,1 km · 4 min" (estação pelo nome, ou o código sem nome; distância; idade da leitura). */
+export const rainSourceLine = (p: Pick<AlagamentoPonto, 'rainStation' | 'rainStationName' | 'rainStationDistanceKm' | 'latestReadingAgeMinutes'>) => {
   const parts: string[] = [];
-  if (p.rainStation) parts.push(p.rainStation);
+  const station = p.rainStationName ?? p.rainStation;
+  if (station) parts.push(station);
   if (p.rainStationDistanceKm != null) parts.push(`${nf1.format(p.rainStationDistanceKm)} km`);
   if (p.latestReadingAgeMinutes != null) parts.push(`${nf0.format(Math.round(p.latestReadingAgeMinutes))} min`);
   return parts.join(' · ');

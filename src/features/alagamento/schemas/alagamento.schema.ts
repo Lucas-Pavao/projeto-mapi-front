@@ -58,6 +58,7 @@ export const alagamentoPontoSchema = z.object({
   horizons: z.array(floodHorizonSchema),
   explanation: floodExplanationSchema.nullable().optional(),
   rainStation: z.string().nullable().optional(),
+  rainStationName: z.string().nullable().optional(),
   rainStationDistanceKm: num,
   latestReadingAgeMinutes: num,
   modelVersions: z.record(z.string(), z.string().nullable()),
