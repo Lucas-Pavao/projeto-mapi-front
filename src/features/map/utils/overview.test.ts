@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { meanRainSeries, rainNow, riverState, sortPoints, tideNow, fmtNum, probabilityByPoint } from './overview';
+import { meanRainSeries, rainNow, riverState, sortPoints, tideNow, fmtNum } from './overview';
 import type { FloodPointResponseDTO } from '../types';
 
 const T = (min: number) => new Date(Date.UTC(2026, 9, 21, 12, min)).toISOString();
@@ -25,10 +25,6 @@ describe('overview', () => {
       ['d', { level: 'ALERTA', hNowCm: 22 }], ['e', { level: 'ATENCAO', hNowCm: 3 }]] as const) as never;
     expect(sortPoints(['b', 'c', 'a', 'd', 'e', 'f'].map(P), by).map((p) => p.name)).toEqual(['d', 'a', 'e', 'c', 'f', 'b']);
     expect(sortPoints(['b', 'a'].map(P)).map((p) => p.name)).toEqual(['a', 'b']); // visitante: por nome
-  });
-  it('probabilidade por ponto: UNKNOWN vira buraco', () => {
-    const m = probabilityByPoint([{ slug: 'x', items: [{ slug: 'x', riskLevel: 'LOW', probability: 0.2, issuedAt: T(10) }, { slug: 'x', riskLevel: 'UNKNOWN', probability: 0.9, issuedAt: T(0) }] as never }]);
-    expect(m.get('x')).toEqual([null, 0.2]);
   });
   it('estado do rio pelas cotas', () => {
     const lv = { riverPreAlertLevel: 1.7, riverAlertLevel: 2.4, riverFloodLevel: 3.1 };

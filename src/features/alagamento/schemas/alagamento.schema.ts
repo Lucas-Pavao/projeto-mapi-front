@@ -94,3 +94,21 @@ export const alagamentoStatusSchema = z.object({
   shadow: z.boolean(),
 });
 export type AlagamentoStatus = z.infer<typeof alagamentoStatusSchema>;
+
+/** GET /api/alagamento/historico?horas=N: um item por ciclo e ponto (relatório do evento e linha do tempo). */
+export const alagamentoHistoricoSchema = z.object({
+  from: isoSchema,
+  to: isoSchema,
+  points: z.array(z.object({
+    slug: z.string(),
+    name: z.string().nullable().optional(),
+    items: z.array(z.object({
+      at: isoSchema,
+      level: floodLevelSchema,
+      worstHorizonHours: z.number().int().nullable().optional(),
+      hNowCm: z.number().nullable().optional(),
+      reason: z.string().nullable().optional(),
+    })),
+  })),
+});
+export type AlagamentoHistorico = z.infer<typeof alagamentoHistoricoSchema>;

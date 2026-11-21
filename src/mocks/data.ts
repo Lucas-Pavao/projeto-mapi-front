@@ -75,7 +75,6 @@ export const timeline = (from: string, to: string): Timeline => {
     rain: [{ stationId: 'SINTETICO-PLUV-01', points: rain }],
     tide: { harbor: 'pe02', points: tide },
     river: [{ stationId: 'SINTETICO-RIO-01', points: river }],
-    risk: [{ slug: SYNTHETIC_SLUG, items: predictions(SYNTHETIC_SLUG) }],
     floodEvents: [{ id: 1, slug: SYNTHETIC_SLUG, startTime: ago(90), severity: 'MEDIUM' }],
   };
 };

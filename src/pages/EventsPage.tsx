@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QueryState } from '@/components/ui/query-state';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { showsExperimentalLabel } from '@/components/risk/risk';
+import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
+import { useAlagamentoHistorico } from '@/features/alagamento/hooks/useAlagamentoHistorico';
+import { useAuth } from '@/hooks/useAuth';
+import { hasRole, parseRole } from '@/lib/roles';
 import { toTimePts, type TimePt } from '@/components/charts/chartMath';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
@@ -20,20 +22,23 @@ import { cn } from '@/lib/utils';
 
 const WINDOWS = [24, 48, 72] as const;
 const HOUR = 3_600_000;
-const DOT: Record<StoryItem['tone'], string> = { low: 'bg-risk-low', moderate: 'bg-risk-moderate', high: 'bg-risk-high', unknown: 'bg-risk-unknown', info: 'bg-chart-3' };
-const TONE_LABEL: Record<StoryItem['tone'], string> = { low: 'risco baixo', moderate: 'atenção', high: 'risco alto', unknown: 'sem previsão', info: 'informação' };
+const DOT: Record<StoryItem['tone'], string> = { ok: 'bg-success', moderate: 'bg-warning', high: 'bg-destructive', unknown: 'bg-muted-foreground', info: 'bg-chart-3' };
+const TONE_LABEL: Record<StoryItem['tone'], string> = { ok: 'sem alerta', moderate: 'atenção', high: 'alerta', unknown: 'sem dado', info: 'informação' };
 
-const Legend: React.FC<{ experimental: boolean }> = ({ experimental }) => (
+const Legend: React.FC = () => (
   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted-foreground">
-    {[['bg-risk-low', 'Baixo'], ['bg-risk-moderate', 'Moderado'], ['bg-risk-high', 'Alto'], ['bg-risk-unknown', 'Indisponível']].map(([c, l]) => (
+    {[['bg-destructive', 'Alerta'], ['bg-warning', 'Atenção'], ['bg-success/40', 'Sem alerta'], ['bg-muted-foreground', 'Sem dado']].map(([c, l]) => (
       <span key={l} className="flex items-center gap-1.5"><span className={cn('size-3 rounded-[2px]', c)} />{l}</span>
     ))}
-    <span>· colunas apagadas: ainda não aconteceram</span>
-    {experimental && <ExperimentalBadge />}
+    <ExperimentalTag />
   </div>
 );
 
 const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: number; onHours: (h: (typeof WINDOWS)[number]) => void }> = ({ t, t0, t1, hours, onHours }) => {
+  const { user } = useAuth();
+  // Alerta por regressão em modo sombra: só o ADMIN vê o histórico do nível.
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const hist = useAlagamentoHistorico(hours, isAdmin);
   const [picked, setPicked] = useState<number | null>(null);
   const sel = Math.min(t1, Math.max(t0, picked ?? t1));
   const points = useFloodPoints();
@@ -50,9 +55,8 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
   const rain = useMemo(() => averageRain(t), [t]);
   const tide = useMemo(() => toTimePts(t.tide.points), [t.tide.points]);
   const river = useMemo(() => toTimePts(riverSeries?.points ?? []), [riverSeries]);
-  const cells = useMemo(() => t.risk.map((r) => ({ slug: r.slug, cells: buildCells(r.items, t0, t1) })), [t.risk, t0, t1]);
-  const story = useMemo(() => buildStory(t, names, { flood, alert, name: riverName, points: river }), [t, names, flood, alert, riverName, river]);
-  const experimental = t.risk.some((r) => r.items.some((p) => showsExperimentalLabel(p)));
+  const cells = useMemo(() => (hist.data?.points ?? []).map((r) => ({ slug: r.slug, cells: buildCells(r.items, t0, t1) })), [hist.data, t0, t1]);
+  const story = useMemo(() => buildStory(t, hist.data, names, { flood, alert, name: riverName, points: river }), [t, hist.data, names, flood, alert, riverName, river]);
 
   const upTo = (xs: TimePt[]) => xs.filter((p) => p.t <= sel && p.v != null);
   const peak = upTo(rain).reduce<TimePt | null>((m, p) => (m == null || (p.v as number) > (m.v as number) ? p : m), null);
@@ -83,7 +87,8 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
           <EventCharts t0={t0} t1={t1} sel={sel} rain={rain} tide={tide} river={river} harbor={t.tide.harbor} riverName={riverName} riverFlood={flood} riverAlert={alert} />
           <div className="col-span-full my-1 h-px bg-border" />
           {cells.map((c) => <EventStrip key={c.slug} name={names.get(c.slug) ?? c.slug} cells={c.cells} sel={sel} onPick={setPicked} />)}
-          {t.risk.length === 0 && <p className="col-span-full m-0 text-[13px] text-muted-foreground">Nenhuma previsão nesta janela.</p>}
+          {!isAdmin ? <p className="col-span-full m-0 text-[13px] text-muted-foreground">O alerta de alagamento por regressão está em teste: só o administrador vê o nível dos pontos.</p>
+            : cells.length === 0 && <p className="col-span-full m-0 text-[13px] text-muted-foreground">Sem histórico do alerta nesta janela.</p>}
           <div />
           <div aria-hidden="true" className="flex justify-between font-mono text-[11px] leading-4 text-muted-foreground">{ticks.map((x, i) => <span key={i}>{x}</span>)}</div>
         </div>
@@ -94,7 +99,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
             aria-valuetext={`até ${formatHoraCurta(new Date(sel).toISOString(), t1) ?? ''}`}
           />
         </label>
-        <Legend experimental={experimental} />
+        <Legend />
       </Panel>
       <aside aria-label="Resumo do evento" className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-2xl border border-border bg-card p-[18px]">
         <PanelTitle>Até {formatHoraCurta(new Date(sel).toISOString(), t1)?.replace(/^\d\d\/\d\d /, '') ?? 'agora'}{picked == null ? ' (agora)' : ''}</PanelTitle>
@@ -126,7 +131,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
 export const EventsPage: React.FC = () => {
   const [hours, setHours] = useState<(typeof WINDOWS)[number]>(24);
   const query = useTimeline(hours);
-  const isEmpty = (t: Timeline) => t.rain.length + t.river.length + t.risk.length === 0 && t.tide.points.length === 0 && (t.floodEvents ?? []).length === 0;
+  const isEmpty = (t: Timeline) => t.rain.length + t.river.length === 0 && t.tide.points.length === 0 && (t.floodEvents ?? []).length === 0;
   const t1 = Date.parse(query.range.to);
   const t0 = t1 - hours * HOUR;
   return (

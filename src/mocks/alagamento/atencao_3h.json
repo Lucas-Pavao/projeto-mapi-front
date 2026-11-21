@@ -436,6 +436,27 @@
   "rain": "rain_v1",
   "bucket": "balde-M1a-10min"
  },
+ "sources": [
+  "CEMADEN_PED"
+ ],
+ "missingInputs": [
+  "L_frac_wet_60",
+  "L_max_30",
+  "L_max_60",
+  "L_min_since_onset",
+  "N_min_since_onset",
+  "O_min_since_onset",
+  "S_frac_wet_60",
+  "S_max_30",
+  "S_max_60",
+  "S_min_since_onset",
+  "om_1h",
+  "om_3h",
+  "om_6h",
+  "r15_40_frac_wet_60",
+  "r15_40_max_60",
+  "r15_40_mean_60"
+ ],
  "codeVersion": "0000000000000000000000000000000000000000",
  "issuedAt": "2026-11-20T17:00:00Z",
  "evaluatedAt": "2026-11-20T17:00:00Z",

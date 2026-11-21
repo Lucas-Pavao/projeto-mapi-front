@@ -19,6 +19,8 @@
   "rain": "rain_v1",
   "bucket": "balde-M1a-10min"
  },
+ "sources": [],
+ "missingInputs": [],
  "codeVersion": null,
  "issuedAt": null,
  "evaluatedAt": "2026-11-20T17:00:00Z",

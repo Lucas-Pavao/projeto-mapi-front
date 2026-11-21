@@ -43,7 +43,22 @@ export const ALAGAMENTO_STATUS = {
   byLevel: { SEM_ALERTA: 3, SEM_DADO: 2 }, semDadoByReason: { SEM_TERRENO: 1, TERRENO_EM_REVISAO: 1 }, shadow: true,
 };
 
+/** DADOS SINTÉTICOS de GET /api/alagamento/historico: ciclos de 10 min com sem alerta, alerta (17,7 cm) e sem dado. */
+export const historicoOf = (horas: number, now = Date.now()) => {
+  const to = Math.floor(now / 600_000) * 600_000;
+  const from = to - horas * 3_600_000;
+  const items = [];
+  for (let t = from + 600_000; t <= to; t += 600_000) {
+    const k = (t - from) / (to - from);
+    const level = k < 0.55 ? 'SEM_ALERTA' : k < 0.7 ? 'ALERTA' : k < 0.8 ? 'SEM_ALERTA' : 'SEM_DADO';
+    items.push({ at: new Date(t).toISOString(), level, worstHorizonHours: level === 'SEM_DADO' ? null : 1,
+      hNowCm: level === 'ALERTA' ? 17.7 : level === 'SEM_DADO' ? null : 0, reason: level === 'SEM_DADO' ? 'CHUVA_AUSENTE' : null });
+  }
+  return { from: new Date(from).toISOString(), to: new Date(to).toISOString(), points: [{ slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', items }] };
+};
+
 export const alagamentoHandlers = [
+  http.get('/api/alagamento/historico', ({ request }) => HttpResponse.json(historicoOf(Number(new URL(request.url).searchParams.get('horas') ?? 24)))),
   http.get('/api/alagamento/status', () => HttpResponse.json(ALAGAMENTO_STATUS)),
   http.get('/api/alagamento/pontos', () => HttpResponse.json(
     [SYNTHETIC_SLUG, 'sintetico-2'].map((slug, i) => ({ ...pick(), slug, floodPointId: i + 1 })),

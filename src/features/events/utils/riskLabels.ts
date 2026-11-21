@@ -1,1 +1,2 @@
-export const RISK_LABEL_PT = { LOW: 'Baixo', MEDIUM: 'Moderado', HIGH: 'Alto', UNKNOWN: 'Previsão indisponível' } as const;
+/** Rótulos do nível do alerta por regressão na linha do tempo. Nunca "risco baixo" nem "seguro". */
+export const RISK_LABEL_PT = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' } as const;

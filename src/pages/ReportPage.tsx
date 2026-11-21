@@ -10,7 +10,8 @@ import { useAlerts } from '@/features/alerts/hooks/useAlerts';
 import { useReports } from '@/features/reports/hooks/useReports';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
 import { EventReport, type SectionKey } from '@/features/reports/components/EventReport';
-import { averageRain, pointRows, summaryText, toCsv } from '@/features/reports/utils/eventReport';
+import { averageRain, pointRows, summaryText, toCsv, worstText } from '@/features/reports/utils/eventReport';
+import { useAlagamentoHistorico } from '@/features/alagamento/hooks/useAlagamentoHistorico';
 import { PageFrame } from '@/features/operacao/components/Panel';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { cn } from '@/lib/utils';
@@ -34,6 +35,9 @@ export const ReportPage: React.FC = () => {
   const [draft, setDraft] = useState<number | null>(null);
   const [show, setShow] = useState<Record<SectionKey, boolean>>({ resumo: true, graficos: true, pontos: true, alertas: true, relatos: false });
   const timeline = useTimeline(hours);
+  // Alerta por regressão em modo sombra: só o ADMIN vê o histórico do nível dos pontos.
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const hist = useAlagamentoHistorico(hours, isAdmin);
   const points = useFloodPoints();
   const sensors = useSensorsLatest();
   const alerts = useAlerts('ALL', { size: 100, enabled: canSee });
@@ -47,7 +51,7 @@ export const ReportPage: React.FC = () => {
   const tide = useMemo(() => toTimePts(t?.tide.points ?? []), [t]);
   const riverSeries = useMemo(() => pickRiver(t?.river, sensors.data), [t, sensors.data]);
   const river = useMemo(() => toTimePts(riverSeries?.points ?? []), [riverSeries]);
-  const rows = useMemo(() => (t ? pointRows(t, names, t0, t1) : []), [t, names, t0, t1]);
+  const rows = useMemo(() => (!isAdmin ? null : hist.data ? pointRows(hist.data, names, t0, t1) : []), [isAdmin, hist.data, names, t0, t1]);
   const riverSensor = sensors.data?.find((s) => s.sensorId === riverSeries?.stationId);
   const riverName = riverSensor?.stationName ?? riverSeries?.stationId ?? null;
 
@@ -56,11 +60,11 @@ export const ReportPage: React.FC = () => {
   const reportsIn = canSee ? (reports.data?.content ?? []).filter((r) => inWindow(r.reviewedAt ?? r.observedAt)) : undefined;
 
   const peak = rain.reduce<(typeof rain)[number] | null>((m, p) => (m == null || (p.v ?? 0) > (m.v ?? 0) ? p : m), null);
-  const reached = rows.filter((r) => r.maxLevel === 'HIGH').length;
+  const reached = rows ? rows.filter((r) => r.worst === 'ALERTA').length : null;
   const riverMax = river.filter((p) => p.v != null).reduce<number | null>((m, p) => (m == null || (p.v as number) > m ? (p.v as number) : m), null);
   const kpis = [
     { label: `pico de chuva (média)${peak ? ` · ${formatHoraCurta(new Date(peak.t).toISOString(), t1)}` : ''}`, value: peak ? `${num(peak.v)} mm/h` : '—' },
-    { label: 'pontos que chegaram a alto', value: `${reached} de ${rows.length}`, tone: reached > 0 ? 'text-risk-high-text' : undefined },
+    { label: 'pontos que chegaram a alerta', value: rows && reached != null ? `${reached} de ${rows.length}` : 'em teste', tone: reached ? 'text-destructive' : undefined },
     { label: 'alertas disparados', value: alertsIn ? String(alertsIn.length) : 'sem acesso' },
     // A série do rio na linha do tempo vem do sensor_data, em cm (como na tela Eventos).
     { label: `${riverName ?? 'rio'} (máximo)`, value: riverMax != null ? `${num(riverMax, 0)} cm` : '—' },
@@ -74,7 +78,7 @@ export const ReportPage: React.FC = () => {
   const commit = () => { if (draft != null) setHours(draft); setDraft(null); };
 
   const csv = () => {
-    const text = toCsv(['ponto', 'prob_max_pct', 'quando', 'minutos_em_alto'], rows.map((r) => [r.name, r.maxProb != null ? Math.round(r.maxProb * 100) : null, r.maxAt != null ? new Date(r.maxAt).toISOString() : null, r.highMin]));
+    const text = toCsv(['ponto', 'pior_nivel', 'lamina_max_cm', 'quando', 'minutos_em_alerta'], (rows ?? []).map((r) => [r.name, r.worst ? worstText(r) : null, r.maxSheetCm, r.worstAt != null ? new Date(r.worstAt).toISOString() : null, r.alertMin]));
     const url = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
     const a = document.createElement('a');
     a.href = url;
@@ -118,7 +122,7 @@ export const ReportPage: React.FC = () => {
           <span role="status" className="text-[12px] text-muted-foreground">Pronto para gerar · {nSections} seç{nSections === 1 ? 'ão' : 'ões'}</span>
           <div className="flex gap-2">
             <Button type="button" size="lg" className="h-11 flex-1 md:h-9" onClick={() => window.print()}>Gerar PDF</Button>
-            <Button type="button" variant="outline" size="lg" className="h-11 text-foreground md:h-9" disabled={rows.length === 0} onClick={csv}>CSV dos dados</Button>
+            <Button type="button" variant="outline" size="lg" className="h-11 text-foreground md:h-9" disabled={!rows || rows.length === 0} onClick={csv}>CSV dos dados</Button>
           </div>
         </div>
       </aside>

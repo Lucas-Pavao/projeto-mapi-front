@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
 import { toTimePts } from '@/components/charts/chartMath';
-import { meanRainSeries, probabilityByPoint, rainNow, tideNow } from '../utils/overview';
+import { meanRainSeries, rainNow, tideNow } from '../utils/overview';
 
 /** Janela do cartão "Chuva e maré hoje": 12 h até agora e 6 h à frente (a maré vem da tábua). */
 const PAST_H = 12;
@@ -26,7 +26,6 @@ export function useMapOverview() {
       tide,
       rainNow: rainNow(rain, now),
       tideNow: tideNow(tide, now),
-      probabilities: data ? probabilityByPoint(data.risk) : new Map<string, Array<number | null>>(),
     };
   }, [data, range, now, q.isError]);
 }

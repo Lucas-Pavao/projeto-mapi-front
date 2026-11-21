@@ -1,37 +1,43 @@
 import type { Timeline } from '../schemas/timeline.schema';
-import type { RiskLevel } from '@/features/map/schemas/floodPointResponse.schema';
+import type { AlagamentoHistorico, FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
 import { toTimePts, type TimePt } from '@/components/charts/chartMath';
-import { levelOf } from './strips';
+import { fmt1 } from '@/features/alagamento/utils/alagamentoText';
 
-export interface StoryItem { t: number; title: string; tone: 'low' | 'moderate' | 'high' | 'unknown' | 'info' }
+export interface StoryItem { t: number; title: string; tone: 'ok' | 'moderate' | 'high' | 'unknown' | 'info' }
 
-const RANK: Record<RiskLevel, number> = { UNKNOWN: -1, LOW: 0, MEDIUM: 1, HIGH: 2 };
-const TONE = { LOW: 'low', MEDIUM: 'moderate', HIGH: 'high', UNKNOWN: 'unknown' } as const;
+const RANK: Record<FloodLevel, number> = { SEM_DADO: -1, SEM_ALERTA: 0, ATENCAO: 1, ALERTA: 2 };
+const TONE = { SEM_ALERTA: 'ok', ATENCAO: 'moderate', ALERTA: 'high', SEM_DADO: 'unknown' } as const;
 export const TIDE_HIGH_M = 2.0;
 
-export function transitionText(name: string, from: RiskLevel | null, to: RiskLevel): string | null {
-  if (from === to) return null;
-  if (to === 'UNKNOWN') return `${name} ficou sem previsão`;
-  if (from === 'UNKNOWN' || from === null) return to === 'LOW' ? null : `${name} passou para ${to === 'HIGH' ? 'alto' : 'moderado'}`;
-  if (RANK[to] > RANK[from]) return `${name} passou para ${to === 'HIGH' ? 'alto' : 'moderado'}`;
-  return from === 'HIGH' ? `${name} saiu do risco alto` : `${name} voltou para baixo`;
+type Item = AlagamentoHistorico['points'][number]['items'][number];
+
+/** "Mascarenhas: alerta em 1 h · lâmina 17,7 cm", "Mascarenhas: saiu do alerta", "Mascarenhas: alerta sem dado". */
+export function transitionText(name: string, from: FloodLevel | null, to: Item): string | null {
+  if (from === to.level) return null;
+  const sheet = to.hNowCm != null ? ` · lâmina ${fmt1(to.hNowCm)} cm` : '';
+  if (to.level === 'SEM_DADO') return from === null ? null : `${name}: alerta sem dado`;
+  if (to.level === 'ALERTA') return `${name}: alerta em ${to.worstHorizonHours ?? '?'} h${sheet}`;
+  if (to.level === 'ATENCAO') return from === 'ALERTA' ? `${name}: saiu do alerta (atenção)` : `${name}: atenção em ${to.worstHorizonHours ?? '?'} h`;
+  // SEM_ALERTA
+  if (from === 'ALERTA') return `${name}: saiu do alerta`;
+  if (from === 'ATENCAO') return `${name}: saiu da atenção`;
+  return null;
 }
 
 /** `points`: a série do rio já escolhida (pickRiver); sem ela, a primeira da API. */
 export interface RiverLevels { flood?: number | null; alert?: number | null; name?: string; points?: TimePt[] }
 
-/** "O que aconteceu": mudanças de classe por ponto, alagamentos confirmados e cruzamentos de maré e de cota do rio. */
-export function buildStory(t: Timeline, names: ReadonlyMap<string, string>, river: RiverLevels = {}): StoryItem[] {
+/** "O que aconteceu": mudanças de nível do alerta por ponto, alagamentos confirmados e cruzamentos de maré e de cota do rio. */
+export function buildStory(t: Timeline, hist: AlagamentoHistorico | null | undefined, names: ReadonlyMap<string, string>, river: RiverLevels = {}): StoryItem[] {
   const out: StoryItem[] = [];
-  for (const r of t.risk) {
-    const name = names.get(r.slug) ?? r.slug;
-    const sorted = [...r.items].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
-    let prev: RiskLevel | null = null;
+  for (const r of hist?.points ?? []) {
+    const name = names.get(r.slug) ?? r.name ?? r.slug;
+    const sorted = [...r.items].sort((a, b) => Date.parse(a.at) - Date.parse(b.at));
+    let prev: FloodLevel | null = null;
     for (const p of sorted) {
-      const level = levelOf(p);
-      const text = transitionText(name, prev, level);
-      if (text) out.push({ t: Date.parse(p.issuedAt), title: text, tone: TONE[level] });
-      prev = level;
+      const text = transitionText(name, prev, p);
+      if (text) out.push({ t: Date.parse(p.at), title: text, tone: TONE[p.level] });
+      if (prev == null || RANK[p.level] >= 0 || p.level === 'SEM_DADO') prev = p.level;
     }
   }
   for (const e of t.floodEvents ?? []) out.push({ t: Date.parse(e.startTime), title: `Alagamento confirmado em ${names.get(e.slug) ?? e.slug}`, tone: 'high' });

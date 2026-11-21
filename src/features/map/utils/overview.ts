@@ -52,15 +52,6 @@ export function sortPoints(points: readonly FloodPointResponseDTO[], by?: Readon
   return [...points].sort((a, b) => rank(a) - rank(b) || sheet(b) - sheet(a) || a.name.localeCompare(b.name));
 }
 
-/** Série de probabilidade (0–1) por ponto para a minilinha; UNKNOWN e sem probabilidade viram buraco (null). */
-export function probabilityByPoint(risk: Timeline['risk']): Map<string, Array<number | null>> {
-  const out = new Map<string, Array<number | null>>();
-  for (const r of risk) {
-    const items = [...r.items].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
-    out.set(r.slug, items.map((i) => (i.riskLevel === 'UNKNOWN' ? null : i.probability ?? null)));
-  }
-  return out;
-}
 
 /** Estado do rio pelas cotas oficiais da APAC. Sem cotas, sem estado (null). */
 export function riverState(level: number | null, s: { riverPreAlertLevel?: number | null; riverAlertLevel?: number | null; riverFloodLevel?: number | null }): 'normal' | 'Pré-alerta' | 'Alerta' | 'Inundação' | null {
