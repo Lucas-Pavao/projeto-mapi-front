@@ -13,6 +13,27 @@ afterEach(() => {
 afterAll(() => server.close());
 
 describe('AdminDataPage', () => {
+  it('cards IA (versões e commit do /health) e Alagamento por regressão (último ciclo, SEM_DADO por motivo)', async () => {
+    renderPage(<AdminDataPage />);
+    const list = await screen.findByRole('list', { name: 'Fontes de dados' });
+    const ia = await waitFor(() => { const el = list.querySelector('[data-source="IA"]') as HTMLElement; expect(el).toHaveTextContent('Respondendo'); return el; });
+    expect(within(ia).getByTestId('ia-versions')).toHaveTextContent('rain_v1');
+    expect(within(ia).getByTestId('ia-versions')).toHaveTextContent('balde-M1a-10min');
+    expect(within(ia).getByTestId('ia-versions')).toHaveTextContent('0000000');
+    const reg = list.querySelector('[data-source="ALAGAMENTO_REGRESSAO"]') as HTMLElement;
+    expect(reg).toHaveTextContent('5 pontos');
+    expect(within(reg).getByTestId('sem-dado-reasons')).toHaveTextContent('1 sem dado · sem terreno');
+    expect(within(reg).getByTestId('sem-dado-reasons')).toHaveTextContent('1 sem dado · terreno em revisão');
+  });
+
+  it('IA fora do ar: "Sem resposta" e versões em traço, nunca inventadas', async () => {
+    server.use(http.get('/api/alagamento/status', () => HttpResponse.json({ aiReachable: false, byLevel: {}, semDadoByReason: {}, shadow: true })));
+    renderPage(<AdminDataPage />);
+    const list = await screen.findByRole('list', { name: 'Fontes de dados' });
+    await waitFor(() => expect(list.querySelector('[data-source="IA"]')).toHaveTextContent('Sem resposta'));
+    expect(list.querySelector('[data-source="ALAGAMENTO_REGRESSAO"]')).toHaveTextContent('Sem ciclo');
+  });
+
   it('mostra o estado de cada fonte com ícone e rótulo e conta os problemas', async () => {
     renderPage(<AdminDataPage />);
     const apac = (await screen.findByRole('list', { name: 'Fontes de dados' })).querySelector('[data-source="APAC"]') as HTMLElement;
@@ -36,7 +57,7 @@ describe('AdminDataPage', () => {
     ])));
     renderPage(<AdminDataPage />);
     const list = await screen.findByRole('list', { name: 'Fontes de dados' });
-    expect(list.querySelectorAll('li')).toHaveLength(3);
+    expect(list.querySelectorAll(':scope > li[data-status]')).toHaveLength(3); // fontes de ingestão (os cards IA e Alagamento ficam à parte)
     const apac = list.querySelector('[data-source="APAC"]') as HTMLElement;
     expect(within(apac).getByText('Em quarentena')).toBeInTheDocument();
     expect(within(apac).getByText('A última coleta ficou toda na quarentena.')).toBeInTheDocument();

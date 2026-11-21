@@ -79,3 +79,18 @@ export type FloodLevel = z.infer<typeof floodLevelSchema>;
 export type FloodReason = z.infer<typeof floodReasonSchema>;
 export type FloodHorizon = z.infer<typeof floodHorizonSchema>;
 export type AlagamentoPonto = z.infer<typeof alagamentoPontoSchema>;
+
+/** GET /api/alagamento/status (só ADMIN): versões da IA pelo /health e o último ciclo (tela Dados, 5.8). */
+export const alagamentoStatusSchema = z.object({
+  aiReachable: z.boolean(),
+  rainModelVersion: z.string().nullable().optional(),
+  bucketVersion: z.string().nullable().optional(),
+  floodVersion: z.string().nullable().optional(),
+  codeVersion: z.string().nullable().optional(),
+  codeDirty: z.string().nullable().optional(),
+  lastCycleAt: isoSchema.nullable().optional(),
+  byLevel: z.record(z.string(), z.number()),
+  semDadoByReason: z.record(z.string(), z.number()),
+  shadow: z.boolean(),
+});
+export type AlagamentoStatus = z.infer<typeof alagamentoStatusSchema>;

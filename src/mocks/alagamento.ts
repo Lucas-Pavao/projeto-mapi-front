@@ -36,7 +36,15 @@ const pick = () => {
   return ALAGAMENTO_FIXTURES[(id ?? '') as AlagamentoFixtureId] ?? ALAGAMENTO_FIXTURES.atencao_3h;
 };
 
+/** DADOS SINTÉTICOS de GET /api/alagamento/status. */
+export const ALAGAMENTO_STATUS = {
+  aiReachable: true, rainModelVersion: 'rain_v1', bucketVersion: 'balde-M1a-10min', floodVersion: 'flood_reg_v1',
+  codeVersion: '0000000000000000000000000000000000000000', codeDirty: 'false', lastCycleAt: '2026-11-20T17:00:00Z',
+  byLevel: { SEM_ALERTA: 3, SEM_DADO: 2 }, semDadoByReason: { SEM_TERRENO: 1, TERRENO_EM_REVISAO: 1 }, shadow: true,
+};
+
 export const alagamentoHandlers = [
+  http.get('/api/alagamento/status', () => HttpResponse.json(ALAGAMENTO_STATUS)),
   http.get('/api/alagamento/pontos', () => HttpResponse.json(
     [SYNTHETIC_SLUG, 'sintetico-2'].map((slug, i) => ({ ...pick(), slug, floodPointId: i + 1 })),
   )),

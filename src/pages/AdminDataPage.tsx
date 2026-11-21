@@ -7,6 +7,7 @@ import { DataSidePanel } from '@/features/admin/components/DataSidePanel';
 import { AlertaLatencyPanel } from '@/features/alerta/components/AlertaLatencyPanel';
 import { groupSources, isProblem } from '@/features/admin/utils/ingestion';
 import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
+import { AlagamentoSourceCards } from '@/features/alagamento/components/AlagamentoSourceCards';
 
 const recifeClock = () => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Recife' }).format(new Date()).replace(':', 'h');
 
@@ -45,6 +46,7 @@ export const AdminDataPage: React.FC = () => {
                 {groupSources(items).map((s) => (
                   <SourceCard key={s.source} source={s} now={now} onShowRuns={(name) => { setSource(name); runsRef.current?.scrollIntoView?.({ block: 'start' }); }} />
                 ))}
+                <AlagamentoSourceCards />
               </ul>
               <div ref={runsRef} className="grid min-h-96 flex-1 grid-cols-1 gap-4 lg:grid-cols-12">
                 <RunsPanel sources={items.map((s) => s.source)} source={source} onSource={setSource} integrityBusy={integrity.isPending} onCheckIntegrity={check} />
