@@ -12,7 +12,7 @@ const PAD = { l: 34, r: 8, t: 8, b: 18 };
  * Balde a cada 10 min (5.4): 3 h medidas antes de agora e o horizonte servido depois. Em cima, entrada de água (barras),
  * saída pela drenagem (linha) e capacidade da galeria (tracejado), em m³/h; embaixo, a lâmina com a linha de 15 cm.
  */
-export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number | null | undefined }> = ({ steps, capacityM3H }) => {
+export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number | null | undefined; only?: 'sheet' }> = ({ steps, capacityM3H, only }) => {
   if (steps.length === 0) return <p className="m-0 text-sm text-muted-foreground">sem decomposição neste ciclo</p>;
   const n = steps.length;
   const iw = W - PAD.l - PAD.r;
@@ -36,7 +36,7 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
   const ticks = [0, now < 0 ? n - 1 : now, n - 1].filter((v, i, a) => a.indexOf(v) === i);
   return (
     <div className="flex flex-col gap-2">
-      <svg data-testid="balde-vazoes" viewBox={`0 0 ${W} ${H1}`} className="w-full" role="img"
+      {only !== 'sheet' && <svg data-testid="balde-vazoes" viewBox={`0 0 ${W} ${H1}`} className="w-full" role="img"
         aria-label={`Entrada de água máxima ${fmt1(maxIn)} m³/h; capacidade da galeria ${fmt1(capacityM3H) ?? 'sem dado'} m³/h; ${n} passos de 10 min`}>
         <text x={2} y={PAD.t + 8} className="fill-muted-foreground text-[9px]">m³/h</text>
         {steps.map((s, i) => (
@@ -47,7 +47,7 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
         {capacityM3H != null && <line x1={PAD.l} x2={W - PAD.r} y1={y1(capacityM3H)} y2={y1(capacityM3H)} className="stroke-warning" strokeDasharray="5 4" strokeWidth={1.5} />}
         {nowX != null && <line x1={nowX} x2={nowX} y1={PAD.t} y2={H1 - PAD.b} className="stroke-foreground" strokeWidth={1} />}
         {ticks.map((i) => <text key={i} x={x(i)} y={H1 - 4} textAnchor="middle" className="fill-muted-foreground text-[9px]">{i === now ? 'agora' : tick(i)}</text>)}
-      </svg>
+      </svg>}
       <svg data-testid="balde-lamina" viewBox={`0 0 ${W} ${H2}`} className="w-full" role="img"
         aria-label={`Lâmina máxima ${fmt1(maxSheet)} cm; alagamento a partir de ${HCRIT_CM} cm`}>
         <text x={2} y={PAD.t + 8} className="fill-muted-foreground text-[9px]">cm</text>
@@ -55,6 +55,7 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
         <text x={PAD.l - 4} y={y2(HCRIT_CM) + 3} textAnchor="end" className="fill-destructive text-[9px]">15</text>
         <path d={sheet} fill="none" className="stroke-primary" strokeWidth={2.5} />
         {nowX != null && <line x1={nowX} x2={nowX} y1={PAD.t} y2={H2 - PAD.b} className="stroke-foreground" strokeWidth={1} />}
+        {only === 'sheet' && ticks.map((i) => <text key={i} x={x(i)} y={H2 - 4} textAnchor="middle" className="fill-muted-foreground text-[9px]">{i === now ? 'agora' : tick(i)}</text>)}
       </svg>
       <OnlyInDetail>
         <p data-testid="balde-legenda" className="m-0 text-xs leading-4 text-muted-foreground">
