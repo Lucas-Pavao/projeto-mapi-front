@@ -40,11 +40,10 @@ describe('FloodPointMarkers', () => {
     expect(ring('d')?.className).not.toContain('animate-ping');
     expect(ring('e')).toBeNull(); // sem alerta
     expect(ring('f')).toHaveAttribute('data-alerta-ring', 'SEM_DADO'); // ADMIN, ponto sem linha: sem dado, nunca "sem alerta"
-    const tag = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-alerta-tag]');
-    expect(tag('a')).toHaveTextContent('atenção'); // cor não é o único sinal
-    expect(tag('b')).toHaveTextContent('alerta');
-    expect(tag('f')).toHaveTextContent('sem dado');
-    expect(container.querySelectorAll('.animate-ping')).toHaveLength(2);
+    // cor não é o único sinal: ícone de forma distinta por nível (octógono, triângulo, escudo, interrogação)
+    const badge = (s: string) => screen.getByRole('button', { name: new RegExp(`Ponto ${s}:`) }).querySelector('[data-flood-badge]');
+    expect(['a', 'b', 'd', 'e', 'f'].map((s) => badge(s)?.getAttribute('data-flood-badge'))).toEqual(['ATENCAO', 'ALERTA', 'SEM_DADO', 'SEM_ALERTA', 'SEM_DADO']);
+    expect(container.querySelectorAll('.animate-ping')).toHaveLength(1); // só o alerta pulsa
     expect(screen.getByRole('button', { name: /Ponto crítico Ponto b: alerta em 1 h/ })).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/%|Risco/);
   });

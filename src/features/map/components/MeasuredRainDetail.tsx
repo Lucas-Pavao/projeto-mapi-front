@@ -21,7 +21,7 @@ export const MeasuredRainDetail: React.FC<Props> = ({ station, computedAtUtc, st
   const last = recifeWithReference(station.lastReadingUtc);
   const computed = recifeWithReference(computedAtUtc);
   return (
-    <div className="flex w-[300px] max-w-full flex-col gap-3 rounded-2xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
+    <div className="flex w-[18.75rem] max-w-full flex-col gap-3 rounded-2xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="m-0 text-2xs font-bold text-chart-1">Chuva medida · pluviômetro</p>

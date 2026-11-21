@@ -27,7 +27,7 @@ interface Props {
 
 /** Lista lateral: filtros em pílula e uma linha por estação (ponto tracejado e texto âmbar quando sem resposta). */
 export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter, onSelect, online, counts }) => (
-  <aside aria-label="Estações" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:w-[340px]">
+  <aside aria-label="Estações" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:w-[21.25rem]">
     <div className="flex flex-col gap-2.5 border-b border-border p-3.5">
       <div className="flex items-baseline justify-between">
         <h1 className="m-0 text-[20px] font-extrabold leading-[26px]">Estações</h1>

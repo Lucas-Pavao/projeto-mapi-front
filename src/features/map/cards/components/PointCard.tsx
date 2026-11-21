@@ -9,6 +9,7 @@ import type { FloodPointResponseDTO } from '../../types';
 import { cn } from '@/lib/utils';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
 import { RegressaoCard } from '@/features/alagamento/components/RegressaoCard';
+import { titleCasePlace } from '../../utils/overview';
 
 interface Props {
   point: FloodPointResponseDTO;
@@ -22,7 +23,7 @@ interface Props {
   alagamentoError?: boolean;
 }
 
-const SHELL = 'flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay';
+const SHELL = 'flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay';
 
 export const VISITOR_INFO = 'O alerta de alagamento por regressão é experimental: enquanto a validação não for aprovada, só o administrador vê. Aqui ficam a chuva medida e a maré.';
 
@@ -31,11 +32,11 @@ export const VISITOR_INFO = 'O alerta de alagamento por regressão é experiment
  * Nunca "risco baixo" nem "seguro"; leitura em falha ou sem cálculo nunca vira "Sem alerta".
  */
 export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysis, isAdmin = false, alagamento, alagamentoLoading = false, alagamentoError = false }) => {
-  const place = `${point.municipality ?? 'Recife'}${point.description ? ` · ${point.description}` : ''}`;
+  const place = `${titleCasePlace(point.municipality ?? 'Recife')}${point.description ? ` · ${point.description}` : ''}`;
   if (isAdmin && alagamento && !alagamentoLoading) {
     return (
       <RegressaoCard ponto={alagamento} name={point.name} place={place} onClose={onClose} onAnalysis={onOpenAnalysis} pageTo={`/pontos/${point.slug}`}
-        className="w-[320px] max-w-full overflow-y-auto bg-popover p-3.5 shadow-elevation-overlay" />
+        className="w-[20rem] max-w-full overflow-y-auto bg-popover p-3.5 shadow-elevation-overlay" />
     );
   }
 

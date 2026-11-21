@@ -55,10 +55,10 @@ export const floodChipOf = (p: Pick<AlagamentoPonto, 'level' | 'worstHorizonHour
 };
 
 export const CHIP_CLASS: Record<FloodTone, string> = {
-  danger: 'border-destructive/60 bg-destructive/10 text-destructive',
-  warn: 'border-warning/60 bg-warning/10 text-warning',
-  ok: 'border-success/60 bg-success/10 text-foreground',
-  muted: 'border-muted-foreground/50 bg-muted text-muted-foreground',
+  danger: 'border-destructive bg-destructive/12 text-destructive',
+  warn: 'border-warning bg-warning/12 text-warning',
+  ok: 'border-success bg-success/12 text-foreground',
+  muted: 'border-muted-foreground bg-muted-foreground/12 text-muted-foreground',
 };
 export const DOT_CLASS: Record<FloodTone, string> = {
   danger: 'bg-destructive', warn: 'bg-warning', ok: 'bg-success', muted: 'bg-muted-foreground',
@@ -111,8 +111,8 @@ export const floodRingOf = (p: AlagamentoPonto | undefined): FloodRing => {
 
 /** Linha da lista "Pontos críticos": "Alerta em 1 h", "Atenção em 3 h", "Sem alerta em 6 h", "Alerta sem dado". */
 export const listLineOf = (p: AlagamentoPonto | undefined): { label: string; tone: FloodTone; sheet: string } => {
-  if (!p || p.level === 'SEM_DADO') return { label: 'Alerta sem dado', tone: 'muted', sheet: p?.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'sem dado' };
-  return { label: floodChipOf(p).label, tone: toneOf(p.level), sheet: p.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'sem dado' };
+  if (!p || p.level === 'SEM_DADO') return { label: 'Alerta sem dado', tone: 'muted', sheet: p?.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'lâmina sem dado' };
+  return { label: floodChipOf(p).label, tone: toneOf(p.level), sheet: p.hNowCm != null ? `lâmina ${fmt1(p.hNowCm)} cm agora` : 'lâmina sem dado' };
 };
 
 /** Contagem do painel "Agora na RMR": Alerta / Atenção / Sem alerta / Sem dado (ponto sem linha conta como sem dado). */

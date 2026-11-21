@@ -6,7 +6,9 @@ import { cn } from '@/lib/utils';
 import { FloodCountTiles } from '@/features/alagamento/components/FloodCountTiles';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
-import { DOT_CLASS, TEXT_CLASS, countByLevel, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { TEXT_CLASS, countByLevel, fmt1, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import { FloodLevelBadge } from '@/features/alagamento/components/FloodLevelBadge';
+import type { FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
 import type { LiveStatus } from '@/features/live/hooks/useLiveStream';
 import type { FloodPointResponseDTO, SensorResponseDTO } from '../types';
 import { getDataFreshness, getSensorConfig } from '../utils/sensor';
@@ -49,6 +51,10 @@ interface Props {
   className?: string;
 }
 
+const SHEET_CLASS: Record<FloodLevel, string> = {
+  ALERTA: 'text-risk-high-text', ATENCAO: 'text-risk-moderate-text', SEM_ALERTA: 'text-risk-low-text', SEM_DADO: 'text-risk-unknown-text',
+};
+const sheetNowText = (a: AlagamentoPonto | undefined) => (a?.hNowCm == null ? '—' : `${fmt1(a.hNowCm)} cm`);
 const row = 'row-hover flex w-full items-center gap-3 rounded-[10px] text-left text-foreground hover:bg-muted';
 const ageText = (min: number | null) => (min == null ? 'sem dados' : min < 60 ? `há ${min} min` : `há ${Math.round(min / 60)} h`);
 const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-5).replace(':', 'h') ?? null;
@@ -111,7 +117,7 @@ export const LivePanel: React.FC<Props> = ({
       <div className="flex flex-col gap-3 border-b border-border px-4 pb-3 pt-4">
         <div className="flex items-baseline justify-between gap-2">
           <h1 className="m-0 whitespace-nowrap text-xl leading-[26px] font-extrabold tracking-[-0.01em]">Agora na RMR</h1>
-          <span className="text-xs leading-4 text-muted-foreground" data-live-status={liveStatus}>
+          <span className="whitespace-nowrap text-xs leading-4 text-muted-foreground" data-live-status={liveStatus}>
             alerta em 1, 3 e 6 h
             {time && <> · <span className="font-mono">{time}</span></>}
           </span>
@@ -136,17 +142,22 @@ export const LivePanel: React.FC<Props> = ({
             return (
               <li key={p.id}>
                 <button type="button" onClick={() => onFloodPointClick(p)} aria-pressed={selectedFloodPointId === p.id} className={cn(row, 'p-2', selectedFloodPointId === p.id && 'bg-secondary')}>
-                  <span aria-hidden="true" className={cn('box-border size-3 flex-none rounded-full', line ? DOT_CLASS[line.tone] : 'bg-muted-foreground', line?.tone === 'muted' && 'border-2 border-dashed border-muted-foreground bg-transparent')} />
+                  <FloodLevelBadge level={alagamentoBySlug ? (alagamentoBySlug.get(p.slug)?.level ?? 'SEM_DADO') : null} />
                   <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm leading-5 font-bold">{p.name}</span>
+                    <span className="text-sm leading-5 font-bold">{p.name}</span>
                     {line ? (
-                      <span data-testid="point-alert-line" className="truncate text-xs leading-4 text-muted-foreground">
+                      <span data-testid="point-alert-line" className="text-xs leading-4 text-muted-foreground">
                         <span className={cn('font-bold', TEXT_CLASS[line.tone])}>{line.label}</span>{` · ${line.sheet}`}
                       </span>
                     ) : (
                       <span className="truncate text-xs leading-4 text-muted-foreground">{p.municipality ?? 'Recife'}</span>
                     )}
                   </span>
+                  {alagamentoBySlug && (
+                    <span data-testid="point-sheet-now" className={cn('flex-none font-mono text-[15px] leading-5 font-bold', SHEET_CLASS[alagamentoBySlug.get(p.slug)?.level ?? 'SEM_DADO'])}>
+                      {sheetNowText(alagamentoBySlug.get(p.slug))}
+                    </span>
+                  )}
                 </button>
               </li>
             );
@@ -197,8 +208,8 @@ export const LivePanel: React.FC<Props> = ({
       )}
 
       <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-xs leading-4 text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          APAC · Cemaden/MCTIC · DHN · Open-Meteo
+        <span className="flex min-w-0 items-center gap-1">
+          <span>APAC · Cemaden/MCTIC · DHN · Open-Meteo</span>
           <InfoTip text={`DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC. ANA (rios), DHN (maré), Open-Meteo (tempo).${versions ? ` Alerta: ${versions}.` : ''}`} />
         </span>
         {canSeeDataHealth && <Link to="/admin/dados" className="shrink-0 text-primary hover:text-foreground">Saúde dos dados</Link>}

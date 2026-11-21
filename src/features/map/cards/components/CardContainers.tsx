@@ -19,7 +19,7 @@ import { RiverCard } from './RiverCard';
 import { StationCard } from './StationCard';
 
 const Shell: React.FC<{ label: string; onClose?: () => void; children: React.ReactNode; className?: string }> = ({ label, onClose, children, className }) => (
-  <div role="dialog" aria-label={label} className={`flex w-[320px] max-w-full flex-col gap-2 rounded-[14px] border border-border bg-popover p-3.5 text-[13px] text-foreground shadow-elevation-overlay ${className ?? ''}`}>
+  <div role="dialog" aria-label={label} className={`flex w-[20rem] max-w-full flex-col gap-2 rounded-[14px] border border-border bg-popover p-3.5 text-[13px] text-foreground shadow-elevation-overlay ${className ?? ''}`}>
     <div className="flex items-start justify-between gap-2"><span>{children}</span>{onClose && <button type="button" onClick={onClose} aria-label="Fechar" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-4" aria-hidden="true" /></button>}</div>
   </div>
 );
@@ -65,8 +65,13 @@ interface LocationProps { lat: number; lon: number; onClose: () => void; onOpenP
 
 export const LocationCardContainer: React.FC<LocationProps> = ({ lat, lon, onClose, onOpenPoint, onOpenStation, onReport }) => {
   const q = useLocationAnalysis({ lat, lon });
-  if (q.data) return <LocationCard analysis={q.data} onClose={onClose} onOpenPoint={onOpenPoint} onOpenStation={onOpenStation} onReport={onReport} />;
-  return <Shell label="Análise do local" onClose={onClose} className="w-[400px]">{q.isError ? 'Não foi possível analisar este local. Tente de novo em instantes.' : 'Analisando o local…'}</Shell>;
+  const { user } = useAuth();
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const al = useAlagamentoPontos(isAdmin);
+  const slug = q.data?.nearestPoint?.slug;
+  if (q.data) return <LocationCard analysis={q.data} onClose={onClose} onOpenPoint={onOpenPoint} onOpenStation={onOpenStation} onReport={onReport}
+    nearestAlagamento={isAdmin && slug ? al.data?.find((a) => a.slug === slug) ?? null : null} />;
+  return <Shell label="Análise do local" onClose={onClose} className="w-[25rem]">{q.isError ? 'Não foi possível analisar este local. Tente de novo em instantes.' : 'Analisando o local…'}</Shell>;
 };
 
 /** Régua do rio a partir do sensor selecionado; a tendência vem da série de 3 h da linha do tempo. */

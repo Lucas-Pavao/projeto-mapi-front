@@ -1,5 +1,8 @@
 import { InfoTip } from '@/components/InfoTip';
 import { OnlyInDetail, OnlyInLean, useDetailMode } from '@/lib/detailMode';
+import { FloodLevelBadge } from '@/features/alagamento/components/FloodLevelBadge';
+import { fmt1, listLineOf } from '@/features/alagamento/utils/alagamentoText';
+import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
 import React, { useEffect, useState } from 'react';
 import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermometer, TriangleAlert, Waves, X } from 'lucide-react';
 import { SourceTag } from '@/components/risk/SourceTag';
@@ -16,6 +19,8 @@ interface Props {
   onOpenPoint?: (slug: string) => void;
   onOpenStation?: (stationId: string) => void;
   onReport?: () => void;
+  /** Nível do alerta por regressão do ponto mais próximo (só ADMIN). Visitante: sem nível, ícone neutro. */
+  nearestAlagamento?: AlagamentoPonto | null;
 }
 
 const CEMADEN = 'DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC';
@@ -35,7 +40,7 @@ const Tile: React.FC<{ label: string; children: React.ReactNode; sub?: React.Rea
 const Unit: React.FC<{ children: React.ReactNode }> = ({ children }) => <span className="ml-0.5 font-sans text-[11px] font-normal text-muted-foreground">{children}</span>;
 
 /** Card da análise de local (B7), como no protótipo (CardLocal): do lado oposto ao clique; medido e estimado nunca se misturam. */
-export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoint, onOpenStation, onReport }) => {
+export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoint, onOpenStation, onReport, nearestAlagamento }) => {
   const state = locationState(a);
   const banner = bannerOf(state);
   const tag = rainSourceTag(a.rain.mode);
@@ -58,7 +63,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
   };
   return (
     <section role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
-      className="flex max-h-full w-[400px] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-elevation-overlay">
+      className="flex max-h-full w-[25rem] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-elevation-overlay">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-primary"><MapPin className="size-5" aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
@@ -89,10 +94,15 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           <H3 icon={<ShieldCheck />}>Ponto crítico mais próximo<InfoTip text="O alerta de alagamento só existe nos 5 pontos críticos. Este local não tem alerta próprio: abra o ponto mais próximo para ver o nível." /></H3>
           {np ? (
             <button type="button" data-testid="nearest-point" onClick={() => onOpenPoint?.(np.slug)} className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-transparent px-3 py-2.5 text-left text-foreground hover:bg-muted">
+              <FloodLevelBadge level={nearestAlagamento?.level ?? null} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-bold leading-[18px]">{np.name}</span>
-                <span className="block text-xs leading-4 text-muted-foreground">ponto crítico mais próximo{np.distanceKm != null ? ` · ${num(np.distanceKm, 1)} km` : ''}</span>
+                <span className="block text-xs leading-4 text-muted-foreground">
+                  {np.distanceKm != null ? `${num(np.distanceKm, 1)} km` : 'ponto crítico mais próximo'}
+                  {nearestAlagamento ? ` · ${listLineOf(nearestAlagamento).label.toLowerCase()}` : ''}
+                </span>
               </span>
+              {nearestAlagamento && <span className="shrink-0 font-mono text-sm font-bold">{nearestAlagamento.hNowCm != null ? `${fmt1(nearestAlagamento.hNowCm)} cm` : '—'}</span>}
             </button>
           ) : <p className="m-0 text-xs text-muted-foreground">Nenhum ponto crítico por perto.</p>}
         </section>

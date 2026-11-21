@@ -62,7 +62,7 @@ export const LoginForm: React.FC = () => {
   const tab = (m: Mode) => `h-9 rounded-lg border-0 text-sm font-bold text-foreground ${mode === m ? 'bg-card' : 'bg-transparent'}`;
 
   return (
-    <form onSubmit={handleSubmit} aria-label={register ? 'Criar conta' : 'Entrar'} className="flex w-full max-w-[400px] flex-col gap-5">
+    <form onSubmit={handleSubmit} aria-label={register ? 'Criar conta' : 'Entrar'} className="flex w-full max-w-[25rem] flex-col gap-5">
       <div role="tablist" aria-label="Acesso" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
         <button type="button" role="tab" aria-selected={!register} onClick={() => switchTo('login')} className={tab('login')}>Entrar</button>
         <button type="button" role="tab" aria-selected={register} onClick={() => switchTo('register')} className={tab('register')}>Criar conta</button>

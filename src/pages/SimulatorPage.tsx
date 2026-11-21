@@ -82,7 +82,7 @@ export const SimulatorPage: React.FC = () => {
 
   return (
     <div className="flex w-full flex-col gap-4 p-4 lg:h-full lg:flex-row">
-      <form onSubmit={run} noValidate aria-label="Parâmetros da simulação" className={`${panel} custom-scrollbar flex shrink-0 flex-col gap-3.5 p-[18px] lg:w-[380px] lg:overflow-y-auto`}>
+      <form onSubmit={run} noValidate aria-label="Parâmetros da simulação" className={`${panel} custom-scrollbar flex shrink-0 flex-col gap-3.5 p-[18px] lg:w-[23.75rem] lg:overflow-y-auto`}>
         <div>
           <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Simulador do balde<LeanTip text="Modelo físico do balde: a chuva enche a depressão da rua e a galeria esvazia até a capacidade de projeto." /></h1>
           <OnlyInDetail><p className="mt-1 mb-0 text-[13px] leading-[18px] text-muted-foreground">Modelo físico M1a (projeto-mapi-ai/avaliacao/balde.py): a chuva enche a depressão da rua e a galeria esvazia até a capacidade de projeto.</p></OnlyInDetail>

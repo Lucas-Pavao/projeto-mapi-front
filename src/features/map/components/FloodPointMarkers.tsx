@@ -1,8 +1,8 @@
 import React from 'react';
-import { MapPin } from 'lucide-react';
 import { MapMarker, MarkerContent } from '@/components/ui/map';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
 import { floodRingOf, listLineOf, type FloodRing } from '@/features/alagamento/utils/alagamentoText';
+import { FloodLevelBadge } from '@/features/alagamento/components/FloodLevelBadge';
 import type { FloodPointResponseDTO } from '../types';
 
 interface Props {
@@ -14,10 +14,10 @@ interface Props {
 }
 
 /** Cor não é o único sinal: cada anel leva um rótulo curto visível sob o marcador. Sem alerta: sem anel. */
-const RING: Record<Exclude<FloodRing, null>, { cls: string; short: string; tagCls: string; pulse: boolean }> = {
-  ALERTA: { cls: 'border-2 border-destructive', short: 'alerta', tagCls: 'border-destructive text-destructive', pulse: true },
-  ATENCAO: { cls: 'border-2 border-warning', short: 'atenção', tagCls: 'border-warning text-warning', pulse: true },
-  SEM_DADO: { cls: 'border-2 border-dashed border-muted-foreground', short: 'sem dado', tagCls: 'border-dashed border-muted-foreground text-muted-foreground', pulse: false },
+const RING: Record<Exclude<FloodRing, null>, { cls: string; short: string; tagCls: string }> = {
+  ALERTA: { cls: 'border-[2.5px] border-destructive', short: 'alerta', tagCls: 'border-destructive text-destructive' },
+  ATENCAO: { cls: 'border-[2.5px] border-warning', short: 'atenção', tagCls: 'border-warning text-warning' },
+  SEM_DADO: { cls: 'border-[2.5px] border-dashed border-muted-foreground', short: 'sem dado', tagCls: 'border-dashed border-muted-foreground text-muted-foreground' },
 };
 
 /** Marcadores dos pontos críticos (5.3): ícone neutro e anel pelo nível do alerta por regressão. Sem porcentagem. */
@@ -43,16 +43,12 @@ export const FloodPointMarkers: React.FC<Props> = ({ points, selectedFloodPointI
           <MarkerContent>
             {/* Alvo de toque >= 44 px (marcador 32 px + 6 px de cada lado). */}
             <div className="group relative flex cursor-pointer flex-col items-center p-1.5" data-flood-level={a?.level ?? (alagamentoBySlug ? 'SEM_DADO' : 'VISITOR')}>
-              {isSelected && <span aria-hidden="true" className="absolute -inset-0.5 rounded-[14px] border-2 border-foreground" />}
-              {r && (
-                <span data-alerta-ring={ring} aria-hidden="true" className={`pointer-events-none absolute inset-0.5 rounded-[12px] ${r.cls} ${r.pulse ? 'animate-ping opacity-70 motion-reduce:animate-none' : ''}`} />
-              )}
-              <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-[10px] border border-border bg-popover text-foreground shadow-elevation-overlay transition-transform duration-200 group-hover:scale-110">
-                <MapPin className="size-4" />
+              {/* Prancha: anel do nível a 7 px do ícone (tracejado em sem dado) e anel de seleção a 2 px. */}
+              <span className="relative transition-transform duration-200 group-hover:scale-110">
+                {r && <span data-alerta-ring={ring} aria-hidden="true" className={`pointer-events-none absolute -inset-[7px] rounded-[18px] ${r.cls}`} />}
+                {isSelected && <span aria-hidden="true" className="pointer-events-none absolute -inset-0.5 rounded-[12px] border-2 border-foreground" />}
+                <FloodLevelBadge level={alagamentoBySlug ? (a?.level ?? 'SEM_DADO') : null} pulse={a?.level === 'ALERTA'} />
               </span>
-              {r && (
-                <span data-alerta-tag={ring} aria-hidden="true" className={`mt-0.5 whitespace-nowrap rounded border bg-popover px-1 text-[9px] font-bold leading-[12px] ${r.tagCls}`}>{r.short}</span>
-              )}
             </div>
           </MarkerContent>
         </MapMarker>

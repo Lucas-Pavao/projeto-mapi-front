@@ -37,7 +37,7 @@ describe('AlertaRegressao: 10 estados', () => {
     expect(body).not.toMatch(/risco baixo|seguro/i);
     if (e.level === 'SEM_DADO') {
       expect(body).not.toMatch(/Sem alerta/);
-      expect(screen.getByText('sem previsão neste ciclo')).toBeInTheDocument();
+      expect(screen.getByRole('list', { name: 'sem previsão neste ciclo' })).toHaveTextContent('1 h—3 h—6 h—'); // nunca 0 cm
       expect(screen.queryByTestId('horizonte-1')).toBeNull();
     } else {
       expect(within(screen.getByTestId('horizonte-1')).getByText(e.faixa1h!)).toBeInTheDocument();

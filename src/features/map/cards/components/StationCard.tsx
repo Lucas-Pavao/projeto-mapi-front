@@ -53,7 +53,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
   const last = c.blocks[c.blocks.length - 1];
   return (
     <section role="dialog" aria-label={`Pluviômetro ${name}`} data-state={c.state} data-pedonly={c.pedOnly}
-      className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
+      className={cn('flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="state-chip" className={cn('inline-flex min-h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 py-[3px] text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
@@ -74,7 +74,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <div className="flex items-end justify-between gap-2.5">
         <div><div className="text-[11px] leading-[14px] text-muted-foreground">Chuva agora</div><div data-testid="now" className={cn('font-mono text-[26px] font-extrabold leading-8', now.warn && 'text-warning')}>{now.value}</div></div>
-        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">valor exibido vem de</div><div data-testid="source" className={cn('text-[13px] font-bold leading-[18px]', sourceClass(c))}>{sourceText(c)}</div></div>
+        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">fonte</div><div data-testid="source" className={cn('text-[13px] font-bold leading-[18px]', sourceClass(c))}>{sourceText(c)}</div></div>
       </div>
 
       <div>
