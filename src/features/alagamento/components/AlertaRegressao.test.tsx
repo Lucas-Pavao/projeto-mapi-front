@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { DetailModeProvider } from '@/lib/detailMode';
 import { AlertaRegressao } from './AlertaRegressao';
 import { RegressaoCard } from './RegressaoCard';
 import { alagamentoPontoSchema, type AlagamentoPonto } from '../schemas/alagamento.schema';
@@ -78,7 +80,7 @@ describe('AlertaRegressao: 10 estados', () => {
 
 describe('RegressaoCard', () => {
   it('selo Experimental com ⓘ, nome, borda pelo nível e botões', () => {
-    render(<RegressaoCard ponto={fx('atencao_3h')} place="Imbiribeira, Recife" pageHref="/pontos/MASCARENHAS_IMBIRIBEIRA" onAnalysis={() => {}} />);
+    render(<MemoryRouter><RegressaoCard ponto={fx('atencao_3h')} place="Imbiribeira, Recife" pageTo="/pontos/MASCARENHAS_IMBIRIBEIRA" onAnalysis={() => {}} /></MemoryRouter>);
     const card = screen.getByTestId('regressao-card');
     expect(card).toHaveClass('border-t-warning');
     expect(within(screen.getByTestId('selo-experimental')).getByTestId('info-tip').getAttribute('aria-label')).toMatch(/^Experimental/);
@@ -89,7 +91,20 @@ describe('RegressaoCard', () => {
   });
 
   it('SEM_DADO tem borda cinza tracejada', () => {
-    render(<RegressaoCard ponto={fx('sem_dado_sem_terreno')} />);
+    render(<MemoryRouter><RegressaoCard ponto={fx('sem_dado_sem_terreno')} /></MemoryRouter>);
     expect(screen.getByTestId('regressao-card')).toHaveClass('border-dashed');
+  });
+
+  it('modo enxuto esconde o bloco técnico; modo Detalhes mostra o que mais pesou, 15 cm, chuva por prazo e versões', () => {
+    render(<MemoryRouter><RegressaoCard ponto={fx('atencao_3h')} /></MemoryRouter>);
+    expect(screen.queryByTestId('regressao-detalhes')).toBeNull();
+    cleanup();
+    render(<DetailModeProvider initial><MemoryRouter><RegressaoCard ponto={fx('atencao_3h')} /></MemoryRouter></DetailModeProvider>);
+    const d = screen.getByTestId('regressao-detalhes');
+    expect(d).toHaveTextContent('O que mais pesou:');
+    expect(d).toHaveTextContent('Para chegar a 15 cm:');
+    expect(within(d).getAllByRole('row')).toHaveLength(4);
+    expect(d).toHaveTextContent('rain rain_v1');
+    expect(d).toHaveTextContent('commit 0000000');
   });
 });
