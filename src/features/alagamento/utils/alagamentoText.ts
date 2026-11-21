@@ -127,3 +127,12 @@ export const TEXT_CLASS: Record<FloodTone, string> = {
 };
 
 export const LEGEND_RULE = 'Alerta se a lâmina provável (q50) chega a 15 cm; Atenção se só a pessimista (q95). Experimental.';
+
+/** "chuva no ponto (até 5 km) nos últimos 10 min: 0,0 mm (−0,2 mm na previsão)" → rótulo à esquerda, valor à direita. */
+export const splitShap = (text: string): { label: string; value: string } => {
+  const i = text.lastIndexOf(': ');
+  if (i < 0) return { label: text, value: '' };
+  const label = text.slice(0, i);
+  return { label: label.charAt(0).toUpperCase() + label.slice(1), value: text.slice(i + 2) };
+};
+

@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void;
 }
 
-const tile = 'rounded-lg bg-muted p-2';
+const tile = 'rounded-lg bg-secondary p-2';
 const tileLabel = 'text-[11px] leading-[14px] text-muted-foreground';
 const tileValue = 'whitespace-nowrap font-mono text-sm leading-5 font-semibold';
 

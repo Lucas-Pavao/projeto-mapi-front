@@ -83,7 +83,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
   const tide = point.tideHeight ?? point.liveData?.tideHeight ?? null;
   const tiles: Array<{ l: string; v: string; s: string; warn: boolean }> = [
     { l: 'Chuva agora', v: rain?.valueMm != null && used ? `${num(rain.valueMm, 1)} mm/h` : 'sem dado', s: used && rain?.valueMm != null ? `${used.name} · ${distanceText(used.distanceM)}` : 'nenhuma estação', warn: rain?.valueMm == null },
-    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: 'medida · Cemaden', warn: agg?.rain3h == null },
+    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: agg?.rainSource ? 'estimada · Open-Meteo' : 'sem leitura', warn: agg?.rain3h == null },
     { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideSource === 'HARMONIC' ? 'maré · reserva harmônica' : point.tideUnit ?? 'DHN (NR)', warn: false },
   ];
   return (
@@ -95,7 +95,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
       )}
       <div className="grid grid-cols-3 gap-1.5">
         {tiles.map((t) => (
-          <div key={t.l} data-testid="tile" className="rounded-lg bg-muted px-2 py-[7px]">
+          <div key={t.l} data-testid="tile" className="rounded-lg bg-secondary px-2 py-[7px]">
             <div className="text-[10px] leading-[13px] text-muted-foreground">{t.l}</div>
             <div className={cn('font-mono text-[13px] font-bold leading-[18px]', t.warn && 'text-warning')}>{t.v}</div>
             <div className="truncate text-[10px] leading-[13px] text-muted-foreground">{t.s}</div>

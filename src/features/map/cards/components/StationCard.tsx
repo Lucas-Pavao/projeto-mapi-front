@@ -91,8 +91,8 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <OnlyInDetail>
       <div className="grid grid-cols-2 gap-1.5">
-        <div className="rounded-lg bg-muted p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">Ao vivo (CEMADEN)</div><div data-testid="live" className="font-mono text-[13px] font-bold leading-[18px]">{liveText(c)}</div></div>
-        <div className="rounded-lg bg-muted p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">PED (CEMADEN_PED)</div><div data-testid="ped" className="font-mono text-[13px] font-bold leading-[18px]">{pedText(c)}</div></div>
+        <div className="rounded-lg bg-secondary p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">Ao vivo (CEMADEN)</div><div data-testid="live" className="font-mono text-[13px] font-bold leading-[18px]">{liveText(c)}</div></div>
+        <div className="rounded-lg bg-secondary p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">PED (CEMADEN_PED)</div><div data-testid="ped" className="font-mono text-[13px] font-bold leading-[18px]">{pedText(c)}</div></div>
       </div>
       </OnlyInDetail>
 

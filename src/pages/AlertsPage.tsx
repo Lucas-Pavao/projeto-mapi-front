@@ -14,6 +14,7 @@ import { useAckAlert } from '@/features/alerts/hooks/useAlertRules';
 import { applyLiveAlert } from '@/features/alerts/utils/liveAlerts';
 import { GROUPS, countByGroup, inGroup, type AlertGroup } from '@/features/alerts/utils/alertGroups';
 import { AlertItem } from '@/features/alerts/components/AlertItem';
+import { useFloodPoints } from '@/features/points/hooks/useFloodPoints';
 import { QuickRules } from '@/features/alerts/components/QuickRules';
 import { RulesPanel } from '@/features/alerts/components/RulesPanel';
 import { PageFrame } from '@/features/operacao/components/Panel';
@@ -26,6 +27,8 @@ const LIVE_TEXT = { open: 'Ao vivo', connecting: 'Conectando…', error: 'Sem at
 const NEW_WINDOW_MS = 30 * 60_000;
 
 export const AlertsPage: React.FC = () => {
+  const pts = useFloodPoints();
+  const pointNames = useMemo(() => new Map((pts.data ?? []).map((p) => [p.slug, p.name])), [pts.data]);
   const [group, setGroup] = useState<AlertGroup>('all');
   const [allRules, setAllRules] = useState(false);
   const qc = useQueryClient();
@@ -114,7 +117,7 @@ export const AlertsPage: React.FC = () => {
               <>
                 {items.length === 0 && <p className="m-0 p-6 text-center text-[14px] text-muted-foreground">Nenhum alerta neste filtro.</p>}
                 <ul aria-label="Lista de alertas" className="m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-2">
-                  {items.map((a) => <AlertItem key={a.id} alert={a} canAck acking={acking.has(a.id)} isNew={now - Date.parse(a.triggeredAt) <= NEW_WINDOW_MS} onAck={doAck} />)}
+                  {items.map((a) => <AlertItem key={a.id} alert={a} canAck acking={acking.has(a.id)} isNew={now - Date.parse(a.triggeredAt) <= NEW_WINDOW_MS} onAck={doAck} pointName={a.floodPointSlug ? pointNames.get(a.floodPointSlug) : null} />)}
                 </ul>
                 {data.totalElements > SIZE && <p className="m-0 border-t border-border px-4 py-2 text-[12px] text-muted-foreground">Mostrando os {SIZE} alertas mais recentes de {data.totalElements}.</p>}
               </>

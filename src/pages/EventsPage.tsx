@@ -1,3 +1,4 @@
+import { cleanStationName } from '@/features/map/utils/overview';
 import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { QueryState } from '@/components/ui/query-state';
@@ -50,7 +51,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
   const sensor = rivers.data?.find((s) => s.sensorId === riverId);
   const lvl = (k: string) => { const v = (sensor as Record<string, unknown> | undefined)?.[k]; return typeof v === 'number' ? v : null; };
   const flood = lvl('riverFloodLevel'), alert = lvl('riverAlertLevel');
-  const riverName = sensor?.stationName ?? riverId ?? 'Rio';
+  const riverName = cleanStationName(sensor?.stationName) ?? riverId ?? 'Rio';
 
   const rain = useMemo(() => averageRain(t), [t]);
   const tide = useMemo(() => toTimePts(t.tide.points), [t.tide.points]);

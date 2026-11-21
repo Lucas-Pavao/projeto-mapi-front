@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { OnlyInDetail } from '@/lib/detailMode';
 import { Input } from '@/components/ui/input';
 import type { FloodPointRequestDTO, FloodPointResponseDTO } from '@/features/map/types';
 import { useDebounced } from '../hooks/useDebounced';
@@ -109,7 +110,7 @@ export const PointEditor: React.FC<PointEditorProps> = ({ mode, saving, error, s
     <form onSubmit={submit} noValidate aria-label="Editar ponto" className="custom-scrollbar flex min-h-0 min-w-0 flex-1 flex-col gap-3.5 overflow-y-auto rounded-2xl border border-border bg-card p-[18px]">
       <div className="flex items-center gap-3">
         <h2 className="m-0 flex-1 text-lg leading-6 font-extrabold">{edit ? `Editar · ${s.name || s.slug}` : 'Novo ponto crítico'}</h2>
-        <span className="font-mono text-xs text-muted-foreground">{edit ? `PATCH /api/pontos/${s.slug}` : 'POST /api/pontos'}</span>
+        <OnlyInDetail><span className="font-mono text-xs text-muted-foreground">{edit ? `PATCH /api/pontos/${s.slug}` : 'POST /api/pontos'}</span></OnlyInDetail>
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_260px]">
         <PointLocationMap latitude={coordOk ? lat : null} longitude={coordOk ? lon : null} onPick={(la, lo) => setS((p) => ({ ...p, latitude: String(la), longitude: String(lo) }))} />
@@ -138,7 +139,7 @@ export const PointEditor: React.FC<PointEditorProps> = ({ mode, saving, error, s
               </li>
             ))}
           </ul>
-          {coordOk && suggestions.data?.length === 0 && <p className="m-0 text-xs text-warning">Nenhuma estação em 3 km. A previsão usaria só o Open-Meteo.</p>}
+          {coordOk && suggestions.data?.length === 0 && <p className="m-0 text-xs text-warning">Nenhuma estação em 3 km: sem chuva medida perto, o alerta deste ponto tende a ficar sem dado.</p>}
           {suggestions.isPending && suggestions.fetchStatus !== 'idle' && <p role="status" className="m-0 text-xs text-muted-foreground">Procurando estações…</p>}
         </div>
       </div>
@@ -154,16 +155,18 @@ export const PointEditor: React.FC<PointEditorProps> = ({ mode, saving, error, s
         {edit && field('threshold', 'Limiar de alerta de chuva (mm)', { span: 2, mono: true, mode: 'decimal', err: errors.alertThresholdMm })}
         {edit && (
           <label className="flex min-h-11 items-end gap-2 pb-2 text-[13px] font-semibold sm:col-span-2" htmlFor="ponto-ativo">
-            <input id="ponto-ativo" type="checkbox" checked={s.active} onChange={(e) => set('active', e.target.checked)} className="size-4 accent-primary" /> Ponto ativo (entra no ciclo de previsão)
+            <input id="ponto-ativo" type="checkbox" checked={s.active} onChange={(e) => set('active', e.target.checked)} className="size-4 accent-primary" /> Ponto ativo (entra no ciclo do alerta)
           </label>
         )}
       </div>
+      <OnlyInDetail>
       <p className="m-0 rounded-[10px] border border-dashed border-border p-2.5 text-xs leading-4 text-muted-foreground">
         Os parâmetros do balde por ponto (capacidade, saída, freio de maré, fração C e cota da rua) não são editáveis: o M1a real só aceita f e a escala da curva na simulação (ADR 0014). Sem terreno carregado, a simulação não funciona neste ponto.
         {edit && ' Altitude, distância e município só mudam no cadastro.'}
       </p>
+      </OnlyInDetail>
       <div className="sticky -bottom-[18px] -mx-[18px] -mb-[18px] flex items-center gap-2.5 border-t border-border bg-card px-[18px] py-3">
-        {saved && !error && <span role="status" className="flex-1 text-[13px] font-bold text-success">Ponto salvo. Entra no próximo ciclo de previsão.</span>}
+        {saved && !error && <span role="status" className="flex-1 text-[13px] font-bold text-success">Ponto salvo. Entra no próximo ciclo do alerta.</span>}
         {error && <span role="alert" className="flex-1 text-[13px] font-bold text-destructive">{error}</span>}
         {errors.form && <span role="alert" className="flex-1 text-[13px] font-bold text-warning">{errors.form}</span>}
         <span className="flex-1" />

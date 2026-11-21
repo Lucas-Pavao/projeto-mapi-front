@@ -36,3 +36,12 @@ describe('overview', () => {
     expect(fmtNum(0.22, 2)).toBe('0,22');
   });
 });
+
+describe('cleanStationName', () => {
+  it('tira colchetes e caixa alta', async () => {
+    const { cleanStationName } = await import('./overview');
+    expect(cleanStationName('[CEMADEN] ENGENHO VELHO [H]')).toBe('Engenho Velho');
+    expect(cleanStationName('[APAC] Jardim Primavera')).toBe('Jardim Primavera');
+    expect(cleanStationName(null)).toBeNull();
+  });
+});

@@ -17,9 +17,13 @@ const Section: React.FC<{ title: string; info: string; children: React.ReactNode
   </section>
 );
 
+// Prancha "ModeloV3": dado = azul (primário), validado = verde, física = laranja, regra = cinza; a mesma cor na faixa de cima.
 const KIND_CLASS: Record<string, string> = {
-  dado: 'border-border text-muted-foreground', validado: 'border-success/60 text-success',
-  'físico, não calibrado': 'border-warning/60 text-warning', 'fixada antes do teste': 'border-primary/60 text-primary',
+  dado: 'border-primary text-primary', validado: 'border-success text-success',
+  'físico, não calibrado': 'border-warning text-warning', 'fixada antes do teste': 'border-muted-foreground text-muted-foreground',
+};
+const KIND_TOP: Record<string, string> = {
+  dado: 'border-t-primary', validado: 'border-t-success', 'físico, não calibrado': 'border-t-warning', 'fixada antes do teste': 'border-t-muted-foreground',
 };
 
 /** Aba "Alagamento por regressão" da tela Modelo (5.7). Enxuta: explicações nos ⓘ; método por extenso só em Detalhes. */
@@ -33,11 +37,11 @@ export const RegressaoView: React.FC<{ card: RegressaoCard }> = ({ card }) => (
     <Section title="Caminho" info={`${card.rule} Cada bloco diz o estado dele: dado medido, modelo validado, física sem calibração e regra fixada antes do teste.`}>
       <ol data-testid="pipeline" className="m-0 grid list-none gap-2 p-0 sm:grid-cols-4">
         {card.pipeline.map((b, i) => (
-          <li key={b.step} className="flex flex-col gap-1 rounded-xl bg-muted p-3">
-            <span className="text-[11px] text-muted-foreground">{i + 1}</span>
+          <li key={b.step} className={cn('flex flex-col gap-1 rounded-xl border border-t-4 border-border bg-card p-3', KIND_TOP[b.kind] ?? 'border-t-border')}>
+            <span className="font-mono text-[11px] font-bold text-muted-foreground">{i + 1}</span>
             <span className="text-sm font-extrabold">{b.step}</span>
-            <span className={cn('self-start rounded-md border px-1.5 text-[11px] font-bold', KIND_CLASS[b.kind] ?? 'border-border')}>{b.kind}</span>
-            <OnlyInDetail><span className="text-xs text-muted-foreground">{b.detail}</span></OnlyInDetail>
+            <span className="text-xs leading-4 text-muted-foreground">{b.detail}</span>
+            <span className={cn('self-start rounded-md border px-1.5 text-[10px] font-bold', KIND_CLASS[b.kind] ?? 'border-border')}>{b.kind}</span>
           </li>
         ))}
       </ol>

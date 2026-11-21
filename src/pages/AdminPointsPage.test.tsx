@@ -50,7 +50,7 @@ describe('AdminPointsPage', () => {
     fireEvent.click(within(form()).getByRole('button', { name: 'Salvar ponto' }));
     await waitFor(() => expect(sent).not.toBeNull());
     expect(sent).toEqual({ slug: 'sintetico-1', body: { name: 'Novo nome', alertThresholdMm: 45 } });
-    expect(await screen.findByText('Ponto salvo. Entra no próximo ciclo de previsão.')).toBeInTheDocument();
+    expect(await screen.findByText('Ponto salvo. Entra no próximo ciclo do alerta.')).toBeInTheDocument();
   });
 
   it('clicar no mapa move a coordenada e o PATCH leva latitude e longitude', async () => {
