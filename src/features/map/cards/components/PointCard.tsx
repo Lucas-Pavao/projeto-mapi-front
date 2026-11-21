@@ -95,7 +95,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
       )}
       <div className="grid grid-cols-3 gap-1.5">
         {tiles.map((t) => (
-          <div key={t.l} data-testid="tile" className="rounded-lg bg-muted px-2 py-[7px]">
+          <div key={t.l} data-testid="tile" className="rounded-lg bg-secondary px-2 py-[7px]">
             <div className="text-[10px] leading-[13px] text-muted-foreground">{t.l}</div>
             <div className={cn('font-mono text-[13px] font-bold leading-[18px]', t.warn && 'text-warning')}>{t.v}</div>
             <div className="truncate text-[10px] leading-[13px] text-muted-foreground">{t.s}</div>

@@ -38,7 +38,7 @@ export const HorizonBars: React.FC<{ horizons: AlagamentoPonto['horizons']; with
       return (
         <li key={h.hours} data-testid={`horizonte-${h.hours}`} data-level={h.level} className={cn('grid items-center gap-2', withValidity ? 'grid-cols-[30px_1fr_9.5rem]' : 'grid-cols-[30px_1fr_74px]')}>
           <span className="font-mono text-xs leading-4 font-bold">{h.hours} h</span>
-          <span className="relative h-2.5 rounded-full bg-muted" role="img"
+          <span className="relative h-2.5 rounded-full bg-secondary" role="img"
             aria-label={`${h.hours} h: lâmina provável ${fmt1(h.sheetQ50Cm) ?? 'sem dado'} cm, pessimista ${fmt1(h.sheetQ95Cm) ?? 'sem dado'} cm; alagamento a partir de ${HCRIT_CM} cm`}>
             <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q95)} style={{ width: `${pctOfBar(h.sheetQ95Cm)}%` }} />
             <span className={cn('absolute inset-y-0 left-0 rounded-full', c.q50)} style={{ width: `${pctOfBar(h.sheetQ50Cm)}%` }} />
@@ -84,7 +84,7 @@ export const AlertaRegressao: React.FC<{ ponto: AlagamentoPonto; showChip?: bool
             {[1, 3, 6].map((h) => (
               <li key={h} className="grid grid-cols-[30px_1fr_74px] items-center gap-2">
                 <span className="font-mono text-xs leading-4 font-bold">{h} h</span>
-                <span aria-hidden="true" className="relative h-2.5 rounded-full bg-muted">
+                <span aria-hidden="true" className="relative h-2.5 rounded-full bg-secondary">
                   <span className="absolute -inset-y-1 w-0.5 bg-destructive" style={{ left: `${pctOfBar(HCRIT_CM)}%` }} />
                 </span>
                 <span className="text-right font-mono text-xs leading-4 font-bold text-muted-foreground">—</span>
