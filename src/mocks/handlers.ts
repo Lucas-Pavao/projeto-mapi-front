@@ -6,6 +6,7 @@ import * as d from './data';
 import { gestaoHandlers } from './handlers-gestao';
 import { cenariosHandlers } from './handlers-cenarios';
 import { alertaHandlers } from './alerta';
+import { alagamentoHandlers } from './alagamento';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
@@ -55,6 +56,7 @@ export const handlers = [
   ...gestaoHandlers,
   ...cenariosHandlers,
   ...alertaHandlers,
+  ...alagamentoHandlers,
   liveStreamHandler(),
   http.get('/api/pontos', () => HttpResponse.json(d.points)),
   http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),
