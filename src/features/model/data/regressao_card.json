@@ -1,0 +1,141 @@
+{
+ "version": "flood_reg_v1",
+ "rule": "ALERTA se a lâmina do cenário q50 chega a 15 cm; ATENÇÃO se só a do cenário q95 chega; SEM ALERTA caso contrário. Limiar e regra fixados antes do teste (20/11).",
+ "pipeline": [
+  {
+   "step": "Chuva medida",
+   "kind": "dado",
+   "detail": "rede Cemaden/PED, 10 min"
+  },
+  {
+   "step": "rain_v1",
+   "kind": "validado",
+   "detail": "quantis q50 e q95 em 1, 3 e 6 h"
+  },
+  {
+   "step": "Balde a 10 min",
+   "kind": "físico, não calibrado",
+   "detail": "lâmina no terreno do ponto"
+  },
+  {
+   "step": "Regra fixa",
+   "kind": "fixada antes do teste",
+   "detail": "15 cm: q50 = Alerta, só q95 = Atenção"
+  }
+ ],
+ "validation": [
+  {
+   "id": "2.1",
+   "item": "Cobertura dos quantis da chuva (teste)",
+   "status": "medido",
+   "result": "1 h: q50 84%, q95 96% · 3 h: q50 75%, q95 97% · 6 h: q50 68%, q95 97%",
+   "ci": null
+  },
+  {
+   "id": "2.2",
+   "item": "Balde com chuva medida chega a 15 cm nos eventos FORTE",
+   "status": "medido",
+   "result": "0 de 17 eventos",
+   "ci": [
+    0.0,
+    0.3085
+   ]
+  },
+  {
+   "id": "2.3",
+   "item": "Dias da Defesa Civil (2 km) com alerta",
+   "status": "medido · uma vez",
+   "result": "0 de 41 ponto-dias (12 dias); 0,00 falsos por ponto-mês",
+   "ci": [
+    0.0,
+    0.2646
+   ]
+  },
+  {
+   "id": "2.4",
+   "item": "Baseline: chuva medida 6 h ≥ 25 mm",
+   "status": "medido",
+   "result": "41 de 41; 3,77 falsos por ponto-mês",
+   "ci": [
+    0.7354,
+    1.0
+   ]
+  }
+ ],
+ "smallSampleNote": "Com 12 dias da Defesa Civil, o intervalo é largo: 0 de 12 dias é compatível com até 26% de sensibilidade.",
+ "finding": "a chuva prevista, espalhada no horizonte, nunca passa da capacidade da galeria (IDF TR 5 em Te = 10 min), e a chuva medida de 10 min fica abaixo da capacidade por passo: o balde não acumula e a regra não tem como disparar com os parâmetros atuais. Nenhum parâmetro foi mudado depois deste resultado.",
+ "neverFired": true,
+ "rainWarning": [
+  {
+   "horizonHours": 1,
+   "events": 28,
+   "detected": 20,
+   "leadMedianMin": 20.0,
+   "falsePerEvent": 3.0,
+   "warnedBeforeRainPct": 0.0
+  },
+  {
+   "horizonHours": 3,
+   "events": 28,
+   "detected": 21,
+   "leadMedianMin": 40.0,
+   "falsePerEvent": 4.2,
+   "warnedBeforeRainPct": 0.0
+  },
+  {
+   "horizonHours": 6,
+   "events": 28,
+   "detected": 24,
+   "leadMedianMin": 195.0,
+   "falsePerEvent": 11.4,
+   "warnedBeforeRainPct": 10.7
+  }
+ ],
+ "bucket5y": [
+  {
+   "slug": "AV_RECIFE_IBURA",
+   "noTerrain": false,
+   "tr2": 0,
+   "tr5": 0,
+   "tr10": 0,
+   "dates": []
+  },
+  {
+   "slug": "CIN_UFPE",
+   "noTerrain": false,
+   "tr2": 1,
+   "tr5": 0,
+   "tr10": 0,
+   "dates": [
+    "2022-05-28"
+   ]
+  },
+  {
+   "slug": "AGAMENON_DERBY",
+   "noTerrain": false,
+   "tr2": 0,
+   "tr5": 0,
+   "tr10": 0,
+   "dates": []
+  },
+  {
+   "slug": "MASCARENHAS_IMBIRIBEIRA",
+   "noTerrain": false,
+   "tr2": 0,
+   "tr5": 0,
+   "tr10": 0,
+   "dates": []
+  },
+  {
+   "slug": "JABOATAO_CENTRO",
+   "noTerrain": true
+  }
+ ],
+ "sources": [
+  "reports/RELATORIO-REGRESSAO.md",
+  "reports/regressao/validacao.json",
+  "reports/v4/rain/evaluation.json",
+  "reports/bucket10/balde10_5anos.json"
+ ],
+ "attribution": "DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC"
+}
