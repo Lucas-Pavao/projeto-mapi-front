@@ -4,9 +4,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { vi } from 'vitest';
 import { STATION_CARD_FIXTURES as F } from '@/mocks/cards';
 import { StationCard } from './StationCard';
+import { DetailModeProvider } from '@/lib/detailMode';
 
 afterEach(cleanup);
-const show = (k: keyof typeof F, onClose?: () => void) => render(<MemoryRouter><StationCard card={F[k]} onClose={onClose} /></MemoryRouter>);
+/** Os testes de conteúdo rodam no modo Detalhes (todos os blocos); os do modo enxuto ficam no fim. */
+const show = (k: keyof typeof F, onClose?: () => void, detail = true) => render(<DetailModeProvider initial={detail}><MemoryRouter><StationCard card={F[k]} onClose={onClose} /></MemoryRouter></DetailModeProvider>);
 
 describe('StationCard: os 8 estados', () => {
   it('1 normal: ao vivo + PED, sem aviso, valor da PED', () => {
@@ -33,7 +35,7 @@ describe('StationCard: os 8 estados', () => {
     expect(screen.getByText(/inconclusiva \(FEW_WET_NEIGHBORS\)/)).toBeInTheDocument();
   });
   it('4b mês ainda não checado: não inventa motivo', () => {
-    render(<MemoryRouter><StationCard card={{ ...F.unchecked, monthCheck: null }} /></MemoryRouter>);
+    render(<DetailModeProvider initial><MemoryRouter><StationCard card={{ ...F.unchecked, monthCheck: null }} /></MemoryRouter></DetailModeProvider>);
     expect(screen.getByTestId('note')).toHaveTextContent('Mês ainda sem checagem');
     expect(screen.getByTestId('note')).not.toHaveTextContent('FEW_WET_NEIGHBORS');
     expect(screen.getByTestId('state-chip')).toHaveTextContent('Mês sem checagem');
@@ -76,5 +78,27 @@ describe('StationCard: os 8 estados', () => {
     expect(screen.getByRole('link', { name: 'Ver série e divergências' })).toHaveAttribute('href', '/sensores');
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Fechar card do pluviômetro' }));
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe('StationCard: modo enxuto (5.11 item 7)', () => {
+  it('mostra estado, nome, chuva agora com a fonte, barras, acumulados e o botão; o aviso do estado fica no ⓘ', () => {
+    show('divergent', undefined, false);
+    const chip = screen.getByTestId('state-chip');
+    expect(within(chip).getByTestId('info-tip').getAttribute('aria-label')).toBeTruthy();
+    expect(screen.getByTestId('now')).toBeInTheDocument();
+    expect(screen.getByTestId('source')).toBeInTheDocument();
+    expect(screen.getByTestId('accs')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver série e divergências' })).toBeInTheDocument();
+    for (const id of ['note', 'live', 'ped', 'bars-legend']) expect(screen.queryByTestId(id)).toBeNull();
+    expect(screen.queryByText('Aliases')).toBeNull();
+    expect(screen.queryByText('ENTRA NA CHUVA DE')).toBeNull();
+    expect(screen.queryByText(/DADOS DA REDE OBSERVACIONAL/)).toBeNull();
+  });
+  it('no modo Detalhes aparecem ao vivo × PED, legenda, checagem, quarentena, aliases, uso e atribuição', () => {
+    show('divergent');
+    for (const id of ['note', 'live', 'ped', 'bars-legend']) expect(screen.getByTestId(id)).toBeInTheDocument();
+    expect(screen.getByText('Aliases')).toBeInTheDocument();
+    expect(screen.getByText('ENTRA NA CHUVA DE')).toBeInTheDocument();
   });
 });

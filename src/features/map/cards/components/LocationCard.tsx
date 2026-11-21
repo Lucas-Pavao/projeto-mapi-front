@@ -1,4 +1,5 @@
 import { InfoTip } from '@/components/InfoTip';
+import { OnlyInDetail, OnlyInLean, useDetailMode } from '@/lib/detailMode';
 import React, { useEffect, useState } from 'react';
 import { Check, CloudRain, Copy, Info, MapPin, Mountain, ShieldCheck, Thermometer, TriangleAlert, Waves, X } from 'lucide-react';
 import { SourceTag } from '@/components/risk/SourceTag';
@@ -46,6 +47,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
   const canReport = showLand && Boolean(onReport);
   const citesCemaden = !estimated || a.rain.candidates.length > 0;
   const [copied, setCopied] = useState(false);
+  const { detail } = useDetailMode();
   useEffect(() => {
     if (!copied) return;
     const t = setTimeout(() => setCopied(false), 1500);
@@ -68,10 +70,19 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain scroll px-4 py-3.5">
         {banner && (
+          <OnlyInLean>
+            <p data-testid="location-banner-short" className={cn('m-0 flex items-center gap-1.5 text-xs font-bold', TONE_TEXT[banner.tone])}>
+              {banner.title}<InfoTip text={banner.text} />
+            </p>
+          </OnlyInLean>
+        )}
+        {banner && (
+          <OnlyInDetail>
           <div role="status" data-testid="location-banner" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-3 py-2.5 text-xs leading-[17px]', TONE_BORDER[banner.tone], TONE_TINT[banner.tone], banner.dashed && 'border-dashed')}>
             <Info className={cn('mt-px size-4 shrink-0', TONE_TEXT[banner.tone])} aria-hidden="true" />
             <span><strong>{banner.title}</strong> {banner.text}</span>
           </div>
+          </OnlyInDetail>
         )}
 
         <section aria-label="Ponto crítico mais próximo" className="flex flex-col gap-2">
@@ -90,7 +101,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           <section aria-label="Chuva" data-mode={a.rain.mode} className="flex flex-col gap-2">
             <H3 icon={<CloudRain />} aside={
               <SourceTag kind={tag.kind} label={tag.label} data-testid="rain-source-tag" className="h-5 rounded-md px-[7px] font-mono" />
-            }>Chuva</H3>
+            }>Chuva<InfoTip text={rainNote(a.rain.mode)} /></H3>
             <div className="grid grid-cols-3 gap-2">
               {rainTiles(a).map((t) => (
                 <div key={t.label} data-testid="rain-tile" className={cn('rounded-xl border p-2.5',
@@ -100,8 +111,8 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
                 </div>
               ))}
             </div>
-            <p className="m-0 text-xs leading-[17px] text-muted-foreground">{rainNote(a.rain.mode)}</p>
             {a.rain.candidates.length > 0 && (
+              <OnlyInDetail>
               <div className="flex flex-col gap-1">
                 <span data-testid="candidates-title" className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">
                   {estimated ? 'PLUVIÔMETROS NO RAIO (NENHUM VÁLIDO)' : `PLUVIÔMETROS ATÉ 5 KM · ${a.rain.candidates.length}${a.rain.nValid != null ? ` (${a.rain.nValid} VÁLIDOS)` : ''}`}
@@ -121,12 +132,13 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
                   </button>
                 ))}
               </div>
+              </OnlyInDetail>
             )}
           </section>
         )}
 
         <section aria-label="Água lá fora" className="flex flex-col gap-2">
-          <H3 icon={<Waves />}>Água lá fora</H3>
+          <H3 icon={<Waves />}>Água lá fora<InfoTip text="Maré sobre o nível de redução da Marinha: não comparar com a altitude do terreno. O rio é mostrado para a operação e fica fora do alerta." /></H3>
           <div className="grid grid-cols-2 gap-2">
             <Tile testId="tide-tile" label="Maré prevista"
               sub={`${a.tide?.harbor ?? 'Porto do Recife'}${a.tide?.rising == null ? '' : a.tide.rising ? ' · enchendo' : ' · vazando'}`}>
@@ -134,18 +146,17 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
               {a.tide?.tideSource === 'HARMONIC' && <div className="mt-1"><SourceTag kind="TIDE_HARMONIC" data-testid="tide-source-tag" /></div>}
             </Tile>
             <Tile testId="river-tile" label="Rio mais próximo" className={cn(!a.river && 'opacity-60')}
-              sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do modelo` : 'nenhuma régua a menos de 6 km'}>
+              sub={a.river ? `${a.river.name}${a.river.distanceKm != null ? ` · ${num(a.river.distanceKm, 1)} km` : ''} · fora do alerta` : 'nenhuma régua a menos de 6 km'}>
               {a.river?.levelM != null ? <>{num(a.river.levelM, 2)}<Unit>m</Unit></> : '—'}
             </Tile>
           </div>
-          <p className="m-0 text-xs leading-[17px] text-muted-foreground">Maré sobre o nível de redução da Marinha: não comparar com a altitude do terreno.</p>
         </section>
 
         {showLand && (
           <section aria-label="Terreno" className="flex flex-col gap-2">
             <H3 icon={<Mountain />}>Terreno</H3>
             <div className="grid grid-cols-2 gap-2" data-testid="terrain">
-              <Tile label="Altitude" sub={a.terrain ? 'PE3D (MDT 1 m) · cota relativa' : 'fora da cobertura do PE3D'}>
+              <Tile label="Altitude" sub={a.terrain ? (detail ? 'PE3D (MDT 1 m) · cota relativa' : 'cota relativa') : 'fora da cobertura do PE3D'}>
                 {a.terrain?.elevationM != null ? <>{num(a.terrain.elevationM, 1)}<Unit>m</Unit></> : '—'}
               </Tile>
               <Tile label="Até a costa" sub={a.terrain?.distanceToCoastKm != null ? 'distância em linha reta' : 'sem linha de costa no MAPi'}>
@@ -170,9 +181,11 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
           </section>
         )}
 
-        <p className="m-0 text-[9px] leading-3 text-muted-foreground">
+        <OnlyInDetail>
+        <p data-testid="location-attribution" className="m-0 text-[9px] leading-3 text-muted-foreground">
           {citesCemaden ? `${a.attribution ?? CEMADEN} · maré DHN/TabuaMare · terreno PE3D · tempo Open-Meteo` : 'Chuva e tempo Open-Meteo (reanálise) · maré DHN/TabuaMare · terreno PE3D'}
         </p>
+        </OnlyInDetail>
       </div>
 
       <footer className="flex gap-2 border-t border-border px-4 py-3">
