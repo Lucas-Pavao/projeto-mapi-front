@@ -6,7 +6,7 @@ import { sensorsService } from '@/features/sensors/services/sensors.service';
 import { predictionsService } from '@/features/points/services/predictions.service';
 import { publicRiskService } from '@/features/public-risk/services/public-risk.service';
 import { modelService } from '@/features/model/services/model.service';
-import { RISK_MEANING, formatProbability } from '@/components/risk/risk';
+import { formatProbability } from '@/components/risk/risk';
 import { alertaService } from '@/features/alerta/services/alerta.service';
 import { alertaPontoSchema } from '@/features/alerta/schemas/alerta.schema';
 import { ALERTA_FIXTURES } from './alerta';
@@ -41,9 +41,11 @@ describe('handlers MSW (dados sintéticos)', () => {
     expect(formatProbability(unknown?.riskLevel, unknown?.probability)).toBeNull();
     expect(s.items.every((p) => p.modelValidationStatus === 'NOT_VALIDATED')).toBe(true);
   });
-  it('risco público devolve RISK_MEANING sem reescrever; fora da RMR dá 422', async () => {
+  it('Minha rua em modo sombra: nível SEM_DADO "em teste", sem probabilidade; fora da RMR dá 422', async () => {
     const r = await publicRiskService.nearby(-8.05, -34.9);
-    expect(r.meaning).toBe(RISK_MEANING[r.nearestPoint!.riskLevel]);
+    expect(r.inTest).toBe(true);
+    expect(r.nearestPoint?.level).toBe('SEM_DADO');
+    expect(JSON.stringify(r)).not.toMatch(/robability|riskLevel/);
     await expect(publicRiskService.nearby(0, 0)).rejects.toMatchObject({ response: { status: 422 } });
   });
   it('simulação é ilustrativa', async () => {

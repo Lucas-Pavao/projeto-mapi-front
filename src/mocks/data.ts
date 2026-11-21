@@ -10,7 +10,6 @@ import type { ModelEvaluation } from '@/features/model/schemas/model.schema';
 import type { FloodReport } from '@/features/reports/schemas/report.schema';
 import type { IngestionSource, UserSummary } from '@/features/admin/schemas/admin.schema';
 import type { PublicRisk } from '@/features/public-risk/schemas/public-risk.schema';
-import { RISK_MEANING } from '@/components/risk/risk';
 
 const MIN = 60_000;
 const ago = (minutes: number) => new Date(Date.now() - minutes * MIN).toISOString();
@@ -118,12 +117,14 @@ export const users: UserSummary[] = [
   { id: 4, name: null, email: null, role: 'USER', active: true, lastLoginAt: null }, // criado antes da V19: sem e-mail nem nome
 ];
 
+/** DADOS SINTÉTICOS de GET /api/public/risk: modo sombra (o alerta está em teste), como no serviço hoje. */
 export const publicRisk = (): PublicRisk => ({
-  nearestPoint: { slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', distanceM: 300, riskLevel: 'MEDIUM', issuedAt: ago(10), validUntil: null, degradationReason: null },
+  nearestPoint: { slug: SYNTHETIC_SLUG, name: 'Sintético: ponto de teste', distanceM: 300, level: 'SEM_DADO', worstHorizonHours: null, issuedAt: null, reason: 'EM_TESTE' },
   rainLastHourMm: 3.2,
   rainStationId: 'SINTETICO-PLUV-01',
-  modelValidationStatus: 'NOT_VALIDATED',
-  meaning: RISK_MEANING.MEDIUM,
+  experimental: true,
+  inTest: true,
+  meaning: 'O alerta de alagamento ainda está em teste. Fique de olho na chuva e siga as orientações da Defesa Civil.',
 });
 
 export const ingestionRuns = [
