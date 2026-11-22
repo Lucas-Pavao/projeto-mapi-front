@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { degradationReasonSchema, isoSchema, modelValidationStatusSchema, pageOf, riskLevelSchema } from '@/lib/apiSchemas';
+import { isoSchema, modelValidationStatusSchema, pageOf } from '@/lib/apiSchemas';
 
 /** Tipos de regra que o operador cria. */
 export const ruleKindSchema = z.enum(['RISK_LEVEL', 'RIVER_STAGE', 'TIDE_ABOVE', 'RAIN_RATE', 'SENSOR_STALE', 'PREDICTION_UNAVAILABLE']);
@@ -17,8 +17,10 @@ export const alertSchema = z.object({
   title: z.string(),
   detail: z.string().nullable().optional(),
   observedValue: z.number().nullable().optional(),
-  riskLevel: riskLevelSchema.nullable().optional(),
-  degradationReason: degradationReasonSchema.nullable().optional(),
+  /** Nível do alerta por regressão (ALERTA, ATENCAO, SEM_ALERTA, SEM_DADO); alertas antigos guardam a classe do classificador retirado. */
+  riskLevel: z.string().nullable().optional(),
+  /** Motivo do SEM_DADO (ou o motivo antigo de previsão indisponível). */
+  degradationReason: z.string().nullable().optional(),
   modelValidationStatus: modelValidationStatusSchema.nullable().optional(),
   triggeredAt: isoSchema,
   acknowledgedAt: isoSchema.nullable().optional(),

@@ -16,25 +16,25 @@ afterAll(() => server.close());
 const lista = async () => within(await screen.findByRole('list', { name: 'Lista de alertas' }));
 
 describe('AlertsPage: alertas', () => {
-  it('lista os abertos com severidade, risco com rótulo experimental e UNKNOWN sem %', async () => {
+  it('lista os abertos com severidade e o nível do alerta por regressão; sem dado com motivo; sem porcentagem', async () => {
     renderPage(<AlertsPage />);
-    const alto = (await (await lista()).findByText('Sintético: risco alto no ponto de teste')).closest('li')!;
-    expect(within(alto).getByText('Crítico')).toBeInTheDocument();
-    expect(within(alto).getByText('Alto')).toBeInTheDocument();
-    expect(within(alto).getByText(/Previsão experimental/)).toBeInTheDocument();
-    const unk = (await lista()).getByText('Sintético: previsão indisponível').closest('li')!;
-    expect(unk.querySelector('[data-risk="UNKNOWN"]')).toHaveTextContent('Previsão indisponível');
-    expect(unk.textContent).not.toMatch(/%/);
-    expect(within(unk).getByText(/o modelo demorou demais.*Isto não é queda de risco/)).toBeInTheDocument();
-    expect(within(unk).queryByText(/Previsão experimental/)).toBeNull();
+    const alerta = (await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm')).closest('li')!;
+    expect(within(alerta).getByText('Crítico')).toBeInTheDocument();
+    expect(within(alerta).getByTestId('alert-level')).toHaveTextContent('Alerta');
+    expect(within(alerta).getByText('Experimental')).toBeInTheDocument();
+    expect(alerta).toHaveTextContent('Alerta experimental (chuva prevista + balde), não validado.');
+    const sd = (await lista()).getByText('Sintético: alerta sem dado').closest('li')!;
+    expect(within(sd).getByTestId('alert-level')).toHaveTextContent('Sem dado');
+    expect(sd).toHaveTextContent(/Motivo: previsão fora/);
+    expect(sd.textContent).not.toMatch(/%|Sem alerta|risco baixo/);
   });
 
   it('reconhecer chama POST /ack e avisa', async () => {
     let acked: string | null = null;
     server.use(http.post<{ id: string }>('/api/alerts/:id/ack', ({ params }) => { acked = params.id; return HttpResponse.json({ id: Number(params.id), kind: 'RISK_LEVEL', severity: 'CRITICAL', title: 'x', triggeredAt: '2026-10-21T12:00:00Z', acknowledgedAt: '2026-10-21T12:05:00Z' }); }));
     renderPage(<AlertsPage />);
-    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
-    fireEvent.click(screen.getByRole('button', { name: /Reconhecer alerta: Sintético: risco alto/ }));
+    await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm');
+    fireEvent.click(screen.getByRole('button', { name: /Reconhecer alerta: Sintético: alerta em 1 h/ }));
     await waitFor(() => expect(acked).toBe('1'));
     expect(await screen.findByText('Alerta reconhecido.')).toBeInTheDocument();
   });
@@ -42,7 +42,7 @@ describe('AlertsPage: alertas', () => {
   it('403 no ack explica permissão/sessão', async () => {
     server.use(http.post('/api/alerts/:id/ack', () => HttpResponse.json({}, { status: 403 })));
     renderPage(<AlertsPage />);
-    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
+    await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm');
     fireEvent.click(screen.getAllByRole('button', { name: /Reconhecer alerta/ })[0]);
     expect(await screen.findByText(/Sem permissão para reconhecer o alerta/)).toBeInTheDocument();
   });
@@ -58,11 +58,11 @@ describe('AlertsPage: alertas', () => {
 
   it('filtros em pílula mostram a contagem e filtram a lista', async () => {
     renderPage(<AlertsPage />);
-    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
-    expect(screen.getByRole('radio', { name: /Risco 2/ })).toBeInTheDocument();
+    await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm');
+    expect(screen.getByRole('radio', { name: /Alagamento 2/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /Sensores 1/ })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('radio', { name: /Sensores/ }));
-    expect((await lista()).queryByText('Sintético: risco alto no ponto de teste')).toBeNull();
+    expect((await lista()).queryByText('Sintético: alerta em 1 h · lâmina 17,7 cm')).toBeNull();
     expect((await lista()).getByText('Sintético: pluviômetro sem resposta')).toBeInTheDocument();
   });
 
@@ -79,7 +79,7 @@ describe('AlertsPage: alertas', () => {
   it('alerta pelo stream entra na lista e avisa', async () => {
     server.use(liveStreamHandler({ heartbeatMs: 1000, maxBeats: 1, extraDelayMs: 300, extra: [{ event: 'alert', data: { id: 50, kind: 'RAIN_RATE', severity: 'WARNING', title: 'Sintético: chuva forte ao vivo', triggeredAt: new Date().toISOString() } }] }));
     renderPage(<AlertsPage />);
-    await (await lista()).findByText('Sintético: risco alto no ponto de teste');
+    await (await lista()).findByText('Sintético: alerta em 1 h · lâmina 17,7 cm');
     expect(await (await lista()).findByText('Sintético: chuva forte ao vivo', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByText('Novo alerta: Sintético: chuva forte ao vivo')).toBeInTheDocument();
   });
@@ -161,8 +161,8 @@ describe('AlertsPage: painel de regras', () => {
     server.use(http.put<{ id: string }>('/api/alert-rules/:id', async ({ params, request }) => { put = { id: params.id, body: await request.json() }; return HttpResponse.json({ ...(put.body as object), id: Number(params.id), createdBy: 'x', createdAt: '2026-10-21T12:00:00Z' }); }));
     renderPage(<AlertsPage />);
     const grupo = await screen.findByRole('radiogroup', { name: 'Nível mínimo' });
-    await waitFor(() => expect(within(grupo).getByRole('radio', { name: 'Só alto' })).toHaveAttribute('aria-checked', 'true'));
-    fireEvent.click(within(grupo).getByRole('radio', { name: 'Moderado ou alto' }));
+    await waitFor(() => expect(within(grupo).getByRole('radio', { name: 'Só alerta' })).toHaveAttribute('aria-checked', 'true'));
+    fireEvent.click(within(grupo).getByRole('radio', { name: 'Atenção ou alerta' }));
     await waitFor(() => expect(put?.id).toBe('1'));
     expect(put!.body).toMatchObject({ kind: 'RISK_LEVEL', minRisk: 'MEDIUM' });
     for (const nome of ['E-mail', 'WhatsApp', 'Telegram']) expect(screen.getByRole('checkbox', { name: new RegExp(nome) })).toBeDisabled();

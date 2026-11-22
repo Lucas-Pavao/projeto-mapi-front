@@ -1,14 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, within, fireEvent, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
 import { EventsPage } from './EventsPage';
 
+const auth = vi.hoisted(() => ({ role: 'ADMIN' }));
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role: auth.role } }) }));
+
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  auth.role = 'ADMIN';
 });
 afterAll(() => server.close());
 
@@ -23,21 +27,30 @@ describe('EventsPage', () => {
     expect(within(resumo).getByRole('link', { name: 'Gerar relatório do evento' })).toHaveAttribute('href', '/relatorio');
   });
 
-  it('faixa por ponto: UNKNOWN sem %, rótulo experimental na legenda, nome do ponto vem da lista', async () => {
+  it('faixa por ponto pelo alerta por regressão: alerta com lâmina, sem dado nunca "sem alerta", legenda e selo Experimental', async () => {
     renderPage(<EventsPage />);
-    const strip = await screen.findByRole('group', { name: 'Risco de Sintético: ponto de teste' });
-    const unk = Array.from(strip.querySelectorAll('button[data-risk="UNKNOWN"]'));
-    expect(unk.length).toBeGreaterThan(0);
-    expect(unk.every((b) => !/%/.test(b.getAttribute('aria-label') ?? ''))).toBe(true);
-    expect(unk[0].getAttribute('aria-label')).toMatch(/Previsão indisponível/);
-    const alto = strip.querySelector('button[data-risk="HIGH"]');
-    expect(alto?.getAttribute('aria-label')).toMatch(/Alto \d+,\d%/);
-    expect(screen.getByText(/Previsão experimental/)).toBeInTheDocument();
+    const strip = await screen.findByRole('group', { name: 'Alerta de Sintético: ponto de teste' });
+    const alerta = strip.querySelector('button[data-level="ALERTA"]');
+    expect(alerta?.getAttribute('aria-label')).toMatch(/Alerta · lâmina 17,7 cm/);
+    const semDado = Array.from(strip.querySelectorAll('button[data-level="SEM_DADO"]'));
+    expect(semDado.length).toBeGreaterThan(0);
+    expect(semDado.every((b) => /Sem dado/.test(b.getAttribute('aria-label') ?? ''))).toBe(true);
+    expect(screen.getByText(/em alerta por \d+ min/)).toBeInTheDocument();
+    expect(screen.getAllByTestId('selo-experimental').length).toBeGreaterThan(0);
+    expect(document.body.textContent).not.toMatch(/risco baixo|seguro|%/i);
+    expect(await screen.findByText('Sintético: ponto de teste: alerta em 1 h · lâmina 17,7 cm')).toBeInTheDocument();
+  });
+
+  it('visitante: o alerta está em teste e as faixas por ponto não aparecem', async () => {
+    auth.role = 'USER';
+    renderPage(<EventsPage />);
+    expect(await screen.findByText(/está em teste: só o administrador vê/)).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /^Alerta de/ })).toBeNull();
   });
 
   it('clicar numa coluna leva o resumo àquele momento; o teclado usa o controle de momento', async () => {
     renderPage(<EventsPage />);
-    const strip = await screen.findByRole('group', { name: 'Risco de Sintético: ponto de teste' });
+    const strip = await screen.findByRole('group', { name: 'Alerta de Sintético: ponto de teste' });
     expect(screen.getByRole('complementary', { name: 'Resumo do evento' })).toHaveTextContent(/\(agora\)/);
     const cols = strip.querySelectorAll('button');
     fireEvent.click(cols[10]);
@@ -50,7 +63,7 @@ describe('EventsPage', () => {
     server.use(http.get('/api/events/timeline', ({ request }) => {
       const u = new URL(request.url);
       spans.push((Date.parse(u.searchParams.get('to')!) - Date.parse(u.searchParams.get('from')!)) / 3_600_000);
-      return HttpResponse.json({ from: u.searchParams.get('from'), to: u.searchParams.get('to'), stepMinutes: 10, rain: [], tide: { harbor: 'pe02', points: [{ t: u.searchParams.get('from'), v: 1 }] }, river: [], risk: [] });
+      return HttpResponse.json({ from: u.searchParams.get('from'), to: u.searchParams.get('to'), stepMinutes: 10, rain: [], tide: { harbor: 'pe02', points: [{ t: u.searchParams.get('from'), v: 1 }] }, river: [] });
     }));
     renderPage(<EventsPage />);
     await waitFor(() => expect(spans).toEqual([24]));
@@ -62,7 +75,7 @@ describe('EventsPage', () => {
   it('vazio total e erro', async () => {
     server.use(http.get('/api/events/timeline', ({ request }) => {
       const u = new URL(request.url);
-      return HttpResponse.json({ from: u.searchParams.get('from'), to: u.searchParams.get('to'), stepMinutes: 10, rain: [], tide: { harbor: 'pe02', points: [] }, river: [], risk: [], floodEvents: [] });
+      return HttpResponse.json({ from: u.searchParams.get('from'), to: u.searchParams.get('to'), stepMinutes: 10, rain: [], tide: { harbor: 'pe02', points: [] }, river: [], floodEvents: [] });
     }));
     const { unmount } = renderPage(<EventsPage />);
     expect(await screen.findByText('Sem dados nesta janela.')).toBeInTheDocument();

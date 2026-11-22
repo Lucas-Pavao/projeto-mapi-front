@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Nav } from './Nav';
 import { initTheme } from '@/lib/theme';
+import { DetailModeProvider } from '@/lib/detailMode';
 
 let role: string | undefined = 'ADMIN';
 const logout = vi.fn(async () => {});
@@ -19,16 +20,28 @@ afterEach(() => {
 const renderNav = (path = '/alertas') =>
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <MemoryRouter initialEntries={[path]}>
-        <Nav />
-      </MemoryRouter>
+      <DetailModeProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <Nav />
+        </MemoryRouter>
+      </DetailModeProvider>
     </QueryClientProvider>,
   );
 
+
+/** Abre o grupo da barra e devolve o menu. */
+const openGroup = (name: string) => {
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }));
+  return screen.getByRole('menu', { name });
+};
+
 describe('Nav', () => {
-  it('marca a página atual e não menciona "simulação" como status', () => {
+  it('marca o grupo da tela atual e a página dentro dele; não menciona "simulação" como status', () => {
     const { container } = renderNav('/alertas');
-    expect(screen.getByRole('link', { name: /Alertas/ })).toHaveAttribute('aria-current', 'page');
+    const op = screen.getByRole('button', { name: /^Operação/ });
+    expect(op).toHaveAttribute('data-current', 'true');
+    expect(screen.getByRole('button', { name: /^Análise/ })).not.toHaveAttribute('data-current');
+    expect(within(openGroup('Operação')).getByRole('menuitem', { name: /Alertas/ })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: /Mapa$/ })).not.toHaveAttribute('aria-current');
     expect(container.textContent).not.toMatch(/simulação/i);
   });
@@ -53,12 +66,13 @@ describe('Nav', () => {
     expect(screen.getByRole('link', { name: /Mapa/ })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Usuários e perfis/ })).toBeNull();
   });
-  it('OPERADOR vê Alertas e Relatos, mas não admin', () => {
+  it('OPERADOR vê Alertas e Relatos, mas não o grupo Gestão', () => {
     role = 'OPERADOR';
     renderNav();
-    expect(screen.getByRole('link', { name: /Alertas/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Relatos/ })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /Dados/ })).toBeNull();
+    const op = openGroup('Operação');
+    expect(within(op).getByRole('menuitem', { name: /Alertas/ })).toBeInTheDocument();
+    expect(within(op).getByRole('menuitem', { name: /Relatos/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Gestão/ })).toBeNull();
   });
   it('perfil ausente ou desconhecido é tratado como USER', () => {
     role = 'ROLE_X';
@@ -67,23 +81,40 @@ describe('Nav', () => {
   });
   it('ADMIN vê tudo e o menu do avatar leva a Usuários e tem Sair', () => {
     renderNav();
-    expect(screen.getByRole('link', { name: /Dados/ })).toBeInTheDocument();
+    const g = openGroup('Gestão');
+    for (const n of ['Dados', 'Pontos', 'Usuários']) expect(within(g).getByRole('menuitem', { name: n })).toBeInTheDocument();
+    fireEvent.keyDown(g, { key: 'Escape' });
     fireEvent.click(screen.getByRole('button', { name: /Conta e perfis/ }));
     expect(screen.getByRole('link', { name: /Usuários e perfis/ })).toHaveAttribute('href', '/admin/usuarios');
     fireEvent.click(within(document.getElementById('menu-conta')!).getByRole('button', { name: 'Sair' }));
     expect(logout).toHaveBeenCalled();
   });
-  it('selos do protótipo: alertas abertos e relatos pendentes, só para OPERADOR em diante', () => {
+  it('o contador de alertas vai no grupo Operação; dentro do menu, alertas abertos e relatos pendentes', () => {
     role = 'OPERADOR';
     renderNav();
-    expect(screen.getByRole('link', { name: /Alertas/ })).toHaveTextContent('19 abertos');
-    expect(screen.getByRole('link', { name: /Relatos/ })).toHaveTextContent('3 pendentes');
+    expect(screen.getByRole('button', { name: /^Operação/ })).toHaveTextContent('19 alertas abertos');
+    const op = openGroup('Operação');
+    expect(within(op).getByRole('menuitem', { name: /Alertas/ })).toHaveTextContent('19 abertos');
+    expect(within(op).getByRole('menuitem', { name: /Relatos/ })).toHaveTextContent('3 pendentes');
   });
-  it('a barra tem os itens do protótipo na ordem, sem Sensores', () => {
+  it('a barra tem 4 grupos na ordem: Mapa · Análise · Operação · Gestão; cada grupo com os itens da seção 5.11', () => {
     renderNav('/map');
     const bar = screen.getByRole('navigation', { name: 'Principal' });
-    const nomes = within(bar).getAllByRole('link').map((l) => l.textContent?.replace(/\d+ (abertos|pendentes)/, '').trim()).filter(Boolean);
-    expect(nomes).toEqual(['Mapa', 'Alertas', 'Evento', 'Simulador', 'Chuva', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatos', 'Relatório']);
+    expect(within(bar).getAllByRole('link').map((l) => l.textContent?.trim()).filter((t) => t === 'Mapa')).toEqual(['Mapa']);
+    const grupos = within(bar).getAllByRole('button').filter((b) => b.getAttribute('aria-haspopup') === 'menu').map((b) => b.textContent?.replace(/\d+ alertas abertos/, '').trim());
+    expect(grupos).toEqual(['Análise', 'Operação', 'Gestão']);
+    const nomes = (g: string) => within(openGroup(g)).getAllByRole('menuitem').map((l) => l.textContent?.replace(/\d+ (abertos|pendentes)/, '').trim());
+    expect(nomes('Análise')).toEqual(['Evento', 'Chuva', 'Maré', 'Modelo', 'Simulador', 'Sensores']);
+    expect(nomes('Operação')).toEqual(['Alertas', 'Relatos', 'Relatório']);
+    expect(nomes('Gestão')).toEqual(['Dados', 'Pontos', 'Usuários']);
+  });
+  it('chave Detalhes: desligada por padrão, liga e fica salva', () => {
+    renderNav('/map');
+    const sw = screen.getByRole('switch', { name: /Detalhes/ });
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+    fireEvent.click(sw);
+    expect(sw).toHaveAttribute('aria-checked', 'true');
+    expect(localStorage.getItem('mapi.detalhes')).toBe('1');
   });
 });
 
@@ -120,30 +151,35 @@ describe('Nav no celular: menu', () => {
   });
 });
 
-describe('Nav: menu Mais (641-1439 px)', () => {
-  it('itens não prioritários ficam no Mais; aria-expanded, Esc fecha e devolve o foco', () => {
+describe('Nav: menus dos grupos com teclado', () => {
+  it('seta para baixo abre e foca o 1º item; setas andam; Esc fecha e devolve o foco', () => {
     role = 'ADMIN';
     renderNav('/map');
-    const mais = screen.getByRole('button', { name: /Mais/ });
-    expect(mais).toHaveAttribute('aria-expanded', 'false');
-    expect(mais.className).toMatch(/h-11/);
-    fireEvent.click(mais);
-    expect(mais).toHaveAttribute('aria-expanded', 'true');
-    const menu = document.getElementById('menu-mais')!;
-    for (const n of ['Sensores', 'Simulador', 'Chuva', 'Modelo', 'Maré', 'Dados', 'Pontos', 'Relatório']) expect(within(menu).getByRole('link', { name: n })).toBeInTheDocument();
-    for (const n of ['Mapa', 'Alertas', 'Evento', 'Relatos']) expect(within(menu).queryByRole('link', { name: n })).toBeNull();
-    fireEvent.keyDown(within(menu).getAllByRole('link')[0], { key: 'Escape' });
-    expect(document.getElementById('menu-mais')).toBeNull();
-    expect(mais).toHaveAttribute('aria-expanded', 'false');
-    expect(document.activeElement).toBe(mais);
+    const btn = screen.getByRole('button', { name: /^Análise/ });
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    expect(btn.className).toMatch(/h-11/);
+    fireEvent.keyDown(btn, { key: 'ArrowDown' });
+    const menu = screen.getByRole('menu', { name: 'Análise' });
+    const itens = within(menu).getAllByRole('menuitem');
+    expect(document.activeElement).toBe(itens[0]);
+    fireEvent.keyDown(itens[0], { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(itens[1]);
+    fireEvent.keyDown(itens[1], { key: 'ArrowUp' });
+    expect(document.activeElement).toBe(itens[0]);
+    fireEvent.keyDown(itens[0], { key: 'End' });
+    expect(document.activeElement).toBe(itens[itens.length - 1]);
+    fireEvent.keyDown(itens[0], { key: 'Escape' });
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(btn).toHaveAttribute('aria-expanded', 'false');
+    expect(document.activeElement).toBe(btn);
   });
-  it('respeita o perfil: USER não vê Dados nem Pontos no Mais', () => {
+  it('respeita o perfil: USER não vê Gestão; em Operação, só Relatório', () => {
     role = 'USER';
     renderNav('/map');
-    fireEvent.click(screen.getByRole('button', { name: /Mais/ }));
-    const menu = document.getElementById('menu-mais')!;
-    expect(within(menu).queryByRole('link', { name: 'Dados' })).toBeNull();
-    expect(within(menu).getByRole('link', { name: 'Maré' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Gestão/ })).toBeNull();
+    expect(within(openGroup('Análise')).getByRole('menuitem', { name: 'Maré' })).toBeInTheDocument();
+    fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
+    expect(within(openGroup('Operação')).getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Relatório']);
   });
 });
 

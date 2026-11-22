@@ -4,7 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { ACCENT_LABEL } from '@/lib/theme';
 
 const btn =
-  'flex h-11 items-center justify-center gap-1.5 rounded-lg border border-border bg-transparent text-xs leading-4 font-semibold text-foreground hover:bg-muted md:h-9';
+  'mapi-press flex h-11 items-center justify-center gap-1.5 rounded-lg border border-border bg-transparent text-xs leading-4 font-semibold text-foreground hover:bg-muted md:h-9';
 
 /** Alternar tema (escuro/claro) e cor de destaque (Capibaribe, Atlântico, Areia). */
 export const ThemeControls: React.FC = () => {

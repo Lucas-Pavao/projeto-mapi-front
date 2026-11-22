@@ -37,8 +37,8 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
   };
 
   return (
-    <ModalDialog label={`Detalhes do sensor ${sensor.stationName ?? sensor.sensorId}`} onClose={onClose} className="absolute inset-0 z-50 bg-background/80 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-300">
-      <Card className="w-full max-w-4xl max-h-[90vh] shadow-elevation-overlay border-border bg-card overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col ring-1 ring-border">
+    <ModalDialog label={`Detalhes do sensor ${sensor.stationName ?? sensor.sensorId}`} onClose={onClose} className="mapi-enter-backdrop absolute inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-[2px] sm:p-6">
+      <Card className="mapi-enter-modal flex max-h-[90vh] w-full max-w-4xl origin-center flex-col overflow-hidden border-border bg-card shadow-[var(--elevation-overlay),var(--surface-highlight)]">
         <CardHeader className="pb-4 flex flex-row items-center justify-between border-b border-border bg-muted shrink-0">
           <div className="flex items-center gap-4 text-foreground">
             <div className={cn(
@@ -80,7 +80,7 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground font-bold">Leitura atual</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-6xl font-bold text-foreground">
+                    <span className="font-mono text-6xl font-bold tabular-nums text-foreground">
                       {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(2) : (sensor.value ?? '--')}
                     </span>
                     <span className="text-xl font-bold text-muted-foreground">
@@ -229,10 +229,10 @@ export const SensorDetailCard: React.FC<SensorDetailCardProps> = ({ sensor, stat
                   </div>
                </div>
                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="bg-muted border-border text-muted-foreground hover:text-foreground text-2xs font-bold px-4 h-10 rounded-xl transition-all">
+                  <Button variant="outline" size="sm" className="bg-muted border-border text-muted-foreground hover:text-foreground text-2xs font-bold px-4 h-10 rounded-xl">
                     Copiar
                   </Button>
-                  <Button variant="outline" size="sm" className="bg-muted border-border text-muted-foreground hover:text-foreground text-2xs font-bold px-4 h-10 rounded-xl transition-all">
+                  <Button variant="outline" size="sm" className="bg-muted border-border text-muted-foreground hover:text-foreground text-2xs font-bold px-4 h-10 rounded-xl">
                     Navegar
                   </Button>
                </div>

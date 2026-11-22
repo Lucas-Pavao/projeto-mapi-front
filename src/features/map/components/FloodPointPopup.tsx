@@ -1,15 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { X } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { PredictionProvenance } from '@/components/risk/PredictionProvenance';
-import { RainForecastSummary } from '@/components/risk/RainForecastSummary';
-import { RISK_MEANING, showsExperimentalLabel, getRiskVisual } from '@/components/risk/risk';
 import type { FloodPointResponseDTO, PreciseDataResponse } from '../types';
-import { PredictionUnavailableNotice } from './PredictionUnavailableNotice';
 import { fmtNum } from '../utils/overview';
-import { PointAlertTabs } from '@/features/alerta/components/PointAlertTabs';
+import { PointRegressaoBlock } from '@/features/alagamento/components/PointRegressaoBlock';
 
 interface Props {
   point: FloodPointResponseDTO;
@@ -18,25 +12,22 @@ interface Props {
   onClose: () => void;
 }
 
-const tile = 'rounded-lg bg-muted p-2';
+const tile = 'rounded-lg bg-secondary p-2';
 const tileLabel = 'text-[11px] leading-[14px] text-muted-foreground';
 const tileValue = 'whitespace-nowrap font-mono text-sm leading-5 font-semibold';
 
 /** Resumo do ponto crítico selecionado (popup do mapa, 300 px; Main.dc.html). Os números vêm do status em tempo real do ponto. */
 export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStatus = false, onClose }) => {
-  const prediction = status?.floodPrediction ?? point.floodPrediction;
   const precise = status?.preciseData;
-  const level = prediction?.riskLevel;
-  const unknown = !getRiskVisual(level).showsProbability;
   const rain3h = precise?.historicalAggregates?.rain3h;
   const tide = precise?.tideHeightTabuaMare;
   const now = precise?.precipitation;
   const dash = isFetchingStatus ? '…' : '—';
   return (
-    <section aria-label={`Resumo do ponto ${point.name}`} className="box-border flex w-[300px] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
+    <section aria-label={`Resumo do ponto ${point.name}`} className="mapi-enter-modal box-border flex w-[18.75rem] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold text-muted-foreground">Ponto crítico</span>
-        <button type="button" onClick={onClose} aria-label="Fechar resumo" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+        <button type="button" onClick={onClose} aria-label="Fechar resumo" className="mapi-press flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
@@ -47,20 +38,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
           {point.description ? ` · ${point.description}` : ''}
         </p>
       </div>
-      <PointAlertTabs
-        slug={point.slug}
-        pointName={point.name}
-        fallback={<RainForecastSummary prediction={prediction} />}
-        experimental={
-          <>
-            <RiskBadge level={level} probability={prediction?.floodProbability} className="self-start" />
-            {showsExperimentalLabel(prediction) && <ExperimentalBadge className="self-start" />}
-            <PredictionProvenance prediction={prediction} />
-            <RainForecastSummary prediction={prediction} />
-            {unknown ? <PredictionUnavailableNotice prediction={prediction} className="space-y-0.5 text-[13px] leading-[18px]" /> : <p className="m-0 text-[13px] leading-[18px]">{RISK_MEANING[level ?? 'UNKNOWN']}</p>}
-          </>
-        }
-      />
+      <PointRegressaoBlock slug={point.slug} />
       <div className="grid grid-cols-3 gap-1.5">
         <div className={tile}>
           <div className={tileLabel}>Chuva 3 h</div>
@@ -75,7 +53,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
           <div className={tileValue}>{now != null ? <>{fmtNum(now)} <span className="text-[11px]">mm/h</span></> : dash}</div>
         </div>
       </div>
-      <Link to={`/pontos/${point.slug}`} className="flex h-9 items-center justify-center rounded-lg bg-primary text-[13px] leading-4 font-bold text-primary-foreground hover:bg-primary/90">
+      <Link to={`/pontos/${point.slug}`} className="mapi-press flex h-9 items-center justify-center rounded-lg bg-primary text-[13px] leading-4 font-bold text-primary-foreground shadow-elevation-raised hover:bg-primary/90">
         Abrir análise completa
       </Link>
     </section>

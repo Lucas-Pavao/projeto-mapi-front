@@ -13,7 +13,7 @@ interface AdminPointListProps {
 
 const coord = (v: number) => v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
 
-/** Lista de pontos cadastrados: seleção para editar e interruptor de ativo (entra ou não no ciclo de previsão). */
+/** Lista de pontos cadastrados: seleção para editar e interruptor de ativo (entra ou não no ciclo do alerta). */
 export const AdminPointList: React.FC<AdminPointListProps> = ({ points, selectedSlug, togglingSlug, onSelect, onToggle }) => (
   <ul aria-label="Pontos críticos" className="custom-scrollbar m-0 flex min-h-0 flex-1 list-none flex-col gap-1 overflow-y-auto p-2">
     {points.map((p) => {

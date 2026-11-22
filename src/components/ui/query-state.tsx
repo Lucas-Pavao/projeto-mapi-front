@@ -1,5 +1,5 @@
 import React from 'react';
-import { CircleAlert, Inbox, Loader2 } from 'lucide-react';
+import { CircleAlert, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface QueryLike<T> {
@@ -28,8 +28,12 @@ export function QueryState<T>({ query, isEmpty, what, emptyTitle, emptyHint, chi
   if (query.isPending) {
     return (
       <div role="status" className={box}>
-        <Loader2 className="size-5 animate-spin text-muted-foreground" aria-hidden="true" />
-        <p className="text-body text-muted-foreground">Carregando {what}…</p>
+        <div aria-hidden="true" className="flex w-full max-w-xs flex-col gap-2">
+          <div className="h-2.5 w-3/4 animate-pulse rounded-full bg-muted" />
+          <div className="h-2.5 w-full animate-pulse rounded-full bg-muted [animation-delay:120ms]" />
+          <div className="h-2.5 w-2/3 animate-pulse rounded-full bg-muted [animation-delay:240ms]" />
+        </div>
+        <p className="mt-1 text-caption text-muted-foreground">Carregando {what}…</p>
       </div>
     );
   }

@@ -1,9 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { CloudRain, OctagonAlert, TriangleAlert, WifiOff, Waves, type LucideIcon, DatabaseZap } from 'lucide-react';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
+import { CHIP_CLASS, REASON_SHORT, toneOf } from '@/features/alagamento/utils/alagamentoText';
+import type { FloodLevel, FloodReason } from '@/features/alagamento/schemas/alagamento.schema';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { cn } from '@/lib/utils';
 import type { Alert, AlertKind, AlertSeverity } from '../schemas/alert.schema';
@@ -24,26 +23,33 @@ const ICON: Record<AlertKind, LucideIcon> = {
   SOURCE_STALE: DatabaseZap,
 };
 
+const LEVEL_TEXT: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };
+
 interface Props {
   alert: Alert;
   canAck: boolean;
   acking: boolean;
   isNew?: boolean;
   onAck: (id: number) => void;
+  /** Nome do ponto pelo slug (cadastro), para não mostrar 'Ponto AGAMENON_DERBY'. */
+  pointName?: string | null;
 }
 
+/** Valor observado só onde o detalhe não traz o número: rio e maré (m). Chuva e sensor parado já dizem no texto. */
+const OBSERVED_UNIT: Partial<Record<AlertKind, string>> = { RIVER_STAGE: 'm', TIDE_ABOVE: 'm' };
+
 /** Linha da Central de alertas: ícone por tipo, título, detalhe, hora e "Ciente". Lido fica sem destaque. */
-export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = false, onAck }) => {
+export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = false, onAck, pointName }) => {
   const sev = SEVERITY[a.severity];
   const Icon = ICON[a.kind];
   const open = !a.acknowledgedAt;
   const detail = [
     a.detail,
-    a.riskLevel === 'UNKNOWN' ? `Motivo: ${degradationText(a.degradationReason)}. Isto não é queda de risco.` : null,
-    a.observedValue != null ? `valor observado ${a.observedValue.toLocaleString('pt-BR')}` : null,
+    a.riskLevel === 'SEM_DADO' && a.degradationReason ? `Motivo: ${REASON_SHORT[a.degradationReason as FloodReason] ?? a.degradationReason}.` : null,
+    a.observedValue != null && OBSERVED_UNIT[a.kind] ? `observado ${a.observedValue.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${OBSERVED_UNIT[a.kind]}` : null,
   ].filter(Boolean).join(' · ');
   return (
-    <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3', open ? 'bg-muted' : 'bg-transparent')}>
+    <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3 transition-colors duration-150', open ? 'bg-muted' : 'bg-transparent hover:bg-muted/40')}>
       <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-[10px]', sev.tint, sev.tone)}>
         <Icon className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
         <span className="sr-only">{sev.label}</span>
@@ -52,24 +58,26 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className={cn('text-[14px] leading-5', open ? 'font-extrabold' : 'font-semibold')}>{a.title}</span>
           {isNew && open && <span className="h-[18px] rounded-full bg-primary px-1.5 text-[10px] font-bold leading-[18px] text-primary-foreground">NOVO</span>}
-          {a.riskLevel && <RiskBadge level={a.riskLevel} />}
-          {a.riskLevel && showsExperimentalLabel({ riskLevel: a.riskLevel, modelValidationStatus: a.modelValidationStatus }) && <ExperimentalBadge />}
+          {a.riskLevel && a.riskLevel in LEVEL_TEXT && (
+            <span data-testid="alert-level" className={cn('inline-flex h-5 items-center rounded-full border px-2 text-[11px] font-bold', CHIP_CLASS[toneOf(a.riskLevel as FloodLevel)])}>{LEVEL_TEXT[a.riskLevel as FloodLevel]}</span>
+          )}
+          {a.riskLevel && a.riskLevel in LEVEL_TEXT && <span className="inline-flex h-5 items-center rounded-md border border-warning/70 px-1.5 text-[10px] font-bold text-warning">Experimental</span>}
         </div>
         <div className="text-[12px] leading-4 text-muted-foreground">
           {detail}
-          {a.floodPointSlug && <>{detail ? ' · ' : ''}<Link to={`/pontos/${a.floodPointSlug}`} className="text-primary hover:underline">Ponto {a.floodPointSlug}</Link></>}
+          {a.floodPointSlug && <>{detail ? ' · ' : ''}<Link to={`/pontos/${a.floodPointSlug}`} className="text-primary hover:underline">{pointName ?? `Ponto ${a.floodPointSlug}`}</Link></>}
           {a.stationId && <>{detail || a.floodPointSlug ? ' · ' : ''}Estação <span className="font-mono">{a.stationId}</span></>}
           {!open && <>{' · '}Reconhecido por {a.acknowledgedBy ?? 'operador'} às {formatHoraCurta(a.acknowledgedAt) ?? '—'}</>}
         </div>
       </div>
-      <span className="font-mono text-[12px] font-semibold leading-5 text-muted-foreground">{formatHoraCurta(a.triggeredAt) ?? '—'}</span>
+      <span className="font-mono text-[12px] font-semibold leading-5 tabular-nums text-muted-foreground">{formatHoraCurta(a.triggeredAt) ?? '—'}</span>
       {open && canAck && (
         <button
           type="button"
           disabled={acking}
           onClick={() => onAck(a.id)}
           aria-label={`Reconhecer alerta: ${a.title}`}
-          className="h-11 cursor-pointer rounded-lg border border-input bg-transparent px-2.5 text-[12px] font-semibold leading-4 text-foreground hover:bg-card disabled:opacity-50 md:h-7"
+          className="mapi-press h-11 rounded-lg border border-input bg-transparent px-2.5 text-[12px] font-semibold leading-4 text-foreground hover:bg-card disabled:opacity-50 md:h-7"
         >
           {acking ? 'Enviando…' : 'Ciente'}
         </button>

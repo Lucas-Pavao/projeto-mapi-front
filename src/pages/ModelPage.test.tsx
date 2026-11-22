@@ -18,8 +18,7 @@ afterAll(() => server.close());
 
 const openF1 = () => {
   const r = renderPage(<ModelPage />);
-  fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
-  fireEvent.click(screen.getByRole('button', { name: /F1 · balde/ }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Avaliação F1' }));
   return r;
 };
 
@@ -34,7 +33,7 @@ describe('ModelPage', () => {
     expect(within(table).getByText('[0,402; 0,803]')).toBeInTheDocument();
     expect(screen.getByText('H1 inconclusivo · H2 inconclusivo')).toBeInTheDocument(); // class_h1 e class_h2 do arquivo
     expect(screen.getByRole('region', { name: 'Amostra e origem' })).toHaveTextContent('101'); // n_neg_bruto
-    expect(screen.getByText('Previsão experimental — modelo não validado')).toBeInTheDocument();
+    expect(screen.getByText('Experimental · não validado')).toBeInTheDocument();
   });
 
   it('nada inventado: números reais da avaliação F1 não aparecem quando o payload é outro', async () => {
@@ -93,53 +92,36 @@ describe('ModelPage', () => {
     expect(await screen.findByText('Não foi possível carregar a avaliação.', {}, { timeout: 3000 })).toBeInTheDocument();
   });
 
-  it('aba do xgb_v2: aviso de sintético, limiares do cartão e baselines', () => {
+  it('abas: Alagamento por regressão (padrão), Previsão de chuva, Avaliação F1; sem v2 × v3 nem xgb_v2', () => {
     renderPage(<ModelPage />);
-    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
-    expect(screen.getByRole('button', { name: /xgb_v2 · rótulo/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByTestId('synthetic-warning')).toHaveTextContent(/DADOS SINTÉTICOS/);
-    const limiares = screen.getByRole('region', { name: 'Limiares de risco' });
-    expect(limiares).toHaveTextContent('Moderado ≥ 1,6%');
-    expect(limiares).toHaveTextContent('Alto ≥ 24,4%');
-    const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
-    expect(base.querySelectorAll('[data-row]').length).toBeGreaterThanOrEqual(5);
-    expect(within(base).getByText('Nunca alaga')).toBeInTheDocument();
-    expect(screen.getAllByText(/cruza o zero/).length).toBeGreaterThan(0); // ablação com IC no zero
+    expect(screen.getAllByRole('tab').map((t) => t.textContent)).toEqual(['Alagamento por regressão', 'Previsão de chuva · dado medido', 'Avaliação F1']);
+    expect(screen.getByRole('tab', { name: 'Alagamento por regressão' })).toHaveAttribute('aria-selected', 'true');
+    expect(document.body.textContent).not.toMatch(/xgb_v2|logreg_v3|v2 × v3|rótulo sintético/);
   });
 
-  it('a sonda de probabilidade classifica com >= nos limiares', () => {
+  it('aba padrão: aviso curto com ⓘ, caminho em 4 blocos, validação 2.1 a 2.4 com IC e a frase do IC largo', () => {
     renderPage(<ModelPage />);
-    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
-    const slider = screen.getByRole('slider');
-    fireEvent.change(slider, { target: { value: '24' } });
-    expect(screen.getByTestId('probe-result')).toHaveTextContent('Moderado'); // 24,0% < 24,4%
-    fireEvent.change(slider, { target: { value: '25' } });
-    expect(screen.getByTestId('probe-result')).toHaveTextContent('Alto');
-    fireEvent.change(slider, { target: { value: '1' } });
-    expect(screen.getByTestId('probe-result')).toHaveTextContent('Baixo');
+    expect(screen.getByTestId('regressao-banner')).toHaveTextContent('Experimental · nenhum modelo aprende com rótulo de alagamento');
+    expect(within(screen.getByTestId('regressao-banner')).getByTestId('info-tip')).toHaveAttribute('aria-label', expect.stringMatching(/^Proposta de 20\/11/));
+    expect(within(screen.getByTestId('pipeline')).getAllByRole('listitem').map((l) => l.textContent)).toEqual([
+      expect.stringContaining('Chuva medida'), expect.stringContaining('rain_v1'), expect.stringContaining('Balde a 10 min'), expect.stringContaining('Regra fixa')]);
+    expect(screen.getByTestId('val-2.3')).toHaveTextContent('0 de 41 ponto-dias (12 dias)');
+    expect(screen.getByTestId('val-2.3')).toHaveTextContent('0%–26%');
+    expect(screen.getByTestId('val-2.4')).toHaveTextContent('41 de 41');
+    expect(screen.getByTestId('small-sample')).toHaveTextContent('o intervalo é largo');
+    expect(screen.getByTestId('never-fired')).toBeInTheDocument();
   });
 
-  it('trocar de métrica muda os números e a F1 e a volta ao v3 continuam acessíveis', () => {
+  it('aviso de chuva forte do rain_v1 e balde em 5 anos (Jaboatão sem terreno)', () => {
     renderPage(<ModelPage />);
-    fireEvent.click(screen.getByRole('tab', { name: /^xgb_v2/ }));
-    const base = screen.getByRole('region', { name: 'Comparação com os baselines' });
-    fireEvent.click(within(base).getByRole('radio', { name: 'Brier' }));
-    expect(within(base).getByText('0,037')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /F1 · balde/ }));
-    expect(screen.getByRole('button', { name: /F1 · balde/ })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: /xgb_v2 · rótulo/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Modelo em produção \(v3\)/ }));
-    expect(screen.getByRole('tab', { name: /v2 × v3/ })).toHaveAttribute('aria-selected', 'true');
-  });
-
-  it('abre no v3 com o v2 ao lado, a etiqueta de sintético, a antecedência e os resultados negativos', () => {
-    renderPage(<ModelPage />);
-    expect(screen.getByRole('tab', { name: /v2 × v3/ })).toHaveAttribute('aria-selected', 'true');
-    const cmp = screen.getByTestId('compare-v2-v3');
-    expect(cmp).toHaveTextContent(/DADOS SINTÉTICOS/);
-    expect(cmp).toHaveTextContent('Alaga nas próximas 6 h');
-    expect(within(cmp).getByRole('region', { name: 'Alertas e eventos' })).toHaveTextContent('antecedência mediana 0 h');
-    expect(within(cmp).getByRole('region', { name: 'Resultados negativos' })).toHaveTextContent('0,77 → 0,62');
+    const rw = screen.getByTestId('rain-warning');
+    expect(rw).toHaveTextContent('20/2820 min3');
+    expect(rw).toHaveTextContent('21/2840 min4,2');
+    expect(rw).toHaveTextContent('24/28195 min11,4');
+    expect(screen.getByText('Nenhum aviso de 1 h antes de começar a chover.')).toBeInTheDocument();
+    const b = screen.getByTestId('bucket-5y');
+    expect(b).toHaveTextContent('CIn · UFPE1 (2022-05-28)00');
+    expect(b).toHaveTextContent('Jaboatão · Centrosem terreno');
   });
 
   it('conferência do alerta: aba só para ADMIN, com a nota de nenhum evento medido', async () => {

@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
+import { InfoTip } from '@/components/InfoTip';
 import { Button } from '@/components/ui/button';
 import { exportService } from '@/features/map/services/export.service';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
-import { formatRecife } from '@/features/map/utils/datetime';
 import type { FloodPointResponseDTO } from '@/features/map/types';
-import type { FloodPrediction } from '@/features/map/schemas/floodPointResponse.schema';
-import { SyntheticWarning } from '@/components/risk/SyntheticWarning';
-import type { PredictionSummary } from '../schemas/prediction.schema';
+import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
+import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
+import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
+import { VisitorChip } from '@/features/alagamento/components/PointRegressaoBlock';
+import { titleCasePlace } from '@/features/map/utils/overview';
+import { OnlyInDetail } from '@/lib/detailMode';
 
 const Mono: React.FC<{ children: React.ReactNode }> = ({ children }) => <dd className="m-0 font-mono text-[16px] font-bold leading-[22px]">{children}</dd>;
 
-/** Cabeçalho do ponto: classe de risco com ícone e rótulo, aviso experimental, nome, metadados da previsão e ações. */
-export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: PredictionSummary | null; modelInfo?: Pick<FloodPrediction, 'trainingData' | 'syntheticWarning'> }> = ({ point, prediction, modelInfo }) => {
+interface Props {
+  point: FloodPointResponseDTO;
+  /** Alerta por regressão do ponto (só ADMIN em modo sombra). */
+  alagamento?: AlagamentoPonto | null;
+  isAdmin?: boolean;
+  /** Leitura do alerta em andamento ou com falha (só ADMIN). */
+  status?: 'loading' | 'error' | 'ok';
+}
+
+/** Cabeçalho do ponto (5.5): selo do nível do alerta por regressão, Experimental, nome, emissão, horizonte e modelo; ações. */
+export const PointHeader: React.FC<Props> = ({ point, alagamento, isAdmin = false, status = 'ok' }) => {
   const [csv, setCsv] = useState<'idle' | 'busy' | 'ok' | 'erro'>('idle');
   const exportar = async () => {
     setCsv('busy');
@@ -33,39 +42,35 @@ export const PointHeader: React.FC<{ point: FloodPointResponseDTO; prediction: P
       setCsv('erro');
     }
   };
-  const unknown = prediction?.riskLevel === 'UNKNOWN';
-  const sub = [point.municipality, point.description].filter(Boolean).join(' · ');
+  const sub = [point.municipality ? titleCasePlace(point.municipality) : null, point.description].filter(Boolean).join(' · ');
+  const validUntil = alagamento?.horizons.map((h) => h.validUntil).filter(Boolean).sort().pop() ?? null;
+  const chip = !isAdmin ? <VisitorChip />
+    : alagamento ? <FloodChip ponto={alagamento} />
+      : (
+        <span data-testid="flood-chip" data-level="SEM_DADO" className="inline-flex min-h-7 items-center gap-1.5 rounded-full border border-dashed border-muted-foreground/50 bg-muted px-2.5 text-sm font-bold text-muted-foreground">
+          {status === 'loading' ? 'Lendo…' : 'Alerta sem leitura'}
+          <InfoTip text="Sem leitura não é sem alerta: o nível deste ponto é desconhecido até o próximo ciclo." side="bottom" />
+        </span>
+      );
   return (
-    <section aria-label="Risco atual" className="flex flex-wrap items-start gap-5 rounded-2xl border border-border bg-card px-5 py-[18px]">
+    <section aria-label="Alerta de alagamento do ponto" className="flex flex-wrap items-start gap-5 rounded-2xl border border-border bg-card px-5 py-[18px]">
       <div className="flex min-w-[260px] flex-1 flex-col gap-1.5">
-        <div className="flex flex-wrap items-center gap-2">
-          {prediction ? <RiskBadge level={prediction.riskLevel} probability={prediction.probability} className="text-[13px]" /> : <RiskBadge level="UNKNOWN" />}
-          {prediction && showsExperimentalLabel(prediction) && <ExperimentalBadge />}
-        </div>
-        {modelInfo && <SyntheticWarning prediction={modelInfo} className="max-w-[460px] text-[13px] leading-[18px]" />}
+        <div className="flex flex-wrap items-center gap-2">{chip}<ExperimentalTag /></div>
         <h1 className="m-0 text-[28px] font-extrabold leading-[34px] tracking-[-0.015em]">{point.name}</h1>
         <p className="m-0 text-[14px] leading-5 text-muted-foreground">
-          {sub && <>{sub} · </>}
-          <span className="font-mono">{point.slug}</span>
+          {sub}
+          <OnlyInDetail><> · <span className="font-mono">{point.slug}</span></></OnlyInDetail>
         </p>
-        {unknown && (
-          <p data-testid="unknown-detail" className="m-0 w-fit rounded-lg border border-dashed border-border px-2.5 py-1 text-[13px] leading-[18px]">
-            <span className="font-semibold">Motivo:</span> <span className="text-muted-foreground">{degradationText(prediction.degradationReason)}</span>
-            {' · '}
-            <span className="font-semibold">Última previsão válida:</span>{' '}
-            <span className="text-muted-foreground">{prediction.lastValidIssuedAt ? formatRecife(prediction.lastValidIssuedAt) : 'nenhuma registrada'}</span>
-          </p>
-        )}
       </div>
       <dl className="m-0 grid self-center grid-cols-[repeat(4,auto)] gap-x-6 gap-y-1 text-[12px] leading-4">
-        <dt className="text-muted-foreground">Emitida</dt>
+        <dt className="text-muted-foreground">Emitido</dt>
         <dt className="text-muted-foreground">Válida até</dt>
         <dt className="text-muted-foreground">Horizonte</dt>
-        <dt className="text-muted-foreground">Modelo</dt>
-        <Mono>{formatHoraCurta(prediction?.issuedAt) ?? '—'}</Mono>
-        <Mono>{formatHoraCurta(prediction?.validUntil) ?? '—'}</Mono>
-        <Mono>{prediction?.horizonHours != null ? `${prediction.horizonHours} h` : '—'}</Mono>
-        <Mono>{prediction?.modelVersion ?? '—'}</Mono>
+        <dt className="text-muted-foreground">Modelo · chuva</dt>
+        <Mono>{formatHoraCurta(alagamento?.issuedAt) ?? '—'}</Mono>
+        <Mono>{formatHoraCurta(validUntil) ?? '—'}</Mono>
+        <Mono>1, 3 e 6 h</Mono>
+        <Mono>rain_v1 + balde</Mono>
       </dl>
       <div className="flex min-w-[220px] self-center flex-col gap-2">
         <Link to="/relatos" className="flex h-[38px] items-center justify-center rounded-lg bg-primary px-4 text-[13px] font-bold leading-4 text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">

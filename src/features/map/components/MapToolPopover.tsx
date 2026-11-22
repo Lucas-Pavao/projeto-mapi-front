@@ -56,7 +56,7 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
         title={label}
         onClick={() => setOpen(!isOpen)}
         className={cn(
-          'relative flex h-12 w-12 items-center justify-center rounded-2xl border bg-popover shadow-elevation-overlay transition-all hover:bg-secondary',
+          'mapi-press relative flex h-12 w-12 items-center justify-center rounded-2xl border bg-popover shadow-[var(--elevation-overlay),var(--surface-highlight)] hover:bg-secondary',
           isOpen || active ? 'border-primary/40 bg-secondary text-primary' : 'border-border text-muted-foreground',
         )}
       >
@@ -70,7 +70,7 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
           aria-label={label}
           style={maxHeight ? { maxHeight: `min(60vh, ${maxHeight}px)` } : undefined}
           className={cn(
-            'custom-scrollbar absolute right-14 top-0 z-30 flex max-h-[60vh] w-72 flex-col overflow-y-auto overscroll-contain rounded-2xl border border-border bg-popover shadow-elevation-overlay animate-in slide-in-from-right-2 duration-200',
+            'mapi-enter-popover custom-scrollbar absolute right-14 top-0 z-30 flex max-h-[60vh] w-72 origin-top-right flex-col overflow-y-auto overscroll-contain rounded-2xl border border-border bg-popover shadow-[var(--elevation-overlay),var(--surface-highlight)]',
             panelClassName,
           )}
         >
@@ -83,7 +83,7 @@ export const MapToolPopover: React.FC<MapToolPopoverProps> = ({
               type="button"
               aria-label={`Fechar ${label.toLowerCase()}`}
               onClick={() => setOpen(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
+              className="mapi-press flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>

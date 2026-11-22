@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { RiskBadge } from '@/components/risk/RiskBadge';
-import { ExperimentalBadge } from '@/components/risk/ExperimentalBadge';
-import { degradationText, showsExperimentalLabel } from '@/components/risk/risk';
+import { useAuth } from '@/hooks/useAuth';
+import { hasRole, parseRole } from '@/lib/roles';
+import { useAlagamentoPontos } from '@/features/alagamento/hooks/useAlagamentoPontos';
+import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
 import { usePoint } from '@/features/points/hooks/usePoint';
 import { formatHoraCurta, num } from '@/features/operacao/utils/format';
 import { formatRecife } from '@/features/map/utils/datetime';
@@ -24,15 +25,23 @@ interface Props {
   onSkip: () => void;
 }
 
-/** Relato selecionado: onde, quanto, o que o modelo diz do ponto agora e a decisão do operador. */
+/** Relato selecionado: onde, quanto, o alerta experimental do ponto agora e a decisão do operador. */
 export const ReportDetail: React.FC<Props> = ({ report: r, pointName, saving, hasNext, onConfirm, onDiscard, onSkip }) => {
   const [severity, setSeverity] = useState<Severity>('MEDIUM');
   const point = usePoint(r.nearestPointSlug ?? '');
-  const pred = point.data?.floodPrediction ?? null;
+  const { user } = useAuth();
+  // Alerta por regressão em modo sombra: só o ADMIN compara o relato com o nível do ponto.
+  const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
+  const al = useAlagamentoPontos(isAdmin);
+  const lvl = r.nearestPointSlug ? al.data?.find((x) => x.slug === r.nearestPointSlug) ?? null : null;
   const rain3 = point.data?.liveData?.historicalAggregates?.rain3h ?? null;
-  const unknown = pred?.riskLevel === 'UNKNOWN';
-  const disagree = pred?.riskLevel === 'LOW';
-  const hint = !r.nearestPointSlug ? 'Sem ponto crítico por perto: ao confirmar, você escolhe o ponto.' : !pred ? 'Sem previsão carregada para comparar.' : unknown ? `Sem previsão para comparar (${degradationText(pred.degradationReason)}).` : disagree ? 'O relato contradiz a previsão atual do ponto. Registre com cuidado: quem confirma assina o evento.' : 'O relato concorda com a previsão atual do ponto.';
+  const disagree = lvl?.level === 'SEM_ALERTA';
+  const hint = !r.nearestPointSlug ? 'Sem ponto crítico por perto: ao confirmar, você escolhe o ponto.'
+    : !isAdmin ? 'O alerta de alagamento está em teste: confira a chuva e o rio antes de confirmar.'
+      : !lvl ? 'Alerta do ponto ainda não calculado.'
+        : lvl.level === 'SEM_DADO' ? `Alerta sem dado (${lvl.reasonText ?? 'motivo não informado'}): nada a comparar.`
+          : disagree ? 'O relato contradiz o alerta experimental do ponto (sem alerta). Registre com cuidado: quem confirma assina o evento; o alerta não está calibrado.'
+            : 'O relato concorda com o alerta experimental do ponto.';
   return (
     <>
       <div className="flex items-start gap-4">
@@ -54,14 +63,13 @@ export const ReportDetail: React.FC<Props> = ({ report: r, pointName, saving, ha
           <dl className="m-0 grid grid-cols-3 gap-2">
             <div className="rounded-[10px] bg-muted p-2.5"><dt className="text-[11px] text-muted-foreground">Altura relatada</dt><dd className="m-0 text-[15px] font-extrabold">{r.waterDepth ? WATER_DEPTH_LABEL[r.waterDepth] : 'não informada'}</dd></div>
             <div className="rounded-[10px] bg-muted p-2.5">
-              <dt className="text-[11px] text-muted-foreground">Previsão atual do ponto</dt>
+              <dt className="text-[11px] text-muted-foreground">Alerta do ponto agora</dt>
               <dd className="m-0 mt-0.5 flex flex-wrap items-center gap-1">
-                {pred ? <RiskBadge level={pred.riskLevel} probability={pred.floodProbability} /> : <span className="font-mono text-[15px] font-extrabold">—</span>}
+                {lvl ? <FloodChip ponto={lvl} /> : <span className="font-mono text-[15px] font-extrabold">{isAdmin ? '—' : 'em teste'}</span>}
               </dd>
             </div>
             <div className="rounded-[10px] bg-muted p-2.5"><dt className="text-[11px] text-muted-foreground">Chuva 3 h</dt><dd className="m-0 font-mono text-[15px] font-extrabold">{rain3 != null ? `${num(rain3)} mm` : '—'}</dd></div>
           </dl>
-          {pred && showsExperimentalLabel({ riskLevel: pred.riskLevel, modelValidationStatus: pred.modelValidationStatus }) && <ExperimentalBadge className="w-fit" />}
           <p className="m-0 rounded-[10px] bg-muted px-3 py-2.5 text-[14px] leading-5">{r.description ? `“${r.description}”` : 'Sem descrição do relator.'}</p>
           <p className={cn('m-0 text-[12px] leading-[17px]', disagree ? 'text-warning' : 'text-muted-foreground')}>{hint}</p>
         </div>

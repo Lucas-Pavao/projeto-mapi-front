@@ -7,7 +7,9 @@ import { useTheme } from '@/hooks/useTheme';
 import { EmptyState } from '@/components/ui/query-state';
 import { Button } from '@/components/ui/button';
 import { usePublicRisk, type Coord } from '@/features/public-risk/hooks/usePublicRisk';
-import { PUBLIC_WARNING, PublicRiskResult } from '@/features/public-risk/components/PublicRiskResult';
+import { PublicRiskResult } from '@/features/public-risk/components/PublicRiskResult';
+import { PublicHoje } from '@/features/horizontes/components/PublicHoje';
+import { PUBLIC_WARNING } from '@/features/public-risk/utils/headlines';
 import { retryAfterSeconds } from '@/features/public-risk/services/public-risk.service';
 import { geoFailureText, insideRmr, roundCoord, type GeoFailure } from '@/features/public-risk/utils/coords';
 import { httpStatus } from '@/lib/apiError';
@@ -88,15 +90,15 @@ export const MyStreetPage: React.FC = () => {
     <div className="grid min-h-[calc(100dvh-60px)] w-full grid-cols-1 lg:grid-cols-[640px_minmax(0,1fr)]">
       <div className="flex min-w-0 flex-col gap-[22px] border-border bg-background px-4 py-6 sm:px-8 lg:border-r lg:px-12 lg:py-10">
         <div>
-          <h1 className="m-0 text-[32px] leading-9 font-extrabold tracking-[-0.02em] text-foreground lg:text-[40px] lg:leading-[44px]">Minha rua pode alagar?</h1>
-          <p className="mt-2.5 mb-0 text-base leading-6 text-muted-foreground">Escolha um local no mapa, num ponto monitorado ou use a sua localização. Mostramos a chuva e a previsão do ponto monitorado mais perto. Não precisa de login e não guardamos a sua posição.</p>
+          <h1 className="m-0 text-balance text-[32px] leading-9 font-extrabold tracking-[-0.02em] text-foreground lg:text-[40px] lg:leading-[44px]">Minha rua pode alagar?</h1>
+          <p className="mt-2.5 mb-0 text-pretty text-base leading-6 text-muted-foreground">Escolha um local no mapa, num ponto monitorado ou use a sua localização. Mostramos a chuva e a previsão do ponto monitorado mais perto. Não precisa de login e não guardamos a sua posição.</p>
         </div>
         <div className="flex flex-col gap-2">
-          <Button type="button" className="h-12 w-full gap-2 rounded-[10px] text-sm font-bold" onClick={locate} disabled={busy}>
+          <Button type="button" className="h-12 w-full gap-2 rounded-[10px] text-sm font-bold shadow-elevation-raised" onClick={locate} disabled={busy}>
             {busy ? <Loader2 className="size-[18px] animate-spin" aria-hidden="true" /> : <LocateFixed className="size-[18px]" aria-hidden="true" />}
             {locating ? 'Buscando sua posição…' : coord ? 'Atualizar onde estou' : 'Onde estou'}
           </Button>
-          <p className="m-0 text-xs text-muted-foreground">Enviamos só uma posição aproximada (cerca de 100 m). Sem busca por endereço: toque no mapa ou escolha um ponto monitorado.</p>
+          <p className="m-0 text-caption text-muted-foreground">Enviamos só uma posição aproximada (cerca de 100 m). Sem busca por endereço: toque no mapa ou escolha um ponto monitorado.</p>
           {places.length > 0 && (
             <ul aria-label="Pontos monitorados" className="m-0 mt-1 flex list-none flex-wrap gap-2 p-0">
               {places.map((p) => {
@@ -104,7 +106,7 @@ export const MyStreetPage: React.FC = () => {
                 return (
                   <li key={p.slug}>
                     <button type="button" aria-pressed={active} onClick={() => choose({ lat: p.latitude, lon: p.longitude }, true)}
-                      className={cn('h-9 rounded-full border px-3.5 text-[13px] font-bold', active ? 'border-primary bg-primary/10 text-primary' : 'border-input text-foreground')}>{p.name}</button>
+                      className={cn('mapi-press h-9 rounded-full border px-3.5 text-[13px] font-bold', active ? 'border-primary bg-primary/10 text-primary shadow-elevation-raised' : 'border-input text-foreground hover:bg-muted')}>{p.name}</button>
                   </li>
                 );
               })}
@@ -129,11 +131,14 @@ export const MyStreetPage: React.FC = () => {
             {![422, 429].includes(httpStatus(query.error) ?? 0) && <Button type="button" variant="outline" className="h-11 px-4" onClick={() => void query.refetch()}>Tentar de novo</Button>}
           </div>
         ) : (
-          <PublicRiskResult risk={query.data} />
+          <>
+            <PublicRiskResult risk={query.data} />
+            <PublicHoje municipio={query.data.nearestPoint?.municipality} className="bg-card shadow-elevation-raised" />
+          </>
         )}
         <div className="flex flex-wrap gap-3">
-          <Link to="/map" className="flex h-[52px] min-w-0 flex-1 items-center justify-center rounded-[10px] bg-foreground px-4 text-[15px] font-bold text-background">Está alagado aqui? Avise</Link>
-          <a href="tel:199" className="flex h-[52px] items-center justify-center rounded-[10px] border border-destructive px-5 text-[15px] font-bold text-destructive">Emergência: 199</a>
+          <Link to="/map" className="mapi-press flex h-[52px] min-w-0 flex-1 items-center justify-center rounded-[10px] bg-foreground px-4 text-[15px] font-bold text-background shadow-elevation-raised hover:opacity-90">Está alagado aqui? Avise</Link>
+          <a href="tel:199" className="mapi-press flex h-[52px] items-center justify-center rounded-[10px] border border-destructive px-5 text-[15px] font-bold text-destructive hover:bg-destructive/10">Emergência: 199</a>
         </div>
         <p className="mt-auto mb-0 text-xs leading-[18px] text-muted-foreground">Dados: APAC, Cemaden, ANA, Open-Meteo e Marinha. O MAPi é um projeto de pesquisa do CIn/UFPE e não substitui os avisos oficiais da Defesa Civil.</p>
       </div>

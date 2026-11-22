@@ -35,9 +35,10 @@ export function waterWeatherTiles(point: FloodPointResponseDTO | undefined, rain
   const tide = d?.tideHeight ?? point?.tideHeight ?? null;
   return [
     nowTile(rain, { label: 'Chuva agora', value: withUnit(d?.precipitation, rainUnit), sub: d?.precipitation == null ? 'sem leitura' : 'pluviômetro mais próximo', tone: (d?.precipitation ?? 0) >= 30 ? 'text-risk-moderate-text' : undefined }),
-    { label: 'Chuva 3 h', value: withUnit(agg?.rain3h, 'mm'), sub: agg?.rain3h == null ? 'sem leitura' : 'acumulado' },
-    { label: 'Chuva 6 h', value: withUnit(agg?.rain6h, 'mm'), sub: agg?.rain6h == null ? 'sem leitura' : 'acumulado' },
-    { label: 'Chuva 24 h', value: withUnit(agg?.rain24h, 'mm'), sub: rainSrc },
+    // Os acumulados vêm do Open-Meteo (modelo, não pluviômetro): a fonte vai declarada em cada bloco.
+    { label: 'Chuva 3 h', value: withUnit(agg?.rain3h, 'mm'), sub: agg?.rain3h == null ? 'sem leitura' : `estimada · ${rainSrc}` },
+    { label: 'Chuva 6 h', value: withUnit(agg?.rain6h, 'mm'), sub: agg?.rain6h == null ? 'sem leitura' : `estimada · ${rainSrc}` },
+    { label: 'Chuva 24 h', value: withUnit(agg?.rain24h, 'mm'), sub: agg?.rain24h == null ? 'sem leitura' : `estimada · ${rainSrc}` },
     { label: 'Maré', value: withUnit(tide, d?.unitTide ?? point?.tideUnit ?? 'm', 2), sub: tide == null ? 'sem leitura' : 'tábua da DHN (NR)' },
     { label: 'Rio', value: withUnit(d?.waterLevel, d?.unitWaterLevel ?? 'm', 2), sub: `${d?.waterLevel == null ? 'sem leitura' : 'nível mais recente'} · fora do modelo` },
     { label: 'Cota da rua', value: terrainValue(elev, 2), sub: terrainSub(terrain, elev) },

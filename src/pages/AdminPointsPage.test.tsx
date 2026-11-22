@@ -32,7 +32,7 @@ describe('AdminPointsPage', () => {
     expect(li).toHaveAttribute('data-active', 'true');
     expect(li).toHaveTextContent('sintetico-1');
     expect(screen.getByRole('switch', { name: 'Sintético: ponto sem previsão: ponto ativo' })).not.toBeChecked();
-    expect(screen.getByText(/cadastrados · \d+ ativos no ciclo de previsão/)).toBeInTheDocument();
+    expect(screen.getByText(/cadastrados · \d+ ativos no ciclo do alerta/)).toBeInTheDocument();
     expect(within(form()).getByText(/Editar · Sintético: ponto de teste/)).toBeInTheDocument();
     expect(within(form()).getByLabelText(/Slug/)).toHaveAttribute('readonly');
   });
@@ -50,7 +50,7 @@ describe('AdminPointsPage', () => {
     fireEvent.click(within(form()).getByRole('button', { name: 'Salvar ponto' }));
     await waitFor(() => expect(sent).not.toBeNull());
     expect(sent).toEqual({ slug: 'sintetico-1', body: { name: 'Novo nome', alertThresholdMm: 45 } });
-    expect(await screen.findByText('Ponto salvo. Entra no próximo ciclo de previsão.')).toBeInTheDocument();
+    expect(await screen.findByText('Ponto salvo. Entra no próximo ciclo do alerta.')).toBeInTheDocument();
   });
 
   it('clicar no mapa move a coordenada e o PATCH leva latitude e longitude', async () => {

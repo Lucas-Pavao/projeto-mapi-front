@@ -1,7 +1,8 @@
 import React from 'react';
 import { ShieldQuestion } from 'lucide-react';
-import { RiskLegendList } from '@/components/risk/RiskLegendList';
-import type { RiskThresholds } from '@/features/map/schemas/floodPointResponse.schema';
+import { InfoTip } from '@/components/InfoTip';
+import { LEGEND_RULE } from '@/features/alagamento/utils/alagamentoText';
+import { AlertLegendList } from './MapAlertLegend';
 import { MapToolPopover } from './MapToolPopover';
 
 interface Props {
@@ -10,21 +11,20 @@ interface Props {
   onOpenChange?: (open: boolean) => void;
   className?: string;
   bottomReserve?: number;
-  /** Limiares do metadata do modelo: a legenda mostra a faixa de cada classe. */
-  thresholds?: RiskThresholds | null;
 }
 
-/** Legenda dos níveis de risco como botão da barra do mapa, no mesmo formato de camadas e terreno. */
-export const RiskLegendControl: React.FC<Props> = ({ open, onOpenChange, className, bottomReserve, thresholds }) => (
+/** Legenda do alerta como botão da barra do mapa no celular (5.11 item 6); a regra fica no ⓘ. */
+export const RiskLegendControl: React.FC<Props> = ({ open, onOpenChange, className, bottomReserve }) => (
   <MapToolPopover
     id="risk-legend-panel"
-    label="Níveis de risco"
+    label="Legenda"
     icon={<ShieldQuestion className="h-5 w-5" aria-hidden="true" />}
     open={open}
     onOpenChange={onOpenChange}
     className={className}
     bottomReserve={bottomReserve}
   >
-    <RiskLegendList showExperimentalNote={false} thresholds={thresholds} />
+    <div className="mb-2 flex items-center justify-between text-xs font-bold">Alerta de alagamento<InfoTip text={LEGEND_RULE} align="end" /></div>
+    <AlertLegendList />
   </MapToolPopover>
 );

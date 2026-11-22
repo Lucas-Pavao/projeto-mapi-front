@@ -15,21 +15,20 @@ const bySensor = vi.mocked(mapService.getLatestBySensorId);
 beforeEach(() => vi.resetAllMocks());
 
 describe('loadFloodPointStatus', () => {
-  it('prefere liveData e predição do ponto sobre a análise da coordenada', async () => {
-    point.mockResolvedValue({ liveData: { source: 'ponto' }, floodPrediction: { riskLevel: 'HIGH' } } as never);
-    precise.mockResolvedValue({ preciseData: { source: 'coord' }, floodPrediction: { riskLevel: 'LOW' }, nearestSensor: 'x' } as never);
+  it('prefere o liveData do ponto sobre a análise da coordenada; sem previsão do classificador', async () => {
+    point.mockResolvedValue({ liveData: { source: 'ponto' } } as never);
+    precise.mockResolvedValue({ preciseData: { source: 'coord' }, nearestSensor: 'x' } as never);
     const r = await loadFloodPointStatus(target);
     expect(r.preciseData.source).toBe('ponto');
-    expect(r.floodPrediction?.riskLevel).toBe('HIGH');
+    expect(r).not.toHaveProperty('floodPrediction');
     expect((r as unknown as { nearestSensor: string }).nearestSensor).toBe('x');
   });
 
   it('cai para a análise da coordenada quando o ponto não traz dado', async () => {
     point.mockResolvedValue({} as never);
-    precise.mockResolvedValue({ preciseData: { source: 'coord' }, floodPrediction: { riskLevel: 'LOW' } } as never);
+    precise.mockResolvedValue({ preciseData: { source: 'coord' } } as never);
     const r = await loadFloodPointStatus(target);
     expect(r.preciseData.source).toBe('coord');
-    expect(r.floodPrediction?.riskLevel).toBe('LOW');
   });
 
   it('completa métricas faltantes com as leituras individuais dos sensores próximos', async () => {

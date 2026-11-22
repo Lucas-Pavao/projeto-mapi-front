@@ -1,6 +1,5 @@
 import type { StationCardData } from '@/features/map/cards/schemas/stationCard.schema';
 import type { FloodPointResponseDTO } from '@/features/map/types';
-import type { PredictionSummary } from '@/features/points/schemas/prediction.schema';
 import type { LocationAnalysis } from '@/features/map/cards/schemas/locationAnalysis.schema';
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
 
@@ -44,7 +43,6 @@ export const STATION_CARD_FIXTURES: Record<string, StationCardData> = {
 /** `?cardFx=<estado>` (normal, divergent, peak, unchecked, gap, noResponse, failMonth, pedOnly) escolhe o estado do card no navegador com MSW. */
 export const stationCardFor = (id: string, fx?: string | null): StationCardData => ({ ...((fx && STATION_CARD_FIXTURES[fx]) || base), canonicalId: id, name: `Sintético: ${id}` });
 
-const TH = { medium: 0.0159, high: 0.2441, source: 'metadata' };
 const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
 
 const pointBase = {
@@ -52,22 +50,11 @@ const pointBase = {
   basinName: null, sensorConfig: null, active: true, tideHeight: 1.4, tideUnit: 'DHN (NR)', liveData: { historicalAggregates: { rain3h: 12.4 } },
 } as unknown as FloodPointResponseDTO;
 
-const pred = (over: Record<string, unknown>) => ({ modelValidationStatus: 'NOT_VALIDATED', modelVersion: 'xgb_v2', rainSource: 'MEASURED', trainingData: 'SYNTHETIC', riskThresholds: TH, issuedAt: ago(10), validUntil: ago(-50),
-  contributors: [{ featureId: 'rain_3h', label: 'Chuva acumulada em 3 horas', contribution: 0.21, value: 12.4, unit: 'mm' }], ...over });
-
-/** Os 5 estados do card do ponto. */
-export const POINT_CARD_FIXTURES: Record<'high' | 'medium' | 'low' | 'insufficient' | 'unavailable', FloodPointResponseDTO> = {
-  high: { ...pointBase, floodPrediction: pred({ riskLevel: 'HIGH', floodProbability: 0.31 }) } as FloodPointResponseDTO,
-  medium: { ...pointBase, floodPrediction: pred({ riskLevel: 'MEDIUM', floodProbability: 0.12 }) } as FloodPointResponseDTO,
-  low: { ...pointBase, floodPrediction: pred({ riskLevel: 'LOW', floodProbability: 0.004 }) } as FloodPointResponseDTO,
-  insufficient: { ...pointBase, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'INSUFFICIENT_DATA', modelValidationStatus: 'NOT_VALIDATED', modelVersion: 'xgb_v2' } } as FloodPointResponseDTO,
-  unavailable: { ...pointBase, floodPrediction: { riskLevel: 'UNKNOWN', floodProbability: null, degradationReason: 'AI_UNAVAILABLE', modelValidationStatus: 'NOT_VALIDATED', lastValidIssuedAt: ago(90) } } as FloodPointResponseDTO,
+/** Pontos do card (dados sintéticos). O nível vem do alerta por regressão (mocks/alagamento). */
+export const POINT_CARD_FIXTURES: Record<'high' | 'medium', FloodPointResponseDTO> = {
+  high: { ...pointBase } as FloodPointResponseDTO,
+  medium: { ...pointBase, id: 2, slug: 'AGAMENON_DERBY_2', name: 'Av. Agamenon - Derby 2' } as FloodPointResponseDTO,
 };
-
-/** Série de 12 h: probabilidades válidas e, quando `gap`, as 3 últimas horas sem previsão (UNKNOWN). */
-export const pointSeries = (gap = false): PredictionSummary[] =>
-  [0.01, 0.02, 0.05, 0.12, 0.31, 0.2].map((probability, i) => ({ slug: 'AGAMENON_DERBY', riskLevel: 'LOW', probability, issuedAt: ago(660 - i * 120), modelValidationStatus: 'NOT_VALIDATED', riskThresholds: TH } as PredictionSummary))
-    .concat(gap ? [{ slug: 'AGAMENON_DERBY', riskLevel: 'UNKNOWN', probability: null, issuedAt: ago(30), degradationReason: 'INSUFFICIENT_DATA', modelValidationStatus: 'NOT_VALIDATED' } as PredictionSummary] : []);
 
 export const pointRain = (over: Partial<RainCandidates> = {}): RainCandidates => ({
   slug: 'AGAMENON_DERBY', hourEndUtc: ago(10), radiusM: 5000, ruleVersion: 'chuva-ponto-v4', valueMm: 3.2, usedStationId: 'SINT-A',
@@ -86,7 +73,7 @@ const locBase: LocationAnalysis = {
   lat: -8.1039, lon: -34.9509, at: ago(10), inArea: true, isSea: false,
   rain: { mode: 'MEASURED', nowMmH: 3.2, acc3hMm: 5.0, acc24hMm: null, station: { stationId: 'SINT-A', name: 'Sintético: Ibura', distanceM: 2400 },
     candidates: [cand('SINT-A', 'Sintético: Ibura', 2400, 3.2, 'USED'), cand('SINT-B', 'Sintético: Areias', 3100, 1.1, 'LOWER', 'UNCHECKED'), cand('SINT-C', 'Sintético: Boa Viagem', 4200, null, 'EXCLUDED', 'FAIL', ['STUCK_ZERO'])], nValid: 2 },
-  nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8, riskLevel: 'LOW', probability: 0.002, degradationReason: null },
+  nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8 },
   tide: { levelM: 1.81, rising: true, harbor: 'Porto do Recife', verticalReference: 'NR DHN' },
   river: { stationId: '260790119H', name: 'Duas Unas', levelM: 1.2, distanceKm: 2.4, outsideModel: true },
   terrain: { elevationM: 4.2, distanceToCoastKm: 3.1 },
@@ -98,7 +85,7 @@ const locBase: LocationAnalysis = {
 export const LOCATION_FIXTURES: Record<'measured' | 'gap' | 'estimated' | 'sea' | 'outside', LocationAnalysis> = {
   measured: locBase,
   gap: { ...locBase, rain: { ...locBase.rain, mode: 'GAP', nowMmH: null, acc3hMm: null, acc24hMm: null, station: null, candidates: [cand('SINT-A', 'Sintético: Ibura', 2400, null, 'NO_VALUE'), cand('SINT-B', 'Sintético: Areias', 3100, null, 'NO_VALUE')] },
-    nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8, riskLevel: 'UNKNOWN', probability: null, degradationReason: 'INSUFFICIENT_DATA' } },
+    nearestPoint: { slug: 'AV_RECIFE_IBURA', name: 'Av. Recife - Entrada do Ibura', distanceKm: 1.8 } },
   estimated: { ...locBase, rain: { mode: 'ESTIMATED', nowMmH: 0.4, acc3hMm: 1.1, acc24hMm: 6.0, station: null, candidates: [], nValid: 0 }, river: null },
   sea: { ...locBase, lat: -8.06, lon: -34.84, isSea: true, rain: { mode: 'ESTIMATED', nowMmH: null, acc3hMm: null, acc24hMm: null, station: null, candidates: [], nValid: 0 }, terrain: null, river: null },
   outside: { ...locBase, lat: -7.85, lon: -34.9, inArea: false, rain: { mode: 'ESTIMATED', nowMmH: 0, acc3hMm: 0.2, acc24hMm: 2, station: null, candidates: [], nValid: 0 }, terrain: null, river: null, nearestPoint: null },

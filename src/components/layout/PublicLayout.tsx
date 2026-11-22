@@ -19,7 +19,7 @@ export const PublicLayout: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <ThemeControls />
-          <Link to="/login" className="flex h-11 items-center rounded-lg border border-input px-3.5 text-[13px] font-bold text-foreground md:h-10">Entrar (equipes)</Link>
+          <Link to="/login" className="mapi-press flex h-11 items-center rounded-lg border border-input px-3.5 text-[13px] font-bold text-foreground hover:bg-muted md:h-9">Entrar (equipes)</Link>
         </div>
       </header>
       <main className="flex-1">

@@ -6,13 +6,15 @@ import * as d from './data';
 import { gestaoHandlers } from './handlers-gestao';
 import { cenariosHandlers } from './handlers-cenarios';
 import { alertaHandlers } from './alerta';
+import { alagamentoHandlers } from './alagamento';
+import { avisoFixture, forecastFixture, horizonsFixture } from './horizontes';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
 const sse = (event: string, data: unknown, id: number) => `id: ${id}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 
 /**
- * Stream SSE sintético: risk-summary na abertura e heartbeat a cada `heartbeatMs`. `maxBeats`
+ * Stream SSE sintético: heartbeat na abertura e a cada `heartbeatMs`. `maxBeats`
  * limita os heartbeats (testes); sem limite o fluxo fica aberto até o cliente fechar.
  */
 export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: number; extra?: Array<{ event: string; data: unknown }>; extraDelayMs?: number } = {}) {
@@ -23,7 +25,6 @@ export function liveStreamHandler(opts: { heartbeatMs?: number; maxBeats?: numbe
     const stream = new ReadableStream<Uint8Array>({
       start(ctrl) {
         let id = 1;
-        ctrl.enqueue(enc.encode(sse('risk-summary', d.riskSummary(), id++)));
         // `extra`: eventos de teste; com extraDelayMs saem depois da abertura (tela já carregada).
         const sendExtra = () => {
           for (const e of extra) ctrl.enqueue(enc.encode(sse(e.event, e.data, id++)));
@@ -55,9 +56,9 @@ export const handlers = [
   ...gestaoHandlers,
   ...cenariosHandlers,
   ...alertaHandlers,
+  ...alagamentoHandlers,
   liveStreamHandler(),
   http.get('/api/pontos', () => HttpResponse.json(d.points)),
-  http.get('/api/pontos/risk-summary', () => HttpResponse.json(d.riskSummary())),
 
   http.get('/api/pontos/station-suggestions', () =>
     HttpResponse.json([
@@ -65,15 +66,6 @@ export const handlers = [
     ]),
   ),
 
-  http.get<{ slug: string }>('/api/pontos/:slug/predictions', ({ params, request }) => {
-    const url = new URL(request.url);
-    return HttpResponse.json({
-      slug: params.slug,
-      from: url.searchParams.get('from') ?? '',
-      to: url.searchParams.get('to') ?? '',
-      items: d.predictions(params.slug),
-    });
-  }),
 
   http.get<{ slug: string }>('/api/pontos/:slug/terrain', ({ params }) => HttpResponse.json(d.terrain(params.slug))),
   http.get('/api/sensors/latest', ({ request }) => {
@@ -181,6 +173,13 @@ export const handlers = [
     const p = d.points.find((x) => x.slug === params.slug);
     return p ? HttpResponse.json(p) : HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
   }),
+  http.get<{ slug: string }>('/api/horizontes/:slug', ({ params }) => HttpResponse.json(horizonsFixture(params.slug, { aviso: true }))),
+  http.get<{ m: string }>('/api/previsao-oficial/:m', ({ params }) => HttpResponse.json(forecastFixture(params.m))),
+  http.get<{ m: string }>('/api/public/previsao-oficial/:m', ({ params }) => HttpResponse.json(forecastFixture(params.m))),
+  http.get('/api/public/avisos-oficiais/:m', () => HttpResponse.json({
+    source: 'INMET', attribution: 'INMET — Instituto Nacional de Meteorologia (https://avisos.inmet.gov.br)',
+    emissionNote: 'firstSeenAt é proxy posterior à emissão real.', referenceTimeUtc: new Date().toISOString(), warnings: [avisoFixture()],
+  })),
   http.get('/api/warnings/official/active', () =>
     HttpResponse.json({
       source: 'INMET',

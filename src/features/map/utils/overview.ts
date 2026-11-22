@@ -1,7 +1,7 @@
+import type { AlagamentoPonto, FloodLevel } from '@/features/alagamento/schemas/alagamento.schema';
 import type { Timeline } from '@/features/events/schemas/timeline.schema';
 import { HOUR_MS, toTimePts, type TimePt } from '@/components/charts/chartMath';
 import { nearestPoint } from '@/features/events/utils/tide';
-import type { RiskLevel } from '../schemas/floodPointResponse.schema';
 import type { FloodPointResponseDTO } from '../types';
 
 /** "0,7" / "0,22": vírgula decimal (pt-BR). */
@@ -38,23 +38,20 @@ export function tideNow(series: readonly TimePt[], nowMs: number): { v: number; 
   return { v: cur.v, rising };
 }
 
-const RANK: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 1, UNKNOWN: 2, LOW: 3 };
 
 /** Alto primeiro; depois Moderado, Previsão indisponível (nunca "escondida" como baixo) e Baixo; dentro do nível, maior probabilidade. */
-export function sortPoints(points: readonly FloodPointResponseDTO[]): FloodPointResponseDTO[] {
-  const lvl = (p: FloodPointResponseDTO): RiskLevel => p.floodPrediction?.riskLevel ?? 'UNKNOWN';
-  return [...points].sort((a, b) => RANK[lvl(a)] - RANK[lvl(b)] || (b.floodPrediction?.floodProbability ?? -1) - (a.floodPrediction?.floodProbability ?? -1) || a.name.localeCompare(b.name));
+/**
+ * Ordem da lista e do anterior/próximo (5.3): pelo nível do alerta por regressão (Alerta, Atenção, Sem dado, Sem
+ * alerta) e, dentro dele, pela lâmina de agora; sem o mapa (visitante), por nome.
+ */
+const FLOOD_RANK: Record<FloodLevel, number> = { ALERTA: 0, ATENCAO: 1, SEM_DADO: 2, SEM_ALERTA: 3 };
+
+export function sortPoints(points: readonly FloodPointResponseDTO[], by?: ReadonlyMap<string, AlagamentoPonto>): FloodPointResponseDTO[] {
+  const rank = (p: FloodPointResponseDTO) => (by ? FLOOD_RANK[by.get(p.slug)?.level ?? 'SEM_DADO'] : 0);
+  const sheet = (p: FloodPointResponseDTO) => (by ? by.get(p.slug)?.hNowCm ?? -1 : -1);
+  return [...points].sort((a, b) => rank(a) - rank(b) || sheet(b) - sheet(a) || a.name.localeCompare(b.name));
 }
 
-/** Série de probabilidade (0–1) por ponto para a minilinha; UNKNOWN e sem probabilidade viram buraco (null). */
-export function probabilityByPoint(risk: Timeline['risk']): Map<string, Array<number | null>> {
-  const out = new Map<string, Array<number | null>>();
-  for (const r of risk) {
-    const items = [...r.items].sort((a, b) => Date.parse(a.issuedAt) - Date.parse(b.issuedAt));
-    out.set(r.slug, items.map((i) => (i.riskLevel === 'UNKNOWN' ? null : i.probability ?? null)));
-  }
-  return out;
-}
 
 /** Estado do rio pelas cotas oficiais da APAC. Sem cotas, sem estado (null). */
 export function riverState(level: number | null, s: { riverPreAlertLevel?: number | null; riverAlertLevel?: number | null; riverFloodLevel?: number | null }): 'normal' | 'Pré-alerta' | 'Alerta' | 'Inundação' | null {
@@ -66,3 +63,16 @@ export function riverState(level: number | null, s: { riverPreAlertLevel?: numbe
   if (pre != null && level >= pre) return 'Pré-alerta';
   return 'normal';
 }
+
+/** "JABOATAO DOS GUARARAPES" → "Jaboatao dos Guararapes" (o cadastro vem em caixa alta; a prancha mostra "Derby, Recife"). */
+const LOWER = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+export const titleCasePlace = (s: string) => s.toLowerCase().split(/\s+/).filter(Boolean)
+  .map((w, i) => (i > 0 && LOWER.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
+
+/** "[CEMADEN] ENGENHO VELHO [H]" → "Engenho Velho": tira as marcas de fonte/tipo entre colchetes; caixa alta vira normal. */
+export const cleanStationName = (s: string | null | undefined): string | null => {
+  if (!s) return null;
+  const t = s.replace(/\[[^\]]*\]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  return t === t.toUpperCase() ? titleCasePlace(t) : t;
+};

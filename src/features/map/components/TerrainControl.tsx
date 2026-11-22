@@ -40,14 +40,14 @@ export const TerrainControl: React.FC<TerrainControlProps> = ({ enabled, onChang
             aria-checked={enabled}
             aria-label="Terreno (hipsometria)"
             onClick={() => onChange(!enabled)}
-            className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-secondary"
+            className="mapi-press-row flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold text-foreground hover:bg-secondary"
           >
             Mostrar no mapa
             <span
               aria-hidden="true"
-              className={cn('relative h-4 w-7 shrink-0 rounded-full border border-border transition-colors', enabled ? 'bg-success' : 'bg-muted')}
+              className={cn('relative h-4 w-7 shrink-0 rounded-full border border-border transition-colors duration-150', enabled ? 'bg-success' : 'bg-muted')}
             >
-              <span className={cn('absolute top-0.5 h-3 w-3 rounded-full bg-primary-foreground transition-all', enabled ? 'left-3.5' : 'left-0.5')} />
+              <span className={cn('absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-primary-foreground transition-transform duration-150 ease-[var(--ease-out)]', enabled ? 'translate-x-3' : 'translate-x-0')} />
             </span>
           </button>
 

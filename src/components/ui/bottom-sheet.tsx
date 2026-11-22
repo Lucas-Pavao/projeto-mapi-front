@@ -23,10 +23,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ title, srTitle, onClos
       label={title}
       labelledBy={titleId}
       onClose={onClose}
-      className="fixed inset-x-0 bottom-0 z-[60] flex max-h-[70vh] flex-col overflow-hidden rounded-t-2xl border border-b-0 border-border bg-popover text-foreground shadow-elevation-overlay"
+      className="mapi-enter-sheet fixed inset-x-0 bottom-0 z-[60] flex max-h-[70vh] flex-col overflow-hidden rounded-t-2xl border border-b-0 border-border bg-popover text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]"
     >
-      <div className="flex shrink-0 items-center justify-between gap-2 pb-2 pl-4 pr-3 pt-1">
-        <div aria-hidden="true" className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-border" />
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/60 pb-2 pl-4 pr-3 pt-1">
+        <div aria-hidden="true" className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-input/70" />
         <h2 id={titleId} className="pt-4 text-overline text-muted-foreground">
           {title}
           {srTitle && <span className="sr-only">: {srTitle}</span>}
@@ -35,13 +35,13 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({ title, srTitle, onClos
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="mt-2 flex h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-body-strong text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="mapi-press mt-2 flex h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-body-strong text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <X className="size-5" aria-hidden="true" />
           Fechar
         </button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
     </ModalDialog>
   );
 };

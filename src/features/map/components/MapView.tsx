@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Map, MapControls, MapMarker, MarkerContent, MapCircle } from '@/components/ui/map';
 import type { MapRef } from '@/components/ui/map';
 import { useAuth } from '@/hooks/useAuth';
-import { useRiskFill } from '@/components/risk/useRiskFill';
 import { useTheme } from '@/hooks/useTheme';
 import { useIsCompactMap } from '@/hooks/useMediaQuery';
 import { useTokenColor } from '@/lib/tokens';
@@ -40,9 +39,8 @@ import { LocationInitializer } from './LocationInitializer';
 import { MapLayerPanel } from './MapLayerPanel';
 import { MapLoadingOverlay } from './MapLoadingOverlay';
 import { SensorMarkers } from './SensorMarkers';
-import { MapRiskLegend } from './MapRiskLegend';
+import { MapAlertLegend } from './MapAlertLegend';
 import { MeasuredRainLegendControl } from './MeasuredRainLegendControl';
-import { thresholdsOf } from '@/components/risk/thresholds';
 import { FloodPointMarkers } from './FloodPointMarkers';
 import { MapSelectionPopups } from './MapSelectionPopups';
 import { DEFAULT_ACTIVE_LAYERS, MEASURED_RAIN_LAYER, filterFloodPointsForMap, filterSensorsForMap } from '../utils/layers';
@@ -51,6 +49,8 @@ import { useMeasuredRainLayer } from '../hooks/useMeasuredRainLayer';
 import { MeasuredRainLayer } from './MeasuredRainLayer';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
 import { useOfficialWarnings } from '@/features/warnings/hooks/useOfficialWarnings';
+import { PanelHoje } from '@/features/horizontes/components/PanelHoje';
+import { countByLevel } from '@/features/alagamento/utils/alagamentoText';
 import type { TerrainStatus } from '../utils/terrain';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
@@ -65,7 +65,7 @@ export const MapView: React.FC = () => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const isMobile = useIsCompactMap();
-  const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch, applyPrediction } = useMapData();
+  const { sensors, floodPoints, isLoading, isRefreshing, hasError, lastSuccessAt, refetch } = useMapData();
   const { notices, notify, dismiss } = useNotices();
   const {
     selectedSensorId,
@@ -154,10 +154,7 @@ export const MapView: React.FC = () => {
 
   // Cores do paint do MapLibre vêm dos tokens em runtime e seguem tema e destaque.
   const primaryColor = useTokenColor('--primary', '#5cb8ff');
-  const selectedRisk =
-    (selectedFloodPoint && (floodPointStatus?.floodPrediction?.riskLevel || selectedFloodPoint.floodPrediction?.riskLevel)) || undefined;
-  const riskFill = useRiskFill(selectedRisk);
-  const circleColor = !selectedFloodPoint ? primaryColor : riskFill;
+  const circleColor = primaryColor;
 
   // Celular: a folha inferior cobre até 70 vh; o mapa desloca o marcador para a área livre acima dela.
   const focusLat = selectedFloodPoint?.latitude ?? selectedSensor?.latitude ?? null;
@@ -172,10 +169,7 @@ export const MapView: React.FC = () => {
   // Ao vivo (ADR 0012): contagem por risco e previsões novas; o pulso do marcador segue o alerta ativo (ADR 0011).
   const overview = useMapOverview();
   const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
-  const { riskSummary, riskSummaryFailed, liveStatus, alertaBySlug } = useMapLive({
-    applyPrediction,
-    isAdmin,
-  });
+  const { liveStatus, alagamentoBySlug, alagamentoFailed } = useMapLive({ isAdmin });
 
   // Lista "Sensores": estações unificadas com a chuva medida, mesmo com a camada de chuva medida desligada no mapa.
   const measuredAll = useMemo(() => measured.query.data?.stations ?? [], [measured.query.data]);
@@ -223,14 +217,15 @@ export const MapView: React.FC = () => {
 
   const riverSensor = useMemo(() => (cards.state.river ? sensors.find((x) => x.sensorId === cards.state.river) : undefined), [cards.state.river, sensors]);
 
-  const sortedPoints = useMemo(() => sortPoints(floodPoints), [floodPoints]);
+  const sortedPoints = useMemo(() => sortPoints(floodPoints, isAdmin ? alagamentoBySlug : undefined), [floodPoints, isAdmin, alagamentoBySlug]);
   const selectedIndex = selectedFloodPoint ? sortedPoints.findIndex((p) => p.id === selectedFloodPoint.id) : -1;
   const stepPoint = (delta: number) => {
     if (sortedPoints.length === 0) return;
     selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
   };
-  const riskModel = useMemo(() => floodPoints.map((p) => p.floodPrediction).find((fp) => fp?.riskThresholds), [floodPoints]);
   const officialWarnings = useOfficialWarnings().data?.warnings ?? [];
+  const hojeCounts = useMemo(() => (isAdmin && alagamentoBySlug && !alagamentoFailed
+    ? countByLevel(floodPoints.map((p) => p.slug), alagamentoBySlug) : null), [isAdmin, alagamentoBySlug, alagamentoFailed, floodPoints]);
 
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
@@ -238,11 +233,9 @@ export const MapView: React.FC = () => {
       {!isMobile && (
         <>
           <LivePanel
-            className="absolute bottom-4 left-4 top-4 z-20 w-[360px]"
+            className="absolute bottom-4 left-4 top-4 z-20 w-[22.5rem]"
             points={floodPoints}
             sensors={sensors}
-            summary={riskSummary}
-            summaryFailed={riskSummaryFailed}
             liveStatus={liveStatus}
             lastSuccessAt={lastSuccessAt}
             overview={overview}
@@ -254,12 +247,14 @@ export const MapView: React.FC = () => {
             onStationClick={selectStation}
             selectedStationId={cards.state.station}
             officialWarnings={officialWarnings}
+            hoje={<PanelHoje warnings={officialWarnings} counts={hojeCounts} isAdmin={isAdmin} />}
             canSeeDataHealth={isAdmin}
-            alertaBySlug={isAdmin ? alertaBySlug : undefined}
+            alagamentoBySlug={isAdmin ? alagamentoBySlug : undefined}
+            alagamentoFailed={alagamentoFailed}
           />
           {/* Coluna direita: cartão de chuva e maré e, logo abaixo, as ferramentas do mapa (camadas, terreno e níveis de risco),
               cada uma recolhida num botão. Na mesma coluna para não se sobreporem quando o cartão cresce. */}
-          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[300px] flex-col items-end gap-3">
+          <div className="pointer-events-none absolute right-4 top-4 z-30 flex w-[18.75rem] flex-col items-end gap-3">
             <RainTideCard overview={overview} className="pointer-events-auto flex w-full shrink-0 flex-col gap-2 p-3.5" />
             <div className="pointer-events-auto flex shrink-0 flex-col items-end gap-3">
               <MapLayerPanel activeLayers={activeLayers} onToggle={toggleLayer} {...toolProps('layers')} />
@@ -274,13 +269,8 @@ export const MapView: React.FC = () => {
               )}
             </div>
           </div>
-          {/* Legenda de risco sempre à vista, no canto inferior direito, com a nota dos limiares do modelo. */}
-          <MapRiskLegend
-            className="pointer-events-auto absolute bottom-10 right-4 z-20 w-[300px]"
-            thresholds={thresholdsOf(floodPoints)}
-            modelVersion={riskModel?.modelVersion}
-            horizonHours={riskModel?.horizonHours}
-          />
+          {/* Legenda (5.11): um botão que abre e fecha, no canto inferior direito. */}
+          <MapAlertLegend className="pointer-events-auto absolute bottom-10 right-4 z-20" />
         </>
       )}
 
@@ -350,8 +340,7 @@ export const MapView: React.FC = () => {
           <FloodPointMarkers
             points={filteredFloodPointsForMap}
             selectedFloodPointId={selectedFloodPointId}
-            selectedRisk={selectedRisk}
-            alertaBySlug={isAdmin ? alertaBySlug : undefined}
+            alagamentoBySlug={isAdmin ? alagamentoBySlug : undefined}
             onSelect={selectFloodPoint}
           />
 
@@ -400,8 +389,8 @@ export const MapView: React.FC = () => {
         <>
           <MobileMapa
             points={floodPoints}
-            summary={riskSummary}
-            summaryFailed={riskSummaryFailed}
+            alagamentoBySlug={isAdmin ? alagamentoBySlug : undefined}
+            alagamentoFailed={alagamentoFailed}
             overview={overview}
             lastSuccessAt={lastSuccessAt}
             onSelect={selectFloodPoint}

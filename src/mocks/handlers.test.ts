@@ -3,10 +3,8 @@ import { http, HttpResponse } from 'msw';
 import { server } from './server';
 import { alertsService } from '@/features/alerts/services/alerts.service';
 import { sensorsService } from '@/features/sensors/services/sensors.service';
-import { predictionsService } from '@/features/points/services/predictions.service';
 import { publicRiskService } from '@/features/public-risk/services/public-risk.service';
 import { modelService } from '@/features/model/services/model.service';
-import { RISK_MEANING, formatProbability } from '@/components/risk/risk';
 import { alertaService } from '@/features/alerta/services/alerta.service';
 import { alertaPontoSchema } from '@/features/alerta/schemas/alerta.schema';
 import { ALERTA_FIXTURES } from './alerta';
@@ -33,17 +31,11 @@ describe('handlers MSW (dados sintéticos)', () => {
     expect(r.length).toBeGreaterThan(0);
     expect(r.every((s) => s.type === 'RIVER_LEVEL')).toBe(true);
   });
-  it('UNKNOWN na série não tem probabilidade nem porcentagem', async () => {
-    const s = await predictionsService.series('sintetico-1', 'a', 'b');
-    const unknown = s.items.find((p) => p.riskLevel === 'UNKNOWN');
-    expect(unknown?.probability).toBeNull();
-    expect(unknown?.degradationReason).toBe('AI_UNAVAILABLE');
-    expect(formatProbability(unknown?.riskLevel, unknown?.probability)).toBeNull();
-    expect(s.items.every((p) => p.modelValidationStatus === 'NOT_VALIDATED')).toBe(true);
-  });
-  it('risco público devolve RISK_MEANING sem reescrever; fora da RMR dá 422', async () => {
+  it('Minha rua em modo sombra: nível SEM_DADO "em teste", sem probabilidade; fora da RMR dá 422', async () => {
     const r = await publicRiskService.nearby(-8.05, -34.9);
-    expect(r.meaning).toBe(RISK_MEANING[r.nearestPoint!.riskLevel]);
+    expect(r.inTest).toBe(true);
+    expect(r.nearestPoint?.level).toBe('SEM_DADO');
+    expect(JSON.stringify(r)).not.toMatch(/robability|riskLevel/);
     await expect(publicRiskService.nearby(0, 0)).rejects.toMatchObject({ response: { status: 422 } });
   });
   it('simulação é ilustrativa', async () => {

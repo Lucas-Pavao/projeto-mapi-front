@@ -19,7 +19,7 @@ interface Props {
   onClose?: () => void;
 }
 
-/** Card da régua do rio (APAC): nível, tendência e as cotas oficiais. O rio fica fora do logreg_v3 e do alerta por ponto. */
+/** Card da régua do rio (APAC): nível, tendência e as cotas oficiais. O rio fica fora do alerta de alagamento por regressão. */
 export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM, trendCmH, levels, onClose }) => {
   const state = riverState(levelM, levels);
   const hasLevels = levels.pre != null || levels.alert != null || levels.flood != null;
@@ -33,14 +33,14 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
   const stops = `var(--risk-low) 0 ${a}, var(--risk-moderate) ${a} ${b}, var(--risk-high) ${b} 100%`;
   return (
     <section role="dialog" aria-label={`Régua do rio ${riverName ?? name}`} data-state={state}
-      className={cn('flex w-[300px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TOP[state])}>
+      className={cn('mapi-enter-modal flex w-[18.75rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', TOP[state])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="river-state" className={cn('inline-flex h-[22px] items-center rounded-full border-[1.5px] px-2 text-[11px] font-bold leading-[14px]', EDGE[state])}>{RIVER_STATE_LABEL[state]}</span>
           <p className="m-0 mt-1.5 text-base font-extrabold leading-[22px]">{riverName ? `${/^rio\b/i.test(riverName) ? riverName : `Rio ${riverName}`} · ${name}` : name}</p>
           <p className="m-0 text-xs text-muted-foreground">Régua de nível APAC · <span className="font-mono">{stationId}</span></p>
         </div>
-        {onClose && <button type="button" onClick={onClose} aria-label="Fechar card do rio" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-4" aria-hidden="true" /></button>}
+        {onClose && <button type="button" onClick={onClose} aria-label="Fechar card do rio" className="mapi-press flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
       </div>
       <div className="flex items-baseline gap-2">
         <span data-testid="river-level" className={cn('font-mono text-[26px] font-extrabold leading-8', levelM == null && 'text-muted-foreground')}>{levelM == null ? '—' : `${num(levelM, 2)} m`}</span>
@@ -56,8 +56,8 @@ export const RiverCard: React.FC<Props> = ({ name, riverName, stationId, levelM,
           </div>
         </>
       ) : <p className="m-0 text-xs text-muted-foreground">A APAC não informou as cotas desta régua: só o nível é mostrado.</p>}
-      <p className="m-0 text-xs leading-[17px] text-muted-foreground">Fica fora do logreg_v3 e do alerta por ponto: é mostrado para a operação.</p>
-      <Link to="/sensores" className="flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Ver série do rio</Link>
+      <p className="m-0 text-xs leading-[17px] text-muted-foreground">Fica fora do alerta de alagamento: é mostrado para a operação.</p>
+      <Link to="/sensores" className="mapi-press flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline shadow-elevation-raised hover:bg-primary/90 hover:text-primary-foreground">Ver série do rio</Link>
     </section>
   );
 };

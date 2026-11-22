@@ -4,7 +4,7 @@ export type AlertGroup = 'all' | 'risk' | 'river' | 'tide' | 'rain' | 'sensor';
 
 export const GROUPS: ReadonlyArray<{ value: AlertGroup; label: string }> = [
   { value: 'all', label: 'Todos' },
-  { value: 'risk', label: 'Risco' },
+  { value: 'risk', label: 'Alagamento' },
   { value: 'river', label: 'Rio' },
   { value: 'tide', label: 'Maré' },
   { value: 'rain', label: 'Chuva' },

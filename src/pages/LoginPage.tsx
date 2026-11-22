@@ -21,7 +21,7 @@ export const LoginPage: React.FC = () => {
         <div className="absolute top-5 right-5 flex items-center gap-2"><ThemeControls /></div>
         <img src={theme === 'light' ? logoLight : logoDark} alt="MAPi" className="h-10 w-auto self-start lg:hidden" />
         {expired && (
-          <p role="status" className="m-0 w-full max-w-[400px] rounded-[10px] border border-info/40 bg-info/10 p-3 text-xs font-medium text-info">
+          <p role="status" className="m-0 w-full max-w-[25rem] rounded-[10px] border border-info/40 bg-info/10 p-3 text-xs font-medium text-info">
             Sua sessão expirou. Entre de novo para continuar.
           </p>
         )}

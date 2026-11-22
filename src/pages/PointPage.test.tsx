@@ -1,32 +1,67 @@
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { screen, cleanup, within, waitFor } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { renderPage } from '@/test/render';
 import { PointPage } from './PointPage';
+import { ALAGAMENTO_FIXTURES } from '@/mocks/alagamento';
+
+let role = 'ADMIN';
+vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({ user: { username: 'sintetico', role } }) }));
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  role = 'ADMIN';
 });
 afterAll(() => server.close());
 
+const serve = (id: keyof typeof ALAGAMENTO_FIXTURES, slug = 'sintetico-1') =>
+  server.use(http.get('/api/alagamento/pontos', () => HttpResponse.json([{ ...ALAGAMENTO_FIXTURES[id], slug }])));
 const open = (slug = 'sintetico-1') => renderPage(<PointPage />, { route: `/pontos/${slug}`, path: '/pontos/:slug' });
 
 describe('PointPage', () => {
-  it('mostra o ponto, o risco atual (UNKNOWN mais recente, sem %) e o histórico', async () => {
+  it('cabeçalho pelo alerta por regressão: selo, Experimental, horizonte 1, 3 e 6 h e rain_v1 + balde; sem %', async () => {
+    serve('atencao_3h');
     open();
     expect(await screen.findByRole('heading', { name: 'Sintético: ponto de teste' })).toBeInTheDocument();
-    const now = await screen.findByRole('region', { name: 'Risco atual' });
-    // a previsão mais recente da fixture é UNKNOWN: motivo e última válida, sem porcentagem
-    const unknown = within(now).getByTestId('unknown-detail');
-    expect(unknown).toHaveTextContent('o modelo está fora do ar');
-    expect(unknown).toHaveTextContent(/Última previsão válida:\s*\d{2}\/\d{2}\/\d{4}/);
-    expect(now.textContent).not.toMatch(/%/);
-    const hist = await screen.findByRole('region', { name: 'Histórico de risco' });
-    expect(within(hist).getAllByText('Alto').length).toBeGreaterThan(0);
-    expect(within(hist).getAllByText(/Previsão experimental/).length).toBeGreaterThan(0); // junto das classes LOW/MEDIUM/HIGH
+    const head = await screen.findByRole('region', { name: 'Alerta de alagamento do ponto' });
+    await waitFor(() => expect(within(head).getByTestId('flood-chip')).toHaveTextContent('Atenção em 3 h'));
+    expect(within(head).getByTestId('selo-experimental')).toBeInTheDocument();
+    expect(head).toHaveTextContent('1, 3 e 6 h');
+    expect(head).toHaveTextContent('rain_v1 + balde');
+    expect(document.body.textContent).not.toMatch(/%|logreg|risco baixo|seguro|Probabilidade/i);
+  });
+
+  it('alagamento previsto: as 3 linhas por prazo e a lâmina a cada 10 min com 15 cm; por que este nível', async () => {
+    serve('alerta_1h');
+    open();
+    const panel = await screen.findByRole('region', { name: 'Alagamento previsto' });
+    await waitFor(() => expect(within(panel).getByTestId('horizonte-1')).toHaveTextContent(/18–33 cm · até/));
+    expect(within(panel).getByTestId('balde-lamina')).toHaveAttribute('aria-label', expect.stringMatching(/15 cm/));
+    expect(within(panel).queryByTestId('balde-vazoes')).toBeNull();
+    const why = screen.getByRole('region', { name: 'Por que este nível' });
+    expect(within(why).getByTestId('point-shap').children).toHaveLength(3);
+    expect(within(why).getByTestId('point-cf')).toHaveTextContent(/15 cm/);
+    expect(within(why).getByTestId('point-sens')).toHaveTextContent(/lâmina máxima entre/);
+  });
+
+  it.each(['sem_dado_chuva_ausente', 'sem_dado_previsao_fora', 'sem_dado_sem_terreno', 'sem_dado_terreno_em_revisao'] as const)(
+    'SEM_DADO (%s): motivo, sem gráfico e nunca "Sem alerta"', async (id) => {
+      serve(id);
+      open();
+      expect(await screen.findByTestId('point-empty')).toHaveTextContent(ALAGAMENTO_FIXTURES[id].reasonText!);
+      expect(screen.queryByTestId('balde-lamina')).toBeNull();
+      expect(document.body.textContent).not.toMatch(/Sem alerta/);
+    });
+
+  it('visitante: "Alerta experimental" e sem o nível', async () => {
+    role = 'USER';
+    open();
+    const head = await screen.findByRole('region', { name: 'Alerta de alagamento do ponto' });
+    expect(within(head).getByTestId('flood-chip')).toHaveTextContent('Alerta experimental');
+    expect(await screen.findByTestId('point-empty')).toHaveTextContent(/só o administrador vê/);
   });
 
   it('terreno e maré trazem o aviso da ADR 0009', async () => {
@@ -42,13 +77,6 @@ describe('PointPage', () => {
     expect(await screen.findByRole('heading', { name: 'Ponto não encontrado' })).toBeInTheDocument();
   });
 
-  it('série vazia: estado vazio, sem inventar risco', async () => {
-    server.use(http.get('/api/pontos/:slug/predictions', ({ params }) => HttpResponse.json({ slug: params.slug, from: 'a', to: 'b', items: [] })));
-    open();
-    expect(await screen.findByText('Sem previsões nas últimas 24 h.')).toBeInTheDocument();
-    expect(screen.queryByRole('region', { name: 'Histórico de risco' })).toBeNull();
-  });
-
   it('erro da API: mensagem e botão de nova tentativa', async () => {
     server.use(http.get('/api/pontos/:slug', () => HttpResponse.json({}, { status: 500 })));
     open();
@@ -58,26 +86,7 @@ describe('PointPage', () => {
 
   it('ponto desativado avisa', async () => {
     open('sintetico-2');
-    expect(await screen.findByText('Ponto desativado: sem previsões novas.')).toBeInTheDocument();
-  });
-
-  it('gráfico traz os limiares do metadata, não 50 % e 80 %', async () => {
-    open();
-    const chart = await screen.findByTestId('probability-chart');
-    expect(await within(chart).findByTestId('threshold-high')).toHaveTextContent('24,4%');
-    expect(within(chart).getByTestId('threshold-medium')).toHaveTextContent('1,6%');
-    expect(chart.textContent).not.toMatch(/80%|50%/);
-  });
-
-  it('mostra o aviso de sintético quando a previsão é sintética', async () => {
-    server.use(http.get('/api/pontos/:slug', ({ params }) => HttpResponse.json({ id: 1, slug: params.slug, name: 'Sintético: ponto', active: true, latitude: -8, longitude: -34.9, floodPrediction: { riskLevel: 'LOW', floodProbability: 0.01, trainingData: 'SYNTHETIC', contributors: [{ featureId: 'rain_3h', label: 'Chuva 3 h', contribution: 0.031, value: 12.4, unit: 'mm' }, { featureId: 'tide', label: 'Nível da maré', contribution: -0.01, value: 0, unit: 'm' }], imputedFeatures: [{ featureId: 'rain_1h', label: 'Chuva 1 h' }, { featureId: 'tide', label: 'Nível da maré' }] } })));
-    open();
-    expect(await screen.findByTestId('synthetic-warning')).toHaveTextContent(/SINTÉTICO/);
-    expect(await screen.findByTestId('contributors')).toHaveTextContent('Chuva 3 h: 12,4 mm');
-    expect(screen.getByTestId('contributors')).toHaveTextContent('+3,1 p.p.');
-    expect(screen.getAllByTestId('imputed')[0]).toHaveTextContent('Chuva 1 h');
-    expect(screen.getByTestId('contributors')).toHaveTextContent('Nível da maré: imputado');
-    expect(screen.getByTestId('contributors')).not.toHaveTextContent('0 m');
+    expect(await screen.findByText('Ponto desativado: sem alerta novo.')).toBeInTheDocument();
   });
 
   it('Chuva agora cita a estação usada e o rio fica fora do modelo', async () => {

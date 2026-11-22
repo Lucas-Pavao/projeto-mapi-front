@@ -85,12 +85,12 @@ export const RuleFormDialog: React.FC<Props> = ({ rule, points, saving, error, o
           </Field>
         )}
         {info.usesMinRisk && (
-          <Field label="Risco mínimo" error={errors.minRisk}>
+          <Field label="Nível mínimo" error={errors.minRisk}>
             {(p) => (
               <Select {...p} value={minRisk} onChange={(e) => setMinRisk(e.target.value as 'MEDIUM' | 'HIGH' | '')}>
                 <option value="">Escolha…</option>
-                <option value="MEDIUM">Moderado ou acima</option>
-                <option value="HIGH">Alto</option>
+                <option value="MEDIUM">Atenção ou alerta</option>
+                <option value="HIGH">Só alerta</option>
               </Select>
             )}
           </Field>

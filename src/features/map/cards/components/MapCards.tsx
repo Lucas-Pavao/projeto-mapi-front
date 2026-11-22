@@ -50,7 +50,9 @@ const AnchoredCard: React.FC<{ lon: number; lat: number; label: string; children
     const update = () => {
       const p = map.project([lon, lat]);
       const c = map.getContainer();
-      setBox(anchoredBox(p.x, p.y, c.clientWidth, c.clientHeight));
+      // Card tem 20rem: no modo projeção (raiz a 125%) fica com 400 px; a âncora usa a largura real.
+      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setBox(anchoredBox(p.x, p.y, c.clientWidth, c.clientHeight, (CARD_W / 16) * remPx));
     };
     update();
     map.on('move', update);
@@ -192,7 +194,7 @@ export const MapCardsDock: React.FC<DockProps> = ({ cards, floodPoints, floodPoi
   }
   return (
     <>
-      {analysis && <CardFrame onClose={closeAnalysis} outside={false} className="absolute inset-y-0 right-0 z-40 w-[480px] max-w-full">{analysis}</CardFrame>}
+      {analysis && <CardFrame onClose={closeAnalysis} outside={false} className="absolute inset-y-0 right-0 z-40 w-[30rem] max-w-full">{analysis}</CardFrame>}
       {stationDock && <CardFrame onClose={closeStation} outside={false} className={`absolute top-4 z-40 scroll max-h-[calc(100%-2rem)] overflow-y-auto overscroll-contain rounded-[14px] ${stationDockSide(state)}`}>{stationDock}</CardFrame>}
       {/* Altura do mapa (top e bottom fixos), como no protótipo: o card rola por dentro e o rodapé com o relato fica sempre visível. */}
       {location && <CardFrame onClose={closeLocation} className={`absolute bottom-4 top-4 z-40 flex ${state.location?.side === 'left' ? 'left-[392px]' : 'right-4'}`}>{location}</CardFrame>}

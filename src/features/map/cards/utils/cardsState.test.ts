@@ -16,10 +16,10 @@ describe('um card por vez', () => {
     expect(s).toMatchObject({ location: null, river: 'R' });
   });
   it('análise: troca de ponto não fecha o painel e mantém a aba', () => {
-    let s = run(EMPTY_CARDS, { type: 'openPoint', slug: 'A' }, { type: 'openAnalysis', slug: 'A', tab: 'inputs' });
-    expect(s).toMatchObject({ point: null, analysis: { slug: 'A', tab: 'inputs' } });
+    let s = run(EMPTY_CARDS, { type: 'openPoint', slug: 'A' }, { type: 'openAnalysis', slug: 'A', tab: 'balde' });
+    expect(s).toMatchObject({ point: null, analysis: { slug: 'A', tab: 'balde' } });
     s = run(s, { type: 'openPoint', slug: 'B' });
-    expect(s.analysis).toEqual({ slug: 'B', tab: 'inputs' });
+    expect(s.analysis).toEqual({ slug: 'B', tab: 'balde' });
     expect(s.point).toBeNull();
   });
   it('candidata abre a estação ao lado do painel', () => {

@@ -53,6 +53,13 @@
   --chart-5: #b3c2c9;
   --elevation-raised: 0 1px 2px rgba(0, 0, 0, 0.5);
   --elevation-overlay: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --surface-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --duration-fast: 150ms;
+  --duration-ui: 200ms;
+  --duration-sheet: 280ms;
 }
 
 /* Também vale em qualquer elemento com data-theme="light" (ex.: a folha do Relatório dentro do app escuro). */
@@ -105,6 +112,7 @@
   --chart-5: #5b6b72;
   --elevation-raised: 0 1px 2px rgba(12, 27, 34, 0.08);
   --elevation-overlay: 0 8px 24px rgba(12, 27, 34, 0.16);
+  --surface-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.75);
 }
 
 /* Cor de destaque (data-accent): Capibaribe é o padrão dos tokens. Valores de design-ref/app.css. */

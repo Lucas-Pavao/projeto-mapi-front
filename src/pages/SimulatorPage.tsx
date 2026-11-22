@@ -1,3 +1,5 @@
+import { LeanTip } from '@/components/LeanTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import React, { useState } from 'react';
 import { FlaskConical } from 'lucide-react';
 import { EmptyState } from '@/components/ui/query-state';
@@ -80,10 +82,10 @@ export const SimulatorPage: React.FC = () => {
 
   return (
     <div className="flex w-full flex-col gap-4 p-4 lg:h-full lg:flex-row">
-      <form onSubmit={run} noValidate aria-label="Parâmetros da simulação" className={`${panel} custom-scrollbar flex shrink-0 flex-col gap-3.5 p-[18px] lg:w-[380px] lg:overflow-y-auto`}>
+      <form onSubmit={run} noValidate aria-label="Parâmetros da simulação" className={`${panel} custom-scrollbar flex shrink-0 flex-col gap-3.5 p-[18px] lg:w-[23.75rem] lg:overflow-y-auto`}>
         <div>
-          <h1 className="m-0 text-[22px] leading-7 font-extrabold text-foreground">Simulador do balde</h1>
-          <p className="mt-1 mb-0 text-[13px] leading-[18px] text-muted-foreground">Modelo físico M1a (projeto-mapi-ai/avaliacao/balde.py): a chuva enche a depressão da rua e a galeria esvazia até a capacidade de projeto.</p>
+          <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Simulador do balde<LeanTip text="Modelo físico do balde: a chuva enche a depressão da rua e a galeria esvazia até a capacidade de projeto." /></h1>
+          <OnlyInDetail><p className="mt-1 mb-0 text-[13px] leading-[18px] text-muted-foreground">Modelo físico M1a (projeto-mapi-ai/avaliacao/balde.py): a chuva enche a depressão da rua e a galeria esvazia até a capacidade de projeto.</p></OnlyInDetail>
           <p role="note" className="mt-2 mb-0 flex items-center gap-1.5 text-xs leading-4 font-bold text-warning">
             <FlaskConical className="size-3.5 shrink-0" aria-hidden="true" /> Simulação — não é previsão. Ilustrativo, sem maré.
           </p>
@@ -131,11 +133,13 @@ export const SimulatorPage: React.FC = () => {
             {(p) => <Textarea {...p} value={manual} onChange={(e) => setManual(e.target.value)} />}
           </Field>
         )}
+        <OnlyInDetail>
         <div className="rounded-[10px] border border-dashed border-border p-2.5 text-[13px] leading-[18px]">
           <strong>Fora do M1a real</strong>
           <br />
           <span className="text-muted-foreground">Coeficiente C, área contribuinte, área da depressão, cota da rua e freio de maré (M1b) não são controles do modelo: o M1a só aceita f e a escala da curva (ADR 0014). Sem maré: a variante só entra com o desnível entre as referências aprovado (ADR 0009).</span>
         </div>
+        </OnlyInDetail>
         <TideDatumNotice compact />
         <div className="sticky bottom-0 -mx-[18px] -mb-[18px] bg-card px-[18px] pt-2 pb-[18px]">
           <Button type="submit" className="h-11 w-full md:h-9" disabled={sim.isPending}>{sim.isPending ? 'Simulando…' : 'Simular'}</Button>

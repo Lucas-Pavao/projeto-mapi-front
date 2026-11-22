@@ -53,7 +53,8 @@ describe('SimulatorPage', () => {
     expect(screen.getByLabelText(/Escala da curva/)).toHaveAttribute('min', '0.7');
     expect(screen.queryByLabelText(/Coeficiente de escoamento/)).toBeNull();
     expect(screen.queryByLabelText(/Nível lá fora/)).toBeNull();
-    expect(screen.getByText('Fora do M1a real')).toBeInTheDocument();
+    expect(screen.queryByText('Fora do M1a real')).toBeNull(); // modo enxuto: só em Detalhes (5.11)
+    expect(screen.getAllByTestId('info-tip').length).toBeGreaterThan(0);
   });
 
   it('modo hora a hora aceita vírgula decimal e valida faixas antes de enviar', async () => {

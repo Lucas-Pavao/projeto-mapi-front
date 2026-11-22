@@ -4,6 +4,8 @@ import { Info, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatHoraCurta } from '@/features/operacao/utils/format';
 import { CEMADEN_ATTRIBUTION } from '@/features/sensors/schemas/station.schema';
+import { InfoTip } from '@/components/InfoTip';
+import { OnlyInDetail } from '@/lib/detailMode';
 import type { StationCardData } from '../schemas/stationCard.schema';
 import {
   TONE_BORDER, TONE_TEXT, TONE_TINT, TONE_TOP, accText, aliasText, liveText, monthText, nowText, pedText, quarantineText, roleTag, sourceClass, sourceText, stateMeta, stateNote,
@@ -51,19 +53,20 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
   const last = c.blocks[c.blocks.length - 1];
   return (
     <section role="dialog" aria-label={`Pluviômetro ${name}`} data-state={c.state} data-pedonly={c.pedOnly}
-      className={cn('flex w-[320px] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
+      className={cn('mapi-enter-modal flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="state-chip" className={cn('inline-flex min-h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 py-[3px] text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
             <span aria-hidden="true" className={cn('size-[7px] shrink-0 rounded-full border-[1.5px]', TONE_BORDER[meta.tone], meta.dashed ? 'bg-transparent' : 'bg-current')} />
             {meta.label}
+            {note && <InfoTip text={`${note.title} ${note.text}`} side="bottom" />}
           </span>
           {c.pedOnly && c.state !== 'NORMAL' && <span data-testid="ped-only-tag" className="ml-1.5 inline-flex h-[22px] items-center rounded-full border border-primary px-2 text-[11px] font-bold text-primary">só PED</span>}
           <p className="m-0 mt-1.5 text-base font-extrabold leading-[22px]">{name}</p>
           <p className="m-0 text-xs leading-4 text-muted-foreground">Pluviômetro Cemaden · <span className="font-mono">{c.canonicalId}</span></p>
         </div>
         {onClose && (
-          <button type="button" onClick={onClose} aria-label="Fechar card do pluviômetro" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+          <button type="button" onClick={onClose} aria-label="Fechar card do pluviômetro" className="mapi-press flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
             <X className="size-4" aria-hidden="true" />
           </button>
         )}
@@ -71,23 +74,27 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
 
       <div className="flex items-end justify-between gap-2.5">
         <div><div className="text-[11px] leading-[14px] text-muted-foreground">Chuva agora</div><div data-testid="now" className={cn('font-mono text-[26px] font-extrabold leading-8', now.warn && 'text-warning')}>{now.value}</div></div>
-        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">valor exibido vem de</div><div data-testid="source" className={cn('text-[13px] font-bold leading-[18px]', sourceClass(c))}>{sourceText(c)}</div></div>
+        <div className="text-right"><div className="text-[11px] leading-[14px] text-muted-foreground">fonte</div><div data-testid="source" className={cn('text-[13px] font-bold leading-[18px]', sourceClass(c))}>{sourceText(c)}</div></div>
       </div>
 
       <div>
         <Bars blocks={c.blocks} name={name} />
         <div className="flex justify-between font-mono text-[10px] leading-[14px] text-muted-foreground"><span>{formatHoraCurta(first?.endUtc) ?? '—'}</span><span>últimas 3 h</span><span>{formatHoraCurta(last?.endUtc) ?? '—'}</span></div>
-        <div className="mt-0.5 flex gap-2.5 text-[10px] leading-[14px] text-muted-foreground">
-          <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-primary" /> PED</span>
-          <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-chart-3" /> ao vivo</span>
-          <span><span aria-hidden="true" className="inline-block size-2 rounded-sm border border-dashed border-warning" /> sem dado</span>
-        </div>
+        <OnlyInDetail>
+          <div data-testid="bars-legend" className="mt-0.5 flex gap-2.5 text-[10px] leading-[14px] text-muted-foreground">
+            <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-primary" /> PED</span>
+            <span><span aria-hidden="true" className="inline-block size-2 rounded-sm bg-chart-3" /> ao vivo</span>
+            <span><span aria-hidden="true" className="inline-block size-2 rounded-sm border border-dashed border-warning" /> sem dado</span>
+          </div>
+        </OnlyInDetail>
       </div>
 
+      <OnlyInDetail>
       <div className="grid grid-cols-2 gap-1.5">
-        <div className="rounded-lg bg-muted p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">Ao vivo (CEMADEN)</div><div data-testid="live" className="font-mono text-[13px] font-bold leading-[18px]">{liveText(c)}</div></div>
-        <div className="rounded-lg bg-muted p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">PED (CEMADEN_PED)</div><div data-testid="ped" className="font-mono text-[13px] font-bold leading-[18px]">{pedText(c)}</div></div>
+        <div className="rounded-lg bg-secondary p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">Ao vivo (CEMADEN)</div><div data-testid="live" className="font-mono text-[13px] font-bold leading-[18px]">{liveText(c)}</div></div>
+        <div className="rounded-lg bg-secondary p-2"><div className="text-[11px] leading-[14px] text-muted-foreground">PED (CEMADEN_PED)</div><div data-testid="ped" className="font-mono text-[13px] font-bold leading-[18px]">{pedText(c)}</div></div>
       </div>
+      </OnlyInDetail>
 
       <div className="grid grid-cols-3 gap-1.5" data-testid="accs">
         {([['1 h', c.acc1hMm], ['3 h', c.acc3hMm], ['24 h', c.acc24hMm]] as const).map(([l, v]) => (
@@ -96,12 +103,15 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
       </div>
 
       {note && (
+        <OnlyInDetail>
         <div role="status" data-testid="note" className={cn('flex gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-xs leading-[17px]', TONE_BORDER[note.tone], TONE_TINT[note.tone])}>
           <Info className={cn('mt-px size-4 shrink-0', TONE_TEXT[note.tone])} aria-hidden="true" />
           <span><strong>{note.title}</strong> {note.text}</span>
         </div>
+        </OnlyInDetail>
       )}
 
+      <OnlyInDetail>
       <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-2.5 gap-y-1 text-xs leading-4">
         <dt className="text-muted-foreground">Checagem do mês</dt><dd className={cn('m-0 font-bold', TONE_TEXT[month.tone])}>{month.text}</dd>
         <dt className="text-muted-foreground">Quarentena hoje</dt><dd className="m-0">{quarantineText(c.quarantineToday)}</dd>
@@ -122,11 +132,14 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
           );
         })}
       </div>
+      </OnlyInDetail>
 
-      <Link to="/sensores" className="flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Ver série e divergências</Link>
+      <Link to="/sensores" className="mapi-press flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline shadow-elevation-raised hover:bg-primary/90 hover:text-primary-foreground">Ver série e divergências</Link>
+      <OnlyInDetail>
       <p className="m-0 text-[9px] leading-3 tracking-[.02em] text-muted-foreground">
         {c.attribution ?? CEMADEN_ATTRIBUTION} · {c.state === 'NO_RESPONSE' ? (c.lastReadingUtc ? `última leitura ${formatHoraCurta(c.lastReadingUtc)}` : 'sem leitura em 30 dias') : `atualizado ${c.lastReadingUtc ? formatHoraCurta(c.lastReadingUtc) : '—'}`}
       </p>
+      </OnlyInDetail>
     </section>
   );
 };

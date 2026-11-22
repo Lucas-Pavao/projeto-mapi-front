@@ -1,30 +1,20 @@
-import { num } from '@/features/operacao/utils/format';
-import type { FloodPointResponseDTO } from '../../types';
+import { LEGEND_RULE } from '@/features/alagamento/utils/alagamentoText';
 
-export const ANALYSIS_TABS = ['why', 'inputs', 'prov'] as const;
+/** Abas do painel de análise completa (5.4): Por quê · Balde · Origem. */
+export const ANALYSIS_TABS = ['why', 'balde', 'prov'] as const;
 export type AnalysisTab = (typeof ANALYSIS_TABS)[number];
-export const TAB_LABEL: Record<AnalysisTab, string> = { why: 'Por quê', inputs: 'Entradas', prov: 'Origem' };
+export const TAB_LABEL: Record<AnalysisTab, string> = { why: 'Por quê', balde: 'Balde', prov: 'Origem' };
 
-/** Aba da URL (?aba=): valor fora da lista cai em "Por quê". */
+/** Aba da URL (?aba=): valor fora da lista (inclusive a antiga "inputs") cai em "Por quê". */
 export const parseTab = (v: string | null | undefined): AnalysisTab => (ANALYSIS_TABS as readonly string[]).includes(v ?? '') ? (v as AnalysisTab) : 'why';
 
-export interface InputTile { id: string; label: string; value: string; sub: string; missing: boolean; imputed: boolean }
-
-/** Entradas do modelo agora, lidas do ponto. Valor ausente fica "—" (nunca 0); feature imputada é declarada. */
-export function inputTiles(point: FloodPointResponseDTO, imputedIds: ReadonlySet<string>): InputTile[] {
-  const d = point.liveData;
-  const agg = d?.historicalAggregates;
-  const tide = point.tideHeight ?? d?.tideHeight ?? null;
-  const mk = (id: string, label: string, v: number | null | undefined, unit: string, sub: string, digits = 1): InputTile => ({
-    id, label, value: imputedIds.has(id) ? 'imputado' : v == null ? '—' : `${num(v, digits)} ${unit}`, sub: imputedIds.has(id) ? 'faltou hora na janela' : v == null ? 'sem leitura' : sub, missing: v == null, imputed: imputedIds.has(id),
-  });
-  return [
-    mk('current_rainfall', 'Chuva atual', d?.precipitation, 'mm/h', 'estação mais próxima válida'),
-    mk('rainfall_3h_accumulated', 'Chuva 3 h', agg?.rain3h, 'mm', 'medida · Cemaden'),
-    mk('rainfall_6h_accumulated', 'Chuva 6 h', agg?.rain6h, 'mm', 'medida · Cemaden'),
-    mk('rainfall_24h_accumulated', 'Chuva 24 h', agg?.rain24h, 'mm', 'medida · Cemaden'),
-    mk('tide_level', 'Maré', tide, 'm', point.tideUnit ?? 'DHN (NR)', 2),
-    mk('altitude', 'Altitude do ponto', point.altitudeM, 'm', 'cadastro do ponto'),
-    mk('distance_to_channel', 'Até o canal', point.distanceToChannelM, 'm', 'cadastro do ponto', 0),
-  ];
-}
+/** Textos dos ⓘ do painel (5.11 item 9). */
+export const ANALYSIS_INFO = {
+  level: `Lâmina máxima prevista por prazo, nos cenários provável (q50) e pessimista (q95). ${LEGEND_RULE}`,
+  shap: 'As três entradas que mais mudaram a chuva prevista pelo rain_v1 nesta previsão (TreeSHAP local), em mm de chuva.',
+  cf: 'Quanta chuva a mais na próxima hora, além da prevista (q50), levaria a lâmina a 15 cm. Calculado no próprio balde, por bissecção.',
+  balde: 'Conta do balde a cada 10 min: 3 h medidas antes de agora e o prazo servido depois. A água entra com a chuva e sai pela galeria até a capacidade.',
+  sens: 'Quanto a lâmina muda com a capacidade da galeria (f, sem fonte), o coeficiente de escoamento C e a chuva de projeto (TR, Te) nas faixas registradas.',
+  prov: 'Rota, modelos, versão do código, validade e entradas desta previsão.',
+  stations: 'A chuva do ponto é o maior valor entre as estações válidas a até 5 km. Toque para abrir o card da estação.',
+};

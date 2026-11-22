@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { meanRainSeries, rainNow, riverState, sortPoints, tideNow, fmtNum, probabilityByPoint } from './overview';
+import { meanRainSeries, rainNow, riverState, sortPoints, tideNow, fmtNum } from './overview';
 import type { FloodPointResponseDTO } from '../types';
 
 const T = (min: number) => new Date(Date.UTC(2026, 9, 21, 12, min)).toISOString();
-const pt = (name: string, riskLevel: string, p: number | null) => ({ name, floodPrediction: { riskLevel, floodProbability: p } }) as unknown as FloodPointResponseDTO;
 
 describe('overview', () => {
   it('chuva média por instante ignora nulos; sem nenhum fica nulo', () => {
@@ -20,13 +19,12 @@ describe('overview', () => {
     expect(tideNow(series, Date.parse(T(300)))).toBeNull();
     expect(tideNow([...series].reverse().map((p, i) => ({ t: series[i].t, v: p.v })), Date.parse(T(0)))?.rising).toBe(false);
   });
-  it('ordena Alto, Moderado, Indisponível, Baixo e, no nível, por probabilidade', () => {
-    const out = sortPoints([pt('b', 'LOW', 0.1), pt('c', 'UNKNOWN', null), pt('a', 'LOW', 0.2), pt('d', 'HIGH', 0.7), pt('e', 'MEDIUM', 0.4)]);
-    expect(out.map((p) => p.name)).toEqual(['d', 'e', 'c', 'a', 'b']);
-  });
-  it('probabilidade por ponto: UNKNOWN vira buraco', () => {
-    const m = probabilityByPoint([{ slug: 'x', items: [{ slug: 'x', riskLevel: 'LOW', probability: 0.2, issuedAt: T(10) }, { slug: 'x', riskLevel: 'UNKNOWN', probability: 0.9, issuedAt: T(0) }] as never }]);
-    expect(m.get('x')).toEqual([null, 0.2]);
+  it('ordena pelo alerta por regressão: Alerta, Atenção, Sem dado (inclusive sem linha), Sem alerta; no nível, pela lâmina de agora', () => {
+    const P = (name: string) => ({ name, slug: name }) as unknown as FloodPointResponseDTO;
+    const by = new Map([['b', { level: 'SEM_ALERTA', hNowCm: 0 }], ['c', { level: 'SEM_DADO', hNowCm: null }], ['a', { level: 'ALERTA', hNowCm: 16 }],
+      ['d', { level: 'ALERTA', hNowCm: 22 }], ['e', { level: 'ATENCAO', hNowCm: 3 }]] as const) as never;
+    expect(sortPoints(['b', 'c', 'a', 'd', 'e', 'f'].map(P), by).map((p) => p.name)).toEqual(['d', 'a', 'e', 'c', 'f', 'b']);
+    expect(sortPoints(['b', 'a'].map(P)).map((p) => p.name)).toEqual(['a', 'b']); // visitante: por nome
   });
   it('estado do rio pelas cotas', () => {
     const lv = { riverPreAlertLevel: 1.7, riverAlertLevel: 2.4, riverFloodLevel: 3.1 };
@@ -36,5 +34,14 @@ describe('overview', () => {
   });
   it('formata com vírgula', () => {
     expect(fmtNum(0.22, 2)).toBe('0,22');
+  });
+});
+
+describe('cleanStationName', () => {
+  it('tira colchetes e caixa alta', async () => {
+    const { cleanStationName } = await import('./overview');
+    expect(cleanStationName('[CEMADEN] ENGENHO VELHO [H]')).toBe('Engenho Velho');
+    expect(cleanStationName('[APAC] Jardim Primavera')).toBe('Jardim Primavera');
+    expect(cleanStationName(null)).toBeNull();
   });
 });
