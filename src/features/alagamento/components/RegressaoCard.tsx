@@ -26,6 +26,8 @@ interface Props {
   /** Rota da página do ponto (atalho). */
   pageTo?: string;
   onClose?: () => void;
+  /** Bloco extra antes dos botões (ex.: "Hoje", com o INMET e a próxima hora). */
+  extra?: React.ReactNode;
   className?: string;
 }
 
@@ -33,7 +35,7 @@ interface Props {
  * Card do ponto crítico pelo alerta por regressão (componentes `CardPonto` e `AlertaRegressao` da prancha "Nível 6").
  * Enxuto: selo, nome, lâmina e chuva agora, previsão de lâmina e botões. O bloco técnico só aparece em Detalhes.
  */
-export const RegressaoCard: React.FC<Props> = ({ ponto, name, place, onAnalysis, pageTo, onClose, className }) => {
+export const RegressaoCard: React.FC<Props> = ({ ponto, name, place, onAnalysis, pageTo, onClose, extra, className }) => {
   const chip = floodChipOf(ponto);
   return (
     <article data-testid="regressao-card" data-level={ponto.level} aria-label={`Alerta de alagamento: ${name ?? ponto.name ?? ponto.slug}`}
@@ -55,6 +57,7 @@ export const RegressaoCard: React.FC<Props> = ({ ponto, name, place, onAnalysis,
       </div>
       <AlertaRegressao ponto={ponto} showChip={false} />
       <OnlyInDetail><RegressaoDetalhes ponto={ponto} /></OnlyInDetail>
+      {extra}
       <div className="flex gap-2">
         <button type="button" onClick={onAnalysis}
           className="mapi-press h-10 flex-1 rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground shadow-elevation-raised hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">

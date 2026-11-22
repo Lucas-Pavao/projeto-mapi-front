@@ -46,6 +46,8 @@ interface Props {
   alagamentoBySlug?: ReadonlyMap<string, AlagamentoPonto>;
   /** Leitura do alerta falhou: contagem em traço, nunca zero. */
   alagamentoFailed?: boolean;
+  /** Bloco "Hoje" (INMET, dia de risco, próxima hora). Com ele, o aviso do INMET vai dentro do bloco. */
+  hoje?: React.ReactNode;
   /** Só ADMIN abre "Saúde dos dados" (ADR 0010). */
   canSeeDataHealth: boolean;
   className?: string;
@@ -62,7 +64,7 @@ const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-
 /** Painel esquerdo "Agora na RMR" do mapa (Main.dc.html): contagem, abas Pontos críticos e Sensores, fontes. */
 export const LivePanel: React.FC<Props> = ({
   points, sensors, liveStatus, lastSuccessAt, overview, selectedFloodPointId, selectedSensorId, onFloodPointClick, onSensorClick, canSeeDataHealth, className,
-  alagamentoBySlug, alagamentoFailed = false, stations = [], onStationClick, selectedStationId, officialWarnings = [],
+  alagamentoBySlug, alagamentoFailed = false, stations = [], onStationClick, selectedStationId, officialWarnings = [], hoje,
 }) => {
   const [tab, setTab] = useState<Tab>('points');
   const sorted = useMemo(() => sortPoints(points, alagamentoBySlug), [points, alagamentoBySlug]);
@@ -127,7 +129,7 @@ export const LivePanel: React.FC<Props> = ({
           <p role="status" className="m-0 text-xs leading-4 text-warning">Sem atualização ao vivo: os números podem estar atrasados.</p>
         )}
         <ExperimentalTag className="self-start" />
-        <OfficialWarningBadge warnings={officialWarnings} />
+        {hoje ?? <OfficialWarningBadge warnings={officialWarnings} />}
         <div role="tablist" aria-label="Tipo de lista" className="grid grid-cols-2 gap-1 rounded-[10px] bg-muted p-1">
           {tabBtn('points', `Pontos críticos · ${points.length}`)}
           {tabBtn('sensors', `Sensores · ${unified.length + sensorRows.length + tideRow}`)}

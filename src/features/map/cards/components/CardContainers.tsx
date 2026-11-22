@@ -17,6 +17,7 @@ import { hasRole, parseRole } from '@/lib/roles';
 import { useAlagamentoPontos } from '@/features/alagamento/hooks/useAlagamentoPontos';
 import { RiverCard } from './RiverCard';
 import { StationCard } from './StationCard';
+import { PointHoje } from '@/features/horizontes/components/PointHoje';
 
 const Shell: React.FC<{ label: string; onClose?: () => void; children: React.ReactNode; className?: string }> = ({ label, onClose, children, className }) => (
   <div role="dialog" aria-label={label} className={`flex w-[20rem] max-w-full flex-col gap-2 rounded-[14px] border border-border bg-popover p-3.5 text-[13px] text-foreground shadow-elevation-overlay ${className ?? ''}`}>
@@ -44,7 +45,8 @@ export const PointCardContainer: React.FC<PointProps> = ({ point, onClose, onOpe
   const al = useAlagamentoPontos(isAdmin);
   return (
     <PointCard point={point} rain={rain.data} onClose={onClose} onOpenAnalysis={onOpenAnalysis} isAdmin={isAdmin}
-      alagamento={al.data?.find((a) => a.slug === point.slug)} alagamentoLoading={al.isLoading} alagamentoError={al.isError} />
+      alagamento={al.data?.find((a) => a.slug === point.slug)} alagamentoLoading={al.isLoading} alagamentoError={al.isError}
+      hoje={<PointHoje slug={point.slug} />} />
   );
 };
 

@@ -49,6 +49,8 @@ import { useMeasuredRainLayer } from '../hooks/useMeasuredRainLayer';
 import { MeasuredRainLayer } from './MeasuredRainLayer';
 import { collectNearbySensorIds } from '../utils/nearbySensors';
 import { useOfficialWarnings } from '@/features/warnings/hooks/useOfficialWarnings';
+import { PanelHoje } from '@/features/horizontes/components/PanelHoje';
+import { countByLevel } from '@/features/alagamento/utils/alagamentoText';
 import type { TerrainStatus } from '../utils/terrain';
 import type { SensorResponseDTO, FloodPointResponseDTO } from '../types';
 
@@ -222,6 +224,8 @@ export const MapView: React.FC = () => {
     selectFloodPoint(sortedPoints[(Math.max(selectedIndex, 0) + delta + sortedPoints.length) % sortedPoints.length]);
   };
   const officialWarnings = useOfficialWarnings().data?.warnings ?? [];
+  const hojeCounts = useMemo(() => (isAdmin && alagamentoBySlug && !alagamentoFailed
+    ? countByLevel(floodPoints.map((p) => p.slug), alagamentoBySlug) : null), [isAdmin, alagamentoBySlug, alagamentoFailed, floodPoints]);
 
   return (
     <div className="h-full min-h-0 w-full bg-background overflow-hidden font-sans selection:bg-primary/30 text-foreground relative">
@@ -243,6 +247,7 @@ export const MapView: React.FC = () => {
             onStationClick={selectStation}
             selectedStationId={cards.state.station}
             officialWarnings={officialWarnings}
+            hoje={<PanelHoje warnings={officialWarnings} counts={hojeCounts} isAdmin={isAdmin} />}
             canSeeDataHealth={isAdmin}
             alagamentoBySlug={isAdmin ? alagamentoBySlug : undefined}
             alagamentoFailed={alagamentoFailed}

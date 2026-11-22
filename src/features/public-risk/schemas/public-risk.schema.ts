@@ -16,6 +16,8 @@ export const publicRiskSchema = z.object({
       worstHorizonHours: z.number().int().nullable().optional(),
       issuedAt: isoSchema.nullable().optional(),
       reason: z.string().nullable().optional(),
+      /** Município do ponto: escolhe a previsão do INMET da linha oficial. */
+      municipality: z.string().nullable().optional(),
     })
     .nullable(),
   rainLastHourMm: z.number().nullable().optional(),

@@ -7,6 +7,7 @@ import { gestaoHandlers } from './handlers-gestao';
 import { cenariosHandlers } from './handlers-cenarios';
 import { alertaHandlers } from './alerta';
 import { alagamentoHandlers } from './alagamento';
+import { avisoFixture, forecastFixture, horizonsFixture } from './horizontes';
 
 const page = <T,>(content: T[]) => ({ page: 0, size: 20, totalElements: content.length, content });
 
@@ -172,6 +173,13 @@ export const handlers = [
     const p = d.points.find((x) => x.slug === params.slug);
     return p ? HttpResponse.json(p) : HttpResponse.json({ message: 'não encontrado' }, { status: 404 });
   }),
+  http.get<{ slug: string }>('/api/horizontes/:slug', ({ params }) => HttpResponse.json(horizonsFixture(params.slug, { aviso: true }))),
+  http.get<{ m: string }>('/api/previsao-oficial/:m', ({ params }) => HttpResponse.json(forecastFixture(params.m))),
+  http.get<{ m: string }>('/api/public/previsao-oficial/:m', ({ params }) => HttpResponse.json(forecastFixture(params.m))),
+  http.get('/api/public/avisos-oficiais/:m', () => HttpResponse.json({
+    source: 'INMET', attribution: 'INMET — Instituto Nacional de Meteorologia (https://avisos.inmet.gov.br)',
+    emissionNote: 'firstSeenAt é proxy posterior à emissão real.', referenceTimeUtc: new Date().toISOString(), warnings: [avisoFixture()],
+  })),
   http.get('/api/warnings/official/active', () =>
     HttpResponse.json({
       source: 'INMET',

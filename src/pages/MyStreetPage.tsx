@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/query-state';
 import { Button } from '@/components/ui/button';
 import { usePublicRisk, type Coord } from '@/features/public-risk/hooks/usePublicRisk';
 import { PublicRiskResult } from '@/features/public-risk/components/PublicRiskResult';
+import { PublicHoje } from '@/features/horizontes/components/PublicHoje';
 import { PUBLIC_WARNING } from '@/features/public-risk/utils/headlines';
 import { retryAfterSeconds } from '@/features/public-risk/services/public-risk.service';
 import { geoFailureText, insideRmr, roundCoord, type GeoFailure } from '@/features/public-risk/utils/coords';
@@ -130,7 +131,10 @@ export const MyStreetPage: React.FC = () => {
             {![422, 429].includes(httpStatus(query.error) ?? 0) && <Button type="button" variant="outline" className="h-11 px-4" onClick={() => void query.refetch()}>Tentar de novo</Button>}
           </div>
         ) : (
-          <PublicRiskResult risk={query.data} />
+          <>
+            <PublicRiskResult risk={query.data} />
+            <PublicHoje municipio={query.data.nearestPoint?.municipality} className="bg-card shadow-elevation-raised" />
+          </>
         )}
         <div className="flex flex-wrap gap-3">
           <Link to="/map" className="mapi-press flex h-[52px] min-w-0 flex-1 items-center justify-center rounded-[10px] bg-foreground px-4 text-[15px] font-bold text-background shadow-elevation-raised hover:opacity-90">Está alagado aqui? Avise</Link>

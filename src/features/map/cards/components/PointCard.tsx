@@ -21,6 +21,8 @@ interface Props {
   alagamento?: AlagamentoPonto | null;
   alagamentoLoading?: boolean;
   alagamentoError?: boolean;
+  /** Bloco "Hoje" (INMET, dia de risco, próxima hora), montado pelo contêiner. */
+  hoje?: React.ReactNode;
 }
 
 const SHELL = 'mapi-enter-modal flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]';
@@ -31,11 +33,11 @@ export const VISITOR_INFO = 'O alerta de alagamento por regressão é experiment
  * Card-resumo do ponto crítico (seção 5.2, prancha "Nível 6"). Sem abas: o nível é o do alerta por regressão.
  * Nunca "risco baixo" nem "seguro"; leitura em falha ou sem cálculo nunca vira "Sem alerta".
  */
-export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysis, isAdmin = false, alagamento, alagamentoLoading = false, alagamentoError = false }) => {
+export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysis, isAdmin = false, alagamento, alagamentoLoading = false, alagamentoError = false, hoje }) => {
   const place = `${titleCasePlace(point.municipality ?? 'Recife')}${point.description ? ` · ${point.description}` : ''}`;
   if (isAdmin && alagamento && !alagamentoLoading) {
     return (
-      <RegressaoCard ponto={alagamento} name={point.name} place={place} onClose={onClose} onAnalysis={onOpenAnalysis} pageTo={`/pontos/${point.slug}`}
+      <RegressaoCard ponto={alagamento} name={point.name} place={place} onClose={onClose} onAnalysis={onOpenAnalysis} pageTo={`/pontos/${point.slug}`} extra={hoje}
         className="w-[20rem] max-w-full overflow-y-auto bg-popover p-3.5 shadow-elevation-overlay" />
     );
   }
@@ -73,6 +75,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
           </span>,
         )}
         <p data-testid="alagamento-estado" className="m-0 text-sm text-muted-foreground">{text}</p>
+        {hoje}
         {actions}
       </section>
     );
@@ -102,6 +105,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
           </div>
         ))}
       </div>
+      {hoje}
       {actions}
     </section>
   );
