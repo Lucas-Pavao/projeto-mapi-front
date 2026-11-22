@@ -17,3 +17,77 @@
 
 /* Contêineres focados por código (popup, diálogos) não desenham o aro de foco; controles continuam com ele. */
 [tabindex="-1"]:focus-visible { outline: none; }
+
+/* Entradas e feedback tátil: compositor apenas (transform + opacity), curvas fortes e interruptíveis. */
+.mapi-enter-modal {
+  transition: opacity var(--duration-ui) var(--ease-out), transform var(--duration-ui) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.mapi-enter-popover {
+  transition: opacity var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.mapi-enter-sheet {
+  transition: transform var(--duration-sheet) var(--ease-drawer), opacity var(--duration-ui) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+.mapi-enter-toast {
+  transition: transform var(--duration-sheet) var(--ease-out), opacity var(--duration-ui) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+.mapi-enter-backdrop {
+  transition: opacity var(--duration-ui) var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.mapi-press {
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+}
+.mapi-press:active:not(:disabled):not([aria-haspopup]):not([aria-expanded="true"]) {
+  transform: scale(0.97);
+}
+
+.mapi-press-row {
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+.mapi-press-row:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mapi-hover-scale:hover,
+  .group:hover .mapi-hover-scale {
+    transform: scale(1.08);
+  }
+  .mapi-hover-lift:hover {
+    transform: translateY(-1px);
+  }
+}

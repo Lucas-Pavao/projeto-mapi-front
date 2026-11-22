@@ -102,7 +102,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
         </label>
         <Legend />
       </Panel>
-      <aside aria-label="Resumo do evento" className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-2xl border border-border bg-card p-[18px]">
+      <aside aria-label="Resumo do evento" className="flex min-w-0 flex-1 flex-col gap-3.5 rounded-2xl border border-border bg-card p-[18px] shadow-[var(--elevation-raised),var(--surface-highlight)]">
         <PanelTitle>Até {formatHoraCurta(new Date(sel).toISOString(), t1)?.replace(/^\d\d\/\d\d /, '') ?? 'agora'}{picked == null ? ' (agora)' : ''}</PanelTitle>
         <div className="grid grid-cols-2 gap-2">
           {kpis.map((k) => (
@@ -123,7 +123,7 @@ const TimelineView: React.FC<{ t: Timeline; t0: number; t1: number; hours: numbe
             </li>
           ))}
         </ol>
-        <Link to="/relatorio" className="flex h-10 items-center justify-center rounded-lg bg-primary text-[14px] font-bold leading-5 text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Gerar relatório do evento</Link>
+        <Link to="/relatorio" className="mapi-press flex h-10 items-center justify-center rounded-lg bg-primary text-[14px] font-bold leading-5 text-primary-foreground no-underline shadow-elevation-raised hover:bg-primary/90 hover:text-primary-foreground">Gerar relatório do evento</Link>
       </aside>
     </>
   );
@@ -145,6 +145,6 @@ export const EventsPage: React.FC = () => {
 };
 
 const WindowButton: React.FC<{ w: (typeof WINDOWS)[number]; on: boolean; onPick: (w: (typeof WINDOWS)[number]) => void }> = ({ w, on, onPick }) => (
-  <button type="button" aria-pressed={on} onClick={() => onPick(w)} className={cn('h-11 cursor-pointer rounded-full border px-3 text-[12px] font-bold md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-transparent text-foreground')}>Últimas {w} h</button>
+  <button type="button" aria-pressed={on} onClick={() => onPick(w)} className={cn('mapi-press h-11 rounded-full border px-3 text-[12px] font-bold md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground shadow-elevation-raised' : 'border-input bg-transparent text-foreground hover:bg-muted')}>Últimas {w} h</button>
 );
 export default EventsPage;

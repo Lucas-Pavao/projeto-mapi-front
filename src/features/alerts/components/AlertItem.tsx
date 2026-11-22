@@ -49,7 +49,7 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
     a.observedValue != null && OBSERVED_UNIT[a.kind] ? `observado ${a.observedValue.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${OBSERVED_UNIT[a.kind]}` : null,
   ].filter(Boolean).join(' · ');
   return (
-    <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3', open ? 'bg-muted' : 'bg-transparent')}>
+    <li data-alert-id={a.id} data-open={open} className={cn('flex items-start gap-3 rounded-xl p-3 transition-colors duration-150', open ? 'bg-muted' : 'bg-transparent hover:bg-muted/40')}>
       <span className={cn('flex size-9 shrink-0 items-center justify-center rounded-[10px]', sev.tint, sev.tone)}>
         <Icon className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
         <span className="sr-only">{sev.label}</span>
@@ -70,14 +70,14 @@ export const AlertItem: React.FC<Props> = ({ alert: a, canAck, acking, isNew = f
           {!open && <>{' · '}Reconhecido por {a.acknowledgedBy ?? 'operador'} às {formatHoraCurta(a.acknowledgedAt) ?? '—'}</>}
         </div>
       </div>
-      <span className="font-mono text-[12px] font-semibold leading-5 text-muted-foreground">{formatHoraCurta(a.triggeredAt) ?? '—'}</span>
+      <span className="font-mono text-[12px] font-semibold leading-5 tabular-nums text-muted-foreground">{formatHoraCurta(a.triggeredAt) ?? '—'}</span>
       {open && canAck && (
         <button
           type="button"
           disabled={acking}
           onClick={() => onAck(a.id)}
           aria-label={`Reconhecer alerta: ${a.title}`}
-          className="h-11 cursor-pointer rounded-lg border border-input bg-transparent px-2.5 text-[12px] font-semibold leading-4 text-foreground hover:bg-card disabled:opacity-50 md:h-7"
+          className="mapi-press h-11 rounded-lg border border-input bg-transparent px-2.5 text-[12px] font-semibold leading-4 text-foreground hover:bg-card disabled:opacity-50 md:h-7"
         >
           {acking ? 'Enviando…' : 'Ciente'}
         </button>

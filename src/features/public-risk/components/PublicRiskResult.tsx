@@ -27,16 +27,16 @@ export const PublicRiskResult: React.FC<{ risk: PublicRisk }> = ({ risk }) => {
   const tone = p ? toneOf(p.level) : 'muted';
   const headline = !p ? NO_POINT_TEXT : risk.inTest ? 'O alerta de alagamento ainda está em teste.' : HEADLINE[p.level];
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="mapi-enter-modal flex origin-top flex-col gap-3.5">
       {p === null ? (
-        <section aria-label="Sem ponto por perto" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px]">
+        <section aria-label="Sem ponto por perto" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px] shadow-[var(--elevation-raised),var(--surface-highlight)]">
           <MapPinOff className="size-5 text-muted-foreground" aria-hidden="true" />
-          <p className="m-0 text-[22px] leading-[30px] font-extrabold text-foreground">{NO_POINT_TEXT}</p>
+          <p className="m-0 text-balance text-[22px] leading-[30px] font-extrabold text-foreground">{NO_POINT_TEXT}</p>
           <p className="m-0 text-[15px] leading-[22px]">Sem ponto monitorado por perto, o MAPi não tem alerta para este local. Isto não quer dizer que está seguro.</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-3"><Tile label="Chuva na última hora" value={rain} sub={rainSub} /></div>
         </section>
       ) : (
-        <section aria-label="Alerta perto de você" aria-live="polite" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px]">
+        <section aria-label="Alerta perto de você" aria-live="polite" className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-[22px] shadow-[var(--elevation-raised),var(--surface-highlight)]">
           <div className="flex flex-wrap items-center gap-3">
             {!risk.inTest && (
               <span data-testid="public-chip" data-level={p.level} className={cn('inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-sm font-bold', CHIP_CLASS[tone], p.level === 'SEM_DADO' && 'border-dashed')}>

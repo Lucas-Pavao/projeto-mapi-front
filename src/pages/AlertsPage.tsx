@@ -85,11 +85,11 @@ export const AlertsPage: React.FC = () => {
 
   return (
     <PageFrame className="lg:grid lg:grid-cols-12 lg:grid-rows-1">
-      <section aria-label="Alertas" className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:col-span-7 lg:min-h-0">
+      <section aria-label="Alertas" className="flex min-h-[420px] min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-raised),var(--surface-highlight)] lg:col-span-7 lg:min-h-0">
         <div className="flex flex-col gap-3 border-b border-border px-[18px] py-4">
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <h1 className="m-0 flex-1 text-[24px] font-extrabold leading-[30px]">Central de alertas</h1>
-            <span className="text-[13px] text-muted-foreground" aria-live="polite"><strong className="font-mono text-foreground">{unread.length}</strong> não lidos de {Math.max(query.data?.totalElements ?? 0, content.length)}</span>
+            <span className="text-[13px] text-muted-foreground" aria-live="polite"><strong className="font-mono tabular-nums text-foreground">{unread.length}</strong> não lidos de {Math.max(query.data?.totalElements ?? 0, content.length)}</span>
             <Button type="button" variant="outline" className="h-11 text-[14px] text-foreground md:h-8" disabled={unread.length === 0 || acking.size > 0} onClick={() => void ackAll()}>Marcar todos como lidos</Button>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -99,9 +99,9 @@ export const AlertsPage: React.FC = () => {
                 return (
                   <button
                     key={g.value} type="button" role="radio" aria-checked={on} onClick={() => setGroup(g.value)}
-                    className={cn('h-11 cursor-pointer rounded-full border px-3 text-[12px] font-bold leading-4 md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-transparent text-foreground')}
+                    className={cn('mapi-press h-11 rounded-full border px-3 text-[12px] font-bold leading-4 md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground shadow-elevation-raised' : 'border-input bg-transparent text-foreground hover:bg-muted')}
                   >
-                    {g.label} <span className="font-mono opacity-80">{countByGroup(content, g.value)}</span>
+                    {g.label} <span className="font-mono tabular-nums opacity-80">{countByGroup(content, g.value)}</span>
                   </button>
                 );
               })}

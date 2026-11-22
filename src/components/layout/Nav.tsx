@@ -90,21 +90,21 @@ const GroupMenu: React.FC<{ id: NavGroupId; label: string; items: readonly NavIt
         aria-expanded={open}
         aria-controls={menuId}
         data-current={current || undefined}
-        className={cn('flex h-11 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 text-[13px] leading-4 md:h-9',
+        className={cn('mapi-press flex h-11 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 text-[13px] leading-4 md:h-9',
           current ? 'bg-secondary font-bold text-foreground' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground')}
       >
         {label}
         {current && <span className="sr-only"> (tela atual neste grupo)</span>}
         {count > 0 && (
-          <span className="h-[18px] min-w-[18px] rounded-full bg-risk-high px-[5px] text-center font-mono text-[11px] leading-[18px] font-bold text-on-risk-high">
+          <span className="h-[18px] min-w-[18px] rounded-full bg-risk-high px-[5px] text-center font-mono text-[11px] leading-[18px] font-bold tabular-nums text-on-risk-high">
             {count > 99 ? '99+' : count}
             <span className="sr-only"> alertas abertos</span>
           </span>
         )}
-        <ChevronDown className="size-4" aria-hidden="true" />
+        <ChevronDown className={cn('size-4 transition-transform duration-150 ease-[var(--ease-out)]', open && 'rotate-180')} aria-hidden="true" />
       </button>
       {open && (
-        <ul id={menuId} role="menu" aria-label={label} className="absolute left-0 top-full z-50 mt-1 min-w-48 rounded-xl border border-border bg-popover p-1 shadow-elevation-overlay">
+        <ul id={menuId} role="menu" aria-label={label} className="mapi-enter-popover absolute left-0 top-full z-50 mt-1.5 min-w-48 origin-top-left rounded-xl border border-border bg-popover p-1 shadow-[var(--elevation-overlay),var(--surface-highlight)]">
           {items.map(({ label: l, to, icon: Icon, badge }) => (
             <li key={to} role="none">
               <NavLink
@@ -112,7 +112,7 @@ const GroupMenu: React.FC<{ id: NavGroupId; label: string; items: readonly NavIt
                 to={to}
                 end={to === '/modelo'}
                 className={({ isActive }) =>
-                  cn('flex h-11 items-center gap-2 rounded-lg px-3 text-body-strong focus-visible:outline-2 focus-visible:outline-ring', isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')
+                  cn('mapi-press-row flex h-11 items-center gap-2 rounded-lg px-3 text-body-strong focus-visible:outline-2 focus-visible:outline-ring', isActive ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')
                 }
               >
                 <Icon className="size-4" aria-hidden="true" />
@@ -151,7 +151,7 @@ const AccountMenu: React.FC<{ username: string | undefined; role: string; initia
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
-  const item = 'flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-body-strong text-muted-foreground hover:bg-muted hover:text-foreground md:h-9';
+  const item = 'mapi-press-row flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-body-strong text-muted-foreground hover:bg-muted hover:text-foreground md:h-9';
   return (
     <div
       ref={wrapRef}
@@ -174,12 +174,12 @@ const AccountMenu: React.FC<{ username: string | undefined; role: string; initia
         aria-expanded={open}
         aria-controls="menu-conta"
         aria-label={`Conta e perfis: ${username ?? 'usuário'} · ${role}`}
-        className="flex size-11 items-center justify-center rounded-full md:size-9"
+        className="mapi-press flex size-11 items-center justify-center rounded-full hover:bg-muted md:size-9"
       >
-        <span className="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-bold">{initials}</span>
+        <span className="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-bold ring-1 ring-border/70">{initials}</span>
       </button>
       {open && (
-        <div id="menu-conta" className="absolute right-0 top-full z-50 mt-1 w-56 rounded-xl border border-border bg-popover p-1 shadow-elevation-overlay">
+        <div id="menu-conta" className="mapi-enter-popover absolute right-0 top-full z-50 mt-1.5 w-56 origin-top-right rounded-xl border border-border bg-popover p-1 shadow-[var(--elevation-overlay),var(--surface-highlight)]">
           <p className="px-3 py-2 text-xs text-muted-foreground">
             <span className="block font-bold text-foreground">{username ?? 'usuário'}</span>
             {role}
@@ -217,7 +217,7 @@ export const Nav: React.FC = () => {
   const { counts, apiDown } = useNavStatus(role);
   return (
     <nav aria-label="Principal" className="flex h-[60px] shrink-0 items-center gap-2 border-b border-border bg-card px-3 text-foreground sm:gap-3 sm:px-4">
-      <Link to="/map" aria-label="MAPi — mapa ao vivo" className="flex h-11 shrink-0 items-center rounded-lg pr-2">
+      <Link to="/map" aria-label="MAPi — mapa ao vivo" className="mapi-press flex h-11 shrink-0 items-center rounded-lg pr-2">
         <img src={theme === 'light' ? logoLight : logoDark} alt="MAPi" className="h-[26px] w-auto" />
       </Link>
       <div className="flex min-w-0 flex-1 items-center gap-0.5 max-[640px]:hidden">
@@ -226,8 +226,8 @@ export const Nav: React.FC = () => {
           if (g.id === 'mapa') {
             return gi.map(({ label, to, icon: Icon }) => (
               <NavLink key={to} to={to}
-                className={({ isActive }) => cn('flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[13px] leading-4 md:h-9',
-                  isActive ? 'bg-secondary font-bold text-foreground' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                className={({ isActive }) => cn('mapi-press flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-[13px] leading-4 md:h-9',
+                  isActive ? 'bg-secondary font-bold text-foreground shadow-elevation-raised' : 'font-semibold text-muted-foreground hover:bg-muted hover:text-foreground')}>
                 <Icon className="size-4" aria-hidden="true" />
                 {label}
               </NavLink>
@@ -247,7 +247,7 @@ export const Nav: React.FC = () => {
         aria-expanded={open}
         aria-controls="menu-principal"
         aria-label={open ? 'Fechar menu' : 'Abrir menu'}
-        className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted min-[641px]:hidden"
+        className="mapi-press flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted min-[641px]:hidden"
       >
         <Menu className="size-5" aria-hidden="true" />
       </button>

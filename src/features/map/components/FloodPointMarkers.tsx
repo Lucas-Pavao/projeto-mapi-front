@@ -44,7 +44,7 @@ export const FloodPointMarkers: React.FC<Props> = ({ points, selectedFloodPointI
             {/* Alvo de toque >= 44 px (marcador 32 px + 6 px de cada lado). */}
             <div className="group relative flex cursor-pointer flex-col items-center p-1.5" data-flood-level={a?.level ?? (alagamentoBySlug ? 'SEM_DADO' : 'VISITOR')}>
               {/* Prancha: anel do nível a 7 px do ícone (tracejado em sem dado) e anel de seleção a 2 px. */}
-              <span className="relative transition-transform duration-200 group-hover:scale-110">
+              <span className="mapi-hover-scale relative transition-transform duration-150 ease-[var(--ease-out)]">
                 {r && <span data-alerta-ring={ring} aria-hidden="true" className={`pointer-events-none absolute -inset-[7px] rounded-[18px] ${r.cls}`} />}
                 {isSelected && <span aria-hidden="true" className="pointer-events-none absolute -inset-0.5 rounded-[12px] border-2 border-foreground" />}
                 <FloodLevelBadge level={alagamentoBySlug ? (a?.level ?? 'SEM_DADO') : null} pulse={a?.level === 'ALERTA'} />

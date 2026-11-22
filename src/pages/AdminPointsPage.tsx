@@ -60,7 +60,7 @@ export const AdminPointsPage: React.FC = () => {
   const activeCount = points.filter((p) => p.active).length;
   return (
     <div className="flex w-full flex-col gap-4 p-4 lg:h-full lg:flex-row">
-      <section aria-label="Pontos cadastrados" className="flex min-h-80 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:min-h-0 lg:w-[560px] lg:shrink-0">
+      <section aria-label="Pontos cadastrados" className="flex min-h-80 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-raised),var(--surface-highlight)] lg:min-h-0 lg:w-[560px] lg:shrink-0">
         <div className="flex items-center gap-3 border-b border-border px-[18px] py-4">
           <div className="min-w-0 flex-1">
             <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Pontos críticos<LeanTip text="Os pontos ativos entram no ciclo do alerta por ponto a cada coleta." /></h1>

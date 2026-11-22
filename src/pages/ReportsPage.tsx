@@ -81,8 +81,8 @@ export const ReportsPage: React.FC = () => {
           <OnlyInDetail><p className="m-0 text-[13px] text-muted-foreground">Confirmar cria um evento de alagamento no ponto, assinado por você; descartar exige um motivo.</p></OnlyInDetail>
         </div>
         {stats.map((k) => (
-          <div key={k.label} className="rounded-2xl border border-border bg-card px-3.5 py-3">
-            <div className={`font-mono text-[24px] font-extrabold leading-7 ${k.tone}`}>{k.value}</div>
+          <div key={k.label} className="rounded-2xl border border-border bg-card px-3.5 py-3 shadow-[var(--elevation-raised),var(--surface-highlight)]">
+            <div className={`font-mono text-[24px] font-extrabold leading-7 tabular-nums ${k.tone}`}>{k.value}</div>
             <div className="text-[12px] text-muted-foreground">{k.label}</div>
           </div>
         ))}
@@ -91,7 +91,7 @@ export const ReportsPage: React.FC = () => {
         {(data) => (
           <>
             <ReportQueue items={items} names={names} selected={current?.id ?? null} tab={tab} counts={counts} onTab={(t) => { setTab(t); setPicked(null); }} onPick={setPicked} />
-            <section aria-label="Relato selecionado" className="flex min-h-0 min-w-0 flex-col gap-3.5 overflow-y-auto rounded-2xl border border-border bg-card p-[18px] lg:col-span-7">
+            <section aria-label="Relato selecionado" className="flex min-h-0 min-w-0 flex-col gap-3.5 overflow-y-auto rounded-2xl border border-border bg-card p-[18px] shadow-[var(--elevation-raised),var(--surface-highlight)] lg:col-span-7">
               {current ? (
                 <ReportDetail
                   key={current.id} report={current} pointName={current.nearestPointSlug ? (names.get(current.nearestPointSlug) ?? current.nearestPointSlug) : null}

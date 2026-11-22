@@ -37,14 +37,14 @@ export const RegressaoCard: React.FC<Props> = ({ ponto, name, place, onAnalysis,
   const chip = floodChipOf(ponto);
   return (
     <article data-testid="regressao-card" data-level={ponto.level} aria-label={`Alerta de alagamento: ${name ?? ponto.name ?? ponto.slug}`}
-      className={cn('flex w-full max-w-sm flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-card p-3.5 text-card-foreground shadow-elevation-overlay', EDGE_CLASS[chip.tone], className)}>
+      className={cn('mapi-enter-modal flex w-full max-w-sm flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-card p-3.5 text-card-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', EDGE_CLASS[chip.tone], className)}>
       <header className="flex items-center gap-1.5">
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           <FloodChip ponto={ponto} />
           {ponto.experimental && <ExperimentalTag />}
         </div>
         {onClose && (
-          <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+          <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="mapi-press ml-auto flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
             <X className="size-4" aria-hidden="true" />
           </button>
         )}
@@ -57,12 +57,12 @@ export const RegressaoCard: React.FC<Props> = ({ ponto, name, place, onAnalysis,
       <OnlyInDetail><RegressaoDetalhes ponto={ponto} /></OnlyInDetail>
       <div className="flex gap-2">
         <button type="button" onClick={onAnalysis}
-          className="h-10 flex-1 rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          className="mapi-press h-10 flex-1 rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground shadow-elevation-raised hover:bg-primary/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
           Análise completa
         </button>
         {pageTo && (
           <Link to={pageTo} aria-label="Abrir a página do ponto"
-            className="inline-flex size-10 items-center justify-center rounded-[10px] border border-border hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring">
+            className="mapi-press inline-flex size-10 items-center justify-center rounded-[10px] border border-border hover:bg-secondary focus-visible:outline-2 focus-visible:outline-ring">
             <ExternalLink className="size-4" aria-hidden="true" />
           </Link>
         )}

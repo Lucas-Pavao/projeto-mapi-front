@@ -60,7 +60,7 @@ export const InfoTip: React.FC<Props> = ({ text, className, side = 'top', align 
         aria-describedby={open ? id : undefined}
         aria-expanded={open}
         data-testid="info-tip"
-        className="inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-bold leading-none text-muted-foreground hover:border-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="mapi-press inline-flex size-4 shrink-0 items-center justify-center rounded-full border border-muted-foreground/60 text-[10px] font-bold leading-none text-muted-foreground hover:border-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => { if (!pinned) setOpen(false); }}
         onFocus={() => setOpen(true)}
@@ -76,7 +76,10 @@ export const InfoTip: React.FC<Props> = ({ text, className, side = 'top', align 
           role="tooltip"
           id={id}
           style={pos ? { left: pos.left, top: pos.top, width: pos.width } : { left: -9999, top: 0, width: W }}
-          className="pointer-events-none fixed z-[1000] rounded-md border border-border bg-popover px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-popover-foreground shadow-lg"
+          className={cn(
+            'mapi-enter-popover pointer-events-none fixed z-[1000] rounded-lg border border-border bg-popover px-3 py-2 text-left text-caption font-normal normal-case tracking-normal text-popover-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]',
+            side === 'top' ? 'origin-bottom' : 'origin-top',
+          )}
         >
           {text}
         </span>,

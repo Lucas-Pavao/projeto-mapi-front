@@ -55,7 +55,7 @@ export const OnlyInLean: React.FC<{ children: React.ReactNode }> = ({ children }
 export const DetailSwitch: React.FC<{ className?: string }> = ({ className }) => {
   const { detail, setDetail } = useDetailMode();
   return (
-    <label className={`flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 text-[13px] font-semibold text-muted-foreground hover:text-foreground ${className ?? ''}`}>
+    <label className={`flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-lg px-2 text-[13px] font-semibold text-muted-foreground transition-colors duration-150 hover:text-foreground ${className ?? ''}`}>
       <span>Detalhes</span>
       <button
         type="button"
@@ -63,9 +63,9 @@ export const DetailSwitch: React.FC<{ className?: string }> = ({ className }) =>
         aria-checked={detail}
         aria-label="Detalhes: mostrar fontes, versões e notas de método em todas as telas"
         onClick={() => setDetail(!detail)}
-        className={`relative h-5 w-9 rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${detail ? 'border-primary bg-primary' : 'border-input bg-muted'}`}
+        className={`relative h-5 w-9 cursor-pointer rounded-full border transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${detail ? 'border-primary bg-primary' : 'border-input bg-muted'}`}
       >
-        <span aria-hidden="true" className={`absolute top-0.5 size-3.5 rounded-full bg-background transition-transform ${detail ? 'translate-x-4' : 'translate-x-0.5'}`} />
+        <span aria-hidden="true" className={`absolute top-0.5 size-3.5 rounded-full bg-background transition-transform duration-150 ease-[var(--ease-out)] ${detail ? 'translate-x-4' : 'translate-x-0.5'}`} />
       </button>
     </label>
   );

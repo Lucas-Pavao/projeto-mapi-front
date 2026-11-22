@@ -29,7 +29,7 @@ export const NoticeRegion: React.FC<{ notices: Notice[]; onDismiss: (id: number)
         <div
           key={n.id}
           role={role}
-          className={cn('pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border bg-popover px-4 py-3 text-sm shadow-elevation-overlay', tone)}
+          className={cn('mapi-enter-toast pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-xl border bg-popover px-4 py-3 text-sm shadow-[var(--elevation-overlay),var(--surface-highlight)]', tone)}
         >
           <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <p className="flex-1 text-popover-foreground">{n.message}</p>
@@ -37,7 +37,7 @@ export const NoticeRegion: React.FC<{ notices: Notice[]; onDismiss: (id: number)
             type="button"
             onClick={() => onDismiss(n.id)}
             aria-label="Dispensar notificação"
-            className="-m-2 flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
+            className="mapi-press -m-2 flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <X className="size-4" aria-hidden="true" />
           </button>

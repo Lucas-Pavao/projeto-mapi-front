@@ -43,7 +43,7 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
   };
 
   return (
-    <div className={variant === 'sheet' ? 'flex w-full flex-col bg-popover text-foreground' : 'flex max-h-[calc(100vh-8rem)] flex-col bg-popover text-foreground rounded-2xl border border-border shadow-elevation-overlay overflow-hidden w-80 ring-1 ring-border animate-in fade-in zoom-in-95 duration-200'}>
+    <div className={variant === 'sheet' ? 'flex w-full flex-col bg-popover text-foreground' : 'mapi-enter-modal flex max-h-[calc(100vh-8rem)] w-80 flex-col overflow-hidden rounded-2xl border border-border bg-popover text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]'}>
       {/* Header with Gradient (fixo; só o corpo rola) */}
       <div className={cn("shrink-0 px-5 py-4 text-background relative overflow-hidden", config.color)}>
         <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -80,14 +80,14 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
           <div className="space-y-1">
              <p className="text-2xs text-muted-foreground font-bold">Leitura atual</p>
              <div className="flex items-baseline gap-1.5">
-               <span className="text-4xl font-bold text-foreground">
+               <span className="font-mono text-4xl font-bold tabular-nums text-foreground">
                 {sensor.value != null && typeof sensor.value === 'number' ? sensor.value.toFixed(1) : (sensor.value ?? '--')}
                </span>
                <span className="text-sm font-bold text-muted-foreground">{sensor.unit || ''}</span>
              </div>
           </div>
           <div className={cn(
-            "h-14 w-14 rounded-2xl flex items-center justify-center bg-muted border border-border shadow-inner group transition-transform hover:scale-105 duration-300",
+            "h-14 w-14 rounded-2xl flex items-center justify-center bg-muted border border-border shadow-inner",
             config.text
           )}>
             {React.createElement(config.icon, { className: "h-7 w-7" })}
@@ -197,10 +197,10 @@ export const SensorPopup: React.FC<SensorPopupProps> = ({
 
         <Button 
           onClick={onShowDetails}
-          className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-muted-foreground border border-border hover:border-primary transition-all duration-300 rounded-xl group shadow-elevation-raised"
+          className="w-full h-10 text-2xs font-bold bg-muted hover:bg-primary hover:text-primary-foreground text-muted-foreground border border-border hover:border-primary rounded-xl group shadow-elevation-raised"
         >
           <span>Analisar dados completos</span>
-          <ExternalLink className="h-3 w-3 ml-2 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          <ExternalLink className="h-3 w-3 ml-2 transition-transform duration-150 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </Button>
       </div>
     </div>

@@ -8,7 +8,7 @@ export const PageFrame: React.FC<{ className?: string; children: React.ReactNode
 
 /** Painel arredondado do protótipo (card, borda, raio 16, respiro 16 × 18). */
 export const Panel = React.forwardRef<HTMLElement, React.ComponentProps<'section'>>(({ className, ...props }, ref) => (
-  <section ref={ref} className={cn('flex min-w-0 flex-1 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-4', className)} {...props} />
+  <section ref={ref} className={cn('flex min-w-0 flex-1 flex-col gap-2.5 rounded-2xl border border-border bg-card px-[18px] py-4 shadow-[var(--elevation-raised),var(--surface-highlight)]', className)} {...props} />
 ));
 Panel.displayName = 'Panel';
 

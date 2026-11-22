@@ -27,7 +27,7 @@ interface Props {
 
 /** Lista lateral: filtros em pílula e uma linha por estação (ponto tracejado e texto âmbar quando sem resposta). */
 export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter, onSelect, online, counts }) => (
-  <aside aria-label="Estações" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:w-[21.25rem]">
+  <aside aria-label="Estações" className="flex min-h-0 w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-raised),var(--surface-highlight)] lg:w-[21.25rem]">
     <div className="flex flex-col gap-2.5 border-b border-border p-3.5">
       <div className="flex items-baseline justify-between">
         <h1 className="m-0 text-[20px] font-extrabold leading-[26px]">Estações</h1>
@@ -43,7 +43,7 @@ export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter,
               role="radio"
               aria-checked={on}
               onClick={() => onFilter(f.value)}
-              className={cn('h-11 cursor-pointer rounded-full border px-3 text-[12px] font-bold leading-4 md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground' : 'border-input bg-transparent text-foreground')}
+              className={cn('mapi-press h-11 rounded-full border px-3 text-[12px] font-bold leading-4 md:h-[30px]', on ? 'border-primary bg-primary text-primary-foreground shadow-elevation-raised' : 'border-input bg-transparent text-foreground hover:bg-muted')}
             >
               {f.label}{counts ? ` ${counts[f.value]}` : ''}
             </button>
@@ -51,14 +51,14 @@ export const SensorList: React.FC<Props> = ({ items, selected, filter, onFilter,
         })}
       </div>
     </div>
-    <ul className="m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-2 max-lg:max-h-80">
+    <ul className="custom-scrollbar m-0 flex min-h-0 flex-1 list-none flex-col gap-0.5 overflow-y-auto p-2 max-lg:max-h-80">
       {items.map((r) => (
         <li key={r.key} data-stale={r.off}>
           <button
             type="button"
             aria-pressed={r.key === selected}
             onClick={() => onSelect(r.key)}
-            className={cn('flex w-full cursor-pointer items-center gap-3 rounded-[10px] border-0 px-2 py-[9px] text-left text-foreground hover:bg-muted', r.key === selected ? 'bg-secondary' : 'bg-transparent', r.fail && 'opacity-70')}
+            className={cn('mapi-press-row flex w-full items-center gap-3 rounded-[10px] border-0 px-2 py-[9px] text-left text-foreground hover:bg-muted', r.key === selected ? 'bg-secondary' : 'bg-transparent', r.fail && 'opacity-70')}
           >
             <span aria-hidden="true" className={cn('box-border size-2.5 shrink-0 rounded-full', r.off ? 'border-2 border-dashed border-risk-unknown-edge bg-transparent' : '')} style={r.off ? undefined : { background: r.dot }} />
             <span className="flex min-w-0 flex-1 flex-col">

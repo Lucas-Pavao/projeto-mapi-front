@@ -23,7 +23,7 @@ interface Props {
   alagamentoError?: boolean;
 }
 
-const SHELL = 'flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-elevation-overlay';
+const SHELL = 'mapi-enter-modal flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain flex-col gap-2.5 rounded-[14px] border border-t-4 border-border bg-popover p-3.5 text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]';
 
 export const VISITOR_INFO = 'O alerta de alagamento por regressão é experimental: enquanto a validação não for aprovada, só o administrador vê. Aqui ficam a chuva medida e a maré.';
 
@@ -44,7 +44,7 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
     <>
       <div className="flex items-center justify-between gap-2">
         {chip}
-        {onClose && <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
+        {onClose && <button type="button" onClick={onClose} aria-label="Fechar resumo do ponto" className="mapi-press flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
       </div>
       <div>
         <p className="m-0 text-base font-extrabold leading-[22px]">{point.name}</p>
@@ -54,8 +54,8 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
   );
   const actions = (
     <div className="flex gap-2">
-      <button type="button" onClick={onOpenAnalysis} className="h-10 flex-1 cursor-pointer rounded-[10px] border-0 bg-primary text-[13px] font-bold text-primary-foreground hover:opacity-90">Análise completa</button>
-      <Link to={`/pontos/${point.slug}`} aria-label="Abrir a página do ponto" className="flex size-10 items-center justify-center rounded-[10px] border border-border text-foreground"><ExternalLink className="size-4" aria-hidden="true" /></Link>
+      <button type="button" onClick={onOpenAnalysis} className="mapi-press h-10 flex-1 rounded-[10px] border-0 bg-primary text-[13px] font-bold text-primary-foreground shadow-elevation-raised hover:bg-primary/90">Análise completa</button>
+      <Link to={`/pontos/${point.slug}`} aria-label="Abrir a página do ponto" className="mapi-press flex size-10 items-center justify-center rounded-[10px] border border-border text-foreground hover:bg-muted"><ExternalLink className="size-4" aria-hidden="true" /></Link>
     </div>
   );
 

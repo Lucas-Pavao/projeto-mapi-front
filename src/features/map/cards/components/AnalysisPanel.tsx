@@ -64,7 +64,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
       <H3 title="Estações até 5 km" info={ANALYSIS_INFO.stations} />
       {rain?.candidates.map((c) => (
         <button key={c.stationId} type="button" data-role={c.role} onClick={() => onOpenStation?.(c.stationId)}
-          className={cn('grid cursor-pointer grid-cols-[12px_1fr_auto_auto] items-center gap-2 rounded-lg border bg-transparent px-2 py-[7px] text-left text-xs leading-4 text-foreground', c.role === 'USED' ? 'border-primary bg-primary/10' : 'border-border')}>
+          className={cn('mapi-press-row grid grid-cols-[12px_1fr_auto_auto] items-center gap-2 rounded-lg border bg-transparent px-2 py-[7px] text-left text-xs leading-4 text-foreground hover:bg-muted', c.role === 'USED' ? 'border-primary bg-primary/10' : 'border-border')}>
           <span aria-hidden="true" className={cn('size-2.5 rounded-full', c.role === 'USED' ? 'bg-primary' : c.role === 'EXCLUDED' ? 'bg-destructive' : 'bg-chart-3')} />
           <span><strong>{c.name}</strong> <span className="text-muted-foreground">· {distanceText(c.distanceM)} · {candidateStatus(c)}</span></span>
           <span className="font-mono">{candidateValue(c)}</span>
@@ -76,11 +76,11 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
   );
   return (
     <section role="dialog" aria-label={`Análise completa de ${point.name}`} data-testid="analysis-panel" data-level={a?.level ?? (isAdmin ? 'SEM_DADO' : 'VISITOR')}
-      className={cn('flex h-full w-[30rem] max-w-full flex-col border-l border-t-4 border-border bg-card text-foreground shadow-elevation-overlay', chip ? EDGE_CLASS[chip.tone] : 'border-t-muted-foreground [border-top-style:dashed]')}>
+      className={cn('mapi-enter-popover flex h-full w-[30rem] max-w-full origin-right flex-col border-l border-t-4 border-border bg-card text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', chip ? EDGE_CLASS[chip.tone] : 'border-t-muted-foreground [border-top-style:dashed]')}>
       <header className="flex flex-col gap-2 border-b border-border px-[18px] pb-3 pt-4">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[11px] font-extrabold tracking-[.06em] text-muted-foreground">ANÁLISE COMPLETA{a?.evaluatedAt ? <> · <span className="font-mono">{formatHoraCurta(a.evaluatedAt)}</span></> : null}</span>
-          {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise" className="flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-4" aria-hidden="true" /></button>}
+          {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise" className="mapi-press flex size-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" aria-hidden="true" /></button>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {a ? <FloodChip ponto={a} /> : isAdmin ? null : <VisitorChip />}
@@ -93,7 +93,7 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
         <div role="tablist" aria-label="Seções da análise" className="flex gap-0.5 rounded-[10px] bg-muted p-[3px]">
           {ANALYSIS_TABS.map((t) => (
             <button key={t} id={`analysis-tab-${t}`} type="button" role="tab" aria-selected={tab === t} aria-controls="analysis-body" onClick={() => onTab(t)}
-              className={cn('h-[30px] flex-1 cursor-pointer rounded-lg border-0 text-xs font-bold text-foreground', tab === t ? 'bg-card' : 'bg-transparent')}>{TAB_LABEL[t]}</button>
+              className={cn('mapi-press h-[30px] flex-1 rounded-lg border-0 text-xs font-bold', tab === t ? 'bg-card text-foreground shadow-elevation-raised' : 'bg-transparent text-muted-foreground hover:text-foreground')}>{TAB_LABEL[t]}</button>
           ))}
         </div>
       </header>
@@ -176,9 +176,9 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
         )}
       </div>
       <footer className="flex gap-2 border-t border-border px-[18px] py-3">
-        <Link to={`/pontos/${point.slug}`} className="flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Abrir página do ponto</Link>
-        <Link to="/relatos" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Relatos</Link>
-        <Link to="/modelo" className="flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline">Validação</Link>
+        <Link to={`/pontos/${point.slug}`} className="mapi-press flex h-[42px] flex-1 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline shadow-elevation-raised hover:bg-primary/90 hover:text-primary-foreground">Abrir página do ponto</Link>
+        <Link to="/relatos" className="mapi-press flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline hover:bg-muted">Relatos</Link>
+        <Link to="/modelo" className="mapi-press flex h-[42px] items-center rounded-[10px] border border-border px-3.5 text-[13px] font-bold text-foreground no-underline hover:bg-muted">Validação</Link>
       </footer>
     </section>
   );

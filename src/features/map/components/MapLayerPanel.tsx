@@ -24,8 +24,8 @@ export const MapLayerPanel: React.FC<Props> = ({ activeLayers, onToggle, open, o
             aria-pressed={active}
             onClick={() => onToggle(layer.id)}
             className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-xl text-2xs font-bold transition-all group',
-              active ? 'bg-secondary text-foreground shadow-inner' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+              'mapi-press-row flex items-center gap-3 px-3 py-2.5 rounded-xl text-2xs font-bold group',
+              active ? 'bg-secondary text-foreground shadow-elevation-raised' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
             )}
           >
             <layer.icon className={cn('h-3.5 w-3.5', active ? layer.color : 'opacity-30')} />

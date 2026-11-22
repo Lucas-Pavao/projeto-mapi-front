@@ -28,13 +28,13 @@ export const MapAlertLegend: React.FC<{ className?: string }> = ({ className }) 
   return (
     <div className={cn('flex flex-col items-end gap-2', className)}>
       {open && (
-        <div id="legenda-alerta" role="region" aria-label="Legenda do alerta" className="w-[220px] rounded-xl border border-border bg-popover p-3 text-xs shadow-elevation-overlay">
+        <div id="legenda-alerta" role="region" aria-label="Legenda do alerta" className="mapi-enter-popover w-[220px] origin-bottom-right rounded-xl border border-border bg-popover p-3 text-xs shadow-[var(--elevation-overlay),var(--surface-highlight)]">
           <div className="mb-2 flex items-center justify-between font-bold">Alerta de alagamento<InfoTip text={LEGEND_RULE} align="end" /></div>
           <AlertLegendList />
         </div>
       )}
       <button type="button" aria-expanded={open} aria-controls="legenda-alerta" onClick={() => setOpen((o) => !o)}
-        className="h-9 rounded-lg border border-border bg-popover px-3 text-xs font-bold text-foreground shadow-elevation-overlay hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
+        className="mapi-press h-9 rounded-lg border border-border bg-popover px-3 text-xs font-bold text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)] hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring">
         Legenda
       </button>
     </div>

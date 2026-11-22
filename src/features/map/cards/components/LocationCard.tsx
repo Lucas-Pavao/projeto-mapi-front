@@ -63,14 +63,14 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
   };
   return (
     <section role="dialog" aria-label={`Análise do local ${coord}`} data-state={state}
-      className="flex max-h-full w-[25rem] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-elevation-overlay">
+      className="mapi-enter-modal flex max-h-full w-[25rem] max-w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]">
       <header className="flex items-center gap-3 border-b border-border px-4 py-3.5">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-primary"><MapPin className="size-5" aria-hidden="true" /></span>
         <div className="min-w-0 flex-1">
           <p className="m-0 text-base font-extrabold leading-[22px]">Análise de local</p>
           <p className="m-0 font-mono text-xs leading-4 text-muted-foreground">{coord}{a.at ? ` · dados das ${formatHoraCurta(a.at)}` : ''}</p>
         </div>
-        {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise de local" className="flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"><X className="size-[18px]" aria-hidden="true" /></button>}
+        {onClose && <button type="button" onClick={onClose} aria-label="Fechar análise de local" className="mapi-press flex size-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-[18px]" aria-hidden="true" /></button>}
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain scroll px-4 py-3.5">
@@ -93,7 +93,7 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
         <section aria-label="Ponto crítico mais próximo" className="flex flex-col gap-2">
           <H3 icon={<ShieldCheck />}>Ponto crítico mais próximo<InfoTip text="O alerta de alagamento só existe nos 5 pontos críticos. Este local não tem alerta próprio: abra o ponto mais próximo para ver o nível." /></H3>
           {np ? (
-            <button type="button" data-testid="nearest-point" onClick={() => onOpenPoint?.(np.slug)} className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-transparent px-3 py-2.5 text-left text-foreground hover:bg-muted">
+            <button type="button" data-testid="nearest-point" onClick={() => onOpenPoint?.(np.slug)} className="mapi-press-row flex items-center gap-2.5 rounded-xl border border-border bg-transparent px-3 py-2.5 text-left text-foreground hover:bg-muted">
               <FloodLevelBadge level={nearestAlagamento?.level ?? null} />
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] font-bold leading-[18px]">{np.name}</span>
@@ -200,12 +200,12 @@ export const LocationCard: React.FC<Props> = ({ analysis: a, onClose, onOpenPoin
 
       <footer className="flex gap-2 border-t border-border px-4 py-3">
         <button type="button" onClick={canReport ? onReport : undefined} disabled={!canReport}
-          className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-destructive bg-destructive/10 text-sm font-bold text-destructive hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-45">
+          className="mapi-press flex h-11 flex-1 items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-destructive bg-destructive/10 text-sm font-bold text-destructive hover:bg-destructive/15 disabled:cursor-not-allowed disabled:opacity-45">
           <TriangleAlert className="size-4" aria-hidden="true" />Reportar alagamento aqui
         </button>
         <button type="button" onClick={copy} aria-label="Copiar coordenadas" title={copied ? 'Copiado' : 'Copiar coordenadas'}
-          className="flex size-11 cursor-pointer items-center justify-center rounded-[10px] border border-border bg-transparent text-foreground hover:bg-muted">
-          {copied ? <Check className="size-4" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
+          className="mapi-press flex size-11 items-center justify-center rounded-[10px] border border-border bg-transparent text-foreground hover:bg-muted">
+          {copied ? <Check className="size-4 text-success" aria-hidden="true" /> : <Copy className="size-4" aria-hidden="true" />}
         </button>
       </footer>
     </section>

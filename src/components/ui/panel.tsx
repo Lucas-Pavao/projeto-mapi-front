@@ -14,6 +14,6 @@ interface PanelProps extends React.HTMLAttributes<HTMLElement> {
  */
 export const Panel = React.forwardRef<HTMLElement, PanelProps>(({ as = 'div', className, ...props }, ref) => {
   const Tag = as as React.ElementType;
-  return <Tag ref={ref} className={cn('rounded-2xl border border-border bg-card text-card-foreground shadow-elevation-overlay', className)} {...props} />;
+  return <Tag ref={ref} className={cn('rounded-2xl border border-border bg-card text-card-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', className)} {...props} />;
 });
 Panel.displayName = 'Panel';

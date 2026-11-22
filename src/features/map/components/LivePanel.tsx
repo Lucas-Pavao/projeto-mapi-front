@@ -55,7 +55,7 @@ const SHEET_CLASS: Record<FloodLevel, string> = {
   ALERTA: 'text-risk-high-text', ATENCAO: 'text-risk-moderate-text', SEM_ALERTA: 'text-risk-low-text', SEM_DADO: 'text-risk-unknown-text',
 };
 const sheetNowText = (a: AlagamentoPonto | undefined) => (a?.hNowCm == null ? '—' : `${fmt1(a.hNowCm)} cm`);
-const row = 'row-hover flex w-full items-center gap-3 rounded-[10px] text-left text-foreground hover:bg-muted';
+const row = 'mapi-press-row flex w-full items-center gap-3 rounded-[10px] text-left text-foreground hover:bg-muted';
 const ageText = (min: number | null) => (min == null ? 'sem dados' : min < 60 ? `há ${min} min` : `há ${Math.round(min / 60)} h`);
 const clockText = (iso: string | null | undefined) => formatRecife(iso)?.slice(-5).replace(':', 'h') ?? null;
 
@@ -106,7 +106,7 @@ export const LivePanel: React.FC<Props> = ({
       aria-selected={tab === id}
       aria-controls={`painel-${id}`}
       onClick={() => setTab(id)}
-      className={cn('h-8 rounded-lg text-[13px] leading-4 font-bold text-foreground', tab === id ? 'bg-card' : 'bg-transparent hover:bg-card/60')}
+      className={cn('mapi-press h-8 rounded-lg text-[13px] leading-4 font-bold', tab === id ? 'bg-card text-foreground shadow-elevation-raised' : 'bg-transparent text-muted-foreground hover:bg-card/60 hover:text-foreground')}
     >
       {label}
     </button>

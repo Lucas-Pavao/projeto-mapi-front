@@ -54,7 +54,7 @@ export const AdminUsersPage: React.FC = () => {
 
   return (
     <div className="grid w-full grid-cols-1 gap-4 p-4 lg:h-full lg:grid-cols-12">
-      <section aria-label="Usuários" className="flex min-h-96 min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card lg:col-span-7 lg:min-h-0">
+      <section aria-label="Usuários" className="flex min-h-96 min-w-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--elevation-raised),var(--surface-highlight)] lg:col-span-7 lg:min-h-0">
         <div className="flex flex-wrap items-center gap-3 border-b border-border px-[18px] py-4">
           <div className="min-w-0 flex-1 basis-64">
             <h1 className="m-0 flex items-center gap-2 text-[22px] leading-7 font-extrabold text-foreground">Usuários e perfis<LeanTip text="Perfis USER, OPERADOR e ADMIN. Convidado não faz login. Desativar bloqueia o login." /></h1>
@@ -62,7 +62,7 @@ export const AdminUsersPage: React.FC = () => {
           </div>
           <label className="flex w-full sm:w-[220px]">
             <span className="sr-only">Buscar usuário</span>
-            <input type="search" placeholder="Buscar usuário" value={q} onChange={(e) => setQ(e.target.value)} className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground placeholder:text-muted-foreground md:h-9" />
+            <input type="search" placeholder="Buscar usuário" value={q} onChange={(e) => setQ(e.target.value)} className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9" />
           </label>
         </div>
         <QueryState query={query} what="os usuários" isEmpty={(d) => d.content.length === 0} emptyTitle="Nenhum usuário." emptyHint="Convide a primeira pessoa.">
@@ -80,7 +80,7 @@ export const AdminUsersPage: React.FC = () => {
                     const self = me?.id === u.id;
                     const on = u.active;
                     return (
-                      <li key={u.id} data-user-id={u.id} data-self={self} data-active={u.active} className={cn(cols, 'border-b border-border px-[18px] py-2.5 max-md:grid-cols-1 max-md:gap-2')}>
+                      <li key={u.id} data-user-id={u.id} data-self={self} data-active={u.active} className={cn(cols, 'border-b border-border px-[18px] py-2.5 transition-colors duration-150 hover:bg-muted/35 max-md:grid-cols-1 max-md:gap-2')}>
                         <span className="flex min-w-0 items-center gap-2.5">
                           <span aria-hidden="true" className="flex size-8 flex-none items-center justify-center rounded-full bg-secondary text-xs font-extrabold">{initials(u.name, u.email)}</span>
                           <span className="min-w-0">
@@ -97,7 +97,7 @@ export const AdminUsersPage: React.FC = () => {
                           <input type="checkbox" role="switch" checked={on} disabled={busyId === u.id || self} onChange={() => apply(u, { active: !u.active }, `${u.active ? 'Usuário desativado.' : 'Usuário ativado.'} ${TAKES_EFFECT}`)} aria-label={`${label(u)}: conta ativa`} className="m-0 size-4 accent-success" />
                           {on ? 'ativo' : 'inativo'}
                         </label>
-                        <button type="button" onClick={() => { setFormError(null); setEditing(u); }} aria-label={`Editar ${label(u)}`} className="flex size-11 items-center justify-center rounded-lg border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground md:size-8"><Pencil className="size-4" aria-hidden="true" /></button>
+                        <button type="button" onClick={() => { setFormError(null); setEditing(u); }} aria-label={`Editar ${label(u)}`} className="mapi-press flex size-11 items-center justify-center rounded-lg border-0 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground md:size-8"><Pencil className="size-4" aria-hidden="true" /></button>
                       </li>
                     );
                   })}
@@ -114,7 +114,7 @@ export const AdminUsersPage: React.FC = () => {
           }}
         </QueryState>
         <form onSubmit={(e) => { e.preventDefault(); openInvite(); }} className="mt-auto flex items-center gap-2 border-t border-border px-[18px] py-3">
-          <input type="email" placeholder="email@instituicao.gov.br" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} aria-label="E-mail para convite" className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground placeholder:text-muted-foreground md:h-[38px]" />
+          <input type="email" placeholder="email@instituicao.gov.br" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} aria-label="E-mail para convite" className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-2.5 text-sm text-foreground outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-[38px]" />
           <Button type="submit" className="h-11 px-4 md:h-9">Convidar</Button>
         </form>
       </section>

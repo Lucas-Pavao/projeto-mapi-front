@@ -24,10 +24,10 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
   const now = precise?.precipitation;
   const dash = isFetchingStatus ? '…' : '—';
   return (
-    <section aria-label={`Resumo do ponto ${point.name}`} className="box-border flex w-[18.75rem] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-elevation-overlay">
+    <section aria-label={`Resumo do ponto ${point.name}`} className="mapi-enter-modal box-border flex w-[18.75rem] max-w-[calc(100vw-2rem)] flex-col gap-2.5 rounded-xl border border-border bg-popover p-3.5 text-popover-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold text-muted-foreground">Ponto crítico</span>
-        <button type="button" onClick={onClose} aria-label="Fechar resumo" className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+        <button type="button" onClick={onClose} aria-label="Fechar resumo" className="mapi-press flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
           <X className="size-4" aria-hidden="true" />
         </button>
       </div>
@@ -53,7 +53,7 @@ export const FloodPointPopup: React.FC<Props> = ({ point, status, isFetchingStat
           <div className={tileValue}>{now != null ? <>{fmtNum(now)} <span className="text-[11px]">mm/h</span></> : dash}</div>
         </div>
       </div>
-      <Link to={`/pontos/${point.slug}`} className="flex h-9 items-center justify-center rounded-lg bg-primary text-[13px] leading-4 font-bold text-primary-foreground hover:bg-primary/90">
+      <Link to={`/pontos/${point.slug}`} className="mapi-press flex h-9 items-center justify-center rounded-lg bg-primary text-[13px] leading-4 font-bold text-primary-foreground shadow-elevation-raised hover:bg-primary/90">
         Abrir análise completa
       </Link>
     </section>

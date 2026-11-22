@@ -37,6 +37,17 @@ code {
 @import "./styles/print.css";
 
 @layer base {
+  /* Superfícies nativas do navegador seguem a paleta MAPi. */
+  ::selection {
+    background-color: color-mix(in srgb, var(--primary) 26%, transparent);
+    color: var(--foreground);
+  }
+  input, textarea {
+    caret-color: var(--primary);
+  }
+  a {
+    text-underline-offset: 3px;
+  }
   /* Foco visível em qualquer controle nativo, também sobre fundos translúcidos. */
   :focus-visible {
     outline: 2px solid var(--ring);

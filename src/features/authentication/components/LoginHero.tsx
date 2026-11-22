@@ -12,12 +12,12 @@ export const LoginHero: React.FC = () => {
       <div className="absolute inset-0" aria-hidden="true">
         <Map theme={theme} center={[-34.93, -8.06]} zoom={11.8} interactive={false} attributionControl={false} />
       </div>
-      <div aria-hidden="true" className="absolute inset-0 bg-background/40" />
-      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-background/90 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-0 bg-background/35" />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-background/95 via-background/55 to-transparent" />
       <div className="absolute right-16 bottom-16 left-16 flex flex-col gap-4">
         <img src={theme === 'light' ? logoLight : logoDark} alt="MAPi" className="h-14 w-auto self-start" />
-        <p className="m-0 max-w-[560px] text-[44px] leading-[48px] font-extrabold tracking-[-0.02em] text-foreground">Previsão e alerta de alagamento para o Recife.</p>
-        <p className="m-0 max-w-[540px] text-base leading-6 text-muted-foreground">Chuva, rio, maré e um modelo de previsão num só mapa. Entre com o usuário da sua equipe ou veja a página pública.</p>
+        <p className="m-0 max-w-[560px] text-balance text-[44px] leading-[48px] font-extrabold tracking-[-0.025em] text-foreground">Previsão e alerta de alagamento para o Recife.</p>
+        <p className="m-0 max-w-[540px] text-pretty text-base leading-6 text-muted-foreground">Chuva, rio, maré e um modelo de previsão num só mapa. Entre com o usuário da sua equipe ou veja a página pública.</p>
       </div>
     </div>
   );

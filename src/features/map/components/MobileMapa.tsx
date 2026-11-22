@@ -96,18 +96,25 @@ export const MobileMapa: React.FC<Props> = ({ points, alagamentoBySlug, alagamen
           <button
             type="button"
             onClick={onReport}
-            style={{ bottom: sheetH + 12 }}
-            className="absolute right-3 z-30 flex h-[52px] items-center gap-2 rounded-full bg-primary px-[18px] text-[15px] font-extrabold text-primary-foreground shadow-elevation-overlay"
+            style={{
+              bottom: MOBILE_SHEET_COLLAPSED + 12,
+              transform: `translateY(${expanded ? -(MOBILE_SHEET_EXPANDED - MOBILE_SHEET_COLLAPSED) : 0}px)`,
+            }}
+            className="mapi-press absolute right-3 z-30 flex h-[52px] items-center gap-2 rounded-full bg-primary px-[18px] text-[15px] font-extrabold text-primary-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)] transition-transform duration-[var(--duration-sheet)] ease-[var(--ease-drawer)]"
           >
             <MapPin className="size-[18px]" aria-hidden="true" />
             Reportar alagamento
           </button>
           <section
             aria-label="Pontos de risco"
-            style={{ height: sheetH }}
-            className="absolute inset-x-0 bottom-0 z-30 box-border flex flex-col gap-3 rounded-t-[18px] border-t border-border bg-card px-4 pb-4 pt-1.5 shadow-elevation-overlay transition-[height] duration-200"
+            style={{
+              height: MOBILE_SHEET_EXPANDED,
+              transform: `translateY(${expanded ? 0 : MOBILE_SHEET_EXPANDED - MOBILE_SHEET_COLLAPSED}px)`,
+              paddingBottom: expanded ? 16 : MOBILE_SHEET_EXPANDED - MOBILE_SHEET_COLLAPSED + 16,
+            }}
+            className="mapi-enter-sheet absolute inset-x-0 bottom-0 z-30 box-border flex flex-col gap-3 rounded-t-[18px] border-t border-border bg-card px-4 pt-1.5 shadow-[var(--elevation-overlay),var(--surface-highlight)] transition-transform duration-[var(--duration-sheet)] ease-[var(--ease-drawer)]"
           >
-            <button type="button" onClick={() => setExpanded((e) => !e)} aria-label={expanded ? 'Recolher lista' : 'Expandir lista'} aria-expanded={expanded} className="-my-2.5 flex h-11 w-20 shrink-0 items-center justify-center self-center">
+            <button type="button" onClick={() => setExpanded((e) => !e)} aria-label={expanded ? 'Recolher lista' : 'Expandir lista'} aria-expanded={expanded} className="mapi-press -my-2.5 flex h-11 w-20 shrink-0 items-center justify-center self-center">
               <span className="h-[5px] w-11 rounded-full bg-input" />
             </button>
             <div className="flex items-baseline justify-between">
@@ -123,7 +130,7 @@ export const MobileMapa: React.FC<Props> = ({ points, alagamentoBySlug, alagamen
                 const line = alagamentoBySlug ? listLineOf(a) : null;
                 return (
                   <li key={p.id}>
-                    <button type="button" onClick={() => onSelect(p)} className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-muted p-2.5 text-left text-foreground">
+                    <button type="button" onClick={() => onSelect(p)} className="mapi-press-row flex min-h-14 w-full items-center gap-3 rounded-xl bg-muted p-2.5 text-left text-foreground hover:bg-secondary">
                       <FloodLevelBadge level={alagamentoBySlug ? (a?.level ?? 'SEM_DADO') : null} />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[15px] leading-5 font-extrabold">{p.name}</span>

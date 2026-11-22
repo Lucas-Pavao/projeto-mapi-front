@@ -53,7 +53,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
   const last = c.blocks[c.blocks.length - 1];
   return (
     <section role="dialog" aria-label={`Pluviômetro ${name}`} data-state={c.state} data-pedonly={c.pedOnly}
-      className={cn('flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-elevation-overlay', TONE_TOP[meta.tone])}>
+      className={cn('mapi-enter-modal flex w-[20rem] max-w-full min-h-0 shrink overflow-y-auto overscroll-contain scroll [scrollbar-gutter:stable] flex-col gap-3 rounded-[14px] border border-t-4 border-border bg-popover py-3.5 pl-3.5 pr-1 text-foreground shadow-[var(--elevation-overlay),var(--surface-highlight)]', TONE_TOP[meta.tone])}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
           <span data-testid="state-chip" className={cn('inline-flex min-h-[22px] items-center gap-1.5 rounded-full border-[1.5px] px-2 py-[3px] text-[11px] font-bold leading-[14px]', TONE_BORDER[meta.tone], TONE_TEXT[meta.tone], meta.dashed && 'border-dashed')}>
@@ -66,7 +66,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
           <p className="m-0 text-xs leading-4 text-muted-foreground">Pluviômetro Cemaden · <span className="font-mono">{c.canonicalId}</span></p>
         </div>
         {onClose && (
-          <button type="button" onClick={onClose} aria-label="Fechar card do pluviômetro" className="flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
+          <button type="button" onClick={onClose} aria-label="Fechar card do pluviômetro" className="mapi-press flex size-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground">
             <X className="size-4" aria-hidden="true" />
           </button>
         )}
@@ -134,7 +134,7 @@ export const StationCard: React.FC<Props> = ({ card: c, onClose, onOpenPoint }) 
       </div>
       </OnlyInDetail>
 
-      <Link to="/sensores" className="flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline hover:text-primary-foreground hover:opacity-90">Ver série e divergências</Link>
+      <Link to="/sensores" className="mapi-press flex h-10 items-center justify-center rounded-[10px] bg-primary text-[13px] font-bold text-primary-foreground no-underline shadow-elevation-raised hover:bg-primary/90 hover:text-primary-foreground">Ver série e divergências</Link>
       <OnlyInDetail>
       <p className="m-0 text-[9px] leading-3 tracking-[.02em] text-muted-foreground">
         {c.attribution ?? CEMADEN_ATTRIBUTION} · {c.state === 'NO_RESPONSE' ? (c.lastReadingUtc ? `última leitura ${formatHoraCurta(c.lastReadingUtc)}` : 'sem leitura em 30 dias') : `atualizado ${c.lastReadingUtc ? formatHoraCurta(c.lastReadingUtc) : '—'}`}
