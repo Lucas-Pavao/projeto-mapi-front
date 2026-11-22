@@ -21,7 +21,11 @@ export const RULE_KINDS: Record<RuleKind, RuleKindInfo> = {
   PREDICTION_UNAVAILABLE: { label: 'Alerta sem dado', unit: null, usesMinRisk: false, needsSource: false, target: 'point', help: 'Dispara quando o alerta do ponto fica sem dado (chuva ausente, previsão fora, sem terreno). Sem dado não é sem alerta.' },
 };
 
-export const ALERT_KIND_LABEL = (k: AlertKind): string => (k === 'SOURCE_STALE' ? 'Fonte de dados parada' : RULE_KINDS[k].label);
+export const ALERT_KIND_LABEL = (k: AlertKind): string => {
+  if (k === 'SOURCE_STALE') return 'Fonte de dados parada';
+  if (k === 'MODEL_CHECK') return 'Conferência da previsão de chuva';
+  return RULE_KINDS[k].label;
+};
 
 /** Valida o formulário da regra; devolve erros por campo (vazio = válido). */
 export function validateRule(r: Partial<AlertRuleInput> & { kind: RuleKind }): Record<string, string> {

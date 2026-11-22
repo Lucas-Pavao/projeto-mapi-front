@@ -21,6 +21,7 @@ const ICON: Record<AlertKind, LucideIcon> = {
   RAIN_RATE: CloudRain,
   SENSOR_STALE: WifiOff,
   SOURCE_STALE: DatabaseZap,
+  MODEL_CHECK: DatabaseZap,
 };
 
 const LEVEL_TEXT: Record<FloodLevel, string> = { ALERTA: 'Alerta', ATENCAO: 'Atenção', SEM_ALERTA: 'Sem alerta', SEM_DADO: 'Sem dado' };

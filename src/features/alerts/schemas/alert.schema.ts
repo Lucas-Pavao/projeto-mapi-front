@@ -4,8 +4,11 @@ import { isoSchema, modelValidationStatusSchema, pageOf } from '@/lib/apiSchemas
 /** Tipos de regra que o operador cria. */
 export const ruleKindSchema = z.enum(['RISK_LEVEL', 'RIVER_STAGE', 'TIDE_ABOVE', 'RAIN_RATE', 'SENSOR_STALE', 'PREDICTION_UNAVAILABLE']);
 export type RuleKind = z.infer<typeof ruleKindSchema>;
-/** Tipos de alerta disparado: os das regras e os do sistema (SOURCE_STALE: fonte sem leitura aceita, V29). */
-export const alertKindSchema = z.enum([...ruleKindSchema.options, 'SOURCE_STALE']);
+/**
+ * Tipos de alerta disparado: os das regras e os do sistema (SOURCE_STALE: fonte sem leitura aceita, V29; MODEL_CHECK:
+ * conferência semanal do rain_v1 pior que no teste, V44).
+ */
+export const alertKindSchema = z.enum([...ruleKindSchema.options, 'SOURCE_STALE', 'MODEL_CHECK']);
 
 export const alertSchema = z.object({
   id: z.number(),
