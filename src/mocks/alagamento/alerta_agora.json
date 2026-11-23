@@ -16,6 +16,10 @@
    "rainQ95Mm": 154.5,
    "sheetQ50Cm": 24.0,
    "sheetQ95Cm": 38.0,
+   "sheetQ50CmQmin": 24.0,
+   "sheetQ95CmQmax": 38.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
    "validUntil": "2026-11-20T18:00:00Z"
   },
   {
@@ -25,6 +29,10 @@
    "rainQ95Mm": 400.1,
    "sheetQ50Cm": 22.0,
    "sheetQ95Cm": 35.0,
+   "sheetQ50CmQmin": 22.0,
+   "sheetQ95CmQmax": 35.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
    "validUntil": "2026-11-20T20:00:00Z"
   },
   {
@@ -34,6 +42,10 @@
    "rainQ95Mm": 767.5,
    "sheetQ50Cm": 21.3,
    "sheetQ95Cm": 30.0,
+   "sheetQ50CmQmin": 21.3,
+   "sheetQ95CmQmax": 30.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
    "validUntil": "2026-11-20T23:00:00Z"
   }
  ],
@@ -434,14 +446,24 @@
      }
     }
    }
-  }
+  },
+  "capacity": {
+   "base": "capacidade de projeto: IDF de Silva e Araújo (2013), Te 10 min",
+   "qMinM3s": 0.5991,
+   "qMaxM3s": 0.5991,
+   "iEqMinMmH": 125.4,
+   "iEqMaxMmH": 125.4,
+   "kappa": null
+  },
+  "servedCapacity": "q_max",
+  "profileMethod": "acumulado espalhado por igual nos passos de 10 min"
  },
  "rainStation": "261160609A",
  "rainStationName": "Imbiribeira",
  "rainStationDistanceKm": 1.1,
  "latestReadingAgeMinutes": 0.0,
  "modelVersions": {
-  "flood": "flood_reg_v1",
+  "flood": "flood_reg_v2",
   "rain": "rain_v1",
   "bucket": "balde-M1a-10min"
  },

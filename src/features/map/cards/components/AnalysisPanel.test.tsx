@@ -72,6 +72,11 @@ describe('AnalysisPanel: Por quê · Balde · Origem', () => {
     expect(screen.getByTestId('fator-limpeza-detalhe')).toHaveTextContent(/chance de entupida 6\d%/);
   });
 
+  it('Balde: capacidade da galeria como faixa (onda 16, 4.1)', () => {
+    render(<Harness id="atencao_faixa_capacidade" initial="balde" />);
+    expect(screen.getByTestId('analysis-capacidade')).toHaveTextContent(/a galeria escoa o equivalente a .* mm\/h de chuva \(0,00 a 0,50 m³\/s\) · ESIG/);
+  });
+
   it('maré ausente com o refluxo no nível: sem dado com o motivo escrito, nunca sem alerta', () => {
     render(<Harness id="sem_dado_mare_ausente" />);
     expect(screen.getByTestId('analysis-empty')).toHaveTextContent(/Sem dado: sem maré prevista para algum passo/);

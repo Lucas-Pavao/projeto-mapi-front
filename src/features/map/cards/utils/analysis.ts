@@ -15,6 +15,7 @@ export const ANALYSIS_INFO = {
   cf: 'Quanta chuva a mais na próxima hora, além da prevista (q50), levaria a lâmina a 15 cm. Calculado no próprio balde, por bissecção.',
   balde: 'Conta do balde a cada 10 min: 3 h medidas antes de agora e o prazo servido depois. A água entra com a chuva e sai pela galeria até a capacidade.',
   fatores: 'Maré e limpeza entram no balde como fatores do ponto (ADR 0030). A maré alta segura a saída da galeria; a limpeza diz a chance de a galeria estar entupida. "Muda o nível" quer dizer que o fator entra na conta do alerta; "só informa" quer dizer que aparece aqui, mas não muda o nível.',
+  capacidade: 'Quanto a galeria leva, como faixa com fonte: bocas de lobo e cano do cadastro ESIG (fatores DAEE/CETESB, Manning com 20 cm de sedimento na ponta baixa) ou, sem cadastro, a chuva de projeto. O ALERTA usa a ponta alta e a ATENÇÃO a baixa. Em mm/h, a chuva que a galeria daria conta de escoar.',
   sens: 'Quanto a lâmina muda com a capacidade da galeria (f, sem fonte), o coeficiente de escoamento C e a chuva de projeto (TR, Te) nas faixas registradas.',
   prov: 'Rota, modelos, versão do código, validade e entradas desta previsão.',
   stations: 'A chuva do ponto é o maior valor entre as estações válidas a até 5 km. Toque para abrir o card da estação.',

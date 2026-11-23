@@ -19,6 +19,12 @@ export const floodHorizonSchema = z.object({
   sheetQ50Cm: num,
   sheetQ95Cm: num,
   validUntil: isoSchema.nullable().optional(),
+  /** Onda 16, 4.1: sheetQ50Cm usa a capacidade máxima da faixa e sheetQ95Cm a mínima; estas são as outras duas pontas. */
+  sheetQ50CmQmin: num,
+  sheetQ95CmQmax: num,
+  /** Pico de 10 min previsto (rain_v1p), limitado ao acumulado. */
+  peak10Q50Mm: num,
+  peak10Q95Mm: num,
 });
 
 export const floodStepSchema = z.object({
@@ -90,6 +96,12 @@ export const floodExplanationSchema = z.object({
   decomposition: z.array(floodStepSchema),
   capacityM3H: num,
   factors: floodFactorsSchema.nullable().optional(),
+  /** Capacidade efetiva da galeria como faixa (onda 16, 4.1). */
+  capacity: z.object({
+    base: z.string().nullable().optional(), qMinM3s: num, qMaxM3s: num, iEqMinMmH: num, iEqMaxMmH: num, kappa: num,
+  }).nullable().optional(),
+  servedCapacity: z.enum(['q_min', 'q_max']).nullable().optional(),
+  profileMethod: z.string().nullable().optional(),
 });
 
 export const alagamentoPontoSchema = z.object({

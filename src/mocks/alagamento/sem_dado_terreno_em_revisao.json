@@ -15,7 +15,7 @@
  "rainStationDistanceKm": 1.1,
  "latestReadingAgeMinutes": null,
  "modelVersions": {
-  "flood": "flood_reg_v1",
+  "flood": "flood_reg_v2",
   "rain": "rain_v1",
   "bucket": "balde-M1a-10min"
  },

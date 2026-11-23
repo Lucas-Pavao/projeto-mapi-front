@@ -1,0 +1,498 @@
+{
+ "floodPointId": 5,
+ "slug": "MASCARENHAS_IMBIRIBEIRA",
+ "name": "Av. Mascarenhas de Morais",
+ "level": "ATENCAO",
+ "worstHorizonHours": 1,
+ "reason": null,
+ "reasonText": null,
+ "hNowCm": 0.0,
+ "rainLastHourMm": 0.0,
+ "horizons": [
+  {
+   "hours": 1,
+   "level": "ATENCAO",
+   "rainQ50Mm": 3.0,
+   "rainQ95Mm": 6.0,
+   "sheetQ50Cm": 0.0,
+   "sheetQ95Cm": 78.8,
+   "sheetQ50CmQmin": 27.2,
+   "sheetQ95CmQmax": 0.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
+   "validUntil": "2026-11-20T18:00:00Z"
+  },
+  {
+   "hours": 3,
+   "level": "ATENCAO",
+   "rainQ50Mm": 4.0,
+   "rainQ95Mm": 8.0,
+   "sheetQ50Cm": 0.0,
+   "sheetQ95Cm": 84.4,
+   "sheetQ50CmQmin": 15.6,
+   "sheetQ95CmQmax": 0.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
+   "validUntil": "2026-11-20T20:00:00Z"
+  },
+  {
+   "hours": 6,
+   "level": "ATENCAO",
+   "rainQ50Mm": 5.0,
+   "rainQ95Mm": 10.0,
+   "sheetQ50Cm": 0.0,
+   "sheetQ95Cm": 75.6,
+   "sheetQ50CmQmin": 0.0,
+   "sheetQ95CmQmax": 0.0,
+   "peak10Q50Mm": null,
+   "peak10Q95Mm": null,
+   "validUntil": "2026-11-20T23:00:00Z"
+  }
+ ],
+ "explanation": {
+  "servedScenario": "q95",
+  "servedHorizonHours": 1,
+  "shapTop3": [
+   {
+    "text": "chuva média nas estações a 5–15 km na última hora: 0,0 mm (−0,5 mm na previsão)",
+    "contributionMm": -0.454
+   },
+   {
+    "text": "estações a 5–15 km com chuva na última hora: 0% (−0,3 mm na previsão)",
+    "contributionMm": -0.261
+   },
+   {
+    "text": "chuva no ponto (até 5 km) nos últimos 10 min: 0,0 mm (−0,2 mm na previsão)",
+    "contributionMm": -0.223
+   }
+  ],
+  "counterfactualMm": 103.11,
+  "counterfactualText": "mais 103,1 mm de chuva na próxima hora, além dos 3,0 mm previstos (q50), levariam a lâmina a 15 cm",
+  "sensitivity": {
+   "minCm": 0.0,
+   "maxCm": 104.0,
+   "levelChanges": true,
+   "heaviestParameter": "f",
+   "text": "lâmina máxima entre 0,0 e 104,0 cm com f, C e a capacidade na faixa; o nível muda"
+  },
+  "decomposition": [
+   {
+    "t": "2026-11-20T14:10:00Z",
+    "minutesFromNow": -170,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T14:20:00Z",
+    "minutesFromNow": -160,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T14:30:00Z",
+    "minutesFromNow": -150,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T14:40:00Z",
+    "minutesFromNow": -140,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T14:50:00Z",
+    "minutesFromNow": -130,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:00:00Z",
+    "minutesFromNow": -120,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:10:00Z",
+    "minutesFromNow": -110,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:20:00Z",
+    "minutesFromNow": -100,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:30:00Z",
+    "minutesFromNow": -90,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:40:00Z",
+    "minutesFromNow": -80,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T15:50:00Z",
+    "minutesFromNow": -70,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:00:00Z",
+    "minutesFromNow": -60,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:10:00Z",
+    "minutesFromNow": -50,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:20:00Z",
+    "minutesFromNow": -40,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:30:00Z",
+    "minutesFromNow": -30,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:40:00Z",
+    "minutesFromNow": -20,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T16:50:00Z",
+    "minutesFromNow": -10,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:00:00Z",
+    "minutesFromNow": 0,
+    "kind": "medido",
+    "rainMm": 0.0,
+    "inflowM3H": 0.0,
+    "outflowM3H": 0.0,
+    "volumeM3": 0.0,
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:10:00Z",
+    "minutesFromNow": 10,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 14.8,
+    "sheetCm": 4.8,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:20:00Z",
+    "minutesFromNow": 20,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 29.6,
+    "sheetCm": 19.6,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:30:00Z",
+    "minutesFromNow": 30,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 44.4,
+    "sheetCm": 34.4,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:40:00Z",
+    "minutesFromNow": 40,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 59.2,
+    "sheetCm": 49.2,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T17:50:00Z",
+    "minutesFromNow": 50,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 74.0,
+    "sheetCm": 64.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   },
+   {
+    "t": "2026-11-20T18:00:00Z",
+    "minutesFromNow": 60,
+    "kind": "previsto",
+    "rainMm": 1.0,
+    "inflowM3H": 103.2,
+    "outflowM3H": 14.4,
+    "volumeM3": 88.8,
+    "sheetCm": 78.8,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
+   }
+  ],
+  "capacityM3H": 14.4,
+  "factors": {
+   "refluxo": {
+    "mode": "NIVEL",
+    "status": "OK",
+    "appliedToLevel": true,
+    "reason": null,
+    "text": "a maré fica abaixo da saída da galeria nas próximas 6 h",
+    "sillNrM": 1.459,
+    "tideNowNrM": 0.9,
+    "tideMaxHorizonNrM": 0.9,
+    "reductionNowPct": 0.0,
+    "periods": [],
+    "servedDeltaCm": 0.0,
+    "deltaSheetCm": {
+     "q50": {
+      "1": 0.0,
+      "3": 0.0,
+      "6": 0.0
+     },
+     "q95": {
+      "1": 0.0,
+      "3": 0.0,
+      "6": 0.0
+     }
+    },
+    "biasScenario": {
+     "mdtBiasM": -0.369,
+     "sillNrM": 1.828,
+     "level": "ALERTA",
+     "worstHorizonHours": 1,
+     "sheetCm": {
+      "q50": {
+       "1": 27.2,
+       "3": 15.6,
+       "6": 0.0
+      },
+      "q95": {
+       "1": 78.8,
+       "3": 84.4,
+       "6": 75.6
+      }
+     }
+    }
+   },
+   "limpeza": {
+    "mode": "INFO",
+    "status": "OK",
+    "appliedToLevel": false,
+    "reason": null,
+    "text": "chance de a galeria estar entupida: 60% (limpeza desconhecida, regime permanente); se estiver, a lâmina do cenário servido chegaria a 93,2 cm em 1 h (não muda o nível: a capacidade da galeria entupida não tem fonte)",
+    "regime": "PERMANENTE",
+    "daysSinceCleaning": null,
+    "pClogged": 0.5955,
+    "fClogged": 0.0,
+    "mixtureLevel": "ALERTA",
+    "sheetCloggedCm": {
+     "q50": {
+      "1": 41.6,
+      "3": 58.8,
+      "6": 76.0
+     },
+     "q95": {
+      "1": 93.2,
+      "3": 127.6,
+      "6": 162.0
+     }
+    },
+    "probHcrit": {
+     "q50": {
+      "1": 1.0,
+      "3": 1.0,
+      "6": 0.5955
+     },
+     "q95": {
+      "1": 1.0,
+      "3": 1.0,
+      "6": 1.0
+     }
+    }
+   }
+  },
+  "capacity": {
+   "base": "ESIG: limite superior (entrada sem cadastro)",
+   "qMinM3s": 0.004,
+   "qMaxM3s": 0.5,
+   "iEqMinMmH": 0.8,
+   "iEqMaxMmH": 104.7,
+   "kappa": null
+  },
+  "servedCapacity": "q_min",
+  "profileMethod": "acumulado espalhado por igual nos passos de 10 min"
+ },
+ "rainStation": "261160609A",
+ "rainStationName": "Imbiribeira",
+ "rainStationDistanceKm": 1.1,
+ "latestReadingAgeMinutes": 0.0,
+ "modelVersions": {
+  "flood": "flood_reg_v2",
+  "rain": "rain_v1",
+  "bucket": "balde-M1a-10min"
+ },
+ "sources": [
+  "CEMADEN_PED"
+ ],
+ "missingInputs": [
+  "L_frac_wet_60",
+  "L_max_30",
+  "L_max_60",
+  "L_min_since_onset",
+  "N_min_since_onset",
+  "O_min_since_onset",
+  "S_frac_wet_60",
+  "S_max_30",
+  "S_max_60",
+  "S_min_since_onset",
+  "om_1h",
+  "om_3h",
+  "om_6h",
+  "r15_40_frac_wet_60",
+  "r15_40_max_60",
+  "r15_40_mean_60"
+ ],
+ "codeVersion": "0000000000000000000000000000000000000000",
+ "issuedAt": "2026-11-20T17:00:00Z",
+ "evaluatedAt": "2026-11-20T17:00:00Z",
+ "experimental": true,
+ "shadow": true,
+ "rule": "ALERTA se a lâmina provável (q50) chega a 15 cm; ATENÇÃO se só a pessimista (q95) chega. Experimental.",
+ "attribution": "DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC"
+}

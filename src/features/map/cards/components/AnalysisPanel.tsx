@@ -50,6 +50,14 @@ const LIMITS = [
   'Experimental até a validação externa (item 2.3) ser aprovada pelo orientador.',
 ];
 
+const n1 = (v: number | null | undefined) => (v == null ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }));
+const n2 = (v: number | null | undefined) => (v == null ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+
+/** "entre 14,4 e 27,6 mm/h (0,14 a 0,26 m³/s) · ESIG: ..." */
+const capacidadeTexto = (c: NonNullable<NonNullable<AlagamentoPonto['explanation']>['capacity']>) =>
+  `a galeria escoa o equivalente a ${n1(c.iEqMinMmH)} a ${n1(c.iEqMaxMmH)} mm/h de chuva (${n2(c.qMinM3s)} a ${n2(c.qMaxM3s)} m³/s)`
+  + (c.base ? ` · ${c.base}` : '');
+
 /** Painel lateral de 480 px com a análise completa do ponto pelo alerta por regressão (5.4): Por quê · Balde · Origem. */
 export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, alagamentoLoading = false, alagamentoError = false, isAdmin = false, tab, onTab, onClose, onOpenStation }) => {
   const semDado = !a || a.level === 'SEM_DADO';
@@ -143,6 +151,14 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
               <H3 title="Balde a cada 10 min" info={ANALYSIS_INFO.balde} />
               <BaldeChart steps={e?.decomposition ?? []} capacityM3H={e?.capacityM3H} />
             </section>
+            {e?.capacity && (
+              <section className="flex flex-col gap-1.5">
+                <H3 title="Capacidade da galeria" info={ANALYSIS_INFO.capacidade} />
+                <p data-testid="analysis-capacidade" className="m-0 text-[13px] leading-[18px]">
+                  {capacidadeTexto(e.capacity)}
+                </p>
+              </section>
+            )}
             <section className="flex flex-col gap-1.5">
               <H3 title="Maré e limpeza no balde" info={ANALYSIS_INFO.fatores} />
               <FatoresBlock factors={e?.factors} />

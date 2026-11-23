@@ -12,6 +12,7 @@ import semDadoTerreno from './alagamento/sem_dado_sem_terreno.json';
 import semDadoRevisao from './alagamento/sem_dado_terreno_em_revisao.json';
 import alertaMare3h from './alagamento/alerta_mare_3h.json';
 import semDadoMare from './alagamento/sem_dado_mare_ausente.json';
+import atencaoFaixa from './alagamento/atencao_faixa_capacidade.json';
 
 /**
  * DADOS SINTÉTICOS de GET /api/alagamento/pontos: os 10 estados da prancha "Nível 6" e 2 do alerta único (ADR 0030: maré
@@ -32,6 +33,7 @@ export const ALAGAMENTO_FIXTURES = {
   sem_dado_terreno_em_revisao: semDadoRevisao,
   alerta_mare_3h: alertaMare3h,
   sem_dado_mare_ausente: semDadoMare,
+  atencao_faixa_capacidade: atencaoFaixa,
 } as const;
 
 export type AlagamentoFixtureId = keyof typeof ALAGAMENTO_FIXTURES;
