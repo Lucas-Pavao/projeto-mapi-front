@@ -77,4 +77,19 @@ describe('PointCard (visitante)', () => {
     expect(screen.getAllByTestId('tile')[0]).toHaveTextContent('sem dado');
     expect(screen.getAllByTestId('tile')[1]).toHaveTextContent('sem dado');
   });
+
+  it('com a chuva medida (onda 16, 7.3): 3 h medida, 6 e 24 h no rodapé; janela com lacuna fica "—", nunca 0', () => {
+    const measured = { slug: 'x', hourEndUtc: '2026-11-23T03:00:00Z', rain1hMm: 2, rain3hMm: 6, rain6hMm: 7.5, rain24hMm: null,
+      n3h: 3, n6h: 6, n24h: 23, source: 'CEMADEN_PED', stationId: 'A', stationDistanceM: 3483, ruleVersion: 'chuva-ponto-v4',
+      rule: 'r', attribution: 'DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC' };
+    render(<MemoryRouter><PointCard point={P.high} rain={pointRain()} measured={measured} /></MemoryRouter>);
+    const t = screen.getAllByTestId('tile')[1];
+    expect(t).toHaveTextContent('6,0 mm');
+    expect(t).toHaveTextContent('medida · 6 h 7,5 · 24 h —');
+    expect(t).not.toHaveTextContent(/Open-Meteo/);
+    cleanup();
+    render(<MemoryRouter><PointCard point={P.high} rain={pointRain()} measured={{ ...measured, rain3hMm: null }} /></MemoryRouter>);
+    expect(screen.getAllByTestId('tile')[1]).toHaveTextContent('lacuna');
+    expect(screen.getAllByTestId('tile')[1].querySelector('.text-warning')).not.toBeNull();
+  });
 });

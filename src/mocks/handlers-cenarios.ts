@@ -68,4 +68,11 @@ export const cenariosHandlers = [
     return HttpResponse.json({ canonicalId: params.id, from: u.searchParams.get('from') ?? '', to: u.searchParams.get('to') ?? '', toleranceMm: 0.5, hours: hourlyHours(), attribution: ATTRIBUTION });
   }),
   http.get<{ slug: string }>('/api/pontos/:slug/rain-candidates', ({ params }) => HttpResponse.json(rainCandidates(params.slug))),
+  // DADOS SINTÉTICOS de GET /api/pontos/{slug}/chuva-medida (onda 16, Fase 7.3): 24 h com valor exceto uma hora
+  http.get<{ slug: string }>('/api/pontos/:slug/chuva-medida', ({ params }) => HttpResponse.json({
+    slug: params.slug, hourEndUtc: new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000).toISOString(),
+    rain1hMm: 2, rain3hMm: 6, rain6hMm: 7.5, rain24hMm: null, n3h: 3, n6h: 6, n24h: 23, source: 'CEMADEN_PED', stationId: 'SINT-A',
+    stationDistanceM: 3483, ruleVersion: 'chuva-ponto-v4', rule: 'maior valor da hora entre as estações válidas a até 5 km (ADR 0022)',
+    attribution: ATTRIBUTION,
+  })),
 ];

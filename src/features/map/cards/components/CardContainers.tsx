@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { useTimeline } from '@/features/events/hooks/useTimeline';
 import { useRainCandidates } from '@/features/points/hooks/useRainCandidates';
+import { useMeasuredRain } from '@/features/points/hooks/useMeasuredRain';
 import { seriesKeys, seriesOf } from '@/features/sensors/utils/sensorView';
 import { httpStatus } from '@/lib/apiError';
 import type { FloodPointResponseDTO, SensorResponseDTO } from '../../types';
@@ -40,11 +41,12 @@ interface PointProps { point: FloodPointResponseDTO; onClose: () => void; onOpen
 /** Resumo do ponto: alerta por regressão (GET /api/alagamento/pontos, só ADMIN em modo sombra) e a chuva do ponto (B3). */
 export const PointCardContainer: React.FC<PointProps> = ({ point, onClose, onOpenAnalysis }) => {
   const rain = useRainCandidates(point.slug);
+  const measured = useMeasuredRain(point.slug);
   const { user } = useAuth();
   const isAdmin = hasRole(parseRole(user?.role), 'ADMIN');
   const al = useAlagamentoPontos(isAdmin);
   return (
-    <PointCard point={point} rain={rain.data} onClose={onClose} onOpenAnalysis={onOpenAnalysis} isAdmin={isAdmin}
+    <PointCard point={point} rain={rain.data} measured={measured.data} onClose={onClose} onOpenAnalysis={onOpenAnalysis} isAdmin={isAdmin}
       alagamento={al.data?.find((a) => a.slug === point.slug)} alagamentoLoading={al.isLoading} alagamentoError={al.isError}
       hoje={<PointHoje slug={point.slug} />} />
   );

@@ -5,6 +5,7 @@ import { InfoTip } from '@/components/InfoTip';
 import { num } from '@/features/operacao/utils/format';
 import { distanceText, missingAccText } from '@/features/points/utils/rainCandidates';
 import type { RainCandidates } from '@/features/points/schemas/rain-candidates.schema';
+import type { MeasuredRain } from '@/features/points/schemas/measured-rain.schema';
 import type { FloodPointResponseDTO } from '../../types';
 import { cn } from '@/lib/utils';
 import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.schema';
@@ -14,6 +15,8 @@ import { titleCasePlace } from '../../utils/overview';
 interface Props {
   point: FloodPointResponseDTO;
   rain?: RainCandidates;
+  /** Chuva medida acumulada (onda 16, Fase 7.3): substitui a estimada do Open-Meteo no card. */
+  measured?: MeasuredRain;
   onClose?: () => void;
   onOpenAnalysis?: () => void;
   /** Só ADMIN vê o alerta por regressão (modo sombra, até a validação ser aprovada). */
@@ -33,7 +36,7 @@ export const VISITOR_INFO = 'O alerta de alagamento por regressão é experiment
  * Card-resumo do ponto crítico (seção 5.2, prancha "Nível 6"). Sem abas: o nível é o do alerta por regressão.
  * Nunca "risco baixo" nem "seguro"; leitura em falha ou sem cálculo nunca vira "Sem alerta".
  */
-export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysis, isAdmin = false, alagamento, alagamentoLoading = false, alagamentoError = false, hoje }) => {
+export const PointCard: React.FC<Props> = ({ point, rain, measured, onClose, onOpenAnalysis, isAdmin = false, alagamento, alagamentoLoading = false, alagamentoError = false, hoje }) => {
   const place = `${titleCasePlace(point.municipality ?? 'Recife')}${point.description ? ` · ${point.description}` : ''}`;
   if (isAdmin && alagamento && !alagamentoLoading) {
     return (
@@ -86,7 +89,11 @@ export const PointCard: React.FC<Props> = ({ point, rain, onClose, onOpenAnalysi
   const tide = point.tideHeight ?? point.liveData?.tideHeight ?? null;
   const tiles: Array<{ l: string; v: string; s: string; warn: boolean }> = [
     { l: 'Chuva agora', v: rain?.valueMm != null && used ? `${num(rain.valueMm, 1)} mm/h` : 'sem dado', s: used && rain?.valueMm != null ? `${used.name} · ${distanceText(used.distanceM)}` : 'nenhuma estação', warn: rain?.valueMm == null },
-    { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: agg?.rainSource ? 'estimada · Open-Meteo' : 'sem leitura', warn: agg?.rain3h == null },
+    measured
+      ? { l: 'Chuva 3 h', v: measured.rain3hMm != null ? `${num(measured.rain3hMm, 1)} mm` : 'lacuna',
+        s: `medida · 6 h ${measured.rain6hMm != null ? `${num(measured.rain6hMm, 1)}` : '—'} · 24 h ${measured.rain24hMm != null ? `${num(measured.rain24hMm, 1)} mm` : '—'}`,
+        warn: measured.rain3hMm == null }
+      : { l: 'Chuva 3 h', v: agg?.rain3h != null ? `${num(agg.rain3h, 1)} mm` : missingAccText(used != null), s: agg?.rainSource ? 'estimada · Open-Meteo' : 'sem leitura', warn: agg?.rain3h == null },
     { l: 'Maré', v: tide != null ? `${num(tide, 2)} m` : '—', s: point.tideSource === 'HARMONIC' ? 'maré · reserva harmônica' : point.tideUnit ?? 'DHN (NR)', warn: false },
   ];
   return (
