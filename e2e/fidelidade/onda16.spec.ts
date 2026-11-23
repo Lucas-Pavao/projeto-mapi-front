@@ -26,7 +26,8 @@ async function analise(page: Page, fx: string, detalhes: boolean) {
   return page.getByRole('dialog', { name: /^Análise completa/ });
 }
 
-for (const [fx, detalhes] of [['alerta_mare_3h', false], ['alerta_mare_3h', true], ['atencao_3h', true], ['sem_dado_mare_ausente', false]] as const) {
+for (const [fx, detalhes] of [['alerta_mare_3h', false], ['alerta_mare_3h', true], ['atencao_3h', true], ['sem_dado_mare_ausente', false],
+  ['atencao_faixa_capacidade', false]] as const) {
   test(`onda16: análise ${fx}${detalhes ? ' detalhes' : ''}`, async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop');
     const d = await analise(page, fx, detalhes);
