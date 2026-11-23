@@ -10,9 +10,12 @@ import semDadoChuva from './alagamento/sem_dado_chuva_ausente.json';
 import semDadoPrevisao from './alagamento/sem_dado_previsao_fora.json';
 import semDadoTerreno from './alagamento/sem_dado_sem_terreno.json';
 import semDadoRevisao from './alagamento/sem_dado_terreno_em_revisao.json';
+import alertaMare3h from './alagamento/alerta_mare_3h.json';
+import semDadoMare from './alagamento/sem_dado_mare_ausente.json';
 
 /**
- * DADOS SINTÉTICOS de GET /api/alagamento/pontos: os 10 estados da prancha "Nível 6". Gerados pelo código real da IA com
+ * DADOS SINTÉTICOS de GET /api/alagamento/pontos: os 10 estados da prancha "Nível 6" e 2 do alerta único (ADR 0030: maré
+ * fechando a saída em 3 h e maré ausente). Gerados pelo código real da IA com
  * entradas controladas (projeto-mapi-ai/scripts/gerar_estados_alagamento.py e estados_para_front.py); não são previsões.
  * No navegador, `?alagamentoFx=<id>` escolhe o estado servido para todos os pontos (padrão: atencao_3h).
  */
@@ -27,6 +30,8 @@ export const ALAGAMENTO_FIXTURES = {
   sem_dado_previsao_fora: semDadoPrevisao,
   sem_dado_sem_terreno: semDadoTerreno,
   sem_dado_terreno_em_revisao: semDadoRevisao,
+  alerta_mare_3h: alertaMare3h,
+  sem_dado_mare_ausente: semDadoMare,
 } as const;
 
 export type AlagamentoFixtureId = keyof typeof ALAGAMENTO_FIXTURES;

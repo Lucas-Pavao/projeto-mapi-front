@@ -11,6 +11,7 @@ import type { AlagamentoPonto } from '@/features/alagamento/schemas/alagamento.s
 import { FloodChip } from '@/features/alagamento/components/AlertaRegressao';
 import { ExperimentalTag } from '@/features/alagamento/components/RegressaoCard';
 import { BaldeChart } from '@/features/alagamento/components/BaldeChart';
+import { FatoresBlock } from '@/features/alagamento/components/FatoresBlock';
 import { VisitorChip } from '@/features/alagamento/components/PointRegressaoBlock';
 import { EDGE_CLASS, floodChipOf, splitShap } from '@/features/alagamento/utils/alagamentoText';
 import { HorizonBoxes } from '@/features/alagamento/components/HorizonBoxes';
@@ -44,6 +45,7 @@ const H3: React.FC<{ title: string; info: string }> = ({ title, info }) => (
 const LIMITS = [
   'Nenhum modelo é treinado com rótulo de alagamento: a chuva prevista vem do rain_v1 (alvo medido) e o resto é física.',
   'O balde quase não dispara com os parâmetros atuais: 1 evento de 15 cm em 5 anos (TR 2) e, na validação, nenhum alerta.',
+  'A maré entra no nível pela soleira do cadastro ESIG e pelo Δ de 0,821 m; o viés do MDT não foi medido na saída da galeria (o cenário de −0,37 m vai junto, só como sensibilidade).',
   'O aviso de 1 h só chega com a chuva já caindo: nenhum aviso antes do início da chuva no teste do rain_v1.',
   'Experimental até a validação externa (item 2.3) ser aprovada pelo orientador.',
 ];
@@ -125,6 +127,10 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
               ) : <p className="m-0 text-xs text-muted-foreground">sem explicação neste ciclo</p>}
             </section>
             <section className="flex flex-col gap-1.5">
+              <H3 title="Maré e limpeza" info={ANALYSIS_INFO.fatores} />
+              <FatoresBlock factors={e?.factors} />
+            </section>
+            <section className="flex flex-col gap-1.5">
               <H3 title="Para chegar a 15 cm" info={ANALYSIS_INFO.cf} />
               <p data-testid="analysis-cf" className="m-0 rounded-lg bg-muted px-2.5 py-2 text-[13px] leading-[18px]">{e?.counterfactualText ?? 'sem cálculo neste ciclo'}</p>
             </section>
@@ -136,6 +142,10 @@ export const AnalysisPanel: React.FC<Props> = ({ point, rain, alagamento: a, ala
             <section className="flex flex-col gap-2">
               <H3 title="Balde a cada 10 min" info={ANALYSIS_INFO.balde} />
               <BaldeChart steps={e?.decomposition ?? []} capacityM3H={e?.capacityM3H} />
+            </section>
+            <section className="flex flex-col gap-1.5">
+              <H3 title="Maré e limpeza no balde" info={ANALYSIS_INFO.fatores} />
+              <FatoresBlock factors={e?.factors} />
             </section>
             <section className="flex flex-col gap-1.5">
               <H3 title="Sensibilidade" info={ANALYSIS_INFO.sens} />

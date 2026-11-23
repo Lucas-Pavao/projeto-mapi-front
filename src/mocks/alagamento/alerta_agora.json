@@ -72,7 +72,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T14:20:00Z",
@@ -82,7 +84,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T14:30:00Z",
@@ -92,7 +96,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T14:40:00Z",
@@ -102,7 +108,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T14:50:00Z",
@@ -112,7 +120,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:00:00Z",
@@ -122,7 +132,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:10:00Z",
@@ -132,7 +144,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:20:00Z",
@@ -142,7 +156,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:30:00Z",
@@ -152,7 +168,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:40:00Z",
@@ -162,7 +180,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T15:50:00Z",
@@ -172,7 +192,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:00:00Z",
@@ -182,7 +204,9 @@
     "inflowM3H": 0.0,
     "outflowM3H": 0.0,
     "volumeM3": 0.0,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:10:00Z",
@@ -192,7 +216,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 156.527,
-    "sheetCm": 0.0
+    "sheetCm": 0.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:20:00Z",
@@ -202,7 +228,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 313.055,
-    "sheetCm": 0.44
+    "sheetCm": 0.44,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:30:00Z",
@@ -212,7 +240,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 469.582,
-    "sheetCm": 5.65
+    "sheetCm": 5.65,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:40:00Z",
@@ -222,7 +252,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 626.109,
-    "sheetCm": 10.87
+    "sheetCm": 10.87,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T16:50:00Z",
@@ -232,7 +264,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 782.636,
-    "sheetCm": 16.09
+    "sheetCm": 16.09,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:00:00Z",
@@ -242,7 +276,9 @@
     "inflowM3H": 3096.0,
     "outflowM3H": 2156.836,
     "volumeM3": 939.164,
-    "sheetCm": 21.31
+    "sheetCm": 21.31,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:10:00Z",
@@ -252,7 +288,9 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 952.644,
-    "sheetCm": 21.75
+    "sheetCm": 21.75,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:20:00Z",
@@ -262,7 +300,9 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 966.125,
-    "sheetCm": 22.2
+    "sheetCm": 22.2,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:30:00Z",
@@ -272,7 +312,9 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 979.606,
-    "sheetCm": 22.65
+    "sheetCm": 22.65,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:40:00Z",
@@ -282,7 +324,9 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 993.086,
-    "sheetCm": 23.1
+    "sheetCm": 23.1,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T17:50:00Z",
@@ -292,7 +336,9 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 1006.567,
-    "sheetCm": 23.55
+    "sheetCm": 23.55,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    },
    {
     "t": "2026-11-20T18:00:00Z",
@@ -302,10 +348,93 @@
     "inflowM3H": 2237.72,
     "outflowM3H": 2156.836,
     "volumeM3": 1020.048,
-    "sheetCm": 24.0
+    "sheetCm": 24.0,
+    "tideNrM": 0.9,
+    "outflowFactor": 1.0
    }
   ],
-  "capacityM3H": 2156.84
+  "capacityM3H": 2156.84,
+  "factors": {
+   "refluxo": {
+    "mode": "NIVEL",
+    "status": "OK",
+    "appliedToLevel": true,
+    "reason": null,
+    "text": "a maré fica abaixo da saída da galeria nas próximas 6 h",
+    "sillNrM": 1.459,
+    "tideNowNrM": 0.9,
+    "tideMaxHorizonNrM": 0.9,
+    "reductionNowPct": 0.0,
+    "periods": [],
+    "servedDeltaCm": 0.0,
+    "deltaSheetCm": {
+     "q50": {
+      "1": 0.0,
+      "3": 0.0,
+      "6": 0.0
+     },
+     "q95": {
+      "1": 0.0,
+      "3": 0.0,
+      "6": 0.0
+     }
+    },
+    "biasScenario": {
+     "mdtBiasM": -0.369,
+     "sillNrM": 1.828,
+     "level": "ALERTA",
+     "worstHorizonHours": 1,
+     "sheetCm": {
+      "q50": {
+       "1": 24.0,
+       "3": 22.0,
+       "6": 21.3
+      },
+      "q95": {
+       "1": 38.0,
+       "3": 35.0,
+       "6": 30.0
+      }
+     }
+    }
+   },
+   "limpeza": {
+    "mode": "INFO",
+    "status": "OK",
+    "appliedToLevel": false,
+    "reason": null,
+    "text": "chance de a galeria estar entupida: 60% (limpeza desconhecida, regime permanente); se estiver, a lâmina do cenário servido chegaria a 167,8 cm em 1 h (não muda o nível: a capacidade da galeria entupida não tem fonte)",
+    "regime": "PERMANENTE",
+    "daysSinceCleaning": null,
+    "pClogged": 0.5955,
+    "fClogged": 0.0,
+    "mixtureLevel": "ALERTA",
+    "sheetCloggedCm": {
+     "q50": {
+      "1": 167.8,
+      "3": 190.0,
+      "6": 93.2
+     },
+     "q95": {
+      "1": 181.8,
+      "3": 190.0,
+      "6": 190.0
+     }
+    },
+    "probHcrit": {
+     "q50": {
+      "1": 1.0,
+      "3": 1.0,
+      "6": 1.0
+     },
+     "q95": {
+      "1": 1.0,
+      "3": 1.0,
+      "6": 1.0
+     }
+    }
+   }
+  }
  },
  "rainStation": "261160609A",
  "rainStationName": "Imbiribeira",

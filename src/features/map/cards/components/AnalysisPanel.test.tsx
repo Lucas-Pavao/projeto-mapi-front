@@ -24,7 +24,14 @@ const Harness = ({ id, initial = 'why', onStation, isAdmin = true, detail = fals
   );
 };
 
-const noRiskWords = () => expect(document.body.textContent).not.toMatch(/risco baixo|seguro|logreg|%/i);
+/** Sem palavra de risco nem probabilidade de alagamento; a redução da saída pela maré e a chance de entupida (fatores do
+ * ADR 0030, com fonte) podem trazer %. */
+const noRiskWords = () => {
+  const body = document.body.cloneNode(true) as HTMLElement;
+  body.querySelectorAll('[data-testid^="fator-"]').forEach((n) => n.remove());
+  expect(body.textContent).not.toMatch(/risco baixo|seguro|logreg|%/i);
+  expect(document.body.textContent).not.toMatch(/risco baixo|seguro|logreg/i);
+};
 
 describe('AnalysisPanel: Por quê · Balde · Origem', () => {
   it('abas na ordem; "inputs" antigo cai em Por quê', () => {
@@ -43,6 +50,31 @@ describe('AnalysisPanel: Por quê · Balde · Origem', () => {
     expect(screen.getAllByTestId('info-tip').map((t) => t.getAttribute('aria-label'))).toEqual(expect.arrayContaining([ANALYSIS_INFO.level, ANALYSIS_INFO.shap, ANALYSIS_INFO.cf]));
     expect(screen.queryByText(ANALYSIS_INFO.level)).toBeNull(); // enxuto: a regra fica no ⓘ
     noRiskWords();
+  });
+
+  it('Por quê e Balde: maré e limpeza do alerta único (ADR 0030), com o papel de cada fator no nível', () => {
+    render(<Harness id="alerta_mare_3h" />);
+    const mare = screen.getByTestId('fator-mare');
+    expect(mare).toHaveAttribute('data-status', 'OK');
+    expect(within(mare).getByTestId('fator-papel')).toHaveTextContent('muda o nível');
+    expect(mare).toHaveTextContent(/reduz a saída da galeria em 100% entre 15h00 e 18h00/);
+    const limpeza = screen.getByTestId('fator-limpeza');
+    expect(within(limpeza).getByTestId('fator-papel')).toHaveTextContent('só informa');
+    expect(limpeza).toHaveTextContent(/não muda o nível/);
+    expect(screen.queryByTestId('fator-mare-detalhe')).toBeNull();
+    noRiskWords();
+    fireEvent.click(screen.getByRole('tab', { name: 'Balde' }));
+    expect(screen.getByTestId('balde-vazoes')).toHaveAttribute('aria-label', expect.stringMatching(/reduzida pela maré em \d+ passos/));
+    expect(screen.getByTestId('fator-mare')).toBeInTheDocument();
+    cleanup();
+    render(<Harness id="alerta_mare_3h" detail />);
+    expect(screen.getByTestId('fator-mare-detalhe')).toHaveTextContent(/soleira 1,46 m \(NR\).*viés do MDT \(-0,37 m\) o nível seria sem alerta/);
+    expect(screen.getByTestId('fator-limpeza-detalhe')).toHaveTextContent(/chance de entupida 6\d%/);
+  });
+
+  it('maré ausente com o refluxo no nível: sem dado com o motivo escrito, nunca sem alerta', () => {
+    render(<Harness id="sem_dado_mare_ausente" />);
+    expect(screen.getByTestId('analysis-empty')).toHaveTextContent(/Sem dado: sem maré prevista para algum passo/);
   });
 
   it('Balde: gráfico de vazões e de lâmina com 15 cm e sensibilidade; legenda só em Detalhes', () => {

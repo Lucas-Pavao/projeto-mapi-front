@@ -14,6 +14,7 @@ export const ANALYSIS_INFO = {
   shap: 'As três entradas que mais mudaram a chuva prevista pelo rain_v1 nesta previsão (TreeSHAP local), em mm de chuva.',
   cf: 'Quanta chuva a mais na próxima hora, além da prevista (q50), levaria a lâmina a 15 cm. Calculado no próprio balde, por bissecção.',
   balde: 'Conta do balde a cada 10 min: 3 h medidas antes de agora e o prazo servido depois. A água entra com a chuva e sai pela galeria até a capacidade.',
+  fatores: 'Maré e limpeza entram no balde como fatores do ponto (ADR 0030). A maré alta segura a saída da galeria; a limpeza diz a chance de a galeria estar entupida. "Muda o nível" quer dizer que o fator entra na conta do alerta; "só informa" quer dizer que aparece aqui, mas não muda o nível.',
   sens: 'Quanto a lâmina muda com a capacidade da galeria (f, sem fonte), o coeficiente de escoamento C e a chuva de projeto (TR, Te) nas faixas registradas.',
   prov: 'Rota, modelos, versão do código, validade e entradas desta previsão.',
   stations: 'A chuva do ponto é o maior valor entre as estações válidas a até 5 km. Toque para abrir o card da estação.',

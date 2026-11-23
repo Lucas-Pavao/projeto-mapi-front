@@ -25,6 +25,14 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
   const qmax = Math.max(1, capacityM3H ?? 0, ...steps.map((s) => Math.max(s.inflowM3H ?? 0, s.outflowM3H ?? 0))) * 1.1;
   const y1 = (v: number) => PAD.t + (H1 - PAD.t - PAD.b) * (1 - v / qmax);
   const out = steps.map((s, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y1(s.outflowM3H ?? 0).toFixed(1)}`).join(' ');
+  // capacidade da galeria por passo: cai quando a maré alta segura a saída (fator de refluxo, ADR 0030)
+  const hasTide = steps.some((s) => s.outflowFactor != null && s.outflowFactor < 1);
+  const cap = capacityM3H == null ? null : steps.map((s, i) => {
+    const c = capacityM3H * (s.outflowFactor ?? 1);
+    const x0 = PAD.l + i * (iw / n), x1 = PAD.l + (i + 1) * (iw / n);
+    return `${i === 0 ? 'M' : 'L'}${x0.toFixed(1)},${y1(c).toFixed(1)} L${x1.toFixed(1)},${y1(c).toFixed(1)}`;
+  }).join(' ');
+  const tideSteps = steps.filter((s) => s.outflowFactor != null && s.outflowFactor < 1).length;
   // lâmina
   const H2 = 110;
   const smax = Math.max(HCRIT_CM * 1.4, ...steps.map((s) => s.sheetCm ?? 0)) * 1.05;
@@ -37,14 +45,14 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
   return (
     <div className="flex flex-col gap-2">
       {only !== 'sheet' && <svg data-testid="balde-vazoes" viewBox={`0 0 ${W} ${H1}`} className="w-full" role="img"
-        aria-label={`Entrada de água máxima ${fmt1(maxIn)} m³/h; capacidade da galeria ${fmt1(capacityM3H) ?? 'sem dado'} m³/h; ${n} passos de 10 min`}>
+        aria-label={`Entrada de água máxima ${fmt1(maxIn)} m³/h; capacidade da galeria ${fmt1(capacityM3H) ?? 'sem dado'} m³/h${hasTide ? `, reduzida pela maré em ${tideSteps} passos` : ''}; ${n} passos de 10 min`}>
         <text x={2} y={PAD.t + 8} className="fill-muted-foreground text-[9px]">m³/h</text>
         {steps.map((s, i) => (
           <rect key={i} x={x(i) - bw / 2} width={bw} y={y1(s.inflowM3H ?? 0)} height={Math.max(0, H1 - PAD.b - y1(s.inflowM3H ?? 0))}
             className={s.kind === 'medido' ? 'fill-primary' : 'fill-primary/45'} />
         ))}
         <path d={out} fill="none" className="stroke-success" strokeWidth={2} />
-        {capacityM3H != null && <line x1={PAD.l} x2={W - PAD.r} y1={y1(capacityM3H)} y2={y1(capacityM3H)} className="stroke-warning" strokeDasharray="5 4" strokeWidth={1.5} />}
+        {cap != null && <path data-testid="balde-capacidade" d={cap} fill="none" className="stroke-warning" strokeDasharray="5 4" strokeWidth={1.5} />}
         {nowX != null && <line x1={nowX} x2={nowX} y1={PAD.t} y2={H1 - PAD.b} className="stroke-foreground" strokeWidth={1} />}
         {ticks.map((i) => <text key={i} x={x(i)} y={H1 - 4} textAnchor="middle" className="fill-muted-foreground text-[9px]">{i === now ? 'agora' : tick(i)}</text>)}
       </svg>}
@@ -60,7 +68,8 @@ export const BaldeChart: React.FC<{ steps: readonly Step[]; capacityM3H: number 
       <OnlyInDetail>
         <p data-testid="balde-legenda" className="m-0 text-xs leading-4 text-muted-foreground">
           Barras: entrada de água por passo de 10 min (cheia = chuva medida; clara = chuva prevista espalhada por igual). Linha verde: saída pela
-          galeria. Tracejado laranja: capacidade da galeria (IDF, TR 5 anos, 10 min). Embaixo: lâmina na rua; linha vermelha em 15 cm.
+          galeria. Tracejado laranja: capacidade da galeria (IDF, TR 5 anos, 10 min), que desce quando a maré alta segura a saída. Embaixo:
+          lâmina na rua; linha vermelha em 15 cm.
         </p>
       </OnlyInDetail>
     </div>

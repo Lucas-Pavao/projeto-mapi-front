@@ -6,7 +6,8 @@ import { isoSchema } from '@/lib/apiSchemas';
  * ALERTA: a lâmina provável (q50) chega a 15 cm; ATENCAO: só a pessimista (q95); SEM_DADO sempre com motivo.
  */
 export const floodLevelSchema = z.enum(['ALERTA', 'ATENCAO', 'SEM_ALERTA', 'SEM_DADO']);
-export const floodReasonSchema = z.enum(['CHUVA_AUSENTE', 'PREVISAO_INDISPONIVEL', 'SEM_TERRENO', 'TERRENO_EM_REVISAO', 'SERIE_INCOMPLETA']);
+export const floodReasonSchema = z.enum(['CHUVA_AUSENTE', 'PREVISAO_INDISPONIVEL', 'SEM_TERRENO', 'TERRENO_EM_REVISAO', 'SERIE_INCOMPLETA',
+  'MARE_AUSENTE']);
 
 const num = z.number().nullable().optional();
 
@@ -29,7 +30,52 @@ export const floodStepSchema = z.object({
   outflowM3H: num,
   volumeM3: num,
   sheetCm: num,
+  /** Maré prevista (m, NR) no fim do passo e fração da capacidade da galeria livre (refluxo, ADR 0030). */
+  tideNrM: num,
+  outflowFactor: num,
 });
+
+/** Lâmina por cenário (q50, q95) e prazo ("1", "3", "6"). */
+const gridSchema = z.record(z.string(), z.record(z.string(), z.number().nullable()));
+const factorStatusSchema = z.enum(['OK', 'DESLIGADO', 'NAO_SE_APLICA', 'SEM_DADO']);
+const factorModeSchema = z.enum(['OFF', 'INFO', 'NIVEL']);
+
+/** Fatores por ponto do alerta único (ADR 0030): maré (refluxo) e limpeza da Central 156, com a contribuição de cada um. */
+export const floodFactorsSchema = z.object({
+  refluxo: z.object({
+    mode: factorModeSchema.nullable().optional(),
+    status: factorStatusSchema,
+    appliedToLevel: z.boolean(),
+    reason: z.string().nullable().optional(),
+    text: z.string().nullable().optional(),
+    sillNrM: num,
+    tideNowNrM: num,
+    tideMaxHorizonNrM: num,
+    reductionNowPct: num,
+    periods: z.array(z.object({ from: isoSchema, to: isoSchema, meanReductionPct: num, maxReductionPct: num })).default([]),
+    servedDeltaCm: num,
+    deltaSheetCm: gridSchema.default({}),
+    biasScenario: z.object({
+      mdtBiasM: num, sillNrM: num, level: floodLevelSchema.nullable().optional(), worstHorizonHours: z.number().int().nullable().optional(),
+      sheetCm: gridSchema.default({}),
+    }).nullable().optional(),
+  }).nullable().optional(),
+  limpeza: z.object({
+    mode: factorModeSchema.nullable().optional(),
+    status: factorStatusSchema,
+    appliedToLevel: z.boolean(),
+    reason: z.string().nullable().optional(),
+    text: z.string().nullable().optional(),
+    regime: z.string().nullable().optional(),
+    daysSinceCleaning: num,
+    pClogged: num,
+    fClogged: num,
+    mixtureLevel: floodLevelSchema.nullable().optional(),
+    sheetCloggedCm: gridSchema.default({}),
+    probHcrit: gridSchema.default({}),
+  }).nullable().optional(),
+});
+export type FloodFactors = z.infer<typeof floodFactorsSchema>;
 
 export const floodExplanationSchema = z.object({
   servedScenario: z.enum(['q50', 'q95']).nullable().optional(),
@@ -43,6 +89,7 @@ export const floodExplanationSchema = z.object({
   }).nullable().optional(),
   decomposition: z.array(floodStepSchema),
   capacityM3H: num,
+  factors: floodFactorsSchema.nullable().optional(),
 });
 
 export const alagamentoPontoSchema = z.object({

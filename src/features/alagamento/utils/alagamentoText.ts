@@ -14,6 +14,7 @@ export const REASON_SHORT: Record<FloodReason, string> = {
   SEM_TERRENO: 'sem terreno',
   TERRENO_EM_REVISAO: 'terreno em revisão',
   SERIE_INCOMPLETA: 'série incompleta',
+  MARE_AUSENTE: 'sem maré',
 };
 
 const assertNever = (x: never): never => {
